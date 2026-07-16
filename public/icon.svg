@@ -1,6 +1,4 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
-  <rect width="192" height="192" rx="42" fill="#214d43"/>
-  <path d="M61 49c28 10 48 27 59 52 8 19 7 36 2 48H75c-7-20-8-39-3-56 5-16 12-29 25-44-13 2-24 1-36 0Z" fill="#f7c873"/>
-  <path d="M96 103c5-22 19-39 42-50-3 24-13 43-35 55Z" fill="#f4f7f2" opacity=".9"/>
-  <path d="M47 132c27-15 59-17 98-5" fill="none" stroke="#f4f7f2" stroke-width="9" stroke-linecap="round"/>
+  <rect width="192" height="192" rx="42" fill="#456f9f"/>
+  <text x="96" y="132" fill="#f7d58d" font-family="-apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Yu Gothic', sans-serif" font-size="112" font-weight="800" text-anchor="middle">N</text>
 </svg>

@@ -306,6 +306,28 @@ function App() {
     if (view === 'food-screen') window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
   }, [view])
 
+  const modalOpen = Boolean(mealTypePicker || mealFood || mealDetails || showTodayDetails || menuDraft || menuSetDraft || showScanner)
+
+  useEffect(() => {
+    if (!modalOpen) return
+    const body = document.body
+    const documentElement = document.documentElement
+    const previousBodyOverflow = body.style.overflow
+    const previousDocumentOverflow = documentElement.style.overflow
+    const previousBodyOverscrollBehavior = body.style.overscrollBehavior
+    const previousDocumentOverscrollBehavior = documentElement.style.overscrollBehavior
+    body.style.overflow = 'hidden'
+    documentElement.style.overflow = 'hidden'
+    body.style.overscrollBehavior = 'none'
+    documentElement.style.overscrollBehavior = 'none'
+    return () => {
+      body.style.overflow = previousBodyOverflow
+      documentElement.style.overflow = previousDocumentOverflow
+      body.style.overscrollBehavior = previousBodyOverscrollBehavior
+      documentElement.style.overscrollBehavior = previousDocumentOverscrollBehavior
+    }
+  }, [modalOpen])
+
   const total = useMemo(() => sumEntries(entries), [entries])
   const subtotals = useMemo(() => sumByMealType(entries), [entries])
   const recordedMealTypes = useMemo(() => MEAL_TYPES.filter((type) => entries.some((entry) => entry.mealType === type)), [entries])
@@ -452,6 +474,7 @@ function App() {
       const entriesToSave = mealType === '間食'
         ? [entry]
         : [entry, ...entries.filter((current) => current.mealType === mealType && current.id !== entry.id).map((current) => ({ ...current, eatenAt }))]
+      const returnToSearchResults = pendingSearchQuery !== null
       await saveMealEntries(entriesToSave)
       if (pendingSearchQuery) {
         setSearchResults((current) => current.filter((group) => group.query !== pendingSearchQuery))
@@ -460,8 +483,8 @@ function App() {
       const continueFoodSelection = recordingMealType !== null && !editingEntry
       setMealFood(null)
       setEditingEntry(null)
-      setRecordingMealType(continueFoodSelection ? recordingMealType : null)
-      setView(continueFoodSelection ? 'food-screen' : 'today')
+      setRecordingMealType(returnToSearchResults ? recordingMealType : continueFoodSelection ? recordingMealType : null)
+      setView(returnToSearchResults ? 'search-results' : continueFoodSelection ? 'food-screen' : 'today')
       await load()
       notify(editingEntry ? '食事記録を更新しました。' : '食事を記録しました。')
     } catch {
@@ -668,7 +691,7 @@ function App() {
   return (
     <div className="app-shell">
       <header className="app-header">
-        <div className="brand"><div className="brand-mark">N</div><div><strong>Nutrition</strong><span>日々の記録を、軽やかに。</span></div></div>
+        <div className="brand"><div className="brand-mark">N</div></div>
         <div className="header-status"><span className="offline-dot" />端末内保存</div>
       </header>
 
@@ -849,7 +872,23 @@ function FoodsView({ recordingMealType, foods, menus, menuSets, recentFoods, fav
 }
 
 function SearchInputView({ bars, setBars, onSearch, onBack }: { bars: string[]; setBars: React.Dispatch<React.SetStateAction<string[]>>; onSearch: () => void; onBack: () => void }) {
-  return <><section className="page-heading"><div><span className="eyebrow">SEARCH</span><h1>食品・メニューを検索</h1></div><button className="button ghost" type="button" onClick={onBack}>← 食品画面へ</button></section><section className="settings-card search-input-card"><div className="search-bar-list">{bars.map((bar, index) => <div className="search-bar-row" key={index}><label><input aria-label="検索バー" autoFocus={index === 0} value={bar} onChange={(event) => setBars((current) => current.map((value, currentIndex) => currentIndex === index ? event.target.value : value))} placeholder="食品名・メーカー・メニュー名" /></label>{bars.length > 1 && <button className="small-action danger-text" type="button" onClick={() => setBars((current) => current.filter((_, currentIndex) => currentIndex !== index))}>削除</button>}</div>)}</div><div className="search-input-actions"><button className="button secondary" type="button" onClick={() => setBars((current) => [...current, ''])}>＋ 検索バーを追加</button><button className="button primary" type="button" onClick={onSearch}>検索する</button></div></section></>
+  const inputRefs = useRef<Array<HTMLInputElement | null>>([])
+  const [focusIndex, setFocusIndex] = useState<number | null>(0)
+
+  useEffect(() => {
+    if (focusIndex === null) return
+    const input = inputRefs.current[focusIndex]
+    if (!input) return
+    input.focus()
+    setFocusIndex(null)
+  }, [bars.length, focusIndex])
+
+  const addSearchBar = () => {
+    setFocusIndex(bars.length)
+    setBars((current) => [...current, ''])
+  }
+
+  return <><section className="page-heading"><div><span className="eyebrow">SEARCH</span><h1>食品・メニューを検索</h1></div><button className="button ghost" type="button" onClick={onBack}>← 食品画面へ</button></section><section className="settings-card search-input-card"><div className="search-bar-list">{bars.map((bar, index) => <div className="search-bar-row" key={index}><label><input ref={(element) => { inputRefs.current[index] = element }} aria-label="検索バー" value={bar} onChange={(event) => setBars((current) => current.map((value, currentIndex) => currentIndex === index ? event.target.value : value))} placeholder="食品名・メーカー・メニュー名" /></label>{bars.length > 1 && <button className="small-action danger-text" type="button" onClick={() => setBars((current) => current.filter((_, currentIndex) => currentIndex !== index))}>削除</button>}</div>)}</div><div className="search-input-actions"><button className="button secondary" type="button" onClick={addSearchBar}>＋ 検索バーを追加</button><button className="button primary" type="button" onClick={onSearch}>検索する</button></div></section></>
 }
 
 function SearchResultsView({ groups, onSelect, onAddFood, onBack }: { groups: SearchResultGroup[]; onSelect: (query: string, item: SearchResultItem) => void; onAddFood: () => void; onBack: () => void }) {

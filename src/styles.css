@@ -350,8 +350,8 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .nav-item.active { color: var(--accent); font-weight: 800; }
 .floating-add { position: fixed; z-index: 6; right: max(1rem, env(safe-area-inset-right)); bottom: calc(4.8rem + env(safe-area-inset-bottom)); display: grid; place-items: center; width: 3.5rem; height: 3.5rem; border: 0; border-radius: 50%; color: white; background: var(--accent); box-shadow: 0 .6rem 1.4rem rgba(69, 111, 159, .3); font-size: 1.8rem; line-height: 1; }
 
-.modal-backdrop { position: fixed; z-index: 10; inset: 0; display: grid; place-items: end center; padding: 1rem; background: rgba(47, 65, 84, .35); }
-.modal-card { width: min(100%, 540px); max-height: calc(100vh - 2rem); overflow-y: auto; border-radius: 1.35rem; padding: 1.3rem; background: #fbfdff; box-shadow: 0 1.4rem 4rem rgba(48, 78, 112, .2); }
+.modal-backdrop { position: fixed; z-index: 10; inset: 0; display: grid; place-items: end center; overflow: hidden; padding: 1rem; overscroll-behavior: contain; background: rgba(47, 65, 84, .35); }
+.modal-card { width: min(100%, 540px); max-height: calc(100vh - 2rem); overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; border-radius: 1.35rem; padding: 1.3rem; background: #fbfdff; box-shadow: 0 1.4rem 4rem rgba(48, 78, 112, .2); }
 .scanner-card { width: min(100%, 620px); }
 .modal-heading { display: flex; justify-content: space-between; align-items: start; gap: 1rem; margin-bottom: 1rem; }
 .meal-type-picker .modal-heading { justify-content: flex-end; margin-bottom: .35rem; }
