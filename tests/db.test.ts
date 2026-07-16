@@ -31,6 +31,16 @@ describe('IndexedDB data safety', () => {
     expect(amaranth?.baseUnit).toBe('g')
     expect(amaranth?.nutrients.calciumMg).toBe(160)
     expect(amaranth?.sourceVersion).toContain('増補2023年')
+    const foods = await db.foods.toArray()
+    const egg = foods.find((food) => food.name.includes('鶏卵'))
+    const rice = foods.find((food) => food.name.includes('水稲めし'))
+    const seasoning = foods.find((food) => food.id === 'mext_17001')
+    expect(egg?.baseUnit).toBe('個')
+    expect(rice?.baseUnit).toBe('合')
+    expect(seasoning?.baseAmount).toBe(1)
+    expect(seasoning?.baseUnit).toBe('小さじ')
+    expect(seasoning?.name).toContain('（小さじ1=')
+    expect(foods.filter((food) => food.source === 'mext').some((food) => /^(＜|（|\()/.test(food.name))).toBe(false)
   })
 
   it('食品削除時も食事記録とスナップショットを残す', async () => {

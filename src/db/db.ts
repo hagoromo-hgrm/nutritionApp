@@ -16,7 +16,7 @@ import {
 import { createId } from '../utils/id'
 import { estimateDailyGoals } from '../services/nutrition'
 
-const INITIAL_FOODS_VERSION = 4
+const INITIAL_FOODS_VERSION = 5
 
 export class NutritionDatabase extends Dexie {
   foods!: Table<Food, string>
@@ -107,8 +107,11 @@ export async function initializeDatabase(): Promise<void> {
           await db.foods.add(bundledFood)
         } else if (
           existing.source === 'mext'
-          && existing.sourceVersion.includes('初期サンプル')
           && existing.createdAt === existing.updatedAt
+          && (
+            existing.sourceVersion.includes('増補2023年')
+            || existing.sourceVersion.includes('初期サンプル')
+          )
         ) {
           await db.foods.put(bundledFood)
         }

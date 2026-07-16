@@ -1,4 +1,4 @@
-import { NUTRIENT_KEYS, type FoodUnit, type Nutrients } from '../types'
+import { FOOD_UNITS, NUTRIENT_KEYS, type FoodUnit, type Nutrients } from '../types'
 
 export function isPositiveFinite(value: number): boolean {
   return Number.isFinite(value) && value > 0
@@ -9,7 +9,7 @@ export function isValidBarcode(value: string): boolean {
 }
 
 export function isValidUnit(value: string): value is FoodUnit {
-  return ['g', 'ml', '個', '合', '袋', '本', '枚', '食', '丁', 'その他'].includes(value)
+  return FOOD_UNITS.includes(value as FoodUnit)
 }
 
 export function isNutrients(value: unknown): value is Nutrients {

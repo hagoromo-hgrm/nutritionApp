@@ -14,6 +14,8 @@ from typing import Any
 
 import openpyxl
 
+from food_data_rules import add_measure_note, clean_food_name, leading_category, preferred_measure, scale_value
+
 
 CSV_COLUMNS = (
     "id", "name", "maker", "barcode", "base_amount", "base_unit",
@@ -59,26 +61,30 @@ def main() -> None:
     for row in sheet.iter_rows(min_row=data_start, values_only=True):
         if len(row) < 61 or not clean_value(row[1]) or not clean_value(row[3]):
             continue
+        raw_name = clean_value(row[3])
+        measure = preferred_measure(clean_food_name(raw_name), leading_category(raw_name))
+        name = add_measure_note(clean_food_name(raw_name), measure)
+        factor = measure.reference_grams / 100
         rows.append({
             "id": food_id(row[1]),
-            "name": clean_value(row[3]),
+            "name": name,
             "maker": "",
             "barcode": "",
-            "base_amount": "100",
-            "base_unit": "g",
-            "energy_kcal": clean_value(row[6]),
-            "protein_g": clean_value(row[9]),
-            "fat_g": clean_value(row[12]),
-            "carbohydrate_g": clean_value(row[20]),
-            "fiber_g": clean_value(row[18]),
-            "salt_g": clean_value(row[60]),
-            "calcium_mg": clean_value(row[25]),
-            "iron_mg": clean_value(row[28]),
-            "vitamin_a_mcg": clean_value(row[42]),
-            "vitamin_e_mg": clean_value(row[44]),
-            "vitamin_b1_mg": clean_value(row[49]),
-            "vitamin_b2_mg": clean_value(row[50]),
-            "vitamin_c_mg": clean_value(row[58]),
+            "base_amount": str(measure.amount),
+            "base_unit": measure.unit,
+            "energy_kcal": scale_value(clean_value(row[6]), factor),
+            "protein_g": scale_value(clean_value(row[9]), factor),
+            "fat_g": scale_value(clean_value(row[12]), factor),
+            "carbohydrate_g": scale_value(clean_value(row[20]), factor),
+            "fiber_g": scale_value(clean_value(row[18]), factor),
+            "salt_g": scale_value(clean_value(row[60]), factor),
+            "calcium_mg": scale_value(clean_value(row[25]), factor),
+            "iron_mg": scale_value(clean_value(row[28]), factor),
+            "vitamin_a_mcg": scale_value(clean_value(row[42]), factor),
+            "vitamin_e_mg": scale_value(clean_value(row[44]), factor),
+            "vitamin_b1_mg": scale_value(clean_value(row[49]), factor),
+            "vitamin_b2_mg": scale_value(clean_value(row[50]), factor),
+            "vitamin_c_mg": scale_value(clean_value(row[58]), factor),
             "saturated_fat_g": "",
         })
 

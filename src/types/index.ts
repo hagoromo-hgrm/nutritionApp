@@ -41,14 +41,14 @@ export const NUTRIENT_UNITS: Record<NutrientKey, string> = {
 }
 
 export type FoodSource = 'mext' | 'open_food_facts' | 'user'
-export type FoodUnit = 'g' | 'ml' | '個' | '合' | '袋' | '本' | '枚' | '食' | '丁' | 'その他'
+export type FoodUnit = 'g' | 'ml' | '個' | '合' | '袋' | '本' | '枚' | '食' | '丁' | '小さじ' | 'その他'
 export type MealType = '朝食' | '昼食' | '夕食' | '間食'
 export type MealTimeMode = 'auto' | 'manual'
 export type BiologicalSex = 'male' | 'female' | 'unspecified'
 export type ActivityLevel = 'low' | 'moderate' | 'high'
 export type MenuCategory = '主食' | '主菜' | '副菜' | '汁物' | '乳製品・果物' | 'お菓子・スイーツ' | 'その他'
 
-export const FOOD_UNITS: FoodUnit[] = ['g', 'ml', '個', '合', '袋', '本', '枚', '食', '丁', 'その他']
+export const FOOD_UNITS: FoodUnit[] = ['g', 'ml', '個', '合', '袋', '本', '枚', '食', '丁', '小さじ', 'その他']
 
 export const MEAL_TYPES: MealType[] = ['朝食', '昼食', '夕食', '間食']
 export const MENU_CATEGORIES: MenuCategory[] = ['主食', '主菜', '副菜', '汁物', '乳製品・果物', 'お菓子・スイーツ', 'その他']

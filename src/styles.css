@@ -285,7 +285,7 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .management-row { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--line); padding: .7rem 0; }
 .management-row > div:first-child { display: flex; align-items: center; gap: .45rem; min-width: 0; }
 .management-row small { overflow: hidden; color: var(--muted); text-overflow: ellipsis; white-space: nowrap; font-size: .64rem; }
-.source-badge { border-radius: 99px; padding: .2rem .4rem; color: var(--accent); background: var(--soft); font-size: .6rem; font-weight: 800; }
+.source-badge { display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; min-width: max-content; border-radius: 99px; padding: .2rem .4rem; color: var(--accent); background: var(--soft); font-size: .6rem; font-weight: 800; white-space: nowrap; word-break: keep-all; overflow-wrap: normal; writing-mode: horizontal-tb; text-orientation: mixed; }
 .food-form-card { max-width: 720px; margin-right: auto; margin-left: auto; }
 .food-form-card form { display: grid; gap: .85rem; }
 .food-menu-selection { max-width: 720px; margin: 1.2rem auto 0; }

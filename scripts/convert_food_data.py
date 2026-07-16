@@ -16,6 +16,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Optional
 
+from food_data_rules import clean_food_name
+
 
 NUTRIENTS = (
     ("energy_kcal", "energyKcal"),
@@ -49,7 +51,7 @@ def convert_row(row: Dict[str, str], source_version: str, processed_at: str) -> 
     created_at = processed_at
     return {
         "id": row["id"].strip(),
-        "name": row["name"].strip(),
+        "name": clean_food_name(row["name"]),
         "maker": row.get("maker", "").strip(),
         "barcode": row.get("barcode", "").strip(),
         "source": "mext",

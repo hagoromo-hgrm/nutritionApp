@@ -7,3 +7,4 @@ AGENTS.md
 nutrition-backup-*.json
 nutrition-auto-backup-*.json
 data/private/
+__pycache__/
