@@ -167,12 +167,16 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .food-collapsible { overflow: hidden; }
 .food-collapsible > summary { list-style: none; cursor: pointer; }
 .food-collapsible > summary::-webkit-details-marker { display: none; }
-.food-collapsible > summary::after { content: '＋ 展開'; display: inline-block; flex: 0 0 auto; margin-left: .35rem; border: 1px solid #bdd4ec; border-radius: 99px; padding: .2rem .45rem; color: var(--accent-deep); background: #eef5fd; font-size: .62rem; font-weight: 800; }
-.food-collapsible[open] > summary::after { content: '− 閉じる'; }
+.food-collapsible > summary::after { content: '＋'; display: inline-grid; place-items: center; flex: 0 0 auto; width: 1.65rem; height: 1.65rem; margin-left: .35rem; border: 1px solid #bdd4ec; border-radius: 50%; color: var(--accent-deep); background: #eef5fd; font-size: .9rem; font-weight: 800; line-height: 1; }
+.food-collapsible[open] > summary::after { content: '−'; }
 .food-collapsible > summary.section-title { align-items: center; margin-bottom: 0; }
 .food-collapsible[open] > summary.section-title { margin-bottom: .9rem; }
 .food-quick-section:not([open]) .quick-count { display: none; }
 .count-label { color: var(--muted); font-size: .72rem; }
+.food-screen-sections { display: grid; gap: .85rem; }
+.food-screen-sections > .food-section-card { margin-top: 0; border: 1px solid var(--line); border-radius: 1.1rem; padding: .2rem 1rem 1rem; background: rgba(255, 255, 255, .78); }
+.food-screen-sections > .food-section-card:not([open]) { padding-bottom: .2rem; }
+.food-screen-sections > .food-section-card > summary { padding: .65rem 0; }
 .quick-groups { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
 .quick-group { min-width: 0; padding: 1rem; border: 1px solid var(--line); border-radius: 1rem; background: rgba(255,255,255,.72); }
 .quick-group h3 { color: var(--muted); margin-bottom: .7rem; }
@@ -336,7 +340,9 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .bottom-nav { position: fixed; z-index: 5; right: 0; bottom: 0; left: 0; display: flex; justify-content: center; gap: min(10vw, 5rem); padding: .6rem max(1rem, env(safe-area-inset-left)) calc(.6rem + env(safe-area-inset-bottom)); border-top: 1px solid rgba(203, 220, 237, .9); background: rgba(250, 253, 255, .94); backdrop-filter: blur(16px); }
 .nav-item { display: grid; gap: .18rem; min-width: 3rem; border: 0; color: var(--muted); background: transparent; font-size: .68rem; }
 .nav-item span { font-size: 1.2rem; line-height: 1; }
-.nav-item .today-icon, .nav-item .graphs-icon, .nav-item .settings-icon { font-size: 1.35rem; }
+.nav-item .today-icon, .nav-item .graphs-icon { font-size: 1.35rem; }
+.nav-item .settings-icon { display: grid; place-items: center; }
+.settings-nav-icon { display: block; width: 1.35rem; height: 1.35rem; object-fit: contain; }
 .nav-item .menu-grid-icon { display: grid; place-items: center; }
 .menu-grid-table { display: grid; grid-template-columns: 1fr 2fr; grid-template-rows: repeat(2, 1fr); gap: .08rem; width: 1.25rem; height: 1.08rem; }
 .menu-grid-table i { display: block; border: 1px solid currentColor; border-radius: .12rem; background: transparent; }
@@ -364,9 +370,13 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .modal-card form { display: grid; gap: .85rem; margin-top: 1rem; }
 .two-fields { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
 .two-fields label { position: relative; }
+.amount-input-row { display: flex; align-items: center; gap: .55rem; }
 .amount-input { position: relative; }
+.amount-input-row .amount-input { min-width: 0; flex: 1; }
 .amount-input input { width: 100%; padding-right: 2.8rem; }
 .field-suffix { position: absolute; top: 50%; right: .75rem; transform: translateY(-50%); color: var(--muted); font-size: .75rem; pointer-events: none; }
+.amount-increment { flex: 0 0 auto; min-height: 2.65rem; border: 1px solid #bdd4ec; border-radius: .7rem; padding: .55rem .7rem; color: var(--accent-deep); background: #edf5fd; font-size: .78rem; font-weight: 800; white-space: nowrap; }
+.amount-increment:disabled { cursor: not-allowed; opacity: .45; }
 .quick-empty-inline { padding: .5rem 0 .1rem; color: var(--muted); font-size: .72rem; line-height: 1.5; }
 .preview-box { border-radius: .9rem; padding: .8rem; background: #eef6fc; }
 .preview-box .nutrient-grid { margin-top: .6rem; }
@@ -405,7 +415,10 @@ legend { padding: 0 .35rem; color: var(--muted); font-size: .75rem; font-weight:
 @media (max-width: 760px) {
   .app-header { padding: 1rem; }
   .content { width: min(100% - 1.2rem, 620px); }
+  input, select, textarea { font-size: 16px; }
   .page-heading { align-items: start; flex-direction: column; padding-top: 1.6rem; }
+  .food-screen-heading { gap: .35rem; padding-top: 1rem; padding-bottom: .55rem; }
+  .food-screen-heading .button { align-self: flex-start; padding-top: .42rem; padding-bottom: .42rem; }
   .page-heading .date-picker { align-self: stretch; justify-content: space-between; }
   .page-heading .date-picker input { flex: 1; }
   .hero-summary { padding: 1rem; border-radius: 1.2rem; }
