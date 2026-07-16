@@ -356,8 +356,10 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .settings-inline-row .settings-info, .backup-action-item .settings-info, .csv-action-row .settings-info { flex: 0 0 auto; margin: 0; }
 .estimate-info-row { display: flex; align-items: center; justify-content: flex-end; gap: .5rem; margin-top: .75rem; color: var(--muted); font-size: .72rem; }
 .estimate-info { margin-top: 0; }
-.settings-info { margin-top: .45rem; }
+.settings-info { align-self: center; margin-top: 0; }
 .food-master-title .button { margin: 0; padding: .48rem .72rem; font-size: .7rem; }
+.food-master-actions { display: flex; flex-wrap: wrap; gap: .6rem; }
+.food-master-actions .button { margin: 0; }
 
 .settings-card { margin-top: 1.2rem; border: 1px solid var(--line); border-radius: 1.2rem; padding: 1.2rem; background: white; }
 .goal-form { display: grid; grid-template-columns: repeat(3, 1fr); gap: .9rem; margin-top: 1rem; }
