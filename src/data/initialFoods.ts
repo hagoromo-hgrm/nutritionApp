@@ -1,4 +1,5 @@
 import type { Food, FoodUnit } from '../types'
+import { mextFoods } from './mextFoods'
 
 const sourceVersion = '日本食品標準成分表（八訂）増補2023年・初期サンプル v3'
 const now = '2026-07-15T00:00:00.000Z'
@@ -43,4 +44,5 @@ export const initialFoods: Food[] = [
     energyKcal: 73, proteinG: 7.0, fatG: 4.9, carbohydrateG: 1.5, fiberG: 1.1, saltG: 0,
     calciumMg: null, ironMg: null, vitaminAMcg: null, vitaminEMg: null, vitaminB1Mg: null, vitaminB2Mg: null, vitaminCMg: null, saturatedFatG: null,
   }),
+  ...mextFoods,
 ]

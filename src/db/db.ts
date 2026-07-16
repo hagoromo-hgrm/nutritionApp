@@ -1,5 +1,4 @@
 import Dexie, { type Table } from 'dexie'
-import { initialFoods } from '../data/initialFoods'
 import {
   DEFAULT_SETTINGS,
   DEFAULT_BODY_PROFILE,
@@ -16,6 +15,8 @@ import {
 } from '../types'
 import { createId } from '../utils/id'
 import { estimateDailyGoals } from '../services/nutrition'
+
+const INITIAL_FOODS_VERSION = 4
 
 export class NutritionDatabase extends Dexie {
   foods!: Table<Food, string>
@@ -84,6 +85,7 @@ export class NutritionDatabase extends Dexie {
 export const db = new NutritionDatabase()
 
 export async function initializeDatabase(): Promise<void> {
+  const { initialFoods } = await import('../data/initialFoods')
   const settings = await db.settings.get('app')
   if (!settings) await db.settings.put({ ...DEFAULT_SETTINGS, goals: { ...DEFAULT_SETTINGS.goals } })
 
@@ -94,10 +96,10 @@ export async function initializeDatabase(): Promise<void> {
       const existing = await db.foods.count()
       if (existing === 0) await db.foods.bulkAdd(initialFoods)
       await db.metadata.put({ key: 'initial-foods-seeded', value: true })
-      await db.metadata.put({ key: 'initial-foods-version', value: 3 })
+      await db.metadata.put({ key: 'initial-foods-version', value: INITIAL_FOODS_VERSION })
       await db.metadata.put({ key: 'schema-version', value: 4 })
     })
-  } else if (seedVersion?.value !== 3) {
+  } else if (seedVersion?.value !== INITIAL_FOODS_VERSION) {
     await db.transaction('rw', [db.foods, db.metadata], async () => {
       for (const bundledFood of initialFoods) {
         const existing = await db.foods.get(bundledFood.id)
@@ -111,7 +113,7 @@ export async function initializeDatabase(): Promise<void> {
           await db.foods.put(bundledFood)
         }
       }
-      await db.metadata.put({ key: 'initial-foods-version', value: 3 })
+      await db.metadata.put({ key: 'initial-foods-version', value: INITIAL_FOODS_VERSION })
       await db.metadata.put({ key: 'schema-version', value: 4 })
     })
   }

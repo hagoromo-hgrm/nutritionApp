@@ -36,7 +36,7 @@ import {
 } from './db/db'
 import { searchExternalFood, type ExternalFoodPreview } from './services/externalFoodApi'
 import { backupToJson, downloadBlob, parseBackupText } from './services/backup'
-import { mealsToCsv } from './services/csv'
+import { mealsToCsv, parseMealsCsv } from './services/csv'
 import { calculateBmi, calculateNutrients, estimateDailyGoals, formatNutrient, goalRate, nutrientRangeForGoals, scaleNutritionGoals, sumByMealType, sumEntries, sumNutrients } from './services/nutrition'
 import { buildDailyNutrientTrend } from './services/trend'
 import {
@@ -327,6 +327,16 @@ function App() {
       documentElement.style.overscrollBehavior = previousDocumentOverscrollBehavior
     }
   }, [modalOpen])
+
+  useEffect(() => {
+    if (!mealTypePicker) return
+    const closeOnBackdropTap = (event: PointerEvent) => {
+      const target = event.target
+      if (target instanceof Element && target.matches('.modal-backdrop[aria-label="食事を追加"]')) setMealTypePicker(null)
+    }
+    document.addEventListener('pointerdown', closeOnBackdropTap)
+    return () => document.removeEventListener('pointerdown', closeOnBackdropTap)
+  }, [mealTypePicker])
 
   const total = useMemo(() => sumEntries(entries), [entries])
   const subtotals = useMemo(() => sumByMealType(entries), [entries])
@@ -668,7 +678,7 @@ function App() {
       downloadBlob(backupToJson(current), `nutrition-auto-backup-${formatFileTimestamp(new Date(current.exportedAt))}.json`, 'application/json')
       await replaceAllData(backup)
       await load()
-      notify(`復元しました。食品${backup.foods.length}件、食事${backup.mealEntries.length}件です。自動退避も出力しました。`)
+      notify(`復元しました。食品${backup.foods.length}件、食事${backup.mealEntries.length}件、メニュー${backup.menus?.length ?? 0}件、セット${backup.menuSets?.length ?? 0}件です。自動退避も出力しました。`)
     } catch (caught) { showError(caught instanceof Error ? caught.message : 'JSONを復元できませんでした。現在のデータは変更していません。') }
   }
 
@@ -681,6 +691,25 @@ function App() {
     } catch { showError('CSVを出力できませんでした。') }
   }
 
+  const importCsv = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+    try {
+      const imported = parseMealsCsv(await file.text())
+      if (imported.length === 0) { showError('CSVに食事記録がありません。'); return }
+      const existing = await db.mealEntries.bulkGet(imported.map((entry) => entry.id))
+      const overwriteCount = existing.filter((entry): entry is MealEntry => Boolean(entry)).length
+      const overwriteNotice = overwriteCount > 0 ? `同じIDの${overwriteCount}件は上書きされます。` : ''
+      if (!window.confirm(`${imported.length}件の食事履歴を取り込みます。${overwriteNotice}\n続けますか？`)) return
+      await saveMealEntries(imported)
+      await load()
+      notify(`${imported.length}件の食事履歴を取り込みました。`)
+    } catch (caught) {
+      showError(caught instanceof Error ? caught.message : 'CSVを取り込めませんでした。既存データは変更していません。')
+    }
+  }
+
   const removeFood = async (food: Food) => {
     if (!window.confirm(`「${displayFoodName(food)}」を食品マスターから削除しますか？食事履歴は残ります。`)) return
     try { await deleteFood(food.id); await load(); notify('食品を削除しました。食事履歴はスナップショットで残っています。') } catch { showError('食品を削除できませんでした。') }
@@ -691,7 +720,6 @@ function App() {
   return (
     <div className="app-shell">
       <header className="app-header">
-        <div className="brand"><div className="brand-mark">N</div></div>
         <div className="header-status"><span className="offline-dot" />端末内保存</div>
       </header>
 
@@ -708,7 +736,7 @@ function App() {
         {view === 'graphs' && <GraphsView entries={trendEntries} from={graphFrom} to={graphTo} goals={settings.goals} onFromChange={setGraphFrom} onToChange={setGraphTo} />}
         {view === 'food-screen' && <FoodsView recordingMealType={recordingMealType} foods={foods} menus={menus} menuSets={menuSets} recentFoods={recentFoods} favoriteFoods={favoriteFoods} favoriteIds={favoriteIds} onSelectFood={handleFoodSelection} onToggleFavorite={toggleFavorite} onEditFood={(food) => openFoodForm(food, '', 'food-screen')} onDeleteFood={removeFood} onOpenSearch={recordingMealType ? openSearchInput : undefined} onOpenScanner={() => setShowScanner(true)} onBack={() => { setRecordingMealType(null); setView('today') }} copyMealType={copyMealType} setCopyMealType={setCopyMealType} onCopyPrevious={copyPreviousMeals} />}
         {view === 'food-form' && foodDraft && <><FoodFormView draft={foodDraft} returnView={foodFormReturnView} setDraft={setFoodDraft} externalNote={externalNote} onSubmit={saveFoodDraft} onClose={() => { setFoodDraft(null); setView(foodFormReturnView) }} /><FoodMenuSelection draft={foodDraft} setDraft={setFoodDraft} menus={menus} /></>}
-        {view === 'settings' && <><SettingsView settings={settings} goalInputs={goalInputs} setGoalInputs={setGoalInputs} onSaveGoals={saveGoals} onToggleExternalApi={toggleExternalApi} onChangeDefaultMealTimeMode={changeDefaultMealTimeMode} onExportJson={exportJson} onRestoreJson={restoreJson} onExportCsv={exportCsv} csvFrom={csvFrom} csvTo={csvTo} setCsvFrom={setCsvFrom} setCsvTo={setCsvTo} counts={counts} /><SettingsExtras bodyProfileInputs={bodyProfileInputs} setBodyProfileInputs={setBodyProfileInputs} onSaveBodyProfile={saveBodyProfile} onOpenNewFood={() => openFoodForm(undefined, '', 'settings')} estimatedGoals={estimateDailyGoals(settings.bodyProfile ?? DEFAULT_BODY_PROFILE)} bmi={calculateBmi(settings.bodyProfile ?? DEFAULT_BODY_PROFILE)} /></>}
+        {view === 'settings' && <><SettingsView settings={settings} goalInputs={goalInputs} setGoalInputs={setGoalInputs} onSaveGoals={saveGoals} onToggleExternalApi={toggleExternalApi} onChangeDefaultMealTimeMode={changeDefaultMealTimeMode} onExportJson={exportJson} onRestoreJson={restoreJson} onExportCsv={exportCsv} onImportCsv={importCsv} csvFrom={csvFrom} csvTo={csvTo} setCsvFrom={setCsvFrom} setCsvTo={setCsvTo} counts={counts} /><SettingsExtras bodyProfileInputs={bodyProfileInputs} setBodyProfileInputs={setBodyProfileInputs} onSaveBodyProfile={saveBodyProfile} onOpenNewFood={() => openFoodForm(undefined, '', 'settings')} estimatedGoals={estimateDailyGoals(settings.bodyProfile ?? DEFAULT_BODY_PROFILE)} bmi={calculateBmi(settings.bodyProfile ?? DEFAULT_BODY_PROFILE)} /></>}
         {view === 'menus' && <MenuView menus={menus} menuSets={menuSets} foods={foods} onNewMenu={() => setMenuDraft({ id: null, name: '', category: '主菜', foodIds: [] })} onEditMenu={(menu) => setMenuDraft({ id: menu.id, name: menu.name, category: menu.category, foodIds: menu.foodIds })} onDeleteMenu={removeMenu} onNewMenuSet={() => setMenuSetDraft({ id: null, name: '', menuIds: [], foodIds: [] })} onEditMenuSet={(menuSet) => setMenuSetDraft({ id: menuSet.id, name: menuSet.name, menuIds: menuSet.menuIds, foodIds: menuSet.foodIds ?? [] })} onDeleteMenuSet={removeMenuSet} onBack={() => setView('today')} />}
         {view === 'search-input' && <SearchInputView bars={searchBars} setBars={setSearchBars} onSearch={() => void searchFoodsAndMenus()} onBack={() => setView('food-screen')} />}
         {view === 'search-results' && <SearchResultsView groups={searchResults} onSelect={handleSearchResultSelect} onAddFood={() => openFoodForm(undefined, '', 'food-screen')} onBack={() => setView('search-input')} />}
@@ -917,9 +945,70 @@ function MenuSetEditorModal({ draft, setDraft, menus, foods, onSubmit, onClose }
   return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="メニューセットを設定"><section className="modal-card"><div className="modal-heading"><div><span className="eyebrow">MENU SET</span><h2>{draft.id ? 'メニューセットを編集' : 'メニューセットを設定'}</h2></div><button className="icon-button" type="button" onClick={onClose} aria-label="閉じる">×</button></div><form onSubmit={onSubmit}><label>セット名*<input value={draft.name} onChange={(event) => setDraft((current) => current ? { ...current, name: event.target.value } : current)} required /></label><fieldset><legend>まとめるメニュー</legend><div className="checkbox-list">{menus.length > 0 ? menus.map((menu) => <label className="checkbox-row" key={menu.id}><input type="checkbox" checked={draft.menuIds.includes(menu.id)} onChange={(event) => setDraft((current) => current ? { ...current, menuIds: event.target.checked ? [...current.menuIds, menu.id] : current.menuIds.filter((id) => id !== menu.id) } : current)} /><span>{menu.name}（{menu.category}）</span></label>) : <p className="empty-state">料理メニューがありません。</p>}</div></fieldset><fieldset><legend>追加する食品</legend><label className="menu-food-search">食品を検索<input value={foodQuery} onChange={(event) => setFoodQuery(event.target.value)} placeholder="食品名・メーカー" /></label><div className="checkbox-list">{filteredFoods.length > 0 ? filteredFoods.map((food) => <label className="checkbox-row" key={food.id}><input type="checkbox" checked={draft.foodIds.includes(food.id)} onChange={(event) => setDraft((current) => current ? { ...current, foodIds: event.target.checked ? [...current.foodIds, food.id] : current.foodIds.filter((id) => id !== food.id) } : current)} /><span>{displayFoodName(food)}（{food.baseAmount}{food.baseUnit}）</span></label>) : <p className="empty-state">検索に一致する食品がありません。</p>}</div></fieldset><button className="button primary full-width" type="submit">保存する</button><button className="button ghost full-width" type="button" onClick={onClose}>キャンセル</button></form></section></div>
 }
 
-interface SettingsViewProps { settings: Awaited<ReturnType<typeof getSettings>>; goalInputs: Record<NutrientKey, string>; setGoalInputs: React.Dispatch<React.SetStateAction<Record<NutrientKey, string>>>; onSaveGoals: (event: React.FormEvent<HTMLFormElement>) => void; onToggleExternalApi: (enabled: boolean) => void; onChangeDefaultMealTimeMode: (mode: MealTimeMode) => void; onExportJson: () => void; onRestoreJson: (event: React.ChangeEvent<HTMLInputElement>) => void; onExportCsv: () => void; csvFrom: string; csvTo: string; setCsvFrom: (value: string) => void; setCsvTo: (value: string) => void; counts: { foods: number; meals: number } }
-function SettingsView({ settings, goalInputs, setGoalInputs, onSaveGoals, onToggleExternalApi, onChangeDefaultMealTimeMode, onExportJson, onRestoreJson, onExportCsv, csvFrom, csvTo, setCsvFrom, setCsvTo, counts }: SettingsViewProps) {
-  return <><section className="page-heading"><div><span className="eyebrow">SETTINGS</span><h1>設定・データ管理</h1></div></section><section className="settings-card"><div className="section-title"><div><span className="eyebrow">GOALS</span><h2>栄養目標</h2></div></div><form onSubmit={onSaveGoals} className="goal-form">{NUTRIENT_KEYS.map((key) => <label key={key}>{NUTRIENT_LABELS[key]}<div className="unit-input"><input type="number" min="0" step="any" value={goalInputs[key]} onChange={(event) => setGoalInputs((current) => ({ ...current, [key]: event.target.value }))} placeholder="未設定" /><span>{NUTRIENT_UNITS[key]}</span></div></label>)}<button className="button primary" type="submit">目標を保存</button></form></section><section className="settings-card"><div className="section-title"><div><span className="eyebrow">MEAL TIME</span><h2>食事時刻</h2></div></div><label>既定の時刻入力<select value={settings.mealTimeMode ?? 'auto'} onChange={(event) => onChangeDefaultMealTimeMode(event.target.value as MealTimeMode)}><option value="auto">現在時刻を自動挿入</option><option value="manual">自分で入力</option></select></label></section><section className="settings-card"><div className="section-title"><div><span className="eyebrow">BACKUP</span><h2>バックアップ</h2></div></div><div className="data-stats"><div><strong>{counts.foods}</strong><span>食品</span></div><div><strong>{counts.meals}</strong><span>食事記録</span></div><div><strong>{settings.dataFormatVersion}</strong><span>データ形式</span></div></div><p className="helper-text">最終バックアップ: {settings.lastBackupAt ? formatDateTime(settings.lastBackupAt) : '未作成'}</p><label className="toggle-row"><input type="checkbox" checked={settings.externalApiEnabled} onChange={(event) => onToggleExternalApi(event.target.checked)} />食品が見つからないときにOpen Food Factsを検索する</label><InfoPopover className="settings-info" label="外部APIについて" text="外部APIにはバーコード番号のみを送り、取得値は確認後に保存します。通信失敗時は手入力へ進みます。" /><div className="backup-actions"><button className="button primary" type="button" onClick={onExportJson}>JSONを出力</button><label className="button secondary file-button">JSONを復元<input type="file" accept="application/json,.json" onChange={onRestoreJson} /></label></div><InfoPopover className="settings-info" label="復元について" text="復元前に現在データを自動退避し、復元方式は全置換です。不正ファイルは変更を行いません。" /></section><section className="settings-card"><div className="section-title"><div><span className="eyebrow">CSV EXPORT</span><h2>食事履歴をCSV出力</h2></div></div><div className="date-range"><label>開始日<input type="date" value={csvFrom} onChange={(event) => setCsvFrom(event.target.value)} /></label><span>〜</span><label>終了日<input type="date" value={csvTo} onChange={(event) => setCsvTo(event.target.value)} /></label></div><button className="button secondary" type="button" onClick={onExportCsv}>CSVを出力</button><InfoPopover className="settings-info" label="CSV出力について" text="UTF-8 BOM付き。CSVは閲覧・分析用で、復元には使いません。" /></section></>
+interface SettingsViewProps {
+  settings: Awaited<ReturnType<typeof getSettings>>
+  goalInputs: Record<NutrientKey, string>
+  setGoalInputs: React.Dispatch<React.SetStateAction<Record<NutrientKey, string>>>
+  onSaveGoals: (event: React.FormEvent<HTMLFormElement>) => void
+  onToggleExternalApi: (enabled: boolean) => void
+  onChangeDefaultMealTimeMode: (mode: MealTimeMode) => void
+  onExportJson: () => void
+  onRestoreJson: (event: React.ChangeEvent<HTMLInputElement>) => void
+  onExportCsv: () => void
+  onImportCsv: (event: React.ChangeEvent<HTMLInputElement>) => void
+  csvFrom: string
+  csvTo: string
+  setCsvFrom: (value: string) => void
+  setCsvTo: (value: string) => void
+  counts: { foods: number; meals: number; menus: number; menuSets: number }
+}
+
+function SettingsView({ settings, goalInputs, setGoalInputs, onSaveGoals, onToggleExternalApi, onChangeDefaultMealTimeMode, onExportJson, onRestoreJson, onExportCsv, onImportCsv, csvFrom, csvTo, setCsvFrom, setCsvTo, counts }: SettingsViewProps) {
+  return <>
+    <section className="page-heading"><div><span className="eyebrow">SETTINGS</span><h1>設定・データ管理</h1></div></section>
+    <section className="settings-card">
+      <div className="section-title"><div><span className="eyebrow">GOALS</span><h2>栄養目標</h2></div></div>
+      <form onSubmit={onSaveGoals} className="goal-form">
+        {NUTRIENT_KEYS.map((key) => <label key={key}>{NUTRIENT_LABELS[key]}<div className="unit-input"><input type="number" min="0" step="any" value={goalInputs[key]} onChange={(event) => setGoalInputs((current) => ({ ...current, [key]: event.target.value }))} placeholder="未設定" /><span>{NUTRIENT_UNITS[key]}</span></div></label>)}
+        <button className="button primary" type="submit">目標を保存</button>
+      </form>
+    </section>
+    <section className="settings-card">
+      <div className="section-title"><div><span className="eyebrow">MEAL TIME</span><h2>食事時刻</h2></div></div>
+      <label>既定の時刻入力<select value={settings.mealTimeMode ?? 'auto'} onChange={(event) => onChangeDefaultMealTimeMode(event.target.value as MealTimeMode)}><option value="auto">現在時刻を自動挿入</option><option value="manual">自分で入力</option></select></label>
+    </section>
+    <section className="settings-card">
+      <div className="section-title"><div><span className="eyebrow">BACKUP</span><h2>バックアップ</h2></div></div>
+      <div className="data-stats">
+        <div><strong>{counts.foods}</strong><span>食品</span></div>
+        <div><strong>{counts.meals}</strong><span>食事記録</span></div>
+        <div><strong>{settings.dataFormatVersion}</strong><span>データ形式</span></div>
+        <div><strong>{counts.menus}</strong><span>料理メニュー</span></div>
+        <div><strong>{counts.menuSets}</strong><span>メニューセット</span></div>
+      </div>
+      <p className="helper-text">最終バックアップ: {settings.lastBackupAt ? formatDateTime(settings.lastBackupAt) : '未作成'}</p>
+      <div className="settings-inline-row">
+        <label className="toggle-row"><input type="checkbox" checked={settings.externalApiEnabled} onChange={(event) => onToggleExternalApi(event.target.checked)} />食品が見つからないときにOpen Food Factsを検索する</label>
+        <InfoPopover className="settings-info" label="外部APIについて" text="外部APIにはバーコード番号のみを送り、取得値は確認後に保存します。通信失敗時は手入力へ進みます。" />
+      </div>
+      <div className="backup-actions">
+        <div className="backup-action-item">
+          <button className="button primary" type="button" onClick={onExportJson}>JSONを出力</button>
+          <InfoPopover className="settings-info" label="JSONバックアップについて" text="JSONには食品、食事記録、お気に入り、料理メニュー、メニューセット、設定を含めます。復元前には現在データを自動退避します。" />
+        </div>
+        <label className="button secondary file-button">JSONを復元<input type="file" accept="application/json,.json" onChange={onRestoreJson} /></label>
+      </div>
+    </section>
+    <section className="settings-card">
+      <div className="section-title"><div><span className="eyebrow">CSV EXPORT / IMPORT</span><h2>食事履歴CSV</h2></div></div>
+      <div className="date-range"><label>開始日<input type="date" value={csvFrom} onChange={(event) => setCsvFrom(event.target.value)} /></label><span>〜</span><label>終了日<input type="date" value={csvTo} onChange={(event) => setCsvTo(event.target.value)} /></label></div>
+      <div className="csv-action-row">
+        <button className="button secondary" type="button" onClick={onExportCsv}>CSVを出力</button>
+        <InfoPopover className="settings-info" label="CSVについて" text="UTF-8 BOM付きです。このPWAで出力したCSVは食事履歴の復元に使えます。取り込み時は同じIDの記録を上書きします。" />
+      </div>
+      <label className="button secondary file-button csv-import-button">CSVを取り込む<input type="file" accept="text/csv,.csv" onChange={onImportCsv} /></label>
+    </section>
+  </>
 }
 
 function SettingsExtras({ bodyProfileInputs, setBodyProfileInputs, onSaveBodyProfile, onOpenNewFood, estimatedGoals, bmi }: { bodyProfileInputs: BodyProfileDraft; setBodyProfileInputs: React.Dispatch<React.SetStateAction<BodyProfileDraft>>; onSaveBodyProfile: (event: React.FormEvent<HTMLFormElement>) => void; onOpenNewFood: () => void; estimatedGoals: NutritionGoals | null; bmi: number | null }) {

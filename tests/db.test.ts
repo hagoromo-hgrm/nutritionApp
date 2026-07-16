@@ -25,6 +25,14 @@ describe('IndexedDB data safety', () => {
     expect(egg?.baseUnit).toBe('個')
   })
 
+  it('MEXTの収集済み食品を初期データとして検索できる', async () => {
+    expect(await db.foods.count()).toBeGreaterThan(2500)
+    const amaranth = await db.foods.get('mext_01001')
+    expect(amaranth?.baseUnit).toBe('g')
+    expect(amaranth?.nutrients.calciumMg).toBe(160)
+    expect(amaranth?.sourceVersion).toContain('増補2023年')
+  })
+
   it('食品削除時も食事記録とスナップショットを残す', async () => {
     await saveFood(userFood)
     const entry: MealEntry = {

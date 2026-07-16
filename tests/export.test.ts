@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { validateBackup } from '../src/services/backup'
-import { CSV_HEADERS, mealsToCsv } from '../src/services/csv'
+import { CSV_HEADERS, mealsToCsv, parseMealsCsv } from '../src/services/csv'
 import type { BackupData, MealEntry } from '../src/types'
 
 const addedNutrients = { calciumMg: null, ironMg: null, vitaminAMcg: null, vitaminEMg: null, vitaminB1Mg: null, vitaminB2Mg: null, vitaminCMg: null, saturatedFatG: null }
@@ -23,6 +23,15 @@ describe('export formats', () => {
     expect(csv.split('\r\n')[0].slice(1).split(',')).toEqual(CSV_HEADERS)
     expect(csv).toContain('"米, 白米"')
     expect(csv).toContain('"メーカー""A"""')
+  })
+
+  it('このPWAで出力したCSVから食事スナップショットを復元できる', () => {
+    const restored = parseMealsCsv(mealsToCsv([entry]))
+    expect(restored).toEqual([entry])
+  })
+
+  it('列が欠けたCSVは取り込まない', () => {
+    expect(() => parseMealsCsv('\uFEFFid,date\r\nmeal_1,2026-07-15\r\n')).toThrow('列名と順序')
   })
 
   it('不正なバックアップは取り込まない', () => {

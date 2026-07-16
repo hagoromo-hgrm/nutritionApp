@@ -2,7 +2,7 @@
 """日本食品標準成分表等の確認済みCSVを、Nutrition PWAの食品JSONへ変換する。
 
 入力CSVの列:
-id,name,maker,barcode,base_amount,base_unit,energy_kcal,protein_g,fat_g,carbohydrate_g,fiber_g,salt_g
+id,name,maker,barcode,base_amount,base_unit,energy_kcal,protein_g,fat_g,carbohydrate_g,fiber_g,salt_g,calcium_mg,iron_mg,vitamin_a_mcg,vitamin_e_mg,vitamin_b1_mg,vitamin_b2_mg,vitamin_c_mg,saturated_fat_g
 
 元データの版・出典・取得日をコマンド引数で明示し、欠損値は null のまま出力する。
 """
@@ -24,13 +24,24 @@ NUTRIENTS = (
     ("carbohydrate_g", "carbohydrateG"),
     ("fiber_g", "fiberG"),
     ("salt_g", "saltG"),
+    ("calcium_mg", "calciumMg"),
+    ("iron_mg", "ironMg"),
+    ("vitamin_a_mcg", "vitaminAMcg"),
+    ("vitamin_e_mg", "vitaminEMg"),
+    ("vitamin_b1_mg", "vitaminB1Mg"),
+    ("vitamin_b2_mg", "vitaminB2Mg"),
+    ("vitamin_c_mg", "vitaminCMg"),
+    ("saturated_fat_g", "saturatedFatG"),
 )
 
 
 def number_or_none(value: str) -> Optional[float]:
     cleaned = value.strip()
-    if not cleaned:
+    if not cleaned or cleaned in {"-", "Tr", "(Tr)"}:
         return None
+    cleaned = cleaned.rstrip("†‡").strip()
+    if cleaned.startswith("(") and cleaned.endswith(")"):
+        cleaned = cleaned[1:-1].strip()
     return float(cleaned)
 
 

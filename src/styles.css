@@ -22,7 +22,7 @@ button { cursor: pointer; }
 button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid rgba(109, 158, 214, .3); outline-offset: 2px; }
 
 .app-shell { min-height: 100vh; padding-bottom: 9rem; }
-.app-header { max-width: 1120px; margin: 0 auto; padding: 1.25rem 1.5rem; display: flex; align-items: center; justify-content: space-between; }
+.app-header { max-width: 1120px; margin: 0 auto; padding: 1.25rem 1.5rem; display: flex; align-items: center; justify-content: flex-end; }
 .brand { display: flex; align-items: center; gap: .7rem; }
 .brand-mark { width: 2.6rem; height: 2.6rem; display: grid; place-items: center; border-radius: .85rem; color: #f7d58d; background: var(--accent-deep); font-family: inherit; font-weight: 800; font-size: 1.5rem; box-shadow: 0 .45rem 1rem rgba(69, 111, 159, .18); }
 .brand strong, .brand span { display: block; }
@@ -310,6 +310,9 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .info-popover { position: relative; display: flex; justify-content: flex-end; }
 .info-button { display: grid; place-items: center; width: 1.5rem; height: 1.5rem; border: 1px solid var(--accent); border-radius: 50%; color: var(--accent-deep); background: #eef5fd; font-size: .78rem; font-weight: 900; cursor: pointer; }
 .info-popover p { position: absolute; z-index: 4; right: 0; bottom: calc(100% + .45rem); width: min(21rem, calc(100vw - 3rem)); border: 1px solid var(--line); border-radius: .8rem; padding: .75rem .85rem; color: var(--muted); background: white; box-shadow: 0 .55rem 1.5rem rgba(69, 111, 159, .16); font-size: .68rem; line-height: 1.55; }
+.settings-inline-row { display: flex; align-items: center; justify-content: space-between; gap: .6rem; margin: .8rem 0 .35rem; }
+.settings-inline-row .toggle-row { min-width: 0; flex: 1; margin: 0; }
+.settings-inline-row .settings-info, .backup-action-item .settings-info, .csv-action-row .settings-info { flex: 0 0 auto; margin: 0; }
 .estimate-info-row { display: flex; align-items: center; justify-content: flex-end; gap: .5rem; margin-top: .75rem; color: var(--muted); font-size: .72rem; }
 .estimate-info { margin-top: 0; }
 .settings-info { margin-top: .45rem; }
@@ -321,12 +324,14 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .unit-input { display: flex; align-items: center; gap: .3rem; }
 .unit-input input { width: 100%; }
 .unit-input span { color: var(--muted); font-size: .72rem; }
-.data-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: .6rem; margin: 1rem 0; }
+.data-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(4.3rem, 1fr)); gap: .6rem; margin: 1rem 0; }
 .data-stats div { border-radius: .8rem; padding: .7rem; background: var(--soft); text-align: center; }
 .data-stats strong, .data-stats span { display: block; }
 .data-stats strong { color: var(--accent-deep); font-family: inherit; font-size: 1.25rem; font-weight: 800; }
 .data-stats span { color: var(--muted); font-size: .68rem; }
-.backup-actions { display: flex; flex-wrap: wrap; gap: .6rem; margin: 1rem 0 .7rem; }
+.backup-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; margin: 1rem 0 .7rem; }
+.backup-action-item, .csv-action-row { display: flex; align-items: center; gap: .45rem; }
+.csv-import-button { display: inline-block; margin-top: .1rem; }
 .file-button { position: relative; overflow: hidden; }
 .file-button input { position: absolute; inset: 0; cursor: pointer; opacity: 0; }
 .date-range { display: flex; align-items: end; gap: .55rem; margin: 1rem 0; }
@@ -351,6 +356,7 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .floating-add { position: fixed; z-index: 6; right: max(1rem, env(safe-area-inset-right)); bottom: calc(4.8rem + env(safe-area-inset-bottom)); display: grid; place-items: center; width: 3.5rem; height: 3.5rem; border: 0; border-radius: 50%; color: white; background: var(--accent); box-shadow: 0 .6rem 1.4rem rgba(69, 111, 159, .3); font-size: 1.8rem; line-height: 1; }
 
 .modal-backdrop { position: fixed; z-index: 10; inset: 0; display: grid; place-items: end center; overflow: hidden; padding: 1rem; overscroll-behavior: contain; background: rgba(47, 65, 84, .35); }
+.modal-backdrop[aria-label="今日の栄養詳細"], .modal-backdrop[aria-label="料理メニューを設定"], .modal-backdrop[aria-label="メニューセットを設定"] { padding-bottom: .35rem; }
 .modal-card { width: min(100%, 540px); max-height: calc(100vh - 2rem); overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; border-radius: 1.35rem; padding: 1.3rem; background: #fbfdff; box-shadow: 0 1.4rem 4rem rgba(48, 78, 112, .2); }
 .scanner-card { width: min(100%, 620px); }
 .modal-heading { display: flex; justify-content: space-between; align-items: start; gap: 1rem; margin-bottom: 1rem; }
