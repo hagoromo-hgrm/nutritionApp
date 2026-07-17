@@ -54,4 +54,16 @@ describe('export formats', () => {
     expect(validateBackup(withMenu).menuSets?.[0].menuIds).toEqual(['menu_1'])
     expect(validateBackup(withMenu).menuSets?.[0].foodIds).toEqual(['food_1'])
   })
+
+  it('検索ログと利用統計を含むバックアップを検証できる', () => {
+    const withSearchData: BackupData = {
+      ...backup,
+      foodGroups: [{ id: 'group_1', displayName: '食品', reading: null, category: null, representativeScore: 0, defaultVariantId: null, isActive: true, metadataSource: 'manual', generationVersion: 'test', needsReview: false, createdAt: '2026-07-15T00:00:00.000Z', updatedAt: '2026-07-15T00:00:00.000Z' }],
+      foodAliases: [{ id: 'alias_1', foodGroupId: 'group_1', foodVariantId: null, alias: 'しょくひん', normalizedAlias: 'しょくひん', aliasType: 'reading', priority: 100, isActive: true, metadataSource: 'manual' }],
+      foodRelatedTerms: [{ id: 'related_1', foodGroupId: 'group_1', term: '食材', normalizedTerm: '食材', weight: 0.5, isActive: true, metadataSource: 'manual' }],
+      foodUsageStats: [{ foodId: 'food_1', selectionCount: 2, lastSelectedAt: '2026-07-15T00:00:00.000Z', updatedAt: '2026-07-15T00:00:00.000Z' }],
+      searchLogs: [{ id: 'search_1', createdAt: '2026-07-15T00:00:00.000Z', query: '食品', normalizedQuery: '食品', resultCount: 1, processingMs: 1, items: [], selectedFoodGroupId: 'group_1', selectedFoodVariantId: 'food_1', selectedRank: 1, selectionElapsedMs: 2, unselected: false }],
+    }
+    expect(validateBackup(withSearchData).searchLogs?.[0].selectedFoodVariantId).toBe('food_1')
+  })
 })

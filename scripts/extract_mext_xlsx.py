@@ -18,7 +18,7 @@ from food_data_rules import add_measure_note, clean_food_name, leading_category,
 
 
 CSV_COLUMNS = (
-    "id", "name", "maker", "barcode", "base_amount", "base_unit",
+    "id", "official_name", "name", "maker", "barcode", "base_amount", "base_unit",
     "energy_kcal", "protein_g", "fat_g", "carbohydrate_g", "fiber_g", "salt_g",
     "calcium_mg", "iron_mg", "vitamin_a_mcg", "vitamin_e_mg", "vitamin_b1_mg",
     "vitamin_b2_mg", "vitamin_c_mg", "saturated_fat_g",
@@ -67,6 +67,7 @@ def main() -> None:
         factor = measure.reference_grams / 100
         rows.append({
             "id": food_id(row[1]),
+            "official_name": raw_name,
             "name": name,
             "maker": "",
             "barcode": "",

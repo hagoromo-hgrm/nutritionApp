@@ -1,6 +1,6 @@
 import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { db, deleteFood, getEntriesForDate, getSettings, initializeDatabase, saveFood, saveMealEntries, saveMealEntry, saveMenu, searchMenus } from '../src/db/db'
+import { db, deleteFood, exportBackup, getEntriesForDate, getSettings, initializeDatabase, recordFoodSelection, saveFood, saveMealEntries, saveMealEntry, saveMenu, searchFoodResults, searchMenus } from '../src/db/db'
 import type { Food, MealEntry, Menu } from '../src/types'
 
 const addedNutrients = { calciumMg: null, ironMg: null, vitaminAMcg: null, vitaminEMg: null, vitaminB1Mg: null, vitaminB2Mg: null, vitaminCMg: null, saturatedFatG: null }
@@ -41,6 +41,20 @@ describe('IndexedDB data safety', () => {
     expect(seasoning?.baseUnit).toBe('小さじ')
     expect(seasoning?.name).toContain('（小さじ1=')
     expect(foods.filter((food) => food.source === 'mext').some((food) => /^(＜|（|\()/.test(food.name))).toBe(false)
+    expect(await db.foodGroups.count()).toBeGreaterThan(2400)
+    expect(await db.foodAliases.where('normalizedAlias').equals('塩').count()).toBe(1)
+  })
+
+  it('食品グループ単位の関連度検索と個人利用統計を保存できる', async () => {
+    const searched = await searchFoodResults('塩')
+    expect(searched.page.results[0].group.displayName).toBe('食塩')
+    expect(searched.page.results[0].variants.length).toBeGreaterThan(1)
+    await recordFoodSelection(searched.logId, searched.page.results[0].group.id, searched.page.results[0].food.id, 1)
+    expect((await db.foodUsageStats.get(searched.page.results[0].food.id))?.selectionCount).toBe(1)
+    const backup = await exportBackup()
+    expect(backup.foodGroups?.length).toBeGreaterThan(2400)
+    expect(backup.searchLogs?.[0].selectedFoodGroupId).toBe('seasoning:salt')
+    expect(backup.foodUsageStats?.[0].foodId).toBe(searched.page.results[0].food.id)
   })
 
   it('食品削除時も食事記録とスナップショットを残す', async () => {

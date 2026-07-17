@@ -1,0 +1,9 @@
+{
+  "separatePairs": [
+    ["soybean", "tofu"],
+    ["soybean", "natto"],
+    ["milk", "low-fat-milk"],
+    ["salt", "reduced-salt"],
+    ["rice:white", "rice:brown"]
+  ]
+}

@@ -2,7 +2,7 @@
 """日本食品標準成分表等の確認済みCSVを、Nutrition PWAの食品JSONへ変換する。
 
 入力CSVの列:
-id,name,maker,barcode,base_amount,base_unit,energy_kcal,protein_g,fat_g,carbohydrate_g,fiber_g,salt_g,calcium_mg,iron_mg,vitamin_a_mcg,vitamin_e_mg,vitamin_b1_mg,vitamin_b2_mg,vitamin_c_mg,saturated_fat_g
+id,official_name,name,maker,barcode,base_amount,base_unit,energy_kcal,protein_g,fat_g,carbohydrate_g,fiber_g,salt_g,calcium_mg,iron_mg,vitamin_a_mcg,vitamin_e_mg,vitamin_b1_mg,vitamin_b2_mg,vitamin_c_mg,saturated_fat_g
 
 元データの版・出典・取得日をコマンド引数で明示し、欠損値は null のまま出力する。
 """
@@ -51,7 +51,9 @@ def convert_row(row: Dict[str, str], source_version: str, processed_at: str) -> 
     created_at = processed_at
     return {
         "id": row["id"].strip(),
+        "officialName": row.get("official_name", row["name"]).strip(),
         "name": clean_food_name(row["name"]),
+        "displayName": clean_food_name(row["name"]),
         "maker": row.get("maker", "").strip(),
         "barcode": row.get("barcode", "").strip(),
         "source": "mext",

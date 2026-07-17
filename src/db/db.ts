@@ -1,4 +1,5 @@
 import Dexie, { type Table } from 'dexie'
+import bundledSearchMetadata from '../../data/mext/processed/mext_search_metadata.json'
 import {
   DEFAULT_SETTINGS,
   DEFAULT_BODY_PROFILE,
@@ -7,16 +8,34 @@ import {
   type BackupData,
   type FavoriteRecord,
   type Food,
+  type FoodAlias,
+  type FoodGroup,
+  type FoodRelatedTerm,
+  type FoodUsageStat,
   type MealEntry,
   type MetadataRecord,
   type Menu,
   type MenuSet,
   type Nutrients,
+  type SearchLog,
 } from '../types'
 import { createId } from '../utils/id'
 import { estimateDailyGoals } from '../services/nutrition'
+import { normalizeSearchText, searchFoodResults as searchFoodResultsPure, type FoodSearchPage } from '../services/foodSearch'
 
-const INITIAL_FOODS_VERSION = 5
+const INITIAL_FOODS_VERSION = 6
+const SEARCH_METADATA_VERSION = 1
+
+interface BundledSearchMetadata {
+  metadata: { generationVersion: string }
+  groups: FoodGroup[]
+  aliases: FoodAlias[]
+  relatedTerms: FoodRelatedTerm[]
+  foodGroupByFoodId: Record<string, string>
+}
+
+const bundledMetadata = bundledSearchMetadata as unknown as BundledSearchMetadata
+const bundledGroupsById = new Map(bundledMetadata.groups.map((group) => [group.id, group]))
 
 export class NutritionDatabase extends Dexie {
   foods!: Table<Food, string>
@@ -26,6 +45,11 @@ export class NutritionDatabase extends Dexie {
   metadata!: Table<MetadataRecord, string>
   menus!: Table<Menu, string>
   menuSets!: Table<MenuSet, string>
+  foodGroups!: Table<FoodGroup, string>
+  foodAliases!: Table<FoodAlias, string>
+  foodRelatedTerms!: Table<FoodRelatedTerm, string>
+  foodUsageStats!: Table<FoodUsageStat, string>
+  searchLogs!: Table<SearchLog, string>
 
   constructor() {
     super('nutrition-pwa')
@@ -76,13 +100,68 @@ export class NutritionDatabase extends Dexie {
         calculatedNutrients: normalize(entry.calculatedNutrients),
       })))
     })
+    this.version(5).stores({
+      foods: 'id, name, maker, barcode, source, foodGroupId, updatedAt',
+      meal_entries: 'id, eatenAt, mealType, foodId',
+      favorites: 'foodId, createdAt',
+      settings: 'id',
+      metadata: 'key',
+      menus: 'id, name, category, updatedAt',
+      menu_sets: 'id, name, updatedAt',
+      food_groups: 'id, displayName, category, updatedAt',
+      food_aliases: 'id, foodGroupId, foodVariantId, normalizedAlias, isActive',
+      food_related_terms: 'id, foodGroupId, normalizedTerm, isActive',
+      food_usage_stats: 'foodId, selectionCount, lastSelectedAt, updatedAt',
+      search_logs: 'id, createdAt, normalizedQuery, selectedFoodGroupId, selectedFoodVariantId, unselected',
+    })
     this.mealEntries = this.table('meal_entries')
     this.menus = this.table('menus')
     this.menuSets = this.table('menu_sets')
+    this.foodGroups = this.table('food_groups')
+    this.foodAliases = this.table('food_aliases')
+    this.foodRelatedTerms = this.table('food_related_terms')
+    this.foodUsageStats = this.table('food_usage_stats')
+    this.searchLogs = this.table('search_logs')
   }
 }
 
 export const db = new NutritionDatabase()
+
+function enrichFoodForSearch(food: Food): Food {
+  const groupId = bundledMetadata.foodGroupByFoodId[food.id] ?? food.foodGroupId ?? `food:${food.id}`
+  const group = bundledGroupsById.get(groupId)
+  return { ...food, foodGroupId: groupId, displayName: food.displayName ?? group?.displayName ?? food.name, officialName: food.officialName ?? food.name }
+}
+
+async function ensureSearchMetadata(): Promise<void> {
+  await db.transaction('rw', [db.foods, db.foodGroups, db.foodAliases, db.foodRelatedTerms, db.metadata], async () => {
+    const foods = await db.foods.toArray()
+    const existingGroups = new Map((await db.foodGroups.toArray()).map((group) => [group.id, group]))
+    const now = new Date().toISOString()
+    const groupsToPut: FoodGroup[] = []
+    const foodsToPut: Food[] = []
+    for (const food of foods) {
+      const groupId = bundledMetadata.foodGroupByFoodId[food.id] ?? food.foodGroupId ?? `food:${food.id}`
+      const bundledGroup = bundledGroupsById.get(groupId)
+      const existingGroup = existingGroups.get(groupId)
+      if (bundledGroup && (!existingGroup || existingGroup.metadataSource !== 'manual')) groupsToPut.push({ ...bundledGroup, createdAt: existingGroup?.createdAt ?? now, updatedAt: now })
+      else if (!existingGroup) groupsToPut.push({ id: groupId, displayName: food.displayName ?? food.name, reading: food.reading ?? null, category: null, representativeScore: 0, defaultVariantId: food.id, isActive: true, metadataSource: 'rule', generationVersion: 'runtime-fallback', needsReview: true, createdAt: food.createdAt, updatedAt: food.updatedAt })
+      if (food.foodGroupId !== groupId || (bundledGroup && food.source === 'mext' && food.createdAt === food.updatedAt && food.displayName === undefined)) foodsToPut.push({ ...food, foodGroupId: groupId, displayName: food.displayName ?? bundledGroup?.displayName ?? food.name, officialName: food.officialName ?? food.name })
+    }
+    if (groupsToPut.length > 0) await db.foodGroups.bulkPut(groupsToPut)
+    if (foodsToPut.length > 0) await db.foods.bulkPut(foodsToPut)
+    const metadataVersion = await db.metadata.get('search-metadata-version')
+    if (metadataVersion?.value !== SEARCH_METADATA_VERSION) {
+      const currentAliases = new Map((await db.foodAliases.toArray()).map((alias) => [alias.id, alias]))
+      const aliasesToPut = bundledMetadata.aliases.filter((alias) => currentAliases.get(alias.id)?.metadataSource !== 'manual')
+      const currentRelated = new Map((await db.foodRelatedTerms.toArray()).map((term) => [term.id, term]))
+      const relatedToPut = bundledMetadata.relatedTerms.filter((term) => currentRelated.get(term.id)?.metadataSource !== 'manual')
+      if (aliasesToPut.length > 0) await db.foodAliases.bulkPut(aliasesToPut)
+      if (relatedToPut.length > 0) await db.foodRelatedTerms.bulkPut(relatedToPut)
+      await db.metadata.put({ key: 'search-metadata-version', value: SEARCH_METADATA_VERSION })
+    }
+  })
+}
 
 export async function initializeDatabase(): Promise<void> {
   const { initialFoods } = await import('../data/initialFoods')
@@ -94,17 +173,18 @@ export async function initializeDatabase(): Promise<void> {
   if (!seeded) {
     await db.transaction('rw', [db.foods, db.metadata], async () => {
       const existing = await db.foods.count()
-      if (existing === 0) await db.foods.bulkAdd(initialFoods)
+      if (existing === 0) await db.foods.bulkAdd(initialFoods.map(enrichFoodForSearch))
       await db.metadata.put({ key: 'initial-foods-seeded', value: true })
       await db.metadata.put({ key: 'initial-foods-version', value: INITIAL_FOODS_VERSION })
-      await db.metadata.put({ key: 'schema-version', value: 4 })
+      await db.metadata.put({ key: 'schema-version', value: 5 })
     })
   } else if (seedVersion?.value !== INITIAL_FOODS_VERSION) {
     await db.transaction('rw', [db.foods, db.metadata], async () => {
       for (const bundledFood of initialFoods) {
+        const enrichedFood = enrichFoodForSearch(bundledFood)
         const existing = await db.foods.get(bundledFood.id)
         if (!existing) {
-          await db.foods.add(bundledFood)
+          await db.foods.add(enrichedFood)
         } else if (
           existing.source === 'mext'
           && existing.createdAt === existing.updatedAt
@@ -113,13 +193,14 @@ export async function initializeDatabase(): Promise<void> {
             || existing.sourceVersion.includes('初期サンプル')
           )
         ) {
-          await db.foods.put(bundledFood)
+          await db.foods.put(enrichedFood)
         }
       }
       await db.metadata.put({ key: 'initial-foods-version', value: INITIAL_FOODS_VERSION })
-      await db.metadata.put({ key: 'schema-version', value: 4 })
+      await db.metadata.put({ key: 'schema-version', value: 5 })
     })
   }
+  await ensureSearchMetadata()
 }
 
 export async function getSettings(): Promise<AppSettings> {
@@ -147,12 +228,50 @@ export async function saveSettings(settings: AppSettings): Promise<void> {
 }
 
 export async function searchFoods(query: string): Promise<Food[]> {
-  const normalized = query.trim().toLocaleLowerCase('ja-JP')
-  if (!normalized) return db.foods.orderBy('name').toArray()
-  return db.foods
-    .filter((food) => [food.name, food.maker, food.barcode].some((field) => field.toLocaleLowerCase('ja-JP').includes(normalized)))
-    .sortBy('name')
+  const page = await searchFoodResults(query, { limit: 100 })
+  return page.page.results.map((result) => result.variants).flat()
 }
+
+export async function searchFoodResults(query: string, options: { limit?: number; cursor?: string | null } = {}): Promise<{ page: FoodSearchPage; logId: string }> {
+  const startedAt = performance.now()
+  const [foods, groups, aliases, relatedTerms, usageStats, favoriteIds] = await Promise.all([
+    db.foods.toArray(), db.foodGroups.toArray(), db.foodAliases.toArray(), db.foodRelatedTerms.toArray(), db.foodUsageStats.toArray(), getFavoriteIds(),
+  ])
+  const page = searchFoodResultsPure(query, { foods, groups, aliases, relatedTerms, usageStats, favoriteIds }, options)
+  const log: SearchLog = {
+    id: createId('search'), createdAt: new Date().toISOString(), query, normalizedQuery: page.normalizedQuery,
+    resultCount: page.results.length, processingMs: Math.max(0, performance.now() - startedAt),
+    items: page.results.map((result, index) => ({ foodGroupId: result.group.id, foodVariantId: result.food.id, rank: index + 1, score: result.score, matchedBy: result.matchedBy, scoreBreakdown: result.scoreBreakdown })),
+    selectedFoodGroupId: null, selectedFoodVariantId: null, selectedRank: null, selectionElapsedMs: null, unselected: false,
+  }
+  try { await db.searchLogs.put(log) } catch { /* ログ保存失敗で検索本体を止めない */ }
+  return { page, logId: log.id }
+}
+
+export async function recordFoodSelection(logId: string, groupId: string, foodId: string, rank: number): Promise<void> {
+  const now = new Date().toISOString()
+  try {
+    await db.transaction('rw', [db.foodUsageStats, db.searchLogs], async () => {
+      const current = await db.foodUsageStats.get(foodId)
+      await db.foodUsageStats.put({ foodId, selectionCount: (current?.selectionCount ?? 0) + 1, lastSelectedAt: now, updatedAt: now })
+      const log = await db.searchLogs.get(logId)
+      if (log) await db.searchLogs.put({ ...log, selectedFoodGroupId: groupId, selectedFoodVariantId: foodId, selectedRank: rank, selectionElapsedMs: Math.max(0, Date.now() - new Date(log.createdAt).getTime()), unselected: false })
+    })
+  } catch { /* 利用統計は補助情報。選択自体の成功を妨げない。 */ }
+}
+
+export async function markSearchLogUnselected(logId: string): Promise<void> {
+  try {
+    const log = await db.searchLogs.get(logId)
+    if (log && log.selectedFoodVariantId === null) await db.searchLogs.put({ ...log, unselected: true })
+  } catch { /* ログ更新失敗は検索画面の操作を妨げない。 */ }
+}
+
+export async function getAllFoodGroups(): Promise<FoodGroup[]> { return db.foodGroups.orderBy('displayName').toArray() }
+export async function getAllFoodAliases(): Promise<FoodAlias[]> { return db.foodAliases.toArray() }
+export async function getAllFoodRelatedTerms(): Promise<FoodRelatedTerm[]> { return db.foodRelatedTerms.toArray() }
+export async function getAllFoodUsageStats(): Promise<FoodUsageStat[]> { return db.foodUsageStats.toArray() }
+export async function getSearchLogs(): Promise<SearchLog[]> { return db.searchLogs.orderBy('createdAt').toArray() }
 
 export async function getFoodById(id: string): Promise<Food | undefined> {
   return db.foods.get(id)
@@ -163,7 +282,22 @@ export async function getFoodByBarcode(barcode: string): Promise<Food | undefine
 }
 
 export async function saveFood(food: Food): Promise<void> {
-  await db.foods.put(food)
+  const previous = await db.foods.get(food.id)
+  const merged: Food = {
+    ...previous,
+    ...food,
+    foodGroupId: food.foodGroupId ?? previous?.foodGroupId,
+    displayName: food.displayName ?? previous?.displayName,
+    officialName: food.officialName ?? previous?.officialName,
+  }
+  const enriched = enrichFoodForSearch(merged)
+  const existingGroup = await db.foodGroups.get(enriched.foodGroupId ?? '')
+  await db.transaction('rw', [db.foods, db.foodGroups], async () => {
+    await db.foods.put(enriched)
+    if (!existingGroup && enriched.foodGroupId) {
+      await db.foodGroups.put({ id: enriched.foodGroupId, displayName: enriched.displayName ?? enriched.name, reading: enriched.reading ?? null, category: null, representativeScore: 0, defaultVariantId: enriched.id, isActive: true, metadataSource: 'rule', generationVersion: 'runtime-fallback', needsReview: true, createdAt: enriched.createdAt, updatedAt: enriched.updatedAt })
+    }
+  })
 }
 
 export async function deleteFood(id: string): Promise<void> {
@@ -178,20 +312,26 @@ export async function getAllFoods(): Promise<Food[]> {
 }
 
 export async function searchMenus(query: string): Promise<Menu[]> {
-  const normalized = query.trim().toLocaleLowerCase('ja-JP')
+  const normalized = normalizeSearchText(query)
   const menus = await db.menus.orderBy('name').toArray()
   if (!normalized) return menus
   const ingredientFoods = await db.foods.bulkGet([...new Set(menus.flatMap((menu) => menu.foodIds))])
   const foodsById = new Map(ingredientFoods.filter((food): food is Food => Boolean(food)).map((food) => [food.id, food]))
-  return menus.filter((menu) => [menu.name, menu.category].some((field) => field.toLocaleLowerCase('ja-JP').includes(normalized))
+  const aliases = await db.foodAliases.toArray()
+  const aliasesByGroup = new Map<string, string[]>()
+  for (const alias of aliases) aliasesByGroup.set(alias.foodGroupId, [...(aliasesByGroup.get(alias.foodGroupId) ?? []), alias.alias])
+  const foodMatches = (food: Food) => [food.displayName ?? food.name, food.officialName ?? food.name, food.maker, food.reading ?? '', ...(food.foodGroupId ? aliasesByGroup.get(food.foodGroupId) ?? [] : [])]
+    .some((field) => normalizeSearchText(field).includes(normalized))
+  const textMatches = (field: string) => normalizeSearchText(field).includes(normalized)
+  return menus.filter((menu) => [menu.name, menu.category].some(textMatches)
     || menu.foodIds.some((foodId) => {
       const food = foodsById.get(foodId)
-      return food ? [food.name, food.maker, food.barcode].some((field) => field.toLocaleLowerCase('ja-JP').includes(normalized)) : false
+      return food ? foodMatches(food) : false
     }))
 }
 
 export async function searchMenuSets(query: string): Promise<MenuSet[]> {
-  const normalized = query.trim().toLocaleLowerCase('ja-JP')
+  const normalized = normalizeSearchText(query)
   const sets = await db.menuSets.orderBy('name').toArray()
   if (!normalized) return sets
   const menus = await db.menus.toArray()
@@ -199,15 +339,19 @@ export async function searchMenuSets(query: string): Promise<MenuSet[]> {
   const foodIds = [...new Set([...sets.flatMap((set) => set.foodIds ?? []), ...menus.flatMap((menu) => menu.foodIds)])]
   const ingredientFoods = await db.foods.bulkGet(foodIds)
   const foodsById = new Map(ingredientFoods.filter((food): food is Food => Boolean(food)).map((food) => [food.id, food]))
+  const aliases = await db.foodAliases.toArray()
+  const aliasesByGroup = new Map<string, string[]>()
+  for (const alias of aliases) aliasesByGroup.set(alias.foodGroupId, [...(aliasesByGroup.get(alias.foodGroupId) ?? []), alias.alias])
   const foodMatches = (foodId: string) => {
     const food = foodsById.get(foodId)
-    return food ? [food.name, food.maker, food.barcode].some((field) => field.toLocaleLowerCase('ja-JP').includes(normalized)) : false
+    return food ? [food.displayName ?? food.name, food.officialName ?? food.name, food.maker, food.reading ?? '', ...(food.foodGroupId ? aliasesByGroup.get(food.foodGroupId) ?? [] : [])].some((field) => normalizeSearchText(field).includes(normalized)) : false
   }
+  const textMatches = (field: string) => normalizeSearchText(field).includes(normalized)
   const menuMatches = (menuId: string) => {
     const menu = menuById.get(menuId)
-    return menu ? [menu.name, menu.category].some((field) => field.toLocaleLowerCase('ja-JP').includes(normalized)) || menu.foodIds.some(foodMatches) : false
+    return menu ? [menu.name, menu.category].some(textMatches) || menu.foodIds.some(foodMatches) : false
   }
-  return sets.filter((set) => set.name.toLocaleLowerCase('ja-JP').includes(normalized) || (set.foodIds ?? []).some(foodMatches) || set.menuIds.some(menuMatches))
+  return sets.filter((set) => textMatches(set.name) || (set.foodIds ?? []).some(foodMatches) || set.menuIds.some(menuMatches))
 }
 
 export async function getAllMenus(): Promise<Menu[]> {
@@ -303,6 +447,11 @@ export async function exportBackup(): Promise<BackupData> {
     foods: await db.foods.toArray(),
     mealEntries: await db.mealEntries.toArray(),
     favorites: await db.favorites.toArray(),
+    foodGroups: await db.foodGroups.toArray(),
+    foodAliases: await db.foodAliases.toArray(),
+    foodRelatedTerms: await db.foodRelatedTerms.toArray(),
+    foodUsageStats: await db.foodUsageStats.toArray(),
+    searchLogs: await db.searchLogs.toArray(),
     menus: await db.menus.toArray(),
     menuSets: await db.menuSets.toArray(),
     settings,
@@ -310,7 +459,7 @@ export async function exportBackup(): Promise<BackupData> {
 }
 
 export async function replaceAllData(backup: BackupData): Promise<void> {
-  await db.transaction('rw', [db.foods, db.mealEntries, db.favorites, db.settings, db.metadata, db.menus, db.menuSets], async () => {
+  await db.transaction('rw', [db.foods, db.mealEntries, db.favorites, db.settings, db.metadata, db.menus, db.menuSets, db.foodGroups, db.foodAliases, db.foodRelatedTerms, db.foodUsageStats, db.searchLogs], async () => {
     await db.foods.clear()
     await db.mealEntries.clear()
     await db.favorites.clear()
@@ -318,16 +467,30 @@ export async function replaceAllData(backup: BackupData): Promise<void> {
     await db.metadata.clear()
     await db.menus.clear()
     await db.menuSets.clear()
+    await db.foodGroups.clear()
+    await db.foodAliases.clear()
+    await db.foodRelatedTerms.clear()
+    await db.foodUsageStats.clear()
+    await db.searchLogs.clear()
     if (backup.foods.length) await db.foods.bulkAdd(backup.foods)
     if (backup.mealEntries.length) await db.mealEntries.bulkAdd(backup.mealEntries)
     if (backup.favorites.length) await db.favorites.bulkAdd(backup.favorites)
     if (backup.menus?.length) await db.menus.bulkAdd(backup.menus)
     if (backup.menuSets?.length) await db.menuSets.bulkAdd(backup.menuSets)
+    if (backup.foodGroups?.length) await db.foodGroups.bulkAdd(backup.foodGroups)
+    if (backup.foodAliases?.length) await db.foodAliases.bulkAdd(backup.foodAliases)
+    if (backup.foodRelatedTerms?.length) await db.foodRelatedTerms.bulkAdd(backup.foodRelatedTerms)
+    if (backup.foodUsageStats?.length) await db.foodUsageStats.bulkAdd(backup.foodUsageStats)
+    if (backup.searchLogs?.length) await db.searchLogs.bulkAdd(backup.searchLogs)
     await db.settings.put(backup.settings)
-    await db.metadata.put({ key: 'schema-version', value: 3 })
+    await db.metadata.put({ key: 'schema-version', value: 5 })
     await db.metadata.put({ key: 'initial-foods-seeded', value: true })
-    await db.metadata.put({ key: 'initial-foods-version', value: 2 })
+    await db.metadata.put({ key: 'initial-foods-version', value: INITIAL_FOODS_VERSION })
+    if (backup.foodAliases !== undefined && backup.foodRelatedTerms !== undefined) {
+      await db.metadata.put({ key: 'search-metadata-version', value: SEARCH_METADATA_VERSION })
+    }
   })
+  await ensureSearchMetadata()
 }
 
 export function createNewFoodId(): string {

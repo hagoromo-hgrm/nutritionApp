@@ -326,8 +326,21 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .search-result-copy strong, .search-result-copy small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .search-result-copy strong { font-size: .8rem; }
 .search-result-copy small { color: var(--muted); font-size: .68rem; }
+.search-result-meta { display: flex; flex-wrap: wrap; gap: .25rem .5rem; color: var(--muted); font-size: .62rem; }
+.search-result-meta em { border-radius: 99px; padding: .12rem .35rem; color: var(--accent-deep); background: #e8f3ff; font-style: normal; font-weight: 800; }
 .search-empty-state { display: grid; justify-items: center; gap: .65rem; padding: 1.1rem .9rem 1.25rem; color: var(--muted); font-size: .78rem; text-align: center; }
 .search-empty-state .button { padding: .55rem .8rem; font-size: .74rem; }
+.search-load-more { width: calc(100% - 1.8rem); margin: .8rem .9rem; }
+.variant-picker-modal { padding-bottom: 1rem; }
+.variant-picker-modal .muted { margin-top: .35rem; }
+.variant-list { display: grid; gap: .45rem; }
+.variant-row { display: flex; align-items: center; justify-content: space-between; gap: .7rem; width: 100%; border: 1px solid var(--line); border-radius: .75rem; padding: .7rem .75rem; color: var(--ink); background: white; text-align: left; }
+.variant-row:hover, .variant-row.is-default { border-color: #9ec5ed; background: #f4f9ff; }
+.variant-row > span { display: grid; min-width: 0; gap: .2rem; }
+.variant-row strong, .variant-row small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.variant-row strong { font-size: .78rem; }
+.variant-row small { color: var(--muted); font-size: .65rem; }
+.variant-row em { flex: 0 0 auto; border-radius: 99px; padding: .2rem .4rem; color: var(--accent-deep); background: #e8f3ff; font-size: .62rem; font-style: normal; font-weight: 800; }
 .menu-list { display: grid; gap: .65rem; }
 .menu-card { display: flex; align-items: center; justify-content: space-between; gap: .8rem; border: 1px solid var(--line); border-radius: 1rem; padding: .9rem; background: white; }
 .menu-card > div:first-child { min-width: 0; display: grid; gap: .35rem; }

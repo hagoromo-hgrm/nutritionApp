@@ -1,4 +1,4 @@
-import { NUTRIENT_KEYS, type AppSettings, type BackupData, type Food, type MealEntry, type Menu, type MenuSet, type Nutrients } from '../types'
+import { NUTRIENT_KEYS, type AppSettings, type BackupData, type Food, type FoodAlias, type FoodGroup, type FoodRelatedTerm, type FoodUsageStat, type MealEntry, type Menu, type MenuSet, type Nutrients, type SearchLog } from '../types'
 import { isNutrients, isValidUnit } from '../utils/validation'
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -22,6 +22,10 @@ function isFood(value: unknown): value is Food {
     && (value.servingUnit === null || isValidUnit(String(value.servingUnit)))
     && isNutrients(value.nutrients) && isString(value.createdAt) && isString(value.updatedAt)
     && (value.menuIds === undefined || (Array.isArray(value.menuIds) && value.menuIds.every(isString)))
+    && (value.officialName === undefined || isString(value.officialName))
+    && (value.displayName === undefined || isString(value.displayName))
+    && (value.reading === undefined || value.reading === null || isString(value.reading))
+    && (value.foodGroupId === undefined || isString(value.foodGroupId))
 }
 
 function isSnapshot(value: unknown): boolean {
@@ -29,6 +33,53 @@ function isSnapshot(value: unknown): boolean {
   return isString(value.name) && isString(value.maker) && isString(value.barcode)
     && typeof value.baseAmount === 'number' && value.baseAmount > 0 && isValidUnit(String(value.baseUnit))
     && isNutrients(value.nutrients)
+    && (value.officialName === undefined || isString(value.officialName))
+    && (value.displayName === undefined || isString(value.displayName))
+}
+
+function isFoodGroup(value: unknown): value is FoodGroup {
+  if (!isRecord(value)) return false
+  return isString(value.id) && isString(value.displayName) && (value.reading === null || isString(value.reading))
+    && (value.category === null || isString(value.category)) && typeof value.representativeScore === 'number'
+    && (value.defaultVariantId === null || isString(value.defaultVariantId)) && typeof value.isActive === 'boolean'
+    && ['llm', 'rule', 'manual', 'imported'].includes(String(value.metadataSource)) && isString(value.generationVersion)
+    && typeof value.needsReview === 'boolean' && isString(value.createdAt) && isString(value.updatedAt)
+}
+
+function isFoodAlias(value: unknown): value is FoodAlias {
+  if (!isRecord(value)) return false
+  return isString(value.id) && isString(value.foodGroupId) && (value.foodVariantId === null || isString(value.foodVariantId))
+    && isString(value.alias) && isString(value.normalizedAlias) && ['synonym', 'reading', 'abbreviation'].includes(String(value.aliasType))
+    && typeof value.priority === 'number' && typeof value.isActive === 'boolean' && ['llm', 'rule', 'manual', 'imported'].includes(String(value.metadataSource))
+}
+
+function isFoodRelatedTerm(value: unknown): value is FoodRelatedTerm {
+  if (!isRecord(value)) return false
+  return isString(value.id) && isString(value.foodGroupId) && isString(value.term) && isString(value.normalizedTerm)
+    && typeof value.weight === 'number' && value.weight >= 0 && value.weight <= 1 && typeof value.isActive === 'boolean'
+    && ['llm', 'rule', 'manual', 'imported'].includes(String(value.metadataSource))
+}
+
+function isFoodUsageStat(value: unknown): value is FoodUsageStat {
+  if (!isRecord(value)) return false
+  return isString(value.foodId) && typeof value.selectionCount === 'number' && value.selectionCount >= 0
+    && (value.lastSelectedAt === null || isString(value.lastSelectedAt)) && isString(value.updatedAt)
+}
+
+function isSearchLogItem(value: unknown): boolean {
+  if (!isRecord(value) || !isString(value.foodGroupId) || !isString(value.foodVariantId) || typeof value.rank !== 'number' || typeof value.score !== 'number' || !isString(value.matchedBy) || !isRecord(value.scoreBreakdown)) return false
+  const breakdown = value.scoreBreakdown as Record<string, unknown>
+  return ['text', 'representative', 'personalFrequency', 'recent', 'total'].every((key) => typeof breakdown[key] === 'number')
+}
+
+function isSearchLog(value: unknown): value is SearchLog {
+  if (!isRecord(value)) return false
+  return isString(value.id) && isString(value.createdAt) && isString(value.query) && isString(value.normalizedQuery)
+    && typeof value.resultCount === 'number' && typeof value.processingMs === 'number' && Array.isArray(value.items) && value.items.every(isSearchLogItem)
+    && (value.selectedFoodGroupId === null || isString(value.selectedFoodGroupId))
+    && (value.selectedFoodVariantId === null || isString(value.selectedFoodVariantId))
+    && (value.selectedRank === null || typeof value.selectedRank === 'number')
+    && (value.selectionElapsedMs === null || typeof value.selectionElapsedMs === 'number') && typeof value.unselected === 'boolean'
 }
 
 function isMealEntry(value: unknown): value is MealEntry {
@@ -87,6 +138,13 @@ export function validateBackup(value: unknown): BackupData {
   }
   if (!value.favorites.every((favorite) => isRecord(favorite) && isString(favorite.foodId) && isString(favorite.createdAt))) {
     throw new Error('お気に入り情報の形式が不正です。')
+  }
+  if ((value.foodGroups !== undefined && (!Array.isArray(value.foodGroups) || !value.foodGroups.every(isFoodGroup)))
+    || (value.foodAliases !== undefined && (!Array.isArray(value.foodAliases) || !value.foodAliases.every(isFoodAlias)))
+    || (value.foodRelatedTerms !== undefined && (!Array.isArray(value.foodRelatedTerms) || !value.foodRelatedTerms.every(isFoodRelatedTerm)))
+    || (value.foodUsageStats !== undefined && (!Array.isArray(value.foodUsageStats) || !value.foodUsageStats.every(isFoodUsageStat)))
+    || (value.searchLogs !== undefined && (!Array.isArray(value.searchLogs) || !value.searchLogs.every(isSearchLog)))) {
+    throw new Error('食品グループ、検索メタデータ、利用統計または検索ログの形式が不正です。')
   }
   // 旧形式のバックアップは元の形を保ったまま復元し、読み込み側の設定正規化に任せる。
   return value as unknown as BackupData

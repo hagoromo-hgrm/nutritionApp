@@ -25,3 +25,12 @@ python scripts/convert_food_data.py data/mext/processed/mext_foods.csv data/mext
 `extract_mext_xlsx.py`の実行には、`requirements-data.txt`のデータ変換用依存関係が必要です。アプリのバンドルには含めません。
 
 変換時に食品名の先頭にある成分表の分類見出し（例: `＜調味料類＞`、`（調味ソース類）`）を除去します。食品の状態や調理方法などの注記は保持します。小さじ・個・合などへ換算した食品は、元データの100g基準値をその代表重量に比例換算しています。換算根拠がない食品は推測で変換せず、100g基準のままです。
+
+検索用メタデータは、`food_group_known_good.json` の確認済み候補と、未整備食品の保守的な1食品1グループのフォールバックからオフライン生成します。
+
+```bash
+python scripts/build_food_search_metadata.py data/mext/processed/mext_foods.json data/mext/processed/mext_search_metadata.json --known-good data/mext/food_group_known_good.json
+python scripts/validate_food_master.py data/mext/processed/mext_search_metadata.json
+```
+
+LLMを使う場合も、`scripts/generate_food_master_candidates.py` で候補入力・構造化出力の検証を別工程として行い、アプリ実行時には呼び出しません。

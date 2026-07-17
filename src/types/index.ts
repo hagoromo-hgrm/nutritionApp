@@ -41,6 +41,7 @@ export const NUTRIENT_UNITS: Record<NutrientKey, string> = {
 }
 
 export type FoodSource = 'mext' | 'open_food_facts' | 'user'
+export type SearchMetadataSource = 'llm' | 'rule' | 'manual' | 'imported'
 export type FoodUnit = 'g' | 'ml' | '個' | '合' | '袋' | '本' | '枚' | '食' | '丁' | '小さじ' | 'その他'
 export type MealType = '朝食' | '昼食' | '夕食' | '間食'
 export type MealTimeMode = 'auto' | 'manual'
@@ -56,6 +57,9 @@ export const MENU_CATEGORIES: MenuCategory[] = ['主食', '主菜', '副菜', '�
 export interface Food {
   id: string
   name: string
+  officialName?: string
+  displayName?: string
+  reading?: string | null
   maker: string
   barcode: string
   source: FoodSource
@@ -65,13 +69,104 @@ export interface Food {
   servingAmount: number | null
   servingUnit: FoodUnit | null
   menuIds?: string[]
+  foodGroupId?: string
+  variantAttributes?: FoodVariantAttributes
   nutrients: Nutrients
   createdAt: string
   updatedAt: string
 }
 
+export interface FoodVariantAttributes {
+  species?: string | null
+  part?: string | null
+  skin?: string | null
+  preparation?: string | null
+  processing?: string | null
+  variety?: string | null
+}
+
+export interface FoodGroup {
+  id: string
+  displayName: string
+  reading: string | null
+  category: string | null
+  representativeScore: number
+  defaultVariantId: string | null
+  isActive: boolean
+  metadataSource: SearchMetadataSource
+  generationVersion: string
+  needsReview: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export type FoodAliasType = 'synonym' | 'reading' | 'abbreviation'
+
+export interface FoodAlias {
+  id: string
+  foodGroupId: string
+  foodVariantId: string | null
+  alias: string
+  normalizedAlias: string
+  aliasType: FoodAliasType
+  priority: number
+  isActive: boolean
+  metadataSource: SearchMetadataSource
+}
+
+export interface FoodRelatedTerm {
+  id: string
+  foodGroupId: string
+  term: string
+  normalizedTerm: string
+  weight: number
+  isActive: boolean
+  metadataSource: SearchMetadataSource
+}
+
+export interface FoodUsageStat {
+  foodId: string
+  selectionCount: number
+  lastSelectedAt: string | null
+  updatedAt: string
+}
+
+export interface SearchScoreBreakdown {
+  text: number
+  representative: number
+  personalFrequency: number
+  recent: number
+  total: number
+}
+
+export interface SearchLogItem {
+  foodGroupId: string
+  foodVariantId: string
+  rank: number
+  score: number
+  matchedBy: string
+  scoreBreakdown: SearchScoreBreakdown
+}
+
+export interface SearchLog {
+  id: string
+  createdAt: string
+  query: string
+  normalizedQuery: string
+  resultCount: number
+  processingMs: number
+  items: SearchLogItem[]
+  selectedFoodGroupId: string | null
+  selectedFoodVariantId: string | null
+  selectedRank: number | null
+  selectionElapsedMs: number | null
+  unselected: boolean
+}
+
 export interface FoodSnapshot {
   name: string
+  officialName?: string
+  displayName?: string
   maker: string
   barcode: string
   baseAmount: number
@@ -162,6 +257,11 @@ export interface BackupData {
   foods: Food[]
   mealEntries: MealEntry[]
   favorites: FavoriteRecord[]
+  foodGroups?: FoodGroup[]
+  foodAliases?: FoodAlias[]
+  foodRelatedTerms?: FoodRelatedTerm[]
+  foodUsageStats?: FoodUsageStat[]
+  searchLogs?: SearchLog[]
   menus?: Menu[]
   menuSets?: MenuSet[]
   settings: AppSettings
