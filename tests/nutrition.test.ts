@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { calculateBmi, calculateNutrients, estimateDailyEnergyTarget, estimateDailyGoals, formatNutrient, goalRate, nutrientRangeForGoals, scaleNutritionGoals, sumByMealType, sumNutrients } from '../src/services/nutrition'
+import { calculateBmi, calculateNutrients, estimateDailyEnergyTarget, estimateDailyGoals, formatNutrient, goalRate, incrementByBaseAmount, nutrientRangeForGoals, scaleNutritionGoals, sumByMealType, sumNutrients } from '../src/services/nutrition'
 import type { BodyProfile, Food, MealEntry, Nutrients } from '../src/types'
 
 const addedNutrients = { calciumMg: null, ironMg: null, vitaminAMcg: null, vitaminEMg: null, vitaminB1Mg: null, vitaminB2Mg: null, vitaminCMg: null, saturatedFatG: null }
@@ -18,6 +18,12 @@ describe('nutrition calculation', () => {
     expect(result.proteinG).toBe(5)
     expect(result.fatG).toBeNull()
     expect(result.saltG).toBe(0.5)
+  })
+
+  it('＋1は基準量一つ分を増やす', () => {
+    expect(incrementByBaseAmount(100, 100)).toBe(200)
+    expect(incrementByBaseAmount(1, 1)).toBe(2)
+    expect(incrementByBaseAmount(Number.NaN, 1)).toBe(1)
   })
 
   it('単位が異なる場合は推測変換しない', () => {

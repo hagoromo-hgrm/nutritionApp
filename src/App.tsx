@@ -2,6 +2,7 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } fro
 import { registerSW } from 'virtual:pwa-register'
 import {
   createNewFoodId,
+  createNewFoodGroupId,
   createNewMealId,
   createNewMenuId,
   createNewMenuSetId,
@@ -16,6 +17,9 @@ import {
   getAllFoods,
   getAllMenus,
   getAllMenuSets,
+  getAllFoodAliases,
+  getAllFoodGroups,
+  getAllFoodRelatedTerms,
   getFavoriteFoods,
   getFavoriteIds,
   getFoodByBarcode,
@@ -25,7 +29,7 @@ import {
   markSearchLogUnselected,
   replaceAllData,
   recordFoodSelection,
-  saveFood,
+  saveFoodWithMetadata,
   saveMealEntries,
   saveMealEntry,
   saveMenu,
@@ -39,7 +43,7 @@ import {
 import { searchExternalFood, type ExternalFoodPreview } from './services/externalFoodApi'
 import { backupToJson, downloadBlob, parseBackupText } from './services/backup'
 import { mealsToCsv, parseMealsCsv } from './services/csv'
-import { calculateBmi, calculateNutrients, estimateDailyGoals, formatNutrient, goalRate, nutrientRangeForGoals, scaleNutritionGoals, sumByMealType, sumEntries, sumNutrients } from './services/nutrition'
+import { calculateBmi, calculateNutrients, estimateDailyGoals, formatNutrient, goalRate, incrementByBaseAmount, nutrientRangeForGoals, scaleNutritionGoals, sumByMealType, sumEntries, sumNutrients } from './services/nutrition'
 import { buildDailyNutrientTrend } from './services/trend'
 import {
   EMPTY_NUTRIENTS,
@@ -51,7 +55,11 @@ import {
   MENU_CATEGORIES,
   DEFAULT_BODY_PROFILE,
   type Food,
+  type FoodAlias,
+  type FoodAliasType,
   type FoodGroup,
+  type FoodRelatedTerm,
+  type FoodVariantAttributes,
   type FoodUnit,
   type BiologicalSex,
   type ActivityLevel,
@@ -106,6 +114,7 @@ interface MenuDraft {
   name: string
   category: MenuCategory
   foodIds: string[]
+  aliases: string[]
 }
 
 interface MenuSetDraft {
@@ -135,6 +144,13 @@ interface FoodDraft {
   servingAmount: string
   servingUnit: FoodUnit
   menuIds: string[]
+  foodGroupId: string
+  groupDisplayName: string
+  groupReading: string
+  groupCategory: string
+  aliases: Array<{ value: string; type: FoodAliasType }>
+  relatedTerms: string[]
+  variantAttributes: Record<keyof FoodVariantAttributes, string>
   nutrients: Record<NutrientKey, string>
 }
 
@@ -155,11 +171,17 @@ const SETTINGS_ICON_ASSET = `${ASSET_BASE_URL}assets/settings-icon.png`
 
 const nutrientKeys = [...NUTRIENT_KEYS]
 const emptyNutrientInputs = (): Record<NutrientKey, string> => Object.fromEntries(nutrientKeys.map((key) => [key, ''])) as Record<NutrientKey, string>
+const variantAttributeKeys: Array<keyof FoodVariantAttributes> = ['species', 'part', 'variety', 'cultivation', 'sourceBean', 'skin', 'preparation', 'processing']
+const variantAttributeLabels: Record<keyof FoodVariantAttributes, string> = {
+  species: '種類', part: '部位', variety: '品種・区分', cultivation: '栽培方法', sourceBean: '原料豆', skin: '皮の状態', preparation: '調理方法', processing: '加工状態',
+}
+const emptyVariantInputs = (): Record<keyof FoodVariantAttributes, string> => Object.fromEntries(variantAttributeKeys.map((key) => [key, ''])) as Record<keyof FoodVariantAttributes, string>
 
-function emptyFoodDraft(barcode = ''): FoodDraft {
+function emptyFoodDraft(barcode = '', initialName = ''): FoodDraft {
   return {
-    id: null, name: '', maker: '', barcode, source: 'user', sourceVersion: 'ユーザー入力',
-    baseAmount: '100', baseUnit: 'g', servingAmount: '', servingUnit: 'g', menuIds: [], nutrients: emptyNutrientInputs(),
+    id: null, name: initialName, maker: '', barcode, source: 'user', sourceVersion: 'ユーザー入力',
+    baseAmount: '100', baseUnit: 'g', servingAmount: '', servingUnit: 'g', menuIds: [], foodGroupId: '', groupDisplayName: initialName,
+    groupReading: '', groupCategory: '', aliases: [], relatedTerms: [], variantAttributes: emptyVariantInputs(), nutrients: emptyNutrientInputs(),
   }
 }
 
@@ -171,19 +193,23 @@ function bodyProfileToDraft(profile: BodyProfile | undefined): BodyProfileDraft 
   }
 }
 
-function foodToDraft(food: Food): FoodDraft {
+function foodToDraft(food: Food, group: FoodGroup | undefined, aliases: FoodAlias[], relatedTerms: FoodRelatedTerm[]): FoodDraft {
   return {
     id: food.id, name: food.name, maker: food.maker, barcode: food.barcode, source: food.source,
     sourceVersion: food.sourceVersion, baseAmount: String(food.baseAmount), baseUnit: food.baseUnit,
     servingAmount: food.servingAmount === null ? '' : String(food.servingAmount), servingUnit: food.servingUnit ?? food.baseUnit,
-    menuIds: food.menuIds ?? [],
+    menuIds: food.menuIds ?? [], foodGroupId: group?.id ?? food.foodGroupId ?? '', groupDisplayName: group?.displayName ?? food.displayName ?? food.name,
+    groupReading: group?.reading ?? food.reading ?? '', groupCategory: group?.category ?? '',
+    aliases: aliases.filter((alias) => alias.isActive).map((alias) => ({ value: alias.alias, type: alias.aliasType })),
+    relatedTerms: relatedTerms.filter((term) => term.isActive).map((term) => term.term),
+    variantAttributes: Object.fromEntries(variantAttributeKeys.map((key) => [key, food.variantAttributes?.[key] ?? ''])) as Record<keyof FoodVariantAttributes, string>,
     nutrients: Object.fromEntries(nutrientKeys.map((key) => [key, food.nutrients[key] === null ? '' : String(food.nutrients[key])])) as Record<NutrientKey, string>,
   }
 }
 
 function previewToDraft(preview: ExternalFoodPreview): FoodDraft {
   return {
-    ...emptyFoodDraft(preview.barcode), name: preview.name, maker: preview.maker, source: 'open_food_facts',
+    ...emptyFoodDraft(preview.barcode, preview.name), maker: preview.maker, source: 'open_food_facts',
     sourceVersion: 'Open Food Facts（取得値は確認後に保存）', baseAmount: String(preview.baseAmount), baseUnit: preview.baseUnit,
     servingAmount: '', servingUnit: preview.baseUnit, menuIds: [],
     nutrients: Object.fromEntries(nutrientKeys.map((key) => [key, preview.nutrients[key] === null ? '' : String(preview.nutrients[key])])) as Record<NutrientKey, string>,
@@ -254,6 +280,9 @@ function App() {
   const [entries, setEntries] = useState<MealEntry[]>([])
   const [trendEntries, setTrendEntries] = useState<MealEntry[]>([])
   const [foods, setFoods] = useState<Food[]>([])
+  const [foodGroups, setFoodGroups] = useState<FoodGroup[]>([])
+  const [foodAliases, setFoodAliases] = useState<FoodAlias[]>([])
+  const [foodRelatedTerms, setFoodRelatedTerms] = useState<FoodRelatedTerm[]>([])
   const [menus, setMenus] = useState<Menu[]>([])
   const [menuSets, setMenuSets] = useState<MenuSet[]>([])
   const [recentFoods, setRecentFoods] = useState<Food[]>([])
@@ -302,13 +331,16 @@ function App() {
   const load = useCallback(async () => {
     try {
       const trendEntriesPromise = graphFrom && graphTo && graphFrom <= graphTo ? getEntriesBetween(graphFrom, graphTo) : Promise.resolve([] as MealEntry[])
-      const [dateEntries, rangeEntries, resultFoods, recent, favorites, ids, currentSettings, foodCount, mealCount, menuCount, menuSetCount, foodKeys, resultMenus, resultMenuSets] = await Promise.all([
-        getEntriesForDate(selectedDate), trendEntriesPromise, getAllFoods(), getRecentFoods(), getFavoriteFoods(), getFavoriteIds(),
+      const [dateEntries, rangeEntries, resultFoods, resultGroups, resultAliases, resultRelatedTerms, recent, favorites, ids, currentSettings, foodCount, mealCount, menuCount, menuSetCount, foodKeys, resultMenus, resultMenuSets] = await Promise.all([
+        getEntriesForDate(selectedDate), trendEntriesPromise, getAllFoods(), getAllFoodGroups(), getAllFoodAliases(), getAllFoodRelatedTerms(), getRecentFoods(), getFavoriteFoods(), getFavoriteIds(),
         getSettings(), db.foods.count(), db.mealEntries.count(), db.menus.count(), db.menuSets.count(), db.foods.toCollection().primaryKeys(), getAllMenus(), getAllMenuSets(),
       ])
       setEntries(dateEntries)
       setTrendEntries(rangeEntries)
       setFoods(resultFoods)
+      setFoodGroups(resultGroups)
+      setFoodAliases(resultAliases)
+      setFoodRelatedTerms(resultRelatedTerms)
       setMenus(resultMenus)
       setMenuSets(resultMenuSets)
       setRecentFoods(recent)
@@ -418,13 +450,16 @@ function App() {
 
   const openFoodForm = useCallback((food?: Food, barcode = '', returnView: FoodFormReturnView = 'settings', returnMealType: MealType | null = null, returnSearchQuery: string | null = null, initialName = '') => {
     setExternalNote(null)
-    setFoodDraft(food ? foodToDraft(food) : { ...emptyFoodDraft(barcode), name: initialName })
+    const group = food ? foodGroups.find((item) => item.id === food.foodGroupId) : undefined
+    const aliases = group ? foodAliases.filter((alias) => alias.foodGroupId === group.id) : []
+    const relatedTerms = group ? foodRelatedTerms.filter((term) => term.foodGroupId === group.id) : []
+    setFoodDraft(food ? foodToDraft(food, group, aliases, relatedTerms) : emptyFoodDraft(barcode, initialName))
     setFoodFormMealType(returnMealType)
     setFoodFormSearchQuery(returnSearchQuery)
     setFoodFormReturnView(returnView)
     setView('food-form')
     setError(null)
-  }, [])
+  }, [foodAliases, foodGroups, foodRelatedTerms])
 
   const handleBarcodeDetected = useCallback(async (barcode: string) => {
     const normalized = barcode.trim()
@@ -486,15 +521,44 @@ function App() {
         if (duplicate && duplicate.id !== foodDraft.id) { showError('同じバーコードの食品が既にあります。食品管理から確認・編集してください。'); return }
       }
       const now = new Date().toISOString()
+      const foodId = foodDraft.id ?? createNewFoodId()
+      const groupId = foodDraft.foodGroupId.trim() || createNewFoodGroupId()
+      const groupDisplayName = foodDraft.groupDisplayName.trim() || foodDraft.name.trim()
+      const existingGroup = foodGroups.find((group) => group.id === groupId)
+      const variantAttributes = Object.fromEntries(variantAttributeKeys.map((key) => [key, foodDraft.variantAttributes[key].trim() || null])) as FoodVariantAttributes
       const food: Food = {
-        id: foodDraft.id ?? createNewFoodId(), name: foodDraft.name.trim(), maker: foodDraft.maker.trim(), barcode: foodDraft.barcode.trim(),
+        id: foodId, name: foodDraft.name.trim(), officialName: foodDraft.name.trim(), displayName: groupDisplayName, maker: foodDraft.maker.trim(), barcode: foodDraft.barcode.trim(),
         source: foodDraft.source, sourceVersion: foodDraft.sourceVersion || 'ユーザー入力', baseAmount, baseUnit: foodDraft.baseUnit,
-        servingAmount, servingUnit: servingAmount === null ? null : foodDraft.servingUnit, menuIds: foodDraft.menuIds, nutrients,
+        servingAmount, servingUnit: servingAmount === null ? null : foodDraft.servingUnit, menuIds: foodDraft.menuIds, foodGroupId: groupId, variantAttributes, nutrients,
         createdAt: foodDraft.id ? (foods.find((item) => item.id === foodDraft.id)?.createdAt ?? now) : now, updatedAt: now,
       }
+      const group: FoodGroup = {
+        id: groupId, displayName: groupDisplayName, reading: foodDraft.groupReading.trim() || null, category: foodDraft.groupCategory.trim() || null,
+        representativeScore: existingGroup?.representativeScore ?? 0, defaultVariantId: existingGroup?.defaultVariantId ?? foodId, isActive: true,
+        metadataSource: 'manual', generationVersion: 'manual-v1', needsReview: false, createdAt: existingGroup?.createdAt ?? now, updatedAt: now,
+      }
+      const aliasValues = new Map<string, { value: string; type: FoodAliasType }>()
+      for (const alias of foodDraft.aliases) {
+        const value = alias.value.trim()
+        const normalized = normalizeSearchText(value)
+        if (value && normalized && !aliasValues.has(normalized)) aliasValues.set(normalized, { value, type: alias.type })
+      }
+      const aliases: FoodAlias[] = [...aliasValues.values()].map((alias, index) => ({
+        id: `manual:alias:${groupId}:${index}`, foodGroupId: groupId, foodVariantId: null, alias: alias.value, normalizedAlias: normalizeSearchText(alias.value),
+        aliasType: alias.type, priority: 80, isActive: true, metadataSource: 'manual',
+      }))
+      const relatedValues = new Map<string, string>()
+      for (const term of foodDraft.relatedTerms) {
+        const value = term.trim()
+        const normalized = normalizeSearchText(value)
+        if (value && normalized && !relatedValues.has(normalized)) relatedValues.set(normalized, value)
+      }
+      const related: FoodRelatedTerm[] = [...relatedValues.values()].map((term) => ({
+        id: `manual:related:${groupId}:${normalizeSearchText(term)}`, foodGroupId: groupId, term, normalizedTerm: normalizeSearchText(term), weight: 0.5, isActive: true, metadataSource: 'manual',
+      }))
       const returnMealType = foodFormMealType
       const returnSearchQuery = foodFormSearchQuery
-      await saveFood(food)
+      await saveFoodWithMetadata(food, { group, aliases, relatedTerms: related })
       setFoodDraft(null)
       setFoodFormMealType(null)
       setFoodFormSearchQuery(null)
@@ -513,22 +577,20 @@ function App() {
     }
   }
 
-  const saveMeal = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    if (!mealFood) return
-    const amount = Number(mealAmount)
+  const saveMealRecord = async (food: Food, amountText: string, entryToEdit: MealEntry | null = editingEntry) => {
+    const amount = Number(amountText)
     if (!isPositiveFinite(amount) || amount > 100000) { showError('分量は0より大きく、現実的な範囲の数値で入力してください。'); return }
-    const calculated = calculateNutrients(mealFood, amount, mealFood.baseUnit)
+    const calculated = calculateNutrients(food, amount, food.baseUnit)
     const currentMealTime = entries.find((current) => current.mealType === mealType)?.eatenAt
-    const eatenAt = editingEntry
-      ? (mealType === '間食' ? editingEntry.eatenAt : (currentMealTime ?? editingEntry.eatenAt))
+    const eatenAt = entryToEdit
+      ? (mealType === '間食' ? entryToEdit.eatenAt : (currentMealTime ?? entryToEdit.eatenAt))
       : isoForDate(selectedDate)
     const entry: MealEntry = {
-      id: editingEntry?.id ?? createNewMealId(), eatenAt, mealType,
-      foodId: mealFood.id, foodSnapshot: {
-        name: mealFood.displayName ?? mealFood.name, officialName: mealFood.officialName, displayName: mealFood.displayName, maker: mealFood.maker, barcode: mealFood.barcode, baseAmount: mealFood.baseAmount,
-        baseUnit: mealFood.baseUnit, nutrients: { ...mealFood.nutrients },
-      }, amount, amountUnit: mealFood.baseUnit, calculatedNutrients: calculated,
+      id: entryToEdit?.id ?? createNewMealId(), eatenAt, mealType,
+      foodId: food.id, foodSnapshot: {
+        name: food.displayName ?? food.name, officialName: food.officialName, displayName: food.displayName, maker: food.maker, barcode: food.barcode, baseAmount: food.baseAmount,
+        baseUnit: food.baseUnit, nutrients: { ...food.nutrients },
+      }, amount, amountUnit: food.baseUnit, calculatedNutrients: calculated,
     }
     try {
       const entriesToSave = mealType === '間食'
@@ -540,16 +602,21 @@ function App() {
         setSearchResults((current) => current.filter((group) => group.query !== pendingSearchQuery))
         setPendingSearchQuery(null)
       }
-      const continueFoodSelection = recordingMealType !== null && !editingEntry
+      const continueFoodSelection = recordingMealType !== null && !entryToEdit
       setMealFood(null)
       setEditingEntry(null)
       setRecordingMealType(returnToSearchResults ? recordingMealType : continueFoodSelection ? recordingMealType : null)
       setView(returnToSearchResults ? 'search-results' : continueFoodSelection ? 'food-screen' : 'today')
       await load()
-      notify(editingEntry ? '食事記録を更新しました。' : '食事を記録しました。')
+      notify(entryToEdit ? '食事記録を更新しました。' : '食事を記録しました。')
     } catch {
       showError('食事を保存できませんでした。保存先の空き容量を確認して再試行してください。')
     }
+  }
+
+  const saveMeal = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (mealFood) await saveMealRecord(mealFood, mealAmount)
   }
 
   const removeMeal = async (entry: MealEntry) => {
@@ -654,7 +721,7 @@ function App() {
     } catch { showError('検索結果を追加で読み込めませんでした。') }
   }
 
-  const selectSearchFood = (groupQuery: string, item: SearchResultItem, food: Food) => {
+  const selectSearchFood = (groupQuery: string, item: SearchResultItem, food: Food, amount?: string) => {
     if (item.searchLogId && item.group) void recordFoodSelection(item.searchLogId, item.group.id, food.id, item.searchRank ?? 0)
     if (searchPurpose === 'food-master') {
       setPendingSearchQuery(null)
@@ -663,6 +730,7 @@ function App() {
     }
     setPendingSearchQuery(groupQuery)
     openMealForm(food, undefined, recordingMealType ?? mealType)
+    if (amount !== undefined) setMealAmount(amount)
   }
 
   const handleSearchResultSelect = (groupQuery: string, item: SearchResultItem) => {
@@ -701,6 +769,7 @@ function App() {
     const now = new Date().toISOString()
     const menu: Menu = {
       id: menuDraft.id ?? createNewMenuId(), name: menuDraft.name.trim(), category: menuDraft.category, foodIds: menuDraft.foodIds,
+      aliases: [...new Set(menuDraft.aliases.map((alias) => alias.trim()).filter(Boolean))],
       createdAt: menuDraft.id ? (menus.find((item) => item.id === menuDraft.id)?.createdAt ?? now) : now, updatedAt: now,
     }
     try { await saveMenu(menu); setMenuDraft(null); await load(); notify(menuDraft.id ? 'メニューを更新しました。' : 'メニューを登録しました。') } catch { showError('メニューを保存できませんでした。') }
@@ -817,9 +886,9 @@ function App() {
         />}
         {view === 'graphs' && <GraphsView entries={trendEntries} from={graphFrom} to={graphTo} goals={settings.goals} onFromChange={setGraphFrom} onToChange={setGraphTo} />}
         {view === 'food-screen' && <FoodsView recordingMealType={recordingMealType} foods={foods} menus={menus} menuSets={menuSets} recentFoods={recentFoods} favoriteFoods={favoriteFoods} favoriteIds={favoriteIds} onSelectFood={handleFoodSelection} onToggleFavorite={toggleFavorite} onEditFood={(food) => openFoodForm(food, '', 'food-screen')} onDeleteFood={removeFood} onOpenSearch={() => openSearchInput(recordingMealType ? 'meal' : 'food-master')} onOpenScanner={() => setShowScanner(true)} onBack={() => { setRecordingMealType(null); setView(foodScreenReturnView) }} backLabel={foodScreenReturnView === 'settings' ? '← 設定' : '← 記録'} copyMealType={copyMealType} setCopyMealType={setCopyMealType} onCopyPrevious={copyPreviousMeals} />}
-        {view === 'food-form' && foodDraft && <><FoodFormView draft={foodDraft} returnView={foodFormReturnView} setDraft={setFoodDraft} externalNote={externalNote} onSubmit={saveFoodDraft} onClose={() => { setFoodDraft(null); setFoodFormMealType(null); setFoodFormSearchQuery(null); setView(foodFormReturnView) }} /><FoodMenuSelection draft={foodDraft} setDraft={setFoodDraft} menus={menus} /></>}
+        {view === 'food-form' && foodDraft && <><FoodFormView draft={foodDraft} returnView={foodFormReturnView} setDraft={setFoodDraft} foodGroups={foodGroups} foodAliases={foodAliases} foodRelatedTerms={foodRelatedTerms} externalNote={externalNote} onSubmit={saveFoodDraft} onClose={() => { setFoodDraft(null); setFoodFormMealType(null); setFoodFormSearchQuery(null); setView(foodFormReturnView) }} /><FoodMenuSelection draft={foodDraft} setDraft={setFoodDraft} menus={menus} /></>}
         {view === 'settings' && <><SettingsView settings={settings} goalInputs={goalInputs} setGoalInputs={setGoalInputs} onSaveGoals={saveGoals} onToggleExternalApi={toggleExternalApi} onChangeDefaultMealTimeMode={changeDefaultMealTimeMode} onExportJson={exportJson} onRestoreJson={restoreJson} onExportCsv={exportCsv} onImportCsv={importCsv} csvFrom={csvFrom} csvTo={csvTo} setCsvFrom={setCsvFrom} setCsvTo={setCsvTo} counts={counts} /><SettingsExtras bodyProfileInputs={bodyProfileInputs} setBodyProfileInputs={setBodyProfileInputs} onSaveBodyProfile={saveBodyProfile} onOpenNewFood={() => openFoodForm(undefined, '', 'settings')} onOpenFoodMaster={() => { setRecordingMealType(null); setFoodScreenReturnView('settings'); setView('food-screen') }} estimatedGoals={estimateDailyGoals(settings.bodyProfile ?? DEFAULT_BODY_PROFILE)} bmi={calculateBmi(settings.bodyProfile ?? DEFAULT_BODY_PROFILE)} /></>}
-        {view === 'menus' && <MenuView menus={menus} menuSets={menuSets} foods={foods} onNewMenu={() => setMenuDraft({ id: null, name: '', category: '主菜', foodIds: [] })} onEditMenu={(menu) => setMenuDraft({ id: menu.id, name: menu.name, category: menu.category, foodIds: menu.foodIds })} onDeleteMenu={removeMenu} onNewMenuSet={() => setMenuSetDraft({ id: null, name: '', menuIds: [], foodIds: [] })} onEditMenuSet={(menuSet) => setMenuSetDraft({ id: menuSet.id, name: menuSet.name, menuIds: menuSet.menuIds, foodIds: menuSet.foodIds ?? [] })} onDeleteMenuSet={removeMenuSet} onBack={() => setView('today')} />}
+        {view === 'menus' && <MenuView menus={menus} menuSets={menuSets} foods={foods} onNewMenu={() => setMenuDraft({ id: null, name: '', category: '主菜', foodIds: [], aliases: [] })} onEditMenu={(menu) => setMenuDraft({ id: menu.id, name: menu.name, category: menu.category, foodIds: menu.foodIds, aliases: menu.aliases ?? [] })} onDeleteMenu={removeMenu} onNewMenuSet={() => setMenuSetDraft({ id: null, name: '', menuIds: [], foodIds: [] })} onEditMenuSet={(menuSet) => setMenuSetDraft({ id: menuSet.id, name: menuSet.name, menuIds: menuSet.menuIds, foodIds: menuSet.foodIds ?? [] })} onDeleteMenuSet={removeMenuSet} onBack={() => setView('today')} />}
         {view === 'search-input' && <SearchInputView bars={searchBars} setBars={setSearchBars} onSearch={() => void searchFoodsAndMenus()} onBack={() => setView('food-screen')} />}
         {view === 'search-results' && <SearchResultsView groups={searchResults} purpose={searchPurpose} onSelect={handleSearchResultSelect} onAddFood={(query) => openFoodForm(undefined, '', 'food-screen', searchPurpose === 'meal' ? (recordingMealType ?? mealType) : null, searchPurpose === 'meal' ? (query || null) : null, query)} onLoadMore={(index) => void loadMoreSearchResults(index)} onBack={leaveSearchResults} />}
       </main>
@@ -834,7 +903,7 @@ function App() {
       {view === 'today' && <button className="floating-add" type="button" onClick={openMealTypePicker} aria-label="食事を追加">＋</button>}
 
       {mealTypePicker && <MealTypePickerModal food={mealTypePicker.food} recordedMealTypes={recordedMealTypes} onSelect={chooseMealType} />}
-      {variantPicker && <FoodVariantPickerModal result={variantPicker.result} onSelect={(food) => { setVariantPicker(null); selectSearchFood(variantPicker.query, variantPicker.item, food) }} onClose={() => setVariantPicker(null)} />}
+      {variantPicker && <FoodVariantPickerModal result={variantPicker.result} mealMode={searchPurpose === 'meal'} onSubmitMeal={async (food, amount) => { await saveMealRecord(food, amount); setVariantPicker(null) }} onSelect={(food) => { setVariantPicker(null); selectSearchFood(variantPicker.query, variantPicker.item, food) }} onClose={() => setVariantPicker(null)} />}
       {mealFood && <MealModal food={mealFood} amount={mealAmount} setAmount={setMealAmount} editing={Boolean(editingEntry)} onSubmit={saveMeal} onClose={() => { setMealFood(null); setEditingEntry(null); setRecordingMealType(null) }} />}
       {mealDetails && <MealDetailsModal details={mealDetails} goals={scaleNutritionGoals(settings.goals, 1 / 3)} onUpdateTimes={updateMealTimes} onClose={() => setMealDetails(null)} />}
       {showTodayDetails && <TodayDetailsModal total={total} goals={settings.goals} subtotals={subtotals} onClose={() => setShowTodayDetails(false)} />}
@@ -1019,21 +1088,27 @@ function SearchResultsView({ groups, purpose, onSelect, onAddFood, onLoadMore, o
   return <><section className="page-heading"><div><span className="eyebrow">SEARCH RESULTS</span><h1>検索結果</h1><p className="muted">{helperText}</p></div><button className="button ghost" type="button" onClick={onBack}>← 検索画面へ</button></section><div className="search-result-groups">{groups.map((group, groupIndex) => <section className="search-result-group" key={`${group.query}:${groupIndex}`}><div className="search-result-heading"><strong>検索結果：</strong><span>{group.query}</span></div><div className="food-results">{group.items.map((item) => <button className="search-result-row" type="button" key={`${item.kind}:${item.id}`} onClick={() => onSelect(group.query, item)}><span className="source-badge">{item.kind === 'food' ? '食品' : item.kind === 'menu' ? 'メニュー' : 'セット'}</span><span className="search-result-copy"><strong>{item.title}</strong><small>{item.subtitle}</small>{item.kind === 'food' && <span className="search-result-meta">{item.recentlyUsed && <em>最近使った</em>}{item.variants.length > 1 && <span>{item.variants.length}種類から選択</span>}</span>}</span><b>›</b></button>)}{group.items.length === 0 && <div className="search-empty-state"><p>一致する食品・メニューがありません。</p><button className="button secondary" type="button" onClick={() => onAddFood(group.query === '最近・お気に入り' ? '' : group.query)}>食品を追加</button></div>}{group.nextCursor && <button className="button secondary search-load-more" type="button" onClick={() => onLoadMore(groupIndex)}>さらに表示</button>}</div></section>)}{groups.length === 0 && <div className="empty-state">検索結果はありません。検索画面へ戻って再検索してください。</div>}</div></>
 }
 
-function FoodVariantPickerModal({ result, onSelect, onClose }: { result: FoodSearchResult; onSelect: (food: Food) => void; onClose: () => void }) {
+function FoodVariantPickerModal({ result, onSelect, onClose, mealMode = false, onSubmitMeal }: { result: FoodSearchResult; onSelect: (food: Food) => void; onClose: () => void; mealMode?: boolean; onSubmitMeal?: (food: Food, amount: string) => void | Promise<void> }) {
   const optionGroups = useMemo(() => getVariantOptionGroups(result.variants), [result.variants])
   const defaultVariant = result.variants.find((food) => food.id === result.group.defaultVariantId) ?? result.food
   const [selection, setSelection] = useState(() => getVariantSelection(defaultVariant, optionGroups))
   const [fallbackVariantId, setFallbackVariantId] = useState(defaultVariant.id)
+  const [amount, setAmount] = useState(String(defaultVariant.servingAmount ?? defaultVariant.baseAmount))
   const fallbackGroup: VariantOptionGroup = useMemo(() => ({ key: 'variant', label: 'バリエーション', options: result.variants.map((food) => ({ value: food.id, label: variantOptionText(food) })) }), [result.variants])
   const groups = optionGroups.length > 0 ? optionGroups : [fallbackGroup]
   const matchingVariants = optionGroups.length > 0 ? filterVariantsBySelection(result.variants, selection) : result.variants.filter((food) => food.id === fallbackVariantId)
   const selectedFood = optionGroups.length > 0 ? resolveVariantForSelection(result.variants, selection, result.group.defaultVariantId) : matchingVariants[0] ?? null
+  const selectedFoodId = selectedFood?.id
+  const selectedFoodDefaultAmount = selectedFood ? String(selectedFood.servingAmount ?? selectedFood.baseAmount) : ''
+  useEffect(() => {
+    if (selectedFoodId) setAmount(selectedFoodDefaultAmount)
+  }, [selectedFoodDefaultAmount, selectedFoodId])
   const isSelected = (group: VariantOptionGroup, value: string | null) => group.key === 'variant' ? fallbackVariantId === value : selection[group.key] === value
   const chooseOption = (group: VariantOptionGroup, value: string | null) => {
     if (group.key === 'variant') setFallbackVariantId(value ?? '')
     else setSelection((current) => ({ ...current, [group.key]: value }))
   }
-  return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="食品のバリエーションを選択"><section className="modal-card variant-picker-modal"><div className="modal-heading"><div><span className="eyebrow">VARIATIONS</span><h2>{result.group.displayName}</h2><p className="muted">条件ごとに選択してください</p></div><button className="icon-button" type="button" onClick={onClose} aria-label="閉じる">×</button></div><div className="variant-choice-groups">{groups.map((group) => <section className="variant-choice-group" key={group.key}><h3>{group.label}</h3><div className="variant-choice-buttons">{group.options.map((option) => <button className={`variant-choice-button${isSelected(group, option.value) ? ' is-selected' : ''}`} type="button" aria-pressed={isSelected(group, option.value)} key={`${group.key}:${option.value ?? 'none'}`} onClick={() => chooseOption(group, option.value)}>{option.label}</button>)}</div></section>)}</div>{selectedFood ? <div className="variant-picker-summary"><span>選択中</span><strong>{variantOptionText(selectedFood)}</strong><small>{selectedFood.baseAmount}{selectedFood.baseUnit} · {formatNutrient(selectedFood.nutrients.energyKcal)}kcal{matchingVariants.length > 1 ? ` · ${matchingVariants.length}件が該当` : ''}</small></div> : <p className="variant-picker-no-match">この組み合わせに該当する食品がありません。</p>}<button className="button primary variant-picker-confirm" type="button" onClick={() => { if (selectedFood) onSelect(selectedFood) }} disabled={!selectedFood}>この食品を選択</button></section></div>
+  return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="食品のバリエーションを選択"><section className="modal-card variant-picker-modal"><div className="modal-heading"><div><span className="eyebrow">VARIATIONS</span><h2>{result.group.displayName}</h2><p className="muted">条件ごとに選択してください</p></div><button className="icon-button" type="button" onClick={onClose} aria-label="閉じる">×</button></div><div className="variant-choice-groups">{groups.map((group) => <section className="variant-choice-group" key={group.key}><h3>{group.label}</h3><div className="variant-choice-buttons">{group.options.map((option) => <button className={`variant-choice-button${isSelected(group, option.value) ? ' is-selected' : ''}`} type="button" aria-pressed={isSelected(group, option.value)} key={`${group.key}:${option.value ?? 'none'}`} onClick={() => chooseOption(group, option.value)}>{option.label}</button>)}</div></section>)}</div>{selectedFood ? <div className="variant-picker-summary"><span>選択中</span><strong>{variantOptionText(selectedFood)}</strong><small>{selectedFood.baseAmount}{selectedFood.baseUnit} · {formatNutrient(selectedFood.nutrients.energyKcal)}kcal{matchingVariants.length > 1 ? ` · ${matchingVariants.length}件が該当` : ''}</small></div> : <p className="variant-picker-no-match">この組み合わせに該当する食品がありません。</p>}{mealMode && selectedFood && <label>分量<div className="amount-input-row"><div className="amount-input"><input type="number" min="0.01" max="100000" step="any" value={amount} onChange={(event) => setAmount(event.target.value)} required /><span className="field-suffix">{selectedFood.baseUnit}</span></div><button className="amount-increment" type="button" onClick={() => setAmount(String(incrementByBaseAmount(Number(amount), selectedFood.baseAmount)))} aria-label={`分量を基準量1つ分（${selectedFood.baseAmount}${selectedFood.baseUnit}）増やす`}>＋1</button></div></label>}{mealMode && selectedFood ? <button className="button primary variant-picker-confirm" type="button" onClick={() => { void onSubmitMeal?.(selectedFood, amount) }}>食事として登録</button> : <button className="button primary variant-picker-confirm" type="button" onClick={() => { if (selectedFood) onSelect(selectedFood) }} disabled={!selectedFood}>この食品を選択</button>}</section></div>
 }
 
 interface MenuViewProps { menus: Menu[]; menuSets: MenuSet[]; foods: Food[]; onNewMenu: () => void; onEditMenu: (menu: Menu) => void; onDeleteMenu: (menu: Menu) => void; onNewMenuSet: () => void; onEditMenuSet: (menuSet: MenuSet) => void; onDeleteMenuSet: (menuSet: MenuSet) => void; onBack: () => void }
@@ -1141,7 +1216,7 @@ function MenuFoodSelection({ selectedIds, foods, recentFoods, favoriteFoods, fav
 function MenuEditorModal({ draft, setDraft, foods, recentFoods, favoriteFoods, favoriteIds, onToggleFavorite, onSubmit, onClose }: { draft: MenuDraft; setDraft: React.Dispatch<React.SetStateAction<MenuDraft | null>>; foods: Food[]; recentFoods: Food[]; favoriteFoods: Food[]; favoriteIds: Set<string>; onToggleFavorite: (food: Food) => void; onSubmit: (event: React.FormEvent<HTMLFormElement>) => void; onClose: () => void }) {
   const addFood = (food: Food) => setDraft((current) => current && !current.foodIds.includes(food.id) ? { ...current, foodIds: [...current.foodIds, food.id] } : current)
   const removeFood = (food: Food) => setDraft((current) => current ? { ...current, foodIds: current.foodIds.filter((id) => id !== food.id) } : current)
-  return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="料理メニューを設定"><section className="modal-card"><div className="modal-heading"><div><span className="eyebrow">MENU</span><h2>{draft.id ? '料理メニューを編集' : '料理メニューを設定'}</h2></div><button className="icon-button" type="button" onClick={onClose} aria-label="閉じる">×</button></div><form onSubmit={onSubmit}><label>メニュー名*<input value={draft.name} onChange={(event) => setDraft((current) => current ? { ...current, name: event.target.value } : current)} required /></label><label>区分<select value={draft.category} onChange={(event) => setDraft((current) => current ? { ...current, category: event.target.value as MenuCategory } : current)}>{MENU_CATEGORIES.map((category) => <option key={category}>{category}</option>)}</select></label><fieldset><legend>食材</legend><MenuFoodSelection selectedIds={draft.foodIds} foods={foods} recentFoods={recentFoods} favoriteFoods={favoriteFoods} favoriteIds={favoriteIds} onToggleFavorite={onToggleFavorite} onAdd={addFood} onRemove={removeFood} /></fieldset><button className="button primary full-width" type="submit">保存する</button><button className="button ghost full-width" type="button" onClick={onClose}>キャンセル</button></form></section></div>
+  return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="料理メニューを設定"><section className="modal-card"><div className="modal-heading"><div><span className="eyebrow">MENU</span><h2>{draft.id ? '料理メニューを編集' : '料理メニューを設定'}</h2></div><button className="icon-button" type="button" onClick={onClose} aria-label="閉じる">×</button></div><form onSubmit={onSubmit}><label>メニュー名*<input value={draft.name} onChange={(event) => setDraft((current) => current ? { ...current, name: event.target.value } : current)} required /></label><label>区分<select value={draft.category} onChange={(event) => setDraft((current) => current ? { ...current, category: event.target.value as MenuCategory } : current)}>{MENU_CATEGORIES.map((category) => <option key={category}>{category}</option>)}</select></label><label>検索用エイリアス（任意）<input value={draft.aliases.join('、')} onChange={(event) => setDraft((current) => current ? { ...current, aliases: event.target.value.split(/[、,，]/).map((alias) => alias.trim()).filter(Boolean) } : current)} placeholder="例：おにぎり、朝ごはん" /></label><fieldset><legend>食材</legend><MenuFoodSelection selectedIds={draft.foodIds} foods={foods} recentFoods={recentFoods} favoriteFoods={favoriteFoods} favoriteIds={favoriteIds} onToggleFavorite={onToggleFavorite} onAdd={addFood} onRemove={removeFood} /></fieldset><button className="button primary full-width" type="submit">保存する</button><button className="button ghost full-width" type="button" onClick={onClose}>キャンセル</button></form></section></div>
 }
 
 function MenuSetEditorModal({ draft, setDraft, menus, foods, recentFoods, favoriteFoods, favoriteIds, onToggleFavorite, onSubmit, onClose }: { draft: MenuSetDraft; setDraft: React.Dispatch<React.SetStateAction<MenuSetDraft | null>>; menus: Menu[]; foods: Food[]; recentFoods: Food[]; favoriteFoods: Food[]; favoriteIds: Set<string>; onToggleFavorite: (food: Food) => void; onSubmit: (event: React.FormEvent<HTMLFormElement>) => void; onClose: () => void }) {
@@ -1226,8 +1301,8 @@ function MealModal({ food, amount, setAmount, editing, onSubmit, onClose }: { fo
   const preview = calculateNutrients(food, Number(amount), food.baseUnit)
   const numericAmount = Number(amount)
   const canIncrement = !Number.isFinite(numericAmount) || numericAmount < 100000
-  const incrementAmount = () => setAmount(String(Math.min(100000, Number.isFinite(numericAmount) ? numericAmount + 1 : 1)))
-  return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="食事を記録"><section className="modal-card"><div className="modal-heading"><div><span className="eyebrow">ADD MEAL</span><h2>{editing ? '食事を編集' : '食事を記録'}</h2></div><button className="icon-button" type="button" onClick={onClose} aria-label="閉じる">×</button></div><div className="selected-food"><strong>{food.name}</strong><span>{food.maker || '一般食品'} · 基準量 {food.baseAmount}{food.baseUnit}</span></div><form onSubmit={onSubmit}><label>分量<div className="amount-input-row"><div className="amount-input"><input type="number" min="0.01" max="100000" step="any" value={amount} onChange={(event) => setAmount(event.target.value)} required /><span className="field-suffix">{food.baseUnit}</span></div><button className="amount-increment" type="button" onClick={incrementAmount} disabled={!canIncrement} aria-label={`分量を1${food.baseUnit}増やす`}>＋1</button></div></label><div className="preview-box calorie-preview"><div className="section-kicker">今回のカロリー</div><strong>{formatNutrient(preview.energyKcal)}<small> kcal</small></strong></div><button className="button primary full-width" type="submit">{editing ? '変更を保存' : '食事として登録'}</button><button className="button ghost full-width" type="button" onClick={onClose}>キャンセル</button></form></section></div>
+  const incrementAmount = () => setAmount(String(incrementByBaseAmount(numericAmount, food.baseAmount)))
+  return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="食事を記録"><section className="modal-card"><div className="modal-heading"><div><span className="eyebrow">ADD MEAL</span><h2>{editing ? '食事を編集' : '食事を記録'}</h2></div><button className="icon-button" type="button" onClick={onClose} aria-label="閉じる">×</button></div><div className="selected-food"><strong>{food.displayName ?? food.name}</strong><span>{food.maker || '一般食品'} · 基準量 {food.baseAmount}{food.baseUnit}</span></div><form onSubmit={onSubmit}><label>分量<div className="amount-input-row"><div className="amount-input"><input type="number" min="0.01" max="100000" step="any" value={amount} onChange={(event) => setAmount(event.target.value)} required /><span className="field-suffix">{food.baseUnit}</span></div><button className="amount-increment" type="button" onClick={incrementAmount} disabled={!canIncrement} aria-label={`分量を基準量1つ分（${food.baseAmount}${food.baseUnit}）増やす`}>＋1</button></div></label><div className="preview-box calorie-preview"><div className="section-kicker">今回のカロリー</div><strong>{formatNutrient(preview.energyKcal)}<small> kcal</small></strong></div><button className="button primary full-width" type="submit">{editing ? '変更を保存' : '食事として登録'}</button><button className="button ghost full-width" type="button" onClick={onClose}>キャンセル</button></form></section></div>
 }
 
 function MealDetailsModal({ details, goals, onUpdateTimes, onClose }: { details: { type: MealType; entries: MealEntry[]; subtotal: Nutrients }; goals: NutritionGoals; onUpdateTimes: (entryIds: string[], time: string) => void; onClose: () => void }) {
@@ -1237,9 +1312,37 @@ function MealDetailsModal({ details, goals, onUpdateTimes, onClose }: { details:
   return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label={`${details.type}の栄養詳細`}><section className="modal-card"><div className="modal-heading"><div><span className="eyebrow">NUTRIENTS</span><h2>{details.type}の詳細</h2></div><button className="icon-button" type="button" onClick={onClose} aria-label="閉じる">×</button></div><div className="detail-total"><span>合計カロリー</span><strong>{formatNutrient(details.subtotal.energyKcal)}<small> kcal</small></strong></div><NutrientGoalGraphs nutrients={details.subtotal} goals={goals} /><section className="meal-time-editor"><div className="section-title"><div><span className="eyebrow">MEAL TIME</span><h3>食事時刻</h3></div></div>{details.type !== '間食' ? <form className="inline-time-form" onSubmit={(event) => { event.preventDefault(); onUpdateTimes(sharedEntryIds, sharedTime) }}><label><input aria-label="食事時刻" type="time" value={sharedTime} onChange={(event) => setSharedTime(event.target.value)} required /></label><button className="button secondary" type="submit">時刻を保存</button></form> : <div className="snack-time-list">{details.entries.map((entry) => <div className="snack-time-row" key={entry.id}><span>{entry.foodSnapshot.name}</span><input type="time" value={snackTimes[entry.id] ?? ''} onChange={(event) => setSnackTimes((current) => ({ ...current, [entry.id]: event.target.value }))} /><button className="small-action" type="button" onClick={() => onUpdateTimes([entry.id], snackTimes[entry.id] ?? '')}>保存</button></div>)}</div>}</section><div className="detail-entry-list">{details.entries.map((entry) => <div className="detail-entry" key={entry.id}><span>{entry.foodSnapshot.name} · {entry.amount}{entry.amountUnit}</span><strong>{formatNutrient(entry.calculatedNutrients.energyKcal)} kcal</strong></div>)}</div><button className="button ghost full-width" type="button" onClick={onClose}>閉じる</button></section></div>
 }
 
-function FoodFormView({ draft, returnView, setDraft, externalNote, onSubmit, onClose }: { draft: FoodDraft; returnView: FoodFormReturnView; setDraft: React.Dispatch<React.SetStateAction<FoodDraft | null>>; externalNote: string | null; onSubmit: (event: React.FormEvent<HTMLFormElement>) => void; onClose: () => void }) {
+function FoodFormView({ draft, returnView, setDraft, foodGroups, foodAliases, foodRelatedTerms, externalNote, onSubmit, onClose }: { draft: FoodDraft; returnView: FoodFormReturnView; setDraft: React.Dispatch<React.SetStateAction<FoodDraft | null>>; foodGroups: FoodGroup[]; foodAliases: FoodAlias[]; foodRelatedTerms: FoodRelatedTerm[]; externalNote: string | null; onSubmit: (event: React.FormEvent<HTMLFormElement>) => void; onClose: () => void }) {
   const update = <K extends keyof FoodDraft>(key: K, value: FoodDraft[K]) => setDraft((current) => current ? { ...current, [key]: value } : current)
-  return <><section className="page-heading food-form-heading"><div><span className="eyebrow">FOOD MASTER</span><h1>{draft.id ? '食品を編集' : '新しい食品を登録'}</h1></div><button className="button ghost" type="button" onClick={onClose}>{returnView === 'settings' ? '← 設定へ' : '← 食品画面へ'}</button></section><section className="settings-card food-form-card">{externalNote && <div className="external-warning">{externalNote}</div>}<form onSubmit={onSubmit}><label>食品名*<input value={draft.name} onChange={(event) => update('name', event.target.value)} required /></label><label>メーカー<input value={draft.maker} onChange={(event) => update('maker', event.target.value)} /></label><label>バーコード（JAN/GTIN）<input inputMode="numeric" value={draft.barcode} onChange={(event) => update('barcode', event.target.value)} placeholder="任意・8〜14桁" /></label><div className="two-fields"><label>基準量*<input type="number" min="0.01" step="any" value={draft.baseAmount} onChange={(event) => update('baseAmount', event.target.value)} required /></label><label>基準単位*<select value={draft.baseUnit} onChange={(event) => update('baseUnit', event.target.value as FoodUnit)}>{FOOD_UNITS.map((unit) => <option key={unit}>{unit}</option>)}</select></label></div><div className="two-fields"><label>既定量<input type="number" min="0.01" step="any" value={draft.servingAmount} onChange={(event) => update('servingAmount', event.target.value)} placeholder="任意" /></label><label>既定単位<select value={draft.servingUnit} onChange={(event) => update('servingUnit', event.target.value as FoodUnit)}>{FOOD_UNITS.map((unit) => <option key={unit}>{unit}</option>)}</select></label></div><fieldset><legend>栄養値（基準量あたり）</legend><div className="nutrient-input-grid">{NUTRIENT_KEYS.map((key) => <label key={key}>{NUTRIENT_LABELS[key]}<div className="unit-input"><input type="number" min="0" step="any" value={draft.nutrients[key]} onChange={(event) => update('nutrients', { ...draft.nutrients, [key]: event.target.value })} placeholder="未設定" /><span>{NUTRIENT_UNITS[key]}</span></div></label>)}</div></fieldset><p className="source-line">出典: {draft.sourceVersion}（保存前に内容を確認してください）</p><button className="button primary full-width" type="submit">保存する</button><button className="button ghost full-width" type="button" onClick={onClose}>キャンセル</button></form></section></>
+  const selectFamily = (value: string) => setDraft((current) => {
+    if (!current) return current
+    const group = foodGroups.find((item) => item.id === value)
+    if (!group) return { ...current, foodGroupId: value }
+    return {
+      ...current, foodGroupId: value, groupDisplayName: group.displayName, groupReading: group.reading ?? '', groupCategory: group.category ?? '',
+      aliases: foodAliases.filter((alias) => alias.foodGroupId === value && alias.isActive).map((alias) => ({ value: alias.alias, type: alias.aliasType })),
+      relatedTerms: foodRelatedTerms.filter((term) => term.foodGroupId === value && term.isActive).map((term) => term.term),
+    }
+  })
+  const addAlias = () => update('aliases', [...draft.aliases, { value: '', type: 'synonym' }])
+  const addRelatedTerm = () => update('relatedTerms', [...draft.relatedTerms, ''])
+  return <><section className="page-heading food-form-heading"><div><span className="eyebrow">FOOD MASTER</span><h1>{draft.id ? '食品を編集' : '新しい食品を登録'}</h1></div><button className="button ghost" type="button" onClick={onClose}>{returnView === 'settings' ? '← 設定へ' : '← 食品画面へ'}</button></section><section className="settings-card food-form-card">{externalNote && <div className="external-warning">{externalNote}</div>}<form onSubmit={onSubmit}>
+    <label>食品名*<input value={draft.name} onChange={(event) => update('name', event.target.value)} required /></label>
+    <label>メーカー<input value={draft.maker} onChange={(event) => update('maker', event.target.value)} /></label>
+    <label>バーコード（JAN/GTIN）<input inputMode="numeric" value={draft.barcode} onChange={(event) => update('barcode', event.target.value)} placeholder="任意・8〜14桁" /></label>
+    <fieldset><legend>検索用 family</legend>
+      <label>所属するfamily<select value={draft.foodGroupId} onChange={(event) => selectFamily(event.target.value)}><option value="">新しいfamilyを作成</option>{foodGroups.map((group) => <option key={group.id} value={group.id}>{group.displayName}{group.needsReview ? '（要確認）' : ''}</option>)}</select></label>
+      <label>表示名*<input value={draft.groupDisplayName} onChange={(event) => update('groupDisplayName', event.target.value)} placeholder="検索結果に表示する名前" required /></label>
+      <div className="two-fields"><label>読み仮名<input value={draft.groupReading} onChange={(event) => update('groupReading', event.target.value)} placeholder="ひらがな" /></label><label>食品区分<input value={draft.groupCategory} onChange={(event) => update('groupCategory', event.target.value)} placeholder="例：主菜" /></label></div>
+      <div className="metadata-editor"><div className="metadata-editor-heading"><strong>別名</strong><button className="small-action" type="button" onClick={addAlias}>＋追加</button></div>{draft.aliases.map((alias, index) => <div className="metadata-input-row" key={`${index}:${alias.value}`}><input value={alias.value} onChange={(event) => update('aliases', draft.aliases.map((item, itemIndex) => itemIndex === index ? { ...item, value: event.target.value } : item))} placeholder="例：とりむね" /><select value={alias.type} onChange={(event) => update('aliases', draft.aliases.map((item, itemIndex) => itemIndex === index ? { ...item, type: event.target.value as FoodAliasType } : item))}><option value="synonym">通称</option><option value="reading">読み</option><option value="abbreviation">略称</option></select><button className="small-action danger-text" type="button" onClick={() => update('aliases', draft.aliases.filter((_, itemIndex) => itemIndex !== index))}>削除</button></div>)}</div>
+      <div className="metadata-editor"><div className="metadata-editor-heading"><strong>関連語</strong><button className="small-action" type="button" onClick={addRelatedTerm}>＋追加</button></div>{draft.relatedTerms.map((term, index) => <div className="metadata-input-row" key={`${index}:${term}`}><input value={term} onChange={(event) => update('relatedTerms', draft.relatedTerms.map((item, itemIndex) => itemIndex === index ? event.target.value : item))} placeholder="同じ食品ではないが関連する語" /><button className="small-action danger-text" type="button" onClick={() => update('relatedTerms', draft.relatedTerms.filter((_, itemIndex) => itemIndex !== index))}>削除</button></div>)}</div>
+    </fieldset>
+    <fieldset><legend>バリエーション属性</legend><p className="helper-text">食品の状態・分量の選択肢として表示する属性です。空欄は指定なしで保存します。</p><div className="two-fields variant-attribute-inputs">{variantAttributeKeys.map((key) => <label key={key}>{variantAttributeLabels[key]}<input value={draft.variantAttributes[key]} onChange={(event) => update('variantAttributes', { ...draft.variantAttributes, [key]: event.target.value })} placeholder="任意" /></label>)}</div></fieldset>
+    <div className="two-fields"><label>基準量*<input type="number" min="0.01" step="any" value={draft.baseAmount} onChange={(event) => update('baseAmount', event.target.value)} required /></label><label>基準単位*<select value={draft.baseUnit} onChange={(event) => update('baseUnit', event.target.value as FoodUnit)}>{FOOD_UNITS.map((unit) => <option key={unit}>{unit}</option>)}</select></label></div>
+    <div className="two-fields"><label>既定量<input type="number" min="0.01" step="any" value={draft.servingAmount} onChange={(event) => update('servingAmount', event.target.value)} placeholder="任意" /></label><label>既定単位<select value={draft.servingUnit} onChange={(event) => update('servingUnit', event.target.value as FoodUnit)}>{FOOD_UNITS.map((unit) => <option key={unit}>{unit}</option>)}</select></label></div>
+    <fieldset><legend>栄養値（基準量あたり）</legend><div className="nutrient-input-grid">{NUTRIENT_KEYS.map((key) => <label key={key}>{NUTRIENT_LABELS[key]}<div className="unit-input"><input type="number" min="0" step="any" value={draft.nutrients[key]} onChange={(event) => update('nutrients', { ...draft.nutrients, [key]: event.target.value })} placeholder="未設定" /><span>{NUTRIENT_UNITS[key]}</span></div></label>)}</div></fieldset>
+    <p className="source-line">出典: {draft.sourceVersion}（保存前に内容を確認してください）</p><button className="button primary full-width" type="submit">保存する</button><button className="button ghost full-width" type="button" onClick={onClose}>キャンセル</button>
+  </form></section></>
 }
 
 function FoodMenuSelection({ draft, setDraft, menus }: { draft: FoodDraft; setDraft: React.Dispatch<React.SetStateAction<FoodDraft | null>>; menus: Menu[] }) {

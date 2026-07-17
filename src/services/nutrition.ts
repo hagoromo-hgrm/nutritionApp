@@ -10,6 +10,12 @@ export function calculateNutrients(food: Food, amount: number, amountUnit: Food[
   })) as Nutrients
 }
 
+/** 基準量を1単位として分量を増やす。gだけでなく個・丁・小さじ等にも使う。 */
+export function incrementByBaseAmount(amount: number, baseAmount: number, maximum = 100000): number {
+  const current = Number.isFinite(amount) && amount > 0 ? amount : 0
+  return Math.min(maximum, current + baseAmount)
+}
+
 export function sumNutrients(values: Nutrients[]): Nutrients {
   return Object.fromEntries(NUTRIENT_KEYS.map((key) => {
     if (values.some((value) => value[key] === null)) return [key, null]

@@ -24,12 +24,17 @@ const ATTRIBUTE_LABELS: Record<VariantAttributeKey, string> = {
   processing: '加工状態',
   variety: '区分',
 }
-const SKIN_VALUES = new Set(['皮つき', '皮なし'])
+const SKIN_VALUE_ALIASES = new Map([['皮つき', '皮つき'], ['皮なし', '皮なし']])
+const SKIN_VALUES = new Set(SKIN_VALUE_ALIASES.keys())
 const PREPARATION_VALUES = new Set(['生', 'ゆで', '焼き', '水煮', '蒸し', '電子レンジ調理', '油いため', '素揚げ', '天ぷら', 'から揚げ', 'ソテー', 'フライ', '煮', 'あめ色たまねぎ'])
 const PROCESSING_VALUES = new Set(['冷凍', '乾', '乾燥', '水戻し', '塩抜き', '水さらし', 'カット', '常法洗浄', '次亜塩素酸洗浄', 'おろし'])
 const CULTIVATION_VALUES = new Set(['菌床栽培', '原木栽培'])
 const SOURCE_BEAN_VALUES = new Map([['アルファルファもやし', 'アルファルファ'], ['だいずもやし', 'だいず'], ['ブラックマッペもやし', 'ブラックマッペ'], ['りょくとうもやし', 'りょくとう']])
 const PART_VALUES = ['手羽さき', '手羽もと', 'ひき肉', 'なんこつ（胸肉）', 'りん茎及び葉', '結球葉', '生しいたけ', '乾しいたけ', 'むね', 'もも', 'ささみ', '手羽', '心臓', '肝臓', 'すなぎも', '皮', '赤身', '脂身', '卵白', '卵黄', '根', '葉', '芽ばえ', '果実', 'りん茎', '塊根', '塊茎', 'ロース', 'ばら', 'かた', 'そともも', 'もも肉']
+
+function standaloneSkinIsAttribute(tokens: string[]): boolean {
+  return tokens.includes('皮') && tokens.includes('にんじん')
+}
 
 function tokensFor(food: Food): string[] {
   const source = (food.officialName ?? food.name)
@@ -51,7 +56,8 @@ export function getVariantAttributes(food: Food): FoodVariantAttributes {
   const tokens = tokensFor(food)
   for (const token of tokens) {
     const normalizedToken = variantToken(token)
-    if (SKIN_VALUES.has(normalizedToken)) attributes.skin = normalizedToken
+    if (SKIN_VALUES.has(normalizedToken)) attributes.skin = SKIN_VALUE_ALIASES.get(normalizedToken)
+    else if (normalizedToken === '皮' && standaloneSkinIsAttribute(tokens)) attributes.skin = '皮つき'
     else if (PREPARATION_VALUES.has(normalizedToken)) attributes.preparation = normalizedToken
     else if (PROCESSING_VALUES.has(normalizedToken)) attributes.processing = normalizedToken
     else if (CULTIVATION_VALUES.has(normalizedToken)) attributes.cultivation = normalizedToken
@@ -62,7 +68,8 @@ export function getVariantAttributes(food: Food): FoodVariantAttributes {
     else if (['和牛', '乳用肥育', '交雑', '黒毛'].some((marker) => squareContent.includes(marker))) attributes.variety = squareContent
     else if (token.includes('養殖')) attributes.variety = '養殖'
   }
-  for (const part of [...PART_VALUES].sort((left, right) => right.length - left.length)) {
+  if (tokens.includes('皮') && !standaloneSkinIsAttribute(tokens)) attributes.part = '皮'
+  else for (const part of [...PART_VALUES].filter((part) => part !== '皮').sort((left, right) => right.length - left.length)) {
     if (tokens.includes(part)) { attributes.part = part; break }
   }
   const species = [['にわとり', '鶏'], ['うし', '牛'], ['ぶた', '豚'], ['ひつじ', '羊'], ['やぎ', '山羊']] as const

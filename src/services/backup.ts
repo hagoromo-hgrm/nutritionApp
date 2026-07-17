@@ -13,6 +13,12 @@ function isNullableNumber(value: unknown): value is number | null {
   return value === null || (typeof value === 'number' && Number.isFinite(value))
 }
 
+function isVariantAttributes(value: unknown): boolean {
+  if (value === undefined) return true
+  if (!isRecord(value)) return false
+  return Object.values(value).every((item) => item === null || isString(item))
+}
+
 function isFood(value: unknown): value is Food {
   if (!isRecord(value)) return false
   return isString(value.id) && isString(value.name) && isString(value.maker) && isString(value.barcode)
@@ -26,6 +32,7 @@ function isFood(value: unknown): value is Food {
     && (value.displayName === undefined || isString(value.displayName))
     && (value.reading === undefined || value.reading === null || isString(value.reading))
     && (value.foodGroupId === undefined || isString(value.foodGroupId))
+    && isVariantAttributes(value.variantAttributes)
 }
 
 function isSnapshot(value: unknown): boolean {
@@ -92,7 +99,9 @@ function isMealEntry(value: unknown): value is MealEntry {
 function isMenu(value: unknown): value is Menu {
   if (!isRecord(value)) return false
   return isString(value.id) && isString(value.name) && ['主食', '主菜', '副菜', '汁物', '乳製品・果物', 'お菓子・スイーツ', 'その他'].includes(String(value.category))
-    && Array.isArray(value.foodIds) && value.foodIds.every(isString) && isString(value.createdAt) && isString(value.updatedAt)
+    && Array.isArray(value.foodIds) && value.foodIds.every(isString)
+    && (value.aliases === undefined || (Array.isArray(value.aliases) && value.aliases.every(isString)))
+    && isString(value.createdAt) && isString(value.updatedAt)
 }
 
 function isMenuSet(value: unknown): value is MenuSet {

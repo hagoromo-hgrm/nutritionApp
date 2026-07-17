@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { filterVariantsBySelection, getVariantOptionGroups, getVariantSelection, resolveVariantForSelection } from '../src/services/foodVariants'
+import { filterVariantsBySelection, getVariantAttributes, getVariantOptionGroups, getVariantSelection, resolveVariantForSelection } from '../src/services/foodVariants'
 import type { Food } from '../src/types'
 
 const nutrients = { energyKcal: 100, proteinG: 10, fatG: 5, carbohydrateG: 1, fiberG: 0, saltG: 0, calciumMg: null, ironMg: null, vitaminAMcg: null, vitaminEMg: null, vitaminB1Mg: null, vitaminB2Mg: null, vitaminCMg: null, saturatedFatG: null }
@@ -21,5 +21,10 @@ describe('food variation option selection', () => {
     const selection = { ...defaultSelection, skin: '皮なし', preparation: 'ゆで' as const }
     expect(filterVariantsBySelection(variants, selection).map((item) => item.id)).toEqual(['boiled-no-skin'])
     expect(resolveVariantForSelection(variants, selection, variants[0].id)?.id).toBe('boiled-no-skin')
+  })
+
+  it('単独の「皮」を皮つき属性として扱い、部位に残さない', () => {
+    const carrot: Food = { ...food('carrot', '皮つき', '生'), name: 'にんじん 根 皮 生', officialName: 'にんじん 根 皮 生', displayName: 'にんじん', variantAttributes: undefined }
+    expect(getVariantAttributes(carrot)).toMatchObject({ part: '根', skin: '皮つき', preparation: '生' })
   })
 })

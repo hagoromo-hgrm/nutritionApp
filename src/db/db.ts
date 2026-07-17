@@ -25,7 +25,7 @@ import { estimateDailyGoals } from '../services/nutrition'
 import { normalizeSearchText, searchFoodResults as searchFoodResultsPure, type FoodSearchPage } from '../services/foodSearch'
 
 const INITIAL_FOODS_VERSION = 6
-const SEARCH_METADATA_VERSION = 4
+const SEARCH_METADATA_VERSION = 5
 
 interface BundledSearchMetadata {
   metadata: { generationVersion: string }
@@ -134,7 +134,9 @@ export class NutritionDatabase extends Dexie {
 export const db = new NutritionDatabase()
 
 function enrichFoodForSearch(food: Food): Food {
-  const groupId = bundledMetadata.foodGroupByFoodId[food.id] ?? food.foodGroupId ?? `food:${food.id}`
+  const groupId = food.source === 'mext'
+    ? bundledMetadata.foodGroupByFoodId[food.id] ?? food.foodGroupId ?? `food:${food.id}`
+    : food.foodGroupId ?? bundledMetadata.foodGroupByFoodId[food.id] ?? `food:${food.id}`
   const group = bundledGroupsById.get(groupId)
   const bundledVariantAttributes = bundledMetadata.variantAttributesByFoodId[food.id]
   const variantAttributes = food.source === 'mext' && bundledVariantAttributes
@@ -153,7 +155,9 @@ async function ensureSearchMetadata(): Promise<void> {
     const groupsToPut = new Map<string, FoodGroup>()
     const foodsToPut: Food[] = []
     for (const food of foods) {
-      const groupId = bundledMetadata.foodGroupByFoodId[food.id] ?? food.foodGroupId ?? `food:${food.id}`
+      const groupId = food.source === 'mext'
+        ? bundledMetadata.foodGroupByFoodId[food.id] ?? food.foodGroupId ?? `food:${food.id}`
+        : food.foodGroupId ?? bundledMetadata.foodGroupByFoodId[food.id] ?? `food:${food.id}`
       const bundledGroup = bundledGroupsById.get(groupId)
       const existingGroup = existingGroups.get(groupId)
       if (bundledGroup && (!existingGroup || existingGroup.metadataSource !== 'manual')) {
@@ -323,6 +327,42 @@ export async function saveFood(food: Food): Promise<void> {
   })
 }
 
+export interface FoodMetadataUpdate {
+  group: FoodGroup
+  aliases: FoodAlias[]
+  relatedTerms: FoodRelatedTerm[]
+}
+
+/** 食品と検索メタデータを一緒に保存し、途中状態を検索対象へ公開しない。 */
+export async function saveFoodWithMetadata(food: Food, metadata: FoodMetadataUpdate): Promise<void> {
+  const previous = await db.foods.get(food.id)
+  const merged: Food = {
+    ...previous,
+    ...food,
+    foodGroupId: food.foodGroupId ?? previous?.foodGroupId,
+    displayName: food.displayName ?? previous?.displayName,
+    officialName: food.officialName ?? previous?.officialName,
+  }
+  const enriched = enrichFoodForSearch(merged)
+  const group = { ...metadata.group, defaultVariantId: metadata.group.defaultVariantId ?? enriched.id }
+  await db.transaction('rw', [db.foods, db.foodGroups, db.foodAliases, db.foodRelatedTerms], async () => {
+    await db.foods.put(enriched)
+    await db.foodGroups.put(group)
+    const currentAliases = await db.foodAliases.where('foodGroupId').equals(group.id).toArray()
+    const manualAliasIds = currentAliases.filter((alias) => alias.metadataSource === 'manual').map((alias) => alias.id)
+    if (manualAliasIds.length > 0) await db.foodAliases.bulkDelete(manualAliasIds)
+    const currentRelatedTerms = await db.foodRelatedTerms.where('foodGroupId').equals(group.id).toArray()
+    const manualRelatedIds = currentRelatedTerms.filter((term) => term.metadataSource === 'manual').map((term) => term.id)
+    if (manualRelatedIds.length > 0) await db.foodRelatedTerms.bulkDelete(manualRelatedIds)
+    if (metadata.aliases.length > 0) await db.foodAliases.bulkPut(metadata.aliases)
+    if (metadata.relatedTerms.length > 0) await db.foodRelatedTerms.bulkPut(metadata.relatedTerms)
+  })
+}
+
+export function createNewFoodGroupId(): string {
+  return createId('food-group')
+}
+
 export async function deleteFood(id: string): Promise<void> {
   await db.transaction('rw', [db.foods, db.favorites], async () => {
     await db.foods.delete(id)
@@ -346,7 +386,7 @@ export async function searchMenus(query: string): Promise<Menu[]> {
   const foodMatches = (food: Food) => [food.displayName ?? food.name, food.officialName ?? food.name, food.maker, food.reading ?? '', ...(food.foodGroupId ? aliasesByGroup.get(food.foodGroupId) ?? [] : [])]
     .some((field) => normalizeSearchText(field).includes(normalized))
   const textMatches = (field: string) => normalizeSearchText(field).includes(normalized)
-  return menus.filter((menu) => [menu.name, menu.category].some(textMatches)
+  return menus.filter((menu) => [menu.name, menu.category, ...(menu.aliases ?? [])].some(textMatches)
     || menu.foodIds.some((foodId) => {
       const food = foodsById.get(foodId)
       return food ? foodMatches(food) : false
@@ -372,7 +412,7 @@ export async function searchMenuSets(query: string): Promise<MenuSet[]> {
   const textMatches = (field: string) => normalizeSearchText(field).includes(normalized)
   const menuMatches = (menuId: string) => {
     const menu = menuById.get(menuId)
-    return menu ? [menu.name, menu.category].some(textMatches) || menu.foodIds.some(foodMatches) : false
+    return menu ? [menu.name, menu.category, ...(menu.aliases ?? [])].some(textMatches) || menu.foodIds.some(foodMatches) : false
   }
   return sets.filter((set) => textMatches(set.name) || (set.foodIds ?? []).some(foodMatches) || set.menuIds.some(menuMatches))
 }

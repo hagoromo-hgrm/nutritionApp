@@ -1,11 +1,11 @@
 {
   "metadata": {
-    "generatedAt": "2026-07-17T05:15:09.657504Z",
+    "generatedAt": "2026-07-17T07:01:03.259714Z",
     "sourceFoodCount": 2538,
     "generationVersion": "known-good-v1-auto-v1",
     "autoGroupCount": 286,
-    "autoGroupedFoodCount": 707,
-    "fallbackGroupCount": 1765,
+    "autoGroupedFoodCount": 708,
+    "fallbackGroupCount": 1763,
     "policy": "同一基底名から状態・調理・皮の有無だけを除去して一致するもののみ自動統合。判断が必要な品種・加工品は統合しない。"
   },
   "autoGroupProposals": [
@@ -4339,6 +4339,7 @@
         "mext_06346",
         "mext_06407",
         "mext_06408",
+        "mext_06347",
         "mext_06216",
         "mext_06380",
         "mext_06381"
@@ -4352,6 +4353,7 @@
         "にんじん　根　皮なし　素揚げ",
         "にんじん　根　皮なし　カット　常法洗浄",
         "にんじん　根　皮なし　カット　次亜塩素酸洗浄",
+        "にんじん　根　皮　生",
         "にんじん　根　冷凍",
         "にんじん　根　冷凍　ゆで",
         "にんじん　根　冷凍　油いため"
@@ -8194,20 +8196,7 @@
       }
     }
   ],
-  "mixedWithKnownGroups": [
-    {
-      "signature": "じゃがいも 塊茎",
-      "knownGroupIds": [
-        "vegetable:potato"
-      ],
-      "foodIds": [
-        "mext_02066"
-      ],
-      "foods": [
-        "じゃがいも　塊茎　皮なし　電子レンジ調理"
-      ]
-    }
-  ],
+  "mixedWithKnownGroups": [],
   "familyDecisions": [
     {
       "id": "carrot-family",
@@ -8277,7 +8266,7 @@
         {
           "id": "mext_06347",
           "name": "にんじん　根　皮　生",
-          "groupId": "food:mext_06347"
+          "groupId": "auto:265d0c8198ec"
         },
         {
           "id": "mext_06216",

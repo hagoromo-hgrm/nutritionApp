@@ -192,6 +192,7 @@ export interface Menu {
   name: string
   category: MenuCategory
   foodIds: string[]
+  aliases?: string[]
   createdAt: string
   updatedAt: string
 }

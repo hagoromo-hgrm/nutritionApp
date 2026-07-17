@@ -44,12 +44,13 @@ describe('export formats', () => {
     const withMenu = {
       ...backup,
       menus: [
-        { id: 'menu_1', name: '朝ごはん', category: '主食', foodIds: ['food_1'], createdAt: '2026-07-15T00:00:00.000Z', updatedAt: '2026-07-15T00:00:00.000Z' },
+        { id: 'menu_1', name: '朝ごはん', category: '主食', foodIds: ['food_1'], aliases: ['朝食'], createdAt: '2026-07-15T00:00:00.000Z', updatedAt: '2026-07-15T00:00:00.000Z' },
         { id: 'menu_2', name: 'おやつ', category: 'お菓子・スイーツ', foodIds: ['food_1'], createdAt: '2026-07-15T00:00:00.000Z', updatedAt: '2026-07-15T00:00:00.000Z' },
       ],
       menuSets: [{ id: 'set_1', name: '平日セット', menuIds: ['menu_1'], foodIds: ['food_1'], createdAt: '2026-07-15T00:00:00.000Z', updatedAt: '2026-07-15T00:00:00.000Z' }],
     }
     expect(validateBackup(withMenu).menus?.[0].name).toBe('朝ごはん')
+    expect(validateBackup(withMenu).menus?.[0].aliases).toEqual(['朝食'])
     expect(validateBackup(withMenu).menus?.[1].category).toBe('お菓子・スイーツ')
     expect(validateBackup(withMenu).menuSets?.[0].menuIds).toEqual(['menu_1'])
     expect(validateBackup(withMenu).menuSets?.[0].foodIds).toEqual(['food_1'])

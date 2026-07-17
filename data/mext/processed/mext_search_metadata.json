@@ -1,7 +1,7 @@
 {
   "metadata": {
     "generationVersion": "known-good-v1-auto-v1",
-    "generatedAt": "2026-07-17T05:15:09.657504Z",
+    "generatedAt": "2026-07-17T07:01:03.259714Z",
     "sourceFoodCount": 2538,
     "llmRuntime": false,
     "groupingPolicy": "deterministic-conservative-v1"
@@ -3693,7 +3693,7 @@
     },
     {
       "id": "food:mext_01006",
-      "displayName": "おおむぎ　押麦　乾",
+      "displayName": "おおむぎ 押麦",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -3969,7 +3969,7 @@
     },
     {
       "id": "food:mext_01174",
-      "displayName": "こむぎ　［パン類］　角形食パン　焼き",
+      "displayName": "こむぎ 角形食パン",
       "reading": null,
       "category": "主食",
       "representativeScore": 0,
@@ -4245,7 +4245,7 @@
     },
     {
       "id": "food:mext_01188",
-      "displayName": "こむぎ　［中華めん類］　蒸し中華めん  ソテー",
+      "displayName": "こむぎ 蒸し中華めん",
       "reading": null,
       "category": "主食",
       "representativeScore": 0,
@@ -4269,7 +4269,7 @@
     },
     {
       "id": "food:mext_01057",
-      "displayName": "こむぎ　［即席めん類］　即席中華めん　油揚げ　乾　（添付調味料等を含むもの）",
+      "displayName": "こむぎ 即席中華めん 油揚げ （添付調味料等を含むもの）",
       "reading": null,
       "category": "主食",
       "representativeScore": 0,
@@ -4293,7 +4293,7 @@
     },
     {
       "id": "food:mext_01058",
-      "displayName": "こむぎ　［即席めん類］　即席中華めん　非油揚げ　乾　（添付調味料等を含むもの）",
+      "displayName": "こむぎ 即席中華めん 非油揚げ （添付調味料等を含むもの）",
       "reading": null,
       "category": "主食",
       "representativeScore": 0,
@@ -4317,7 +4317,7 @@
     },
     {
       "id": "food:mext_01193",
-      "displayName": "こむぎ　［即席めん類］　中華スタイル即席カップめん　油揚げ　塩味　乾　（添付調味料等を含むもの）",
+      "displayName": "こむぎ 中華スタイル即席カップめん 油揚げ 塩味 （添付調味料等を含むもの）",
       "reading": null,
       "category": "主食",
       "representativeScore": 0,
@@ -4353,7 +4353,7 @@
     },
     {
       "id": "food:mext_01191",
-      "displayName": "こむぎ　［即席めん類］　中華スタイル即席カップめん　油揚げ　しょうゆ味　乾　（添付調味料等を含むもの）",
+      "displayName": "こむぎ 中華スタイル即席カップめん 油揚げ しょうゆ味 （添付調味料等を含むもの）",
       "reading": null,
       "category": "主食",
       "representativeScore": 0,
@@ -4389,7 +4389,7 @@
     },
     {
       "id": "food:mext_01060",
-      "displayName": "こむぎ　［即席めん類］　中華スタイル即席カップめん　油揚げ　焼きそば　乾　（添付調味料等を含むもの）",
+      "displayName": "こむぎ 中華スタイル即席カップめん 油揚げ 焼きそば （添付調味料等を含むもの）",
       "reading": null,
       "category": "主食",
       "representativeScore": 0,
@@ -4413,7 +4413,7 @@
     },
     {
       "id": "food:mext_01061",
-      "displayName": "こむぎ　［即席めん類］　中華スタイル即席カップめん　非油揚げ　乾　（添付調味料等を含むもの）",
+      "displayName": "こむぎ 中華スタイル即席カップめん 非油揚げ （添付調味料等を含むもの）",
       "reading": null,
       "category": "主食",
       "representativeScore": 0,
@@ -4449,7 +4449,7 @@
     },
     {
       "id": "food:mext_01062",
-      "displayName": "こむぎ　［即席めん類］　和風スタイル即席カップめん　油揚げ　乾　（添付調味料等を含むもの）",
+      "displayName": "こむぎ 和風スタイル即席カップめん 油揚げ （添付調味料等を含むもの）",
       "reading": null,
       "category": "主食",
       "representativeScore": 0,
@@ -4485,7 +4485,7 @@
     },
     {
       "id": "food:mext_01149",
-      "displayName": "こむぎ　［マカロニ・スパゲッティ類］　生パスタ　生",
+      "displayName": "こむぎ 生パスタ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -4617,7 +4617,7 @@
     },
     {
       "id": "food:mext_01074",
-      "displayName": "こむぎ　［その他］　ぎょうざの皮　生",
+      "displayName": "こむぎ ぎょうざの皮",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -4629,7 +4629,7 @@
     },
     {
       "id": "food:mext_01075",
-      "displayName": "こむぎ　［その他］　しゅうまいの皮　生",
+      "displayName": "こむぎ しゅうまいの皮",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -4641,7 +4641,7 @@
     },
     {
       "id": "food:mext_01179",
-      "displayName": "こむぎ　［その他］　春巻きの皮　生",
+      "displayName": "こむぎ 春巻きの皮",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -4701,7 +4701,7 @@
     },
     {
       "id": "food:mext_01150",
-      "displayName": "こむぎ　［その他］　冷めん　生",
+      "displayName": "こむぎ 冷めん",
       "reading": null,
       "category": "主食",
       "representativeScore": 0,
@@ -5613,7 +5613,7 @@
     },
     {
       "id": "food:mext_01135",
-      "displayName": "とうもろこし　ジャイアントコーン　フライ　味付け",
+      "displayName": "とうもろこし ジャイアントコーン 味付け",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -5793,7 +5793,7 @@
     },
     {
       "id": "food:mext_02065",
-      "displayName": "じゃがいも　塊茎　皮つき　フライドポテト　（生を揚げたもの）",
+      "displayName": "じゃがいも 塊茎 フライドポテト （生を揚げたもの）",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -5804,20 +5804,8 @@
       "needsReview": true
     },
     {
-      "id": "food:mext_02066",
-      "displayName": "じゃがいも　塊茎　皮なし　電子レンジ調理",
-      "reading": null,
-      "category": "副菜",
-      "representativeScore": 0,
-      "defaultVariantId": "mext_02066",
-      "isActive": true,
-      "metadataSource": "rule",
-      "generationVersion": "fallback-v2",
-      "needsReview": true
-    },
-    {
       "id": "food:mext_02067",
-      "displayName": "じゃがいも　塊茎　皮なし　フライドポテト　（生を揚げたもの）",
+      "displayName": "じゃがいも 塊茎 フライドポテト （生を揚げたもの）",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -5829,7 +5817,7 @@
     },
     {
       "id": "food:mext_02020",
-      "displayName": "じゃがいも　塊茎　皮なし　フライドポテト　（市販冷凍食品を揚げたもの）",
+      "displayName": "じゃがいも 塊茎 フライドポテト （市販冷凍食品を揚げたもの）",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -5853,7 +5841,7 @@
     },
     {
       "id": "food:mext_02022",
-      "displayName": "ながいも　いちょういも　塊根　生",
+      "displayName": "ながいも いちょういも",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -5865,7 +5853,7 @@
     },
     {
       "id": "food:mext_02025",
-      "displayName": "ながいも　やまといも　塊根　生",
+      "displayName": "ながいも やまといも",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -5877,7 +5865,7 @@
     },
     {
       "id": "food:mext_02026",
-      "displayName": "じねんじょ　塊根　生",
+      "displayName": "じねんじょ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -5889,7 +5877,7 @@
     },
     {
       "id": "food:mext_02027",
-      "displayName": "だいじょ　塊根　生",
+      "displayName": "だいじょ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -6573,7 +6561,7 @@
     },
     {
       "id": "food:mext_04019",
-      "displayName": "そらまめ　全粒　乾",
+      "displayName": "そらまめ 全粒",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -6633,7 +6621,7 @@
     },
     {
       "id": "food:mext_04025",
-      "displayName": "だいず　［全粒・全粒製品］　全粒　黄大豆　米国産　乾",
+      "displayName": "だいず 全粒 黄大豆 米国産",
       "reading": null,
       "category": "主食",
       "representativeScore": 0,
@@ -6645,7 +6633,7 @@
     },
     {
       "id": "food:mext_04026",
-      "displayName": "だいず　［全粒・全粒製品］　全粒　黄大豆　中国産　乾",
+      "displayName": "だいず 全粒 黄大豆 中国産",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -6657,7 +6645,7 @@
     },
     {
       "id": "food:mext_04027",
-      "displayName": "だいず　［全粒・全粒製品］　全粒　黄大豆　ブラジル産　乾",
+      "displayName": "だいず 全粒 黄大豆 ブラジル産",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -6909,9 +6897,9 @@
     },
     {
       "id": "food:mext_04040",
-      "displayName": "だいず　［豆腐・油揚げ類］　油揚げ　生",
+      "displayName": "だいず 油揚げ",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_04040",
       "isActive": true,
@@ -7101,7 +7089,7 @@
     },
     {
       "id": "food:mext_04059",
-      "displayName": "だいず　［その他］　湯葉　生",
+      "displayName": "だいず 湯葉",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -7113,7 +7101,7 @@
     },
     {
       "id": "food:mext_04060",
-      "displayName": "だいず　［その他］　湯葉　干し　乾",
+      "displayName": "だいず 湯葉 干し",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -7173,7 +7161,7 @@
     },
     {
       "id": "food:mext_04067",
-      "displayName": "ひよこまめ　全粒　フライ　味付け",
+      "displayName": "ひよこまめ 全粒 味付け",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -7185,7 +7173,7 @@
     },
     {
       "id": "food:mext_05001",
-      "displayName": "アーモンド　乾",
+      "displayName": "アーモンド",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -7197,7 +7185,7 @@
     },
     {
       "id": "food:mext_05002",
-      "displayName": "アーモンド　フライ　味付け",
+      "displayName": "アーモンド 味付け",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -7221,7 +7209,7 @@
     },
     {
       "id": "food:mext_05003",
-      "displayName": "あさ　乾",
+      "displayName": "あさ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -7245,7 +7233,7 @@
     },
     {
       "id": "food:mext_05004",
-      "displayName": "えごま　乾",
+      "displayName": "えごま",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -7257,7 +7245,7 @@
     },
     {
       "id": "food:mext_05005",
-      "displayName": "カシューナッツ　フライ　味付け",
+      "displayName": "カシューナッツ 味付け",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -7329,7 +7317,7 @@
     },
     {
       "id": "food:mext_05015",
-      "displayName": "けし　乾",
+      "displayName": "けし",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -7353,7 +7341,7 @@
     },
     {
       "id": "food:mext_05017",
-      "displayName": "ごま　乾",
+      "displayName": "ごま",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -7401,7 +7389,7 @@
     },
     {
       "id": "food:mext_05020",
-      "displayName": "しい　生",
+      "displayName": "しい",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -7425,7 +7413,7 @@
     },
     {
       "id": "food:mext_05046",
-      "displayName": "チアシード　乾",
+      "displayName": "チアシード",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -7437,7 +7425,7 @@
     },
     {
       "id": "food:mext_05022",
-      "displayName": "とち　蒸し",
+      "displayName": "とち",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -7449,7 +7437,7 @@
     },
     {
       "id": "food:mext_05023",
-      "displayName": "はす　未熟　生",
+      "displayName": "はす 未熟",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -7461,7 +7449,7 @@
     },
     {
       "id": "food:mext_05025",
-      "displayName": "ひし　生",
+      "displayName": "ひし",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -7485,7 +7473,7 @@
     },
     {
       "id": "food:mext_05027",
-      "displayName": "ひまわり　フライ　味付け",
+      "displayName": "ひまわり 味付け",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -7497,7 +7485,7 @@
     },
     {
       "id": "food:mext_05028",
-      "displayName": "ブラジルナッツ　フライ　味付け",
+      "displayName": "ブラジルナッツ 味付け",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -7509,7 +7497,7 @@
     },
     {
       "id": "food:mext_05029",
-      "displayName": "ヘーゼルナッツ　フライ　味付け",
+      "displayName": "ヘーゼルナッツ 味付け",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -7521,7 +7509,7 @@
     },
     {
       "id": "food:mext_05030",
-      "displayName": "ペカン　フライ　味付け",
+      "displayName": "ペカン 味付け",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -7545,7 +7533,7 @@
     },
     {
       "id": "food:mext_05032",
-      "displayName": "まつ　生",
+      "displayName": "まつ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -7569,7 +7557,7 @@
     },
     {
       "id": "food:mext_05034",
-      "displayName": "らっかせい　大粒種　乾",
+      "displayName": "らっかせい 大粒種",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -7593,7 +7581,7 @@
     },
     {
       "id": "food:mext_05044",
-      "displayName": "らっかせい　小粒種　乾",
+      "displayName": "らっかせい 小粒種",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -7641,7 +7629,7 @@
     },
     {
       "id": "food:mext_06402",
-      "displayName": "アイスプラント　生",
+      "displayName": "アイスプラント",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -7665,7 +7653,7 @@
     },
     {
       "id": "food:mext_06328",
-      "displayName": "アロエ　葉　生",
+      "displayName": "アロエ 葉",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -7677,7 +7665,7 @@
     },
     {
       "id": "food:mext_06014",
-      "displayName": "やまうど　茎　生",
+      "displayName": "やまうど 茎",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -7689,7 +7677,7 @@
     },
     {
       "id": "food:mext_06363",
-      "displayName": "うるい　葉　生",
+      "displayName": "うるい 葉",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -7701,7 +7689,7 @@
     },
     {
       "id": "food:mext_06018",
-      "displayName": "エンダイブ　葉　生",
+      "displayName": "エンダイブ 葉",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -7713,7 +7701,7 @@
     },
     {
       "id": "food:mext_06019",
-      "displayName": "トウミョウ　茎葉　生",
+      "displayName": "トウミョウ 茎葉",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -7725,7 +7713,7 @@
     },
     {
       "id": "food:mext_06022",
-      "displayName": "スナップえんどう　若ざや　生",
+      "displayName": "スナップえんどう 若ざや",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -7773,7 +7761,7 @@
     },
     {
       "id": "food:mext_06041",
-      "displayName": "かぶ　漬物　塩漬　根　皮つき",
+      "displayName": "かぶ 漬物 塩漬",
       "reading": null,
       "category": "調味料",
       "representativeScore": 0,
@@ -7785,7 +7773,7 @@
     },
     {
       "id": "food:mext_06042",
-      "displayName": "かぶ　漬物　塩漬　根　皮なし",
+      "displayName": "かぶ 漬物 塩漬",
       "reading": null,
       "category": "調味料",
       "representativeScore": 0,
@@ -7809,7 +7797,7 @@
     },
     {
       "id": "food:mext_06044",
-      "displayName": "かぶ　漬物　ぬかみそ漬　根　皮つき",
+      "displayName": "かぶ 漬物 ぬかみそ漬",
       "reading": null,
       "category": "調味料",
       "representativeScore": 0,
@@ -7821,7 +7809,7 @@
     },
     {
       "id": "food:mext_06045",
-      "displayName": "かぶ　漬物　ぬかみそ漬　根　皮なし",
+      "displayName": "かぶ 漬物 ぬかみそ漬",
       "reading": null,
       "category": "調味料",
       "representativeScore": 0,
@@ -7833,7 +7821,7 @@
     },
     {
       "id": "food:mext_06051",
-      "displayName": "そうめんかぼちゃ　果実　生",
+      "displayName": "そうめんかぼちゃ",
       "reading": null,
       "category": "主食",
       "representativeScore": 0,
@@ -7845,7 +7833,7 @@
     },
     {
       "id": "food:mext_06052",
-      "displayName": "からしな　葉　生",
+      "displayName": "からしな 葉",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -7893,7 +7881,7 @@
     },
     {
       "id": "food:mext_06063",
-      "displayName": "グリーンボール　結球葉　生",
+      "displayName": "グリーンボール",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -7905,7 +7893,7 @@
     },
     {
       "id": "food:mext_06064",
-      "displayName": "レッドキャベツ　結球葉　生",
+      "displayName": "レッドキャベツ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -7917,7 +7905,7 @@
     },
     {
       "id": "food:mext_06065",
-      "displayName": "きゅうり　果実　生",
+      "displayName": "きゅうり",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -7989,7 +7977,7 @@
     },
     {
       "id": "food:mext_06071",
-      "displayName": "ぎょうじゃにんにく　葉　生",
+      "displayName": "ぎょうじゃにんにく 葉",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -8001,7 +7989,7 @@
     },
     {
       "id": "food:mext_06077",
-      "displayName": "クレソン　茎葉　生",
+      "displayName": "クレソン 茎葉",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -8013,7 +8001,7 @@
     },
     {
       "id": "food:mext_06080",
-      "displayName": "ケール　葉　生",
+      "displayName": "ケール 葉",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -8025,7 +8013,7 @@
     },
     {
       "id": "food:mext_06083",
-      "displayName": "こごみ　若芽　生",
+      "displayName": "こごみ 若芽",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -8037,7 +8025,7 @@
     },
     {
       "id": "food:mext_06405",
-      "displayName": "堀川ごぼう　根　生",
+      "displayName": "堀川ごぼう",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -8049,7 +8037,7 @@
     },
     {
       "id": "food:mext_06385",
-      "displayName": "コリアンダー　葉　生",
+      "displayName": "コリアンダー 葉",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -8085,7 +8073,7 @@
     },
     {
       "id": "food:mext_06092",
-      "displayName": "しかくまめ　若ざや　生",
+      "displayName": "しかくまめ 若ざや",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -8097,7 +8085,7 @@
     },
     {
       "id": "food:mext_06406",
-      "displayName": "万願寺とうがらし　果実　生",
+      "displayName": "万願寺とうがらし",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -8109,7 +8097,7 @@
     },
     {
       "id": "food:mext_06095",
-      "displayName": "しそ　葉　生",
+      "displayName": "しそ 葉",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -8121,7 +8109,7 @@
     },
     {
       "id": "food:mext_06096",
-      "displayName": "しそ　実　生",
+      "displayName": "しそ 実",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -8145,7 +8133,7 @@
     },
     {
       "id": "food:mext_06102",
-      "displayName": "葉しょうが　根茎　生",
+      "displayName": "葉しょうが 根茎",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -8157,7 +8145,7 @@
     },
     {
       "id": "food:mext_06366",
-      "displayName": "しょうが　根茎　皮なし　生　おろし汁",
+      "displayName": "しょうが 根茎 おろし汁",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -8193,7 +8181,7 @@
     },
     {
       "id": "food:mext_06386",
-      "displayName": "新しょうが　根茎　生",
+      "displayName": "新しょうが 根茎",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -8205,7 +8193,7 @@
     },
     {
       "id": "food:mext_06106",
-      "displayName": "しろうり　果実　生",
+      "displayName": "しろうり",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -8241,7 +8229,7 @@
     },
     {
       "id": "food:mext_06387",
-      "displayName": "すいぜんじな　葉　生",
+      "displayName": "すいぜんじな 葉",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -8253,7 +8241,7 @@
     },
     {
       "id": "food:mext_06113",
-      "displayName": "すぐきな　葉　生",
+      "displayName": "すぐきな 葉",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -8265,7 +8253,7 @@
     },
     {
       "id": "food:mext_06114",
-      "displayName": "すぐきな　根　生",
+      "displayName": "すぐきな",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -8289,7 +8277,7 @@
     },
     {
       "id": "food:mext_06116",
-      "displayName": "ズッキーニ　果実　生",
+      "displayName": "ズッキーニ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -8301,7 +8289,7 @@
     },
     {
       "id": "food:mext_06119",
-      "displayName": "セロリ　葉柄　生",
+      "displayName": "セロリ 葉柄",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -8313,7 +8301,7 @@
     },
     {
       "id": "food:mext_06128",
-      "displayName": "かいわれだいこん　芽ばえ　生",
+      "displayName": "かいわれだいこん 芽ばえ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -8325,7 +8313,7 @@
     },
     {
       "id": "food:mext_06129",
-      "displayName": "葉だいこん　葉　生",
+      "displayName": "葉だいこん 葉",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -8337,7 +8325,7 @@
     },
     {
       "id": "food:mext_06368",
-      "displayName": "だいこん　根　皮なし　生　おろし汁",
+      "displayName": "だいこん 根 おろし汁",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -8349,7 +8337,7 @@
     },
     {
       "id": "food:mext_06369",
-      "displayName": "だいこん　根　皮なし　生　おろし水洗い",
+      "displayName": "だいこん 根 おろし水洗い",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -8457,7 +8445,7 @@
     },
     {
       "id": "food:mext_06144",
-      "displayName": "つまみな　葉　生",
+      "displayName": "つまみな 葉",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -8469,7 +8457,7 @@
     },
     {
       "id": "food:mext_06145",
-      "displayName": "たいさい　葉　生",
+      "displayName": "たいさい 葉",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -8493,7 +8481,7 @@
     },
     {
       "id": "food:mext_06147",
-      "displayName": "たかな　葉　生",
+      "displayName": "たかな 葉",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -8529,7 +8517,7 @@
     },
     {
       "id": "food:mext_06152",
-      "displayName": "たけのこ　めんま　塩蔵　塩抜き",
+      "displayName": "たけのこ めんま 塩蔵",
       "reading": null,
       "category": "主食",
       "representativeScore": 0,
@@ -8541,7 +8529,7 @@
     },
     {
       "id": "food:mext_06156",
-      "displayName": "赤たまねぎ　りん茎　生",
+      "displayName": "赤たまねぎ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -8553,7 +8541,7 @@
     },
     {
       "id": "food:mext_06337",
-      "displayName": "葉たまねぎ　りん茎及び葉　生",
+      "displayName": "葉たまねぎ りん茎及び葉",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -8565,7 +8553,7 @@
     },
     {
       "id": "food:mext_06159",
-      "displayName": "チコリ　若芽　生",
+      "displayName": "チコリ 若芽",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -8577,7 +8565,7 @@
     },
     {
       "id": "food:mext_06164",
-      "displayName": "つるな　茎葉　生",
+      "displayName": "つるな 茎葉",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -8589,7 +8577,7 @@
     },
     {
       "id": "food:mext_06390",
-      "displayName": "つるにんじん　根　生",
+      "displayName": "つるにんじん",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -8601,7 +8589,7 @@
     },
     {
       "id": "food:mext_06177",
-      "displayName": "スイートコーン　未熟種子　穂軸つき　冷凍",
+      "displayName": "スイートコーン 未熟種子 穂軸つき",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -8637,7 +8625,7 @@
     },
     {
       "id": "food:mext_06181",
-      "displayName": "ヤングコーン　幼雌穂　生",
+      "displayName": "ヤングコーン 幼雌穂",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -8649,7 +8637,7 @@
     },
     {
       "id": "food:mext_06182",
-      "displayName": "赤色トマト　果実　生",
+      "displayName": "赤色トマト",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -8661,7 +8649,7 @@
     },
     {
       "id": "food:mext_06183",
-      "displayName": "赤色ミニトマト　果実　生",
+      "displayName": "赤色ミニトマト",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -8673,7 +8661,7 @@
     },
     {
       "id": "food:mext_06391",
-      "displayName": "黄色トマト　果実　生",
+      "displayName": "黄色トマト",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -8757,7 +8745,7 @@
     },
     {
       "id": "food:mext_06187",
-      "displayName": "トレビス　葉　生",
+      "displayName": "トレビス 葉",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -8769,7 +8757,7 @@
     },
     {
       "id": "food:mext_06188",
-      "displayName": "とんぶり　ゆで",
+      "displayName": "とんぶり",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -8841,7 +8829,7 @@
     },
     {
       "id": "food:mext_06200",
-      "displayName": "なずな　葉　生",
+      "displayName": "なずな 葉",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -8853,7 +8841,7 @@
     },
     {
       "id": "food:mext_06209",
-      "displayName": "花にら　花茎・花らい　生",
+      "displayName": "花にら 花茎・花らい",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -8865,7 +8853,7 @@
     },
     {
       "id": "food:mext_06210",
-      "displayName": "黄にら　葉　生",
+      "displayName": "黄にら 葉",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -8877,23 +8865,11 @@
     },
     {
       "id": "food:mext_06211",
-      "displayName": "葉にんじん　葉　生",
+      "displayName": "葉にんじん 葉",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_06211",
-      "isActive": true,
-      "metadataSource": "rule",
-      "generationVersion": "fallback-v2",
-      "needsReview": true
-    },
-    {
-      "id": "food:mext_06347",
-      "displayName": "にんじん　根　皮　生",
-      "reading": null,
-      "category": "副菜",
-      "representativeScore": 0,
-      "defaultVariantId": "mext_06347",
       "isActive": true,
       "metadataSource": "rule",
       "generationVersion": "fallback-v2",
@@ -8925,7 +8901,7 @@
     },
     {
       "id": "food:mext_06409",
-      "displayName": "島にんじん　根　皮なし　生",
+      "displayName": "島にんじん",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -8937,7 +8913,7 @@
     },
     {
       "id": "food:mext_06222",
-      "displayName": "ミニキャロット　根　生",
+      "displayName": "ミニキャロット",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -8949,7 +8925,7 @@
     },
     {
       "id": "food:mext_06410",
-      "displayName": "九条ねぎ　葉　生",
+      "displayName": "九条ねぎ 葉",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -8961,7 +8937,7 @@
     },
     {
       "id": "food:mext_06228",
-      "displayName": "こねぎ　葉　生",
+      "displayName": "こねぎ 葉",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -8973,7 +8949,7 @@
     },
     {
       "id": "food:mext_06411",
-      "displayName": "めねぎ　葉　生",
+      "displayName": "めねぎ 葉",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -8985,7 +8961,7 @@
     },
     {
       "id": "food:mext_06229",
-      "displayName": "のざわな　葉　生",
+      "displayName": "のざわな 葉",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -9021,7 +8997,7 @@
     },
     {
       "id": "food:mext_06232",
-      "displayName": "のびる　りん茎葉　生",
+      "displayName": "のびる りん茎葉",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -9057,7 +9033,7 @@
     },
     {
       "id": "food:mext_06237",
-      "displayName": "パクチョイ　葉　生",
+      "displayName": "パクチョイ 葉",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -9069,7 +9045,7 @@
     },
     {
       "id": "food:mext_06238",
-      "displayName": "バジル　葉　生",
+      "displayName": "バジル 葉",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -9081,7 +9057,7 @@
     },
     {
       "id": "food:mext_06239",
-      "displayName": "パセリ　葉　生",
+      "displayName": "パセリ 葉",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -9093,7 +9069,7 @@
     },
     {
       "id": "food:mext_06240",
-      "displayName": "はつかだいこん　根　生",
+      "displayName": "はつかだいこん",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -9105,7 +9081,7 @@
     },
     {
       "id": "food:mext_06392",
-      "displayName": "はなっこりー　生",
+      "displayName": "はなっこりー",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -9117,7 +9093,7 @@
     },
     {
       "id": "food:mext_06241",
-      "displayName": "はやとうり　果実　白色種　生",
+      "displayName": "はやとうり 果実 白色種",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -9141,7 +9117,7 @@
     },
     {
       "id": "food:mext_06353",
-      "displayName": "はやとうり　果実　緑色種　生",
+      "displayName": "はやとうり 果実 緑色種",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -9153,7 +9129,7 @@
     },
     {
       "id": "food:mext_06251",
-      "displayName": "トマピー　果実　生",
+      "displayName": "トマピー",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -9165,7 +9141,7 @@
     },
     {
       "id": "food:mext_06252",
-      "displayName": "ひのな　根・茎葉　生",
+      "displayName": "ひのな 根・茎葉",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -9189,7 +9165,7 @@
     },
     {
       "id": "food:mext_06254",
-      "displayName": "ひろしまな　葉　生",
+      "displayName": "ひろしまな 葉",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -9213,7 +9189,7 @@
     },
     {
       "id": "food:mext_06260",
-      "displayName": "ふじまめ　若ざや　生",
+      "displayName": "ふじまめ 若ざや",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -9225,7 +9201,7 @@
     },
     {
       "id": "food:mext_06354",
-      "displayName": "ブロッコリー　芽ばえ　生",
+      "displayName": "ブロッコリー 芽ばえ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -9237,7 +9213,7 @@
     },
     {
       "id": "food:mext_06270",
-      "displayName": "ホースラディシュ　根茎　生",
+      "displayName": "ホースラディシュ 根茎",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -9249,7 +9225,7 @@
     },
     {
       "id": "food:mext_06271",
-      "displayName": "まこも　茎　生",
+      "displayName": "まこも 茎",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -9261,7 +9237,7 @@
     },
     {
       "id": "food:mext_06272",
-      "displayName": "みずかけな　葉　生",
+      "displayName": "みずかけな 葉",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -9297,7 +9273,7 @@
     },
     {
       "id": "food:mext_06360",
-      "displayName": "みぶな　葉　生",
+      "displayName": "みぶな 葉",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -9309,7 +9285,7 @@
     },
     {
       "id": "food:mext_06280",
-      "displayName": "みょうが　花穂　生",
+      "displayName": "みょうが 花穂",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -9321,7 +9297,7 @@
     },
     {
       "id": "food:mext_06281",
-      "displayName": "みょうがたけ　茎葉　生",
+      "displayName": "みょうがたけ 茎葉",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -9333,7 +9309,7 @@
     },
     {
       "id": "food:mext_06282",
-      "displayName": "むかご　肉芽　生",
+      "displayName": "むかご 肉芽",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -9345,7 +9321,7 @@
     },
     {
       "id": "food:mext_06285",
-      "displayName": "めたで　芽ばえ　生",
+      "displayName": "めたで 芽ばえ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -9369,7 +9345,7 @@
     },
     {
       "id": "food:mext_06300",
-      "displayName": "よめな　葉　生",
+      "displayName": "よめな 葉",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -9381,7 +9357,7 @@
     },
     {
       "id": "food:mext_06305",
-      "displayName": "らっきょう　りん茎　生",
+      "displayName": "らっきょう",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -9405,7 +9381,7 @@
     },
     {
       "id": "food:mext_06307",
-      "displayName": "エシャレット　りん茎　生",
+      "displayName": "エシャレット",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -9417,7 +9393,7 @@
     },
     {
       "id": "food:mext_06319",
-      "displayName": "ルッコラ　葉　生",
+      "displayName": "ルッコラ 葉",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -9429,7 +9405,7 @@
     },
     {
       "id": "food:mext_06312",
-      "displayName": "レタス　土耕栽培　結球葉　生",
+      "displayName": "レタス 土耕栽培",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -9441,7 +9417,7 @@
     },
     {
       "id": "food:mext_06361",
-      "displayName": "レタス　水耕栽培　結球葉　生",
+      "displayName": "レタス 水耕栽培",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -9453,7 +9429,7 @@
     },
     {
       "id": "food:mext_06313",
-      "displayName": "サラダな　葉　生",
+      "displayName": "サラダな 葉",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -9465,7 +9441,7 @@
     },
     {
       "id": "food:mext_06314",
-      "displayName": "リーフレタス　葉　生",
+      "displayName": "リーフレタス 葉",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -9477,7 +9453,7 @@
     },
     {
       "id": "food:mext_06315",
-      "displayName": "サニーレタス　葉　生",
+      "displayName": "サニーレタス 葉",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -9489,7 +9465,7 @@
     },
     {
       "id": "food:mext_06362",
-      "displayName": "サンチュ　葉　生",
+      "displayName": "サンチュ 葉",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -9501,7 +9477,7 @@
     },
     {
       "id": "food:mext_06316",
-      "displayName": "コスレタス　葉　生",
+      "displayName": "コスレタス 葉",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -9525,7 +9501,7 @@
     },
     {
       "id": "food:mext_06322",
-      "displayName": "わさび　根茎　生",
+      "displayName": "わさび 根茎",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -9549,7 +9525,7 @@
     },
     {
       "id": "food:mext_06326",
-      "displayName": "わらび　干しわらび　乾",
+      "displayName": "わらび 干しわらび",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -9585,7 +9561,7 @@
     },
     {
       "id": "food:mext_07001",
-      "displayName": "あけび　果肉　生",
+      "displayName": "あけび 果肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -9597,7 +9573,7 @@
     },
     {
       "id": "food:mext_07002",
-      "displayName": "あけび　果皮　生",
+      "displayName": "あけび 果皮",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -9609,7 +9585,7 @@
     },
     {
       "id": "food:mext_07181",
-      "displayName": "アサイー　冷凍　無糖",
+      "displayName": "アサイー 無糖",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -9621,7 +9597,7 @@
     },
     {
       "id": "food:mext_07003",
-      "displayName": "アセロラ　酸味種　生",
+      "displayName": "アセロラ 酸味種",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -9633,7 +9609,7 @@
     },
     {
       "id": "food:mext_07159",
-      "displayName": "アセロラ　甘味種　生",
+      "displayName": "アセロラ 甘味種",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -9657,7 +9633,7 @@
     },
     {
       "id": "food:mext_07005",
-      "displayName": "アテモヤ　生",
+      "displayName": "アテモヤ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -9669,7 +9645,7 @@
     },
     {
       "id": "food:mext_07006",
-      "displayName": "アボカド　生",
+      "displayName": "アボカド",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -9753,7 +9729,7 @@
     },
     {
       "id": "food:mext_07019",
-      "displayName": "うめ　生",
+      "displayName": "うめ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -9873,7 +9849,7 @@
     },
     {
       "id": "food:mext_07049",
-      "displayName": "かき　甘がき　生",
+      "displayName": "かき 甘がき",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -9885,7 +9861,7 @@
     },
     {
       "id": "food:mext_07050",
-      "displayName": "かき　渋抜きがき　生",
+      "displayName": "かき 渋抜きがき",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -9909,7 +9885,7 @@
     },
     {
       "id": "food:mext_07053",
-      "displayName": "かりん　生",
+      "displayName": "かりん",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -9921,7 +9897,7 @@
     },
     {
       "id": "food:mext_07018",
-      "displayName": "いよかん　砂じょう　生",
+      "displayName": "いよかん 砂じょう",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -9933,7 +9909,7 @@
     },
     {
       "id": "food:mext_07026",
-      "displayName": "うんしゅうみかん　じょうのう　早生　生",
+      "displayName": "うんしゅうみかん じょうのう 早生",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -9945,7 +9921,7 @@
     },
     {
       "id": "food:mext_07027",
-      "displayName": "うんしゅうみかん　じょうのう　普通　生",
+      "displayName": "うんしゅうみかん じょうのう 普通",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -9957,7 +9933,7 @@
     },
     {
       "id": "food:mext_07028",
-      "displayName": "うんしゅうみかん　砂じょう　早生　生",
+      "displayName": "うんしゅうみかん 砂じょう 早生",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -9969,7 +9945,7 @@
     },
     {
       "id": "food:mext_07029",
-      "displayName": "うんしゅうみかん　砂じょう　普通　生",
+      "displayName": "うんしゅうみかん 砂じょう 普通",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -10065,7 +10041,7 @@
     },
     {
       "id": "food:mext_07040",
-      "displayName": "オレンジ　ネーブル　砂じょう　生",
+      "displayName": "オレンジ ネーブル 砂じょう",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -10077,7 +10053,7 @@
     },
     {
       "id": "food:mext_07041",
-      "displayName": "オレンジ　バレンシア　米国産　砂じょう　生",
+      "displayName": "オレンジ バレンシア 米国産 砂じょう",
       "reading": null,
       "category": "主食",
       "representativeScore": 0,
@@ -10161,7 +10137,7 @@
     },
     {
       "id": "food:mext_07161",
-      "displayName": "オレンジ　福原オレンジ　砂じょう　生",
+      "displayName": "オレンジ 福原オレンジ 砂じょう",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -10173,7 +10149,7 @@
     },
     {
       "id": "food:mext_07048",
-      "displayName": "オロブランコ　砂じょう　生",
+      "displayName": "オロブランコ 砂じょう",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -10185,7 +10161,7 @@
     },
     {
       "id": "food:mext_07052",
-      "displayName": "かぼす　果汁　生",
+      "displayName": "かぼす 果汁",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -10197,7 +10173,7 @@
     },
     {
       "id": "food:mext_07162",
-      "displayName": "かわちばんかん　砂じょう　生",
+      "displayName": "かわちばんかん 砂じょう",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -10209,7 +10185,7 @@
     },
     {
       "id": "food:mext_07163",
-      "displayName": "きよみ　砂じょう　生",
+      "displayName": "きよみ 砂じょう",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -10221,7 +10197,7 @@
     },
     {
       "id": "food:mext_07056",
-      "displayName": "きんかん　全果　生",
+      "displayName": "きんかん 全果",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -10233,7 +10209,7 @@
     },
     {
       "id": "food:mext_07062",
-      "displayName": "グレープフルーツ　白肉種　砂じょう　生",
+      "displayName": "グレープフルーツ 白肉種 砂じょう",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -10245,7 +10221,7 @@
     },
     {
       "id": "food:mext_07164",
-      "displayName": "グレープフルーツ　紅肉種　砂じょう　生",
+      "displayName": "グレープフルーツ 紅肉種 砂じょう",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -10317,7 +10293,7 @@
     },
     {
       "id": "food:mext_07074",
-      "displayName": "さんぼうかん　砂じょう　生",
+      "displayName": "さんぼうかん 砂じょう",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -10329,7 +10305,7 @@
     },
     {
       "id": "food:mext_07075",
-      "displayName": "シークヮーサー　果汁　生",
+      "displayName": "シークヮーサー 果汁",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -10353,7 +10329,7 @@
     },
     {
       "id": "food:mext_07165",
-      "displayName": "しらぬひ　砂じょう　生",
+      "displayName": "しらぬひ 砂じょう",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -10365,7 +10341,7 @@
     },
     {
       "id": "food:mext_07078",
-      "displayName": "すだち　果皮　生",
+      "displayName": "すだち 果皮",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -10377,7 +10353,7 @@
     },
     {
       "id": "food:mext_07079",
-      "displayName": "すだち　果汁　生",
+      "displayName": "すだち 果汁",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -10389,7 +10365,7 @@
     },
     {
       "id": "food:mext_07166",
-      "displayName": "せとか　砂じょう　生",
+      "displayName": "せとか 砂じょう",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -10401,7 +10377,7 @@
     },
     {
       "id": "food:mext_07085",
-      "displayName": "セミノール　砂じょう　生",
+      "displayName": "セミノール 砂じょう",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -10413,7 +10389,7 @@
     },
     {
       "id": "food:mext_07083",
-      "displayName": "だいだい　果汁　生",
+      "displayName": "だいだい 果汁",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -10425,7 +10401,7 @@
     },
     {
       "id": "food:mext_07093",
-      "displayName": "なつみかん　砂じょう　生",
+      "displayName": "なつみかん 砂じょう",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -10449,7 +10425,7 @@
     },
     {
       "id": "food:mext_07105",
-      "displayName": "はっさく　砂じょう　生",
+      "displayName": "はっさく 砂じょう",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -10461,7 +10437,7 @@
     },
     {
       "id": "food:mext_07167",
-      "displayName": "はるみ　砂じょう　生",
+      "displayName": "はるみ 砂じょう",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -10473,7 +10449,7 @@
     },
     {
       "id": "food:mext_07112",
-      "displayName": "ひゅうがなつ　じょうのう及びアルベド　生",
+      "displayName": "ひゅうがなつ じょうのう及びアルベド",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -10485,7 +10461,7 @@
     },
     {
       "id": "food:mext_07113",
-      "displayName": "ひゅうがなつ　砂じょう　生",
+      "displayName": "ひゅうがなつ 砂じょう",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -10497,7 +10473,7 @@
     },
     {
       "id": "food:mext_07126",
-      "displayName": "ぶんたん　砂じょう　生",
+      "displayName": "ぶんたん 砂じょう",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -10521,7 +10497,7 @@
     },
     {
       "id": "food:mext_07129",
-      "displayName": "ぽんかん　砂じょう　生",
+      "displayName": "ぽんかん 砂じょう",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -10533,7 +10509,7 @@
     },
     {
       "id": "food:mext_07142",
-      "displayName": "ゆず　果皮　生",
+      "displayName": "ゆず 果皮",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -10545,7 +10521,7 @@
     },
     {
       "id": "food:mext_07143",
-      "displayName": "ゆず　果汁　生",
+      "displayName": "ゆず 果汁",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -10557,7 +10533,7 @@
     },
     {
       "id": "food:mext_07145",
-      "displayName": "ライム　果汁　生",
+      "displayName": "ライム 果汁",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -10569,7 +10545,7 @@
     },
     {
       "id": "food:mext_07155",
-      "displayName": "レモン　全果　生",
+      "displayName": "レモン 全果",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -10581,7 +10557,7 @@
     },
     {
       "id": "food:mext_07156",
-      "displayName": "レモン　果汁　生",
+      "displayName": "レモン 果汁",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -10593,7 +10569,7 @@
     },
     {
       "id": "food:mext_07054",
-      "displayName": "キウイフルーツ　緑肉種　生",
+      "displayName": "キウイフルーツ 緑肉種",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -10605,7 +10581,7 @@
     },
     {
       "id": "food:mext_07168",
-      "displayName": "キウイフルーツ　黄肉種　生",
+      "displayName": "キウイフルーツ 黄肉種",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -10617,7 +10593,7 @@
     },
     {
       "id": "food:mext_07183",
-      "displayName": "きはだ　実　乾",
+      "displayName": "きはだ 実",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -10629,7 +10605,7 @@
     },
     {
       "id": "food:mext_07055",
-      "displayName": "キワノ　生",
+      "displayName": "キワノ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -10641,7 +10617,7 @@
     },
     {
       "id": "food:mext_07057",
-      "displayName": "グァバ　赤肉種　生",
+      "displayName": "グァバ 赤肉種",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -10653,7 +10629,7 @@
     },
     {
       "id": "food:mext_07169",
-      "displayName": "グァバ　白肉種　生",
+      "displayName": "グァバ 白肉種",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -10689,7 +10665,7 @@
     },
     {
       "id": "food:mext_07185",
-      "displayName": "くこ　実　乾",
+      "displayName": "くこ 実",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -10701,7 +10677,7 @@
     },
     {
       "id": "food:mext_07061",
-      "displayName": "ぐみ　生",
+      "displayName": "ぐみ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -10749,7 +10725,7 @@
     },
     {
       "id": "food:mext_07070",
-      "displayName": "さくらんぼ　国産　生",
+      "displayName": "さくらんぼ 国産",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -10761,7 +10737,7 @@
     },
     {
       "id": "food:mext_07071",
-      "displayName": "さくらんぼ　米国産　生",
+      "displayName": "さくらんぼ 米国産",
       "reading": null,
       "category": "主食",
       "representativeScore": 0,
@@ -10785,7 +10761,7 @@
     },
     {
       "id": "food:mext_07073",
-      "displayName": "ざくろ　生",
+      "displayName": "ざくろ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -10797,7 +10773,7 @@
     },
     {
       "id": "food:mext_07077",
-      "displayName": "すいか　赤肉種　生",
+      "displayName": "すいか 赤肉種",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -10809,7 +10785,7 @@
     },
     {
       "id": "food:mext_07171",
-      "displayName": "すいか　黄肉種　生",
+      "displayName": "すいか 黄肉種",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -10821,7 +10797,7 @@
     },
     {
       "id": "food:mext_07186",
-      "displayName": "赤すぐり　冷凍",
+      "displayName": "赤すぐり",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -10833,7 +10809,7 @@
     },
     {
       "id": "food:mext_07182",
-      "displayName": "カシス　冷凍",
+      "displayName": "カシス",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -10845,7 +10821,7 @@
     },
     {
       "id": "food:mext_07060",
-      "displayName": "グーズベリー　生",
+      "displayName": "グーズベリー",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -10857,7 +10833,7 @@
     },
     {
       "id": "food:mext_07069",
-      "displayName": "スターフルーツ　生",
+      "displayName": "スターフルーツ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -10869,7 +10845,7 @@
     },
     {
       "id": "food:mext_07080",
-      "displayName": "にほんすもも　生",
+      "displayName": "にほんすもも",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -10881,7 +10857,7 @@
     },
     {
       "id": "food:mext_07086",
-      "displayName": "チェリモヤ　生",
+      "displayName": "チェリモヤ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -10893,7 +10869,7 @@
     },
     {
       "id": "food:mext_07111",
-      "displayName": "ドラゴンフルーツ　生",
+      "displayName": "ドラゴンフルーツ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -10905,7 +10881,7 @@
     },
     {
       "id": "food:mext_07087",
-      "displayName": "ドリアン　生",
+      "displayName": "ドリアン",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -10917,7 +10893,7 @@
     },
     {
       "id": "food:mext_07088",
-      "displayName": "日本なし　生",
+      "displayName": "日本なし",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -10941,7 +10917,7 @@
     },
     {
       "id": "food:mext_07090",
-      "displayName": "中国なし　生",
+      "displayName": "中国なし",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -10953,7 +10929,7 @@
     },
     {
       "id": "food:mext_07091",
-      "displayName": "西洋なし　生",
+      "displayName": "西洋なし",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -10977,7 +10953,7 @@
     },
     {
       "id": "food:mext_07095",
-      "displayName": "なつめ　乾",
+      "displayName": "なつめ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -10989,7 +10965,7 @@
     },
     {
       "id": "food:mext_07096",
-      "displayName": "なつめやし　乾",
+      "displayName": "なつめやし",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -11073,7 +11049,7 @@
     },
     {
       "id": "food:mext_07104",
-      "displayName": "ハスカップ　生",
+      "displayName": "ハスカップ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -11085,7 +11061,7 @@
     },
     {
       "id": "food:mext_07106",
-      "displayName": "パッションフルーツ　果汁　生",
+      "displayName": "パッションフルーツ 果汁",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -11097,7 +11073,7 @@
     },
     {
       "id": "food:mext_07109",
-      "displayName": "パパイア　完熟　生",
+      "displayName": "パパイア 完熟",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -11109,7 +11085,7 @@
     },
     {
       "id": "food:mext_07110",
-      "displayName": "パパイア　未熟　生",
+      "displayName": "パパイア 未熟",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -11121,7 +11097,7 @@
     },
     {
       "id": "food:mext_07114",
-      "displayName": "びわ　生",
+      "displayName": "びわ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -11145,7 +11121,7 @@
     },
     {
       "id": "food:mext_07187",
-      "displayName": "ぶどう　皮つき　シャインマスカット　生",
+      "displayName": "ぶどう シャインマスカット",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -11253,7 +11229,7 @@
     },
     {
       "id": "food:mext_07128",
-      "displayName": "ホワイトサポテ　生",
+      "displayName": "ホワイトサポテ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -11265,7 +11241,7 @@
     },
     {
       "id": "food:mext_07130",
-      "displayName": "まくわうり　黄肉種　生",
+      "displayName": "まくわうり 黄肉種",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -11277,7 +11253,7 @@
     },
     {
       "id": "food:mext_07173",
-      "displayName": "まくわうり　白肉種　生",
+      "displayName": "まくわうり 白肉種",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -11289,7 +11265,7 @@
     },
     {
       "id": "food:mext_07131",
-      "displayName": "マルメロ　生",
+      "displayName": "マルメロ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -11301,7 +11277,7 @@
     },
     {
       "id": "food:mext_07132",
-      "displayName": "マンゴー　生",
+      "displayName": "マンゴー",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -11325,7 +11301,7 @@
     },
     {
       "id": "food:mext_07133",
-      "displayName": "マンゴスチン　生",
+      "displayName": "マンゴスチン",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -11337,7 +11313,7 @@
     },
     {
       "id": "food:mext_07134",
-      "displayName": "メロン　温室メロン　生",
+      "displayName": "メロン 温室メロン",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -11349,7 +11325,7 @@
     },
     {
       "id": "food:mext_07135",
-      "displayName": "メロン　露地メロン　緑肉種　生",
+      "displayName": "メロン 露地メロン 緑肉種",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -11361,7 +11337,7 @@
     },
     {
       "id": "food:mext_07174",
-      "displayName": "メロン　露地メロン　赤肉種　生",
+      "displayName": "メロン 露地メロン 赤肉種",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -11373,7 +11349,7 @@
     },
     {
       "id": "food:mext_07136",
-      "displayName": "もも　白肉種　生",
+      "displayName": "もも 白肉種",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -11385,7 +11361,7 @@
     },
     {
       "id": "food:mext_07184",
-      "displayName": "もも　黄肉種　生",
+      "displayName": "もも 黄肉種",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -11445,7 +11421,7 @@
     },
     {
       "id": "food:mext_07140",
-      "displayName": "ネクタリン　生",
+      "displayName": "ネクタリン",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -11457,7 +11433,7 @@
     },
     {
       "id": "food:mext_07141",
-      "displayName": "やまもも　生",
+      "displayName": "やまもも",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -11469,7 +11445,7 @@
     },
     {
       "id": "food:mext_07144",
-      "displayName": "ライチー　生",
+      "displayName": "ライチー",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -11481,7 +11457,7 @@
     },
     {
       "id": "food:mext_07146",
-      "displayName": "ラズベリー　生",
+      "displayName": "ラズベリー",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -11493,7 +11469,7 @@
     },
     {
       "id": "food:mext_07147",
-      "displayName": "りゅうがん　乾",
+      "displayName": "りゅうがん",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -11589,7 +11565,7 @@
     },
     {
       "id": "food:mext_08010",
-      "displayName": "くろあわびたけ　生",
+      "displayName": "くろあわびたけ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -11613,7 +11589,7 @@
     },
     {
       "id": "food:mext_08019",
-      "displayName": "たもぎたけ　生",
+      "displayName": "たもぎたけ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -11625,7 +11601,7 @@
     },
     {
       "id": "food:mext_08058",
-      "displayName": "なめこ　カットなめこ　生",
+      "displayName": "なめこ カットなめこ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -11649,7 +11625,7 @@
     },
     {
       "id": "food:mext_08023",
-      "displayName": "ぬめりすぎたけ　生",
+      "displayName": "ぬめりすぎたけ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -11661,7 +11637,7 @@
     },
     {
       "id": "food:mext_08024",
-      "displayName": "うすひらたけ　生",
+      "displayName": "うすひらたけ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -11673,7 +11649,7 @@
     },
     {
       "id": "food:mext_08059",
-      "displayName": "マッシュルーム　ブラウン種　生",
+      "displayName": "マッシュルーム ブラウン種",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -11697,7 +11673,7 @@
     },
     {
       "id": "food:mext_08034",
-      "displayName": "まつたけ　生",
+      "displayName": "まつたけ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -11709,7 +11685,7 @@
     },
     {
       "id": "food:mext_08036",
-      "displayName": "やなぎまつたけ　生",
+      "displayName": "やなぎまつたけ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -11805,7 +11781,7 @@
     },
     {
       "id": "food:mext_09012",
-      "displayName": "うみぶどう　生",
+      "displayName": "うみぶどう",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -11841,7 +11817,7 @@
     },
     {
       "id": "food:mext_09010",
-      "displayName": "おごのり　塩蔵　塩抜き",
+      "displayName": "おごのり 塩蔵",
       "reading": null,
       "category": "調味料",
       "representativeScore": 0,
@@ -11985,7 +11961,7 @@
     },
     {
       "id": "food:mext_09024",
-      "displayName": "すいぜんじのり　素干し　水戻し",
+      "displayName": "すいぜんじのり 素干し",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -12057,7 +12033,7 @@
     },
     {
       "id": "food:mext_09029",
-      "displayName": "とさかのり　赤とさか　塩蔵　塩抜き",
+      "displayName": "とさかのり 赤とさか 塩蔵",
       "reading": null,
       "category": "調味料",
       "representativeScore": 0,
@@ -12069,7 +12045,7 @@
     },
     {
       "id": "food:mext_09030",
-      "displayName": "とさかのり　青とさか　塩蔵　塩抜き",
+      "displayName": "とさかのり 青とさか 塩蔵",
       "reading": null,
       "category": "調味料",
       "representativeScore": 0,
@@ -12129,7 +12105,7 @@
     },
     {
       "id": "food:mext_09036",
-      "displayName": "むかでのり　塩蔵　塩抜き",
+      "displayName": "むかでのり 塩蔵",
       "reading": null,
       "category": "調味料",
       "representativeScore": 0,
@@ -12141,7 +12117,7 @@
     },
     {
       "id": "food:mext_09037",
-      "displayName": "おきなわもずく　塩蔵　塩抜き",
+      "displayName": "おきなわもずく 塩蔵",
       "reading": null,
       "category": "調味料",
       "representativeScore": 0,
@@ -12153,7 +12129,7 @@
     },
     {
       "id": "food:mext_09038",
-      "displayName": "もずく　塩蔵　塩抜き",
+      "displayName": "もずく 塩蔵",
       "reading": null,
       "category": "調味料",
       "representativeScore": 0,
@@ -12165,7 +12141,7 @@
     },
     {
       "id": "food:mext_09039",
-      "displayName": "わかめ　原藻　生",
+      "displayName": "わかめ 原藻",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -12189,7 +12165,7 @@
     },
     {
       "id": "food:mext_09043",
-      "displayName": "わかめ　乾燥わかめ　灰干し　水戻し",
+      "displayName": "わかめ 乾燥わかめ 灰干し",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -12201,7 +12177,7 @@
     },
     {
       "id": "food:mext_09044",
-      "displayName": "わかめ　カットわかめ　乾",
+      "displayName": "わかめ カットわかめ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -12213,7 +12189,7 @@
     },
     {
       "id": "food:mext_09058",
-      "displayName": "わかめ　カットわかめ　水煮　（沸騰水で短時間加熱したもの）",
+      "displayName": "わかめ カットわかめ （沸騰水で短時間加熱したもの）",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -12237,7 +12213,7 @@
     },
     {
       "id": "food:mext_09046",
-      "displayName": "わかめ　くきわかめ　湯通し塩蔵　塩抜き",
+      "displayName": "わかめ くきわかめ 湯通し塩蔵",
       "reading": null,
       "category": "調味料",
       "representativeScore": 0,
@@ -12249,7 +12225,7 @@
     },
     {
       "id": "food:mext_09047",
-      "displayName": "わかめ　めかぶわかめ　生",
+      "displayName": "わかめ めかぶわかめ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -12261,7 +12237,7 @@
     },
     {
       "id": "food:mext_10001",
-      "displayName": "あいなめ　生",
+      "displayName": "あいなめ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -12273,7 +12249,7 @@
     },
     {
       "id": "food:mext_10002",
-      "displayName": "あこうだい　生",
+      "displayName": "あこうだい",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -12309,7 +12285,7 @@
     },
     {
       "id": "food:mext_10017",
-      "displayName": "あまご　養殖　生",
+      "displayName": "あまご 養殖",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -12333,7 +12309,7 @@
     },
     {
       "id": "food:mext_10030",
-      "displayName": "アラスカめぬけ　生",
+      "displayName": "アラスカめぬけ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -12345,7 +12321,7 @@
     },
     {
       "id": "food:mext_10031",
-      "displayName": "あんこう　生",
+      "displayName": "あんこう",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -12357,7 +12333,7 @@
     },
     {
       "id": "food:mext_10032",
-      "displayName": "あんこう　きも　生",
+      "displayName": "あんこう きも",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -12369,7 +12345,7 @@
     },
     {
       "id": "food:mext_10033",
-      "displayName": "いかなご　生",
+      "displayName": "いかなご",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -12417,7 +12393,7 @@
     },
     {
       "id": "food:mext_10037",
-      "displayName": "いさき　生",
+      "displayName": "いさき",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -12429,7 +12405,7 @@
     },
     {
       "id": "food:mext_10038",
-      "displayName": "いしだい　生",
+      "displayName": "いしだい",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -12441,7 +12417,7 @@
     },
     {
       "id": "food:mext_10039",
-      "displayName": "いとよりだい　生",
+      "displayName": "いとよりだい",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -12465,7 +12441,7 @@
     },
     {
       "id": "food:mext_10041",
-      "displayName": "いぼだい　生",
+      "displayName": "いぼだい",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -12477,7 +12453,7 @@
     },
     {
       "id": "food:mext_10042",
-      "displayName": "うるめいわし　生",
+      "displayName": "うるめいわし",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -12501,7 +12477,7 @@
     },
     {
       "id": "food:mext_10044",
-      "displayName": "かたくちいわし　生",
+      "displayName": "かたくちいわし",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -12573,7 +12549,7 @@
     },
     {
       "id": "food:mext_10396",
-      "displayName": "しらす　生",
+      "displayName": "しらす",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -12657,7 +12633,7 @@
     },
     {
       "id": "food:mext_10060",
-      "displayName": "缶詰　水煮",
+      "displayName": "缶詰",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -12729,7 +12705,7 @@
     },
     {
       "id": "food:mext_10065",
-      "displayName": "いわな　養殖　生",
+      "displayName": "いわな 養殖",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -12741,7 +12717,7 @@
     },
     {
       "id": "food:mext_10066",
-      "displayName": "うぐい　生",
+      "displayName": "うぐい",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -12753,7 +12729,7 @@
     },
     {
       "id": "food:mext_10067",
-      "displayName": "うなぎ　養殖　生",
+      "displayName": "うなぎ 養殖",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -12765,7 +12741,7 @@
     },
     {
       "id": "food:mext_10068",
-      "displayName": "うなぎ　きも　生",
+      "displayName": "うなぎ きも",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -12801,7 +12777,7 @@
     },
     {
       "id": "food:mext_10071",
-      "displayName": "うまづらはぎ　生",
+      "displayName": "うまづらはぎ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -12825,7 +12801,7 @@
     },
     {
       "id": "food:mext_10073",
-      "displayName": "えい　生",
+      "displayName": "えい",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -12837,7 +12813,7 @@
     },
     {
       "id": "food:mext_10074",
-      "displayName": "えそ　生",
+      "displayName": "えそ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -12849,7 +12825,7 @@
     },
     {
       "id": "food:mext_10075",
-      "displayName": "おいかわ　生",
+      "displayName": "おいかわ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -12861,7 +12837,7 @@
     },
     {
       "id": "food:mext_10076",
-      "displayName": "おおさが　生",
+      "displayName": "おおさが",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -12873,7 +12849,7 @@
     },
     {
       "id": "food:mext_10077",
-      "displayName": "おこぜ　生",
+      "displayName": "おこぜ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -12885,7 +12861,7 @@
     },
     {
       "id": "food:mext_10078",
-      "displayName": "おひょう　生",
+      "displayName": "おひょう",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -12897,7 +12873,7 @@
     },
     {
       "id": "food:mext_10079",
-      "displayName": "かさご　生",
+      "displayName": "かさご",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -12921,7 +12897,7 @@
     },
     {
       "id": "food:mext_10083",
-      "displayName": "くろかじき　生",
+      "displayName": "くろかじき",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -12933,7 +12909,7 @@
     },
     {
       "id": "food:mext_10084",
-      "displayName": "まかじき　生",
+      "displayName": "まかじき",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -12945,7 +12921,7 @@
     },
     {
       "id": "food:mext_10086",
-      "displayName": "かつお　春獲り　生",
+      "displayName": "かつお 春獲り",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -12957,7 +12933,7 @@
     },
     {
       "id": "food:mext_10087",
-      "displayName": "かつお　秋獲り　生",
+      "displayName": "かつお 秋獲り",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -12969,7 +12945,7 @@
     },
     {
       "id": "food:mext_10088",
-      "displayName": "そうだがつお　生",
+      "displayName": "そうだがつお",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -13101,7 +13077,7 @@
     },
     {
       "id": "food:mext_10107",
-      "displayName": "かわはぎ　生",
+      "displayName": "かわはぎ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -13113,7 +13089,7 @@
     },
     {
       "id": "food:mext_10108",
-      "displayName": "かんぱち　三枚おろし　生",
+      "displayName": "かんぱち 三枚おろし",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -13125,7 +13101,7 @@
     },
     {
       "id": "food:mext_10424",
-      "displayName": "かんぱち　背側　生",
+      "displayName": "かんぱち 背側",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -13137,7 +13113,7 @@
     },
     {
       "id": "food:mext_10110",
-      "displayName": "きちじ　生",
+      "displayName": "きちじ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -13149,7 +13125,7 @@
     },
     {
       "id": "food:mext_10111",
-      "displayName": "きびなご　生",
+      "displayName": "きびなご",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -13185,7 +13161,7 @@
     },
     {
       "id": "food:mext_10114",
-      "displayName": "キングクリップ　生",
+      "displayName": "キングクリップ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -13197,7 +13173,7 @@
     },
     {
       "id": "food:mext_10116",
-      "displayName": "きんめだい　生",
+      "displayName": "きんめだい",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -13209,7 +13185,7 @@
     },
     {
       "id": "food:mext_10121",
-      "displayName": "こい　養殖　内臓　生",
+      "displayName": "こい 養殖 内臓",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -13221,7 +13197,7 @@
     },
     {
       "id": "food:mext_10122",
-      "displayName": "まごち　生",
+      "displayName": "まごち",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -13233,7 +13209,7 @@
     },
     {
       "id": "food:mext_10123",
-      "displayName": "めごち　生",
+      "displayName": "めごち",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -13245,7 +13221,7 @@
     },
     {
       "id": "food:mext_10124",
-      "displayName": "このしろ　生",
+      "displayName": "このしろ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -13365,7 +13341,7 @@
     },
     {
       "id": "food:mext_10148",
-      "displayName": "にじます　淡水養殖　皮つき　生",
+      "displayName": "にじます 淡水養殖",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -13437,7 +13413,7 @@
     },
     {
       "id": "food:mext_10164",
-      "displayName": "缶詰　水煮",
+      "displayName": "缶詰",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -13473,7 +13449,7 @@
     },
     {
       "id": "food:mext_10167",
-      "displayName": "あぶらつのざめ　生",
+      "displayName": "あぶらつのざめ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -13485,7 +13461,7 @@
     },
     {
       "id": "food:mext_10168",
-      "displayName": "よしきりざめ　生",
+      "displayName": "よしきりざめ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -13509,7 +13485,7 @@
     },
     {
       "id": "food:mext_10170",
-      "displayName": "さより　生",
+      "displayName": "さより",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -13569,7 +13545,7 @@
     },
     {
       "id": "food:mext_10179",
-      "displayName": "しいら　生",
+      "displayName": "しいら",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -13581,7 +13557,7 @@
     },
     {
       "id": "food:mext_10184",
-      "displayName": "したびらめ　生",
+      "displayName": "したびらめ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -13593,7 +13569,7 @@
     },
     {
       "id": "food:mext_10185",
-      "displayName": "しまあじ　養殖　生",
+      "displayName": "しまあじ 養殖",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -13605,7 +13581,7 @@
     },
     {
       "id": "food:mext_10186",
-      "displayName": "しらうお　生",
+      "displayName": "しらうお",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -13617,7 +13593,7 @@
     },
     {
       "id": "food:mext_10187",
-      "displayName": "シルバー　生",
+      "displayName": "シルバー",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -13629,7 +13605,7 @@
     },
     {
       "id": "food:mext_10188",
-      "displayName": "すずき　生",
+      "displayName": "すずき",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -13641,7 +13617,7 @@
     },
     {
       "id": "food:mext_10189",
-      "displayName": "きだい　生",
+      "displayName": "きだい",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -13653,7 +13629,7 @@
     },
     {
       "id": "food:mext_10190",
-      "displayName": "くろだい　生",
+      "displayName": "くろだい",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -13665,7 +13641,7 @@
     },
     {
       "id": "food:mext_10191",
-      "displayName": "ちだい　生",
+      "displayName": "ちだい",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -13677,7 +13653,7 @@
     },
     {
       "id": "food:mext_10192",
-      "displayName": "まだい　天然　生",
+      "displayName": "まだい 天然",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -13689,7 +13665,7 @@
     },
     {
       "id": "food:mext_10196",
-      "displayName": "たかさご　生",
+      "displayName": "たかさご",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -13701,7 +13677,7 @@
     },
     {
       "id": "food:mext_10197",
-      "displayName": "たかべ　生",
+      "displayName": "たかべ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -13713,7 +13689,7 @@
     },
     {
       "id": "food:mext_10198",
-      "displayName": "たちうお　生",
+      "displayName": "たちうお",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -13761,7 +13737,7 @@
     },
     {
       "id": "food:mext_10207",
-      "displayName": "まだら　しらこ　生",
+      "displayName": "まだら しらこ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -13821,7 +13797,7 @@
     },
     {
       "id": "food:mext_10211",
-      "displayName": "ちか　生",
+      "displayName": "ちか",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -13833,7 +13809,7 @@
     },
     {
       "id": "food:mext_10215",
-      "displayName": "とびうお　生",
+      "displayName": "とびうお",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -13869,7 +13845,7 @@
     },
     {
       "id": "food:mext_10212",
-      "displayName": "ナイルティラピア　生",
+      "displayName": "ナイルティラピア",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -13881,7 +13857,7 @@
     },
     {
       "id": "food:mext_10216",
-      "displayName": "なまず　生",
+      "displayName": "なまず",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -13893,7 +13869,7 @@
     },
     {
       "id": "food:mext_10217",
-      "displayName": "にぎす　生",
+      "displayName": "にぎす",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -13905,7 +13881,7 @@
     },
     {
       "id": "food:mext_10218",
-      "displayName": "にしん　生",
+      "displayName": "にしん",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -13953,7 +13929,7 @@
     },
     {
       "id": "food:mext_10224",
-      "displayName": "にしん　かずのこ　塩蔵　水戻し",
+      "displayName": "にしん かずのこ 塩蔵",
       "reading": null,
       "category": "調味料",
       "representativeScore": 0,
@@ -13965,7 +13941,7 @@
     },
     {
       "id": "food:mext_10225",
-      "displayName": "はぜ　生",
+      "displayName": "はぜ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14001,7 +13977,7 @@
     },
     {
       "id": "food:mext_10228",
-      "displayName": "はたはた　生",
+      "displayName": "はたはた",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14025,7 +14001,7 @@
     },
     {
       "id": "food:mext_10230",
-      "displayName": "はまふえふき　生",
+      "displayName": "はまふえふき",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14037,7 +14013,7 @@
     },
     {
       "id": "food:mext_10231",
-      "displayName": "はも　生",
+      "displayName": "はも",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14049,7 +14025,7 @@
     },
     {
       "id": "food:mext_10233",
-      "displayName": "ひらまさ　生",
+      "displayName": "ひらまさ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14061,7 +14037,7 @@
     },
     {
       "id": "food:mext_10234",
-      "displayName": "ひらめ　天然　生",
+      "displayName": "ひらめ 天然",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14073,7 +14049,7 @@
     },
     {
       "id": "food:mext_10236",
-      "displayName": "とらふぐ　養殖　生",
+      "displayName": "とらふぐ 養殖",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14085,7 +14061,7 @@
     },
     {
       "id": "food:mext_10237",
-      "displayName": "まふぐ　生",
+      "displayName": "まふぐ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14121,7 +14097,7 @@
     },
     {
       "id": "food:mext_10244",
-      "displayName": "ほうぼう　生",
+      "displayName": "ほうぼう",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14133,7 +14109,7 @@
     },
     {
       "id": "food:mext_10245",
-      "displayName": "ホキ　生",
+      "displayName": "ホキ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14145,7 +14121,7 @@
     },
     {
       "id": "food:mext_10246",
-      "displayName": "ほっけ　生",
+      "displayName": "ほっけ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14169,7 +14145,7 @@
     },
     {
       "id": "food:mext_10249",
-      "displayName": "ぼら　生",
+      "displayName": "ぼら",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14193,7 +14169,7 @@
     },
     {
       "id": "food:mext_10251",
-      "displayName": "ほんもろこ　生",
+      "displayName": "ほんもろこ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14205,7 +14181,7 @@
     },
     {
       "id": "food:mext_10252",
-      "displayName": "きはだ　生",
+      "displayName": "きはだ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14217,7 +14193,7 @@
     },
     {
       "id": "food:mext_10253",
-      "displayName": "くろまぐろ　天然　赤身　生",
+      "displayName": "くろまぐろ 天然 赤身",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14229,7 +14205,7 @@
     },
     {
       "id": "food:mext_10254",
-      "displayName": "くろまぐろ　天然　脂身　生",
+      "displayName": "くろまぐろ 天然 脂身",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14241,7 +14217,7 @@
     },
     {
       "id": "food:mext_10255",
-      "displayName": "びんなが　生",
+      "displayName": "びんなが",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14253,7 +14229,7 @@
     },
     {
       "id": "food:mext_10256",
-      "displayName": "みなみまぐろ　赤身　生",
+      "displayName": "みなみまぐろ 赤身",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14265,7 +14241,7 @@
     },
     {
       "id": "food:mext_10257",
-      "displayName": "みなみまぐろ　脂身　生",
+      "displayName": "みなみまぐろ 脂身",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14277,7 +14253,7 @@
     },
     {
       "id": "food:mext_10258",
-      "displayName": "めじまぐろ　生",
+      "displayName": "めじまぐろ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14289,7 +14265,7 @@
     },
     {
       "id": "food:mext_10425",
-      "displayName": "めばち　赤身　生",
+      "displayName": "めばち 赤身",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14301,7 +14277,7 @@
     },
     {
       "id": "food:mext_10426",
-      "displayName": "めばち　脂身　生",
+      "displayName": "めばち 脂身",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14313,7 +14289,7 @@
     },
     {
       "id": "food:mext_10260",
-      "displayName": "缶詰　水煮　フレーク　ライト",
+      "displayName": "缶詰 フレーク ライト",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14325,7 +14301,7 @@
     },
     {
       "id": "food:mext_10261",
-      "displayName": "缶詰　水煮　フレーク　ホワイト",
+      "displayName": "缶詰 フレーク ホワイト",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14373,7 +14349,7 @@
     },
     {
       "id": "food:mext_10265",
-      "displayName": "マジェランあいなめ　生",
+      "displayName": "マジェランあいなめ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14385,7 +14361,7 @@
     },
     {
       "id": "food:mext_10266",
-      "displayName": "まながつお　生",
+      "displayName": "まながつお",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14397,7 +14373,7 @@
     },
     {
       "id": "food:mext_10232",
-      "displayName": "みなみくろたち　生",
+      "displayName": "みなみくろたち",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14409,7 +14385,7 @@
     },
     {
       "id": "food:mext_10267",
-      "displayName": "みなみだら　生",
+      "displayName": "みなみだら",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14421,7 +14397,7 @@
     },
     {
       "id": "food:mext_10270",
-      "displayName": "めじな　生",
+      "displayName": "めじな",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14433,7 +14409,7 @@
     },
     {
       "id": "food:mext_10271",
-      "displayName": "めばる　生",
+      "displayName": "めばる",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14445,7 +14421,7 @@
     },
     {
       "id": "food:mext_10272",
-      "displayName": "メルルーサ　生",
+      "displayName": "メルルーサ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14457,7 +14433,7 @@
     },
     {
       "id": "food:mext_10273",
-      "displayName": "やつめうなぎ　生",
+      "displayName": "やつめうなぎ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14481,7 +14457,7 @@
     },
     {
       "id": "food:mext_10275",
-      "displayName": "やまめ　養殖　生",
+      "displayName": "やまめ 養殖",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14493,7 +14469,7 @@
     },
     {
       "id": "food:mext_10276",
-      "displayName": "わかさぎ　生",
+      "displayName": "わかさぎ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14529,7 +14505,7 @@
     },
     {
       "id": "food:mext_10279",
-      "displayName": "あかがい　生",
+      "displayName": "あかがい",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14541,7 +14517,7 @@
     },
     {
       "id": "food:mext_10280",
-      "displayName": "あげまき　生",
+      "displayName": "あげまき",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14565,7 +14541,7 @@
     },
     {
       "id": "food:mext_10283",
-      "displayName": "あさり　缶詰　水煮",
+      "displayName": "あさり 缶詰",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14589,7 +14565,7 @@
     },
     {
       "id": "food:mext_10427",
-      "displayName": "あわび　くろあわび　生",
+      "displayName": "あわび くろあわび",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14601,7 +14577,7 @@
     },
     {
       "id": "food:mext_10428",
-      "displayName": "あわび　まだかあわび　生",
+      "displayName": "あわび まだかあわび",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14613,7 +14589,7 @@
     },
     {
       "id": "food:mext_10429",
-      "displayName": "あわび　めがいあわび　生",
+      "displayName": "あわび めがいあわび",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14661,7 +14637,7 @@
     },
     {
       "id": "food:mext_10289",
-      "displayName": "いがい　生",
+      "displayName": "いがい",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14673,7 +14649,7 @@
     },
     {
       "id": "food:mext_10290",
-      "displayName": "いたやがい　養殖　生",
+      "displayName": "いたやがい 養殖",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14721,7 +14697,7 @@
     },
     {
       "id": "food:mext_10298",
-      "displayName": "たいらがい　貝柱　生",
+      "displayName": "たいらがい 貝柱",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14733,7 +14709,7 @@
     },
     {
       "id": "food:mext_10299",
-      "displayName": "たにし　生",
+      "displayName": "たにし",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14745,7 +14721,7 @@
     },
     {
       "id": "food:mext_10300",
-      "displayName": "つぶ　生",
+      "displayName": "つぶ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14757,7 +14733,7 @@
     },
     {
       "id": "food:mext_10301",
-      "displayName": "とこぶし　生",
+      "displayName": "とこぶし",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14769,7 +14745,7 @@
     },
     {
       "id": "food:mext_10303",
-      "displayName": "とりがい　斧足　生",
+      "displayName": "とりがい 斧足",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14781,7 +14757,7 @@
     },
     {
       "id": "food:mext_10304",
-      "displayName": "ばい　生",
+      "displayName": "ばい",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14793,7 +14769,7 @@
     },
     {
       "id": "food:mext_10305",
-      "displayName": "ばかがい　生",
+      "displayName": "ばかがい",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14817,7 +14793,7 @@
     },
     {
       "id": "food:mext_10310",
-      "displayName": "ちょうせんはまぐり　生",
+      "displayName": "ちょうせんはまぐり",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14853,7 +14829,7 @@
     },
     {
       "id": "food:mext_10316",
-      "displayName": "ほっきがい　生",
+      "displayName": "ほっきがい",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14865,7 +14841,7 @@
     },
     {
       "id": "food:mext_10317",
-      "displayName": "みるがい　水管　生",
+      "displayName": "みるがい 水管",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14877,7 +14853,7 @@
     },
     {
       "id": "food:mext_10319",
-      "displayName": "あまえび　生",
+      "displayName": "あまえび",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14889,7 +14865,7 @@
     },
     {
       "id": "food:mext_10320",
-      "displayName": "いせえび　生",
+      "displayName": "いせえび",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14925,7 +14901,7 @@
     },
     {
       "id": "food:mext_10327",
-      "displayName": "大正えび　生",
+      "displayName": "大正えび",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14937,7 +14913,7 @@
     },
     {
       "id": "food:mext_10328",
-      "displayName": "しばえび　生",
+      "displayName": "しばえび",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14949,7 +14925,7 @@
     },
     {
       "id": "food:mext_10329",
-      "displayName": "ブラックタイガー　養殖　生",
+      "displayName": "ブラックタイガー 養殖",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -14985,7 +14961,7 @@
     },
     {
       "id": "food:mext_10332",
-      "displayName": "がざみ　生",
+      "displayName": "がざみ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -15033,7 +15009,7 @@
     },
     {
       "id": "food:mext_10342",
-      "displayName": "あかいか　生",
+      "displayName": "あかいか",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -15045,7 +15021,7 @@
     },
     {
       "id": "food:mext_10343",
-      "displayName": "けんさきいか　生",
+      "displayName": "けんさきいか",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -15057,7 +15033,7 @@
     },
     {
       "id": "food:mext_10344",
-      "displayName": "こういか　生",
+      "displayName": "こういか",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -15069,7 +15045,7 @@
     },
     {
       "id": "food:mext_10420",
-      "displayName": "するめいか　耳・足　生",
+      "displayName": "するめいか 耳・足",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -15105,7 +15081,7 @@
     },
     {
       "id": "food:mext_10352",
-      "displayName": "やりいか　生",
+      "displayName": "やりいか",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -15189,7 +15165,7 @@
     },
     {
       "id": "food:mext_10360",
-      "displayName": "いいだこ　生",
+      "displayName": "いいだこ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -15201,7 +15177,7 @@
     },
     {
       "id": "food:mext_10432",
-      "displayName": "みずだこ　生",
+      "displayName": "みずだこ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -15273,7 +15249,7 @@
     },
     {
       "id": "food:mext_10370",
-      "displayName": "くらげ　塩蔵　塩抜き",
+      "displayName": "くらげ 塩蔵",
       "reading": null,
       "category": "調味料",
       "representativeScore": 0,
@@ -15285,7 +15261,7 @@
     },
     {
       "id": "food:mext_10371",
-      "displayName": "しゃこ　ゆで",
+      "displayName": "しゃこ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -15297,7 +15273,7 @@
     },
     {
       "id": "food:mext_10372",
-      "displayName": "なまこ　生",
+      "displayName": "なまこ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -15321,7 +15297,7 @@
     },
     {
       "id": "food:mext_10374",
-      "displayName": "ほや　生",
+      "displayName": "ほや",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -15513,7 +15489,7 @@
     },
     {
       "id": "food:mext_11001",
-      "displayName": "いのしし　肉　脂身つき　生",
+      "displayName": "いのしし 肉 脂身つき",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -15525,7 +15501,7 @@
     },
     {
       "id": "food:mext_11002",
-      "displayName": "いのぶた　肉　脂身つき　生",
+      "displayName": "いのぶた 肉 脂身つき",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -15537,7 +15513,7 @@
     },
     {
       "id": "food:mext_11003",
-      "displayName": "うさぎ　肉　赤肉　生",
+      "displayName": "うさぎ 肉 赤肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -15549,9 +15525,9 @@
     },
     {
       "id": "food:mext_11004",
-      "displayName": "うし　［和牛肉］　かた　脂身つき　生",
+      "displayName": "うし かた 脂身つき",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11004",
       "isActive": true,
@@ -15561,9 +15537,9 @@
     },
     {
       "id": "food:mext_11005",
-      "displayName": "うし　［和牛肉］　かた　皮下脂肪なし　生",
+      "displayName": "うし かた 皮下脂肪なし",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11005",
       "isActive": true,
@@ -15573,7 +15549,7 @@
     },
     {
       "id": "food:mext_11006",
-      "displayName": "うし　［和牛肉］　かた　赤肉　生",
+      "displayName": "うし かた 赤肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -15585,9 +15561,9 @@
     },
     {
       "id": "food:mext_11007",
-      "displayName": "うし　［和牛肉］　かた　脂身　生",
+      "displayName": "うし かた 脂身",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11007",
       "isActive": true,
@@ -15597,9 +15573,9 @@
     },
     {
       "id": "food:mext_11008",
-      "displayName": "うし　［和牛肉］　かたロース　脂身つき　生",
+      "displayName": "うし かたロース 脂身つき",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11008",
       "isActive": true,
@@ -15609,9 +15585,9 @@
     },
     {
       "id": "food:mext_11009",
-      "displayName": "うし　［和牛肉］　かたロース　皮下脂肪なし　生",
+      "displayName": "うし かたロース 皮下脂肪なし",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11009",
       "isActive": true,
@@ -15621,7 +15597,7 @@
     },
     {
       "id": "food:mext_11010",
-      "displayName": "うし　［和牛肉］　かたロース　赤肉　生",
+      "displayName": "うし かたロース 赤肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -15633,9 +15609,9 @@
     },
     {
       "id": "food:mext_11012",
-      "displayName": "うし　［和牛肉］　リブロース　皮下脂肪なし　生",
+      "displayName": "うし リブロース 皮下脂肪なし",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11012",
       "isActive": true,
@@ -15645,7 +15621,7 @@
     },
     {
       "id": "food:mext_11013",
-      "displayName": "うし　［和牛肉］　リブロース　赤肉　生",
+      "displayName": "うし リブロース 赤肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -15657,9 +15633,9 @@
     },
     {
       "id": "food:mext_11014",
-      "displayName": "うし　［和牛肉］　リブロース　脂身　生",
+      "displayName": "うし リブロース 脂身",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11014",
       "isActive": true,
@@ -15669,9 +15645,9 @@
     },
     {
       "id": "food:mext_11015",
-      "displayName": "うし　［和牛肉］　サーロイン　脂身つき　生",
+      "displayName": "うし サーロイン 脂身つき",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11015",
       "isActive": true,
@@ -15681,9 +15657,9 @@
     },
     {
       "id": "food:mext_11016",
-      "displayName": "うし　［和牛肉］　サーロイン　皮下脂肪なし　生",
+      "displayName": "うし サーロイン 皮下脂肪なし",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11016",
       "isActive": true,
@@ -15693,7 +15669,7 @@
     },
     {
       "id": "food:mext_11017",
-      "displayName": "うし　［和牛肉］　サーロイン　赤肉　生",
+      "displayName": "うし サーロイン 赤肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -15705,9 +15681,9 @@
     },
     {
       "id": "food:mext_11018",
-      "displayName": "うし　［和牛肉］　ばら　脂身つき　生",
+      "displayName": "うし ばら 脂身つき",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11018",
       "isActive": true,
@@ -15717,9 +15693,9 @@
     },
     {
       "id": "food:mext_11019",
-      "displayName": "うし　［和牛肉］　もも　脂身つき　生",
+      "displayName": "うし もも 脂身つき",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11019",
       "isActive": true,
@@ -15729,7 +15705,7 @@
     },
     {
       "id": "food:mext_11021",
-      "displayName": "うし　［和牛肉］　もも　赤肉　生",
+      "displayName": "うし もも 赤肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -15741,9 +15717,9 @@
     },
     {
       "id": "food:mext_11022",
-      "displayName": "うし　［和牛肉］　もも　脂身　生",
+      "displayName": "うし もも 脂身",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11022",
       "isActive": true,
@@ -15753,9 +15729,9 @@
     },
     {
       "id": "food:mext_11023",
-      "displayName": "うし　［和牛肉］　そともも　脂身つき　生",
+      "displayName": "うし そともも 脂身つき",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11023",
       "isActive": true,
@@ -15765,9 +15741,9 @@
     },
     {
       "id": "food:mext_11024",
-      "displayName": "うし　［和牛肉］　そともも　皮下脂肪なし　生",
+      "displayName": "うし そともも 皮下脂肪なし",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11024",
       "isActive": true,
@@ -15777,7 +15753,7 @@
     },
     {
       "id": "food:mext_11025",
-      "displayName": "うし　［和牛肉］　そともも　赤肉　生",
+      "displayName": "うし そともも 赤肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -15789,9 +15765,9 @@
     },
     {
       "id": "food:mext_11026",
-      "displayName": "うし　［和牛肉］　ランプ　脂身つき　生",
+      "displayName": "うし ランプ 脂身つき",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11026",
       "isActive": true,
@@ -15801,9 +15777,9 @@
     },
     {
       "id": "food:mext_11027",
-      "displayName": "うし　［和牛肉］　ランプ　皮下脂肪なし　生",
+      "displayName": "うし ランプ 皮下脂肪なし",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11027",
       "isActive": true,
@@ -15813,7 +15789,7 @@
     },
     {
       "id": "food:mext_11028",
-      "displayName": "うし　［和牛肉］　ランプ　赤肉　生",
+      "displayName": "うし ランプ 赤肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -15825,7 +15801,7 @@
     },
     {
       "id": "food:mext_11029",
-      "displayName": "うし　［和牛肉］　ヒレ　赤肉　生",
+      "displayName": "うし ヒレ 赤肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -15837,9 +15813,9 @@
     },
     {
       "id": "food:mext_11031",
-      "displayName": "うし　［乳用肥育牛肉］　かた　皮下脂肪なし　生",
+      "displayName": "うし かた 皮下脂肪なし",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11031",
       "isActive": true,
@@ -15849,9 +15825,9 @@
     },
     {
       "id": "food:mext_11033",
-      "displayName": "うし　［乳用肥育牛肉］　かた　脂身　生",
+      "displayName": "うし かた 脂身",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11033",
       "isActive": true,
@@ -15861,9 +15837,9 @@
     },
     {
       "id": "food:mext_11034",
-      "displayName": "うし　［乳用肥育牛肉］　かたロース　脂身つき　生",
+      "displayName": "うし かたロース 脂身つき",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11034",
       "isActive": true,
@@ -15873,9 +15849,9 @@
     },
     {
       "id": "food:mext_11035",
-      "displayName": "うし　［乳用肥育牛肉］　かたロース　皮下脂肪なし　生",
+      "displayName": "うし かたロース 皮下脂肪なし",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11035",
       "isActive": true,
@@ -15885,7 +15861,7 @@
     },
     {
       "id": "food:mext_11036",
-      "displayName": "うし　［乳用肥育牛肉］　かたロース　赤肉　生",
+      "displayName": "うし かたロース 赤肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -15897,9 +15873,9 @@
     },
     {
       "id": "food:mext_11040",
-      "displayName": "うし　［乳用肥育牛肉］　リブロース　皮下脂肪なし　生",
+      "displayName": "うし リブロース 皮下脂肪なし",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11040",
       "isActive": true,
@@ -15909,7 +15885,7 @@
     },
     {
       "id": "food:mext_11041",
-      "displayName": "うし　［乳用肥育牛肉］　リブロース　赤肉　生",
+      "displayName": "うし リブロース 赤肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -15921,9 +15897,9 @@
     },
     {
       "id": "food:mext_11042",
-      "displayName": "うし　［乳用肥育牛肉］　リブロース　脂身　生",
+      "displayName": "うし リブロース 脂身",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11042",
       "isActive": true,
@@ -15933,9 +15909,9 @@
     },
     {
       "id": "food:mext_11043",
-      "displayName": "うし　［乳用肥育牛肉］　サーロイン　脂身つき　生",
+      "displayName": "うし サーロイン 脂身つき",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11043",
       "isActive": true,
@@ -15945,9 +15921,9 @@
     },
     {
       "id": "food:mext_11044",
-      "displayName": "うし　［乳用肥育牛肉］　サーロイン　皮下脂肪なし　生",
+      "displayName": "うし サーロイン 皮下脂肪なし",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11044",
       "isActive": true,
@@ -15957,7 +15933,7 @@
     },
     {
       "id": "food:mext_11045",
-      "displayName": "うし　［乳用肥育牛肉］　サーロイン　赤肉　生",
+      "displayName": "うし サーロイン 赤肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -15969,9 +15945,9 @@
     },
     {
       "id": "food:mext_11047",
-      "displayName": "うし　［乳用肥育牛肉］　もも　脂身つき　生",
+      "displayName": "うし もも 脂身つき",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11047",
       "isActive": true,
@@ -15981,7 +15957,7 @@
     },
     {
       "id": "food:mext_11051",
-      "displayName": "うし　［乳用肥育牛肉］　もも　赤肉　生",
+      "displayName": "うし もも 赤肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -15993,9 +15969,9 @@
     },
     {
       "id": "food:mext_11052",
-      "displayName": "うし　［乳用肥育牛肉］　もも　脂身　生",
+      "displayName": "うし もも 脂身",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11052",
       "isActive": true,
@@ -16005,9 +15981,9 @@
     },
     {
       "id": "food:mext_11053",
-      "displayName": "うし　［乳用肥育牛肉］　そともも　脂身つき　生",
+      "displayName": "うし そともも 脂身つき",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11053",
       "isActive": true,
@@ -16017,9 +15993,9 @@
     },
     {
       "id": "food:mext_11054",
-      "displayName": "うし　［乳用肥育牛肉］　そともも　皮下脂肪なし　生",
+      "displayName": "うし そともも 皮下脂肪なし",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11054",
       "isActive": true,
@@ -16029,7 +16005,7 @@
     },
     {
       "id": "food:mext_11055",
-      "displayName": "うし　［乳用肥育牛肉］　そともも　赤肉　生",
+      "displayName": "うし そともも 赤肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -16041,9 +16017,9 @@
     },
     {
       "id": "food:mext_11056",
-      "displayName": "うし　［乳用肥育牛肉］　ランプ　脂身つき　生",
+      "displayName": "うし ランプ 脂身つき",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11056",
       "isActive": true,
@@ -16053,9 +16029,9 @@
     },
     {
       "id": "food:mext_11057",
-      "displayName": "うし　［乳用肥育牛肉］　ランプ　皮下脂肪なし　生",
+      "displayName": "うし ランプ 皮下脂肪なし",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11057",
       "isActive": true,
@@ -16065,7 +16041,7 @@
     },
     {
       "id": "food:mext_11058",
-      "displayName": "うし　［乳用肥育牛肉］　ランプ　赤肉　生",
+      "displayName": "うし ランプ 赤肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -16077,9 +16053,9 @@
     },
     {
       "id": "food:mext_11257",
-      "displayName": "うし　［交雑牛肉］　リブロース　皮下脂肪なし　生",
+      "displayName": "うし リブロース 皮下脂肪なし",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11257",
       "isActive": true,
@@ -16089,7 +16065,7 @@
     },
     {
       "id": "food:mext_11258",
-      "displayName": "うし　［交雑牛肉］　リブロース　赤肉　生",
+      "displayName": "うし リブロース 赤肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -16101,9 +16077,9 @@
     },
     {
       "id": "food:mext_11259",
-      "displayName": "うし　［交雑牛肉］　リブロース　脂身　生",
+      "displayName": "うし リブロース 脂身",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11259",
       "isActive": true,
@@ -16113,9 +16089,9 @@
     },
     {
       "id": "food:mext_11260",
-      "displayName": "うし　［交雑牛肉］　ばら　脂身つき　生",
+      "displayName": "うし ばら 脂身つき",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11260",
       "isActive": true,
@@ -16125,9 +16101,9 @@
     },
     {
       "id": "food:mext_11261",
-      "displayName": "うし　［交雑牛肉］　もも　脂身つき　生",
+      "displayName": "うし もも 脂身つき",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11261",
       "isActive": true,
@@ -16137,7 +16113,7 @@
     },
     {
       "id": "food:mext_11265",
-      "displayName": "うし　［交雑牛肉］　もも　赤肉　生",
+      "displayName": "うし もも 赤肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -16149,9 +16125,9 @@
     },
     {
       "id": "food:mext_11266",
-      "displayName": "うし　［交雑牛肉］　もも　脂身　生",
+      "displayName": "うし もも 脂身",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11266",
       "isActive": true,
@@ -16161,7 +16137,7 @@
     },
     {
       "id": "food:mext_11267",
-      "displayName": "うし　［交雑牛肉］　ヒレ　赤肉　生",
+      "displayName": "うし ヒレ 赤肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -16173,9 +16149,9 @@
     },
     {
       "id": "food:mext_11060",
-      "displayName": "うし　［輸入牛肉］　かた　脂身つき　生",
+      "displayName": "うし かた 脂身つき",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11060",
       "isActive": true,
@@ -16185,9 +16161,9 @@
     },
     {
       "id": "food:mext_11061",
-      "displayName": "うし　［輸入牛肉］　かた　皮下脂肪なし　生",
+      "displayName": "うし かた 皮下脂肪なし",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11061",
       "isActive": true,
@@ -16197,7 +16173,7 @@
     },
     {
       "id": "food:mext_11062",
-      "displayName": "うし　［輸入牛肉］　かた　赤肉　生",
+      "displayName": "うし かた 赤肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -16209,9 +16185,9 @@
     },
     {
       "id": "food:mext_11063",
-      "displayName": "うし　［輸入牛肉］　かた　脂身　生",
+      "displayName": "うし かた 脂身",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11063",
       "isActive": true,
@@ -16221,9 +16197,9 @@
     },
     {
       "id": "food:mext_11064",
-      "displayName": "うし　［輸入牛肉］　かたロース　脂身つき　生",
+      "displayName": "うし かたロース 脂身つき",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11064",
       "isActive": true,
@@ -16233,9 +16209,9 @@
     },
     {
       "id": "food:mext_11065",
-      "displayName": "うし　［輸入牛肉］　かたロース　皮下脂肪なし　生",
+      "displayName": "うし かたロース 皮下脂肪なし",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11065",
       "isActive": true,
@@ -16245,7 +16221,7 @@
     },
     {
       "id": "food:mext_11066",
-      "displayName": "うし　［輸入牛肉］　かたロース　赤肉　生",
+      "displayName": "うし かたロース 赤肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -16257,9 +16233,9 @@
     },
     {
       "id": "food:mext_11068",
-      "displayName": "うし　［輸入牛肉］　リブロース　皮下脂肪なし　生",
+      "displayName": "うし リブロース 皮下脂肪なし",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11068",
       "isActive": true,
@@ -16269,7 +16245,7 @@
     },
     {
       "id": "food:mext_11069",
-      "displayName": "うし　［輸入牛肉］　リブロース　赤肉　生",
+      "displayName": "うし リブロース 赤肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -16281,9 +16257,9 @@
     },
     {
       "id": "food:mext_11070",
-      "displayName": "うし　［輸入牛肉］　リブロース　脂身　生",
+      "displayName": "うし リブロース 脂身",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11070",
       "isActive": true,
@@ -16293,9 +16269,9 @@
     },
     {
       "id": "food:mext_11071",
-      "displayName": "うし　［輸入牛肉］　サーロイン　脂身つき　生",
+      "displayName": "うし サーロイン 脂身つき",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11071",
       "isActive": true,
@@ -16305,9 +16281,9 @@
     },
     {
       "id": "food:mext_11072",
-      "displayName": "うし　［輸入牛肉］　サーロイン　皮下脂肪なし　生",
+      "displayName": "うし サーロイン 皮下脂肪なし",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11072",
       "isActive": true,
@@ -16317,7 +16293,7 @@
     },
     {
       "id": "food:mext_11073",
-      "displayName": "うし　［輸入牛肉］　サーロイン　赤肉　生",
+      "displayName": "うし サーロイン 赤肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -16329,9 +16305,9 @@
     },
     {
       "id": "food:mext_11074",
-      "displayName": "うし　［輸入牛肉］　ばら　脂身つき　生",
+      "displayName": "うし ばら 脂身つき",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11074",
       "isActive": true,
@@ -16341,9 +16317,9 @@
     },
     {
       "id": "food:mext_11075",
-      "displayName": "うし　［輸入牛肉］　もも　脂身つき　生",
+      "displayName": "うし もも 脂身つき",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11075",
       "isActive": true,
@@ -16353,7 +16329,7 @@
     },
     {
       "id": "food:mext_11077",
-      "displayName": "うし　［輸入牛肉］　もも　赤肉　生",
+      "displayName": "うし もも 赤肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -16365,9 +16341,9 @@
     },
     {
       "id": "food:mext_11078",
-      "displayName": "うし　［輸入牛肉］　もも　脂身　生",
+      "displayName": "うし もも 脂身",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11078",
       "isActive": true,
@@ -16377,9 +16353,9 @@
     },
     {
       "id": "food:mext_11079",
-      "displayName": "うし　［輸入牛肉］　そともも　脂身つき　生",
+      "displayName": "うし そともも 脂身つき",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11079",
       "isActive": true,
@@ -16389,9 +16365,9 @@
     },
     {
       "id": "food:mext_11080",
-      "displayName": "うし　［輸入牛肉］　そともも　皮下脂肪なし　生",
+      "displayName": "うし そともも 皮下脂肪なし",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11080",
       "isActive": true,
@@ -16401,7 +16377,7 @@
     },
     {
       "id": "food:mext_11081",
-      "displayName": "うし　［輸入牛肉］　そともも　赤肉　生",
+      "displayName": "うし そともも 赤肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -16413,9 +16389,9 @@
     },
     {
       "id": "food:mext_11082",
-      "displayName": "うし　［輸入牛肉］　ランプ　脂身つき　生",
+      "displayName": "うし ランプ 脂身つき",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11082",
       "isActive": true,
@@ -16425,9 +16401,9 @@
     },
     {
       "id": "food:mext_11083",
-      "displayName": "うし　［輸入牛肉］　ランプ　皮下脂肪なし　生",
+      "displayName": "うし ランプ 皮下脂肪なし",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11083",
       "isActive": true,
@@ -16437,7 +16413,7 @@
     },
     {
       "id": "food:mext_11084",
-      "displayName": "うし　［輸入牛肉］　ランプ　赤肉　生",
+      "displayName": "うし ランプ 赤肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -16449,7 +16425,7 @@
     },
     {
       "id": "food:mext_11085",
-      "displayName": "うし　［輸入牛肉］　ヒレ　赤肉　生",
+      "displayName": "うし ヒレ 赤肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -16461,9 +16437,9 @@
     },
     {
       "id": "food:mext_11086",
-      "displayName": "うし　［子牛肉］　リブロース　皮下脂肪なし　生",
+      "displayName": "うし リブロース 皮下脂肪なし",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11086",
       "isActive": true,
@@ -16473,9 +16449,9 @@
     },
     {
       "id": "food:mext_11087",
-      "displayName": "うし　［子牛肉］　ばら　皮下脂肪なし　生",
+      "displayName": "うし ばら 皮下脂肪なし",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11087",
       "isActive": true,
@@ -16485,9 +16461,9 @@
     },
     {
       "id": "food:mext_11088",
-      "displayName": "うし　［子牛肉］　もも　皮下脂肪なし　生",
+      "displayName": "うし もも 皮下脂肪なし",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11088",
       "isActive": true,
@@ -16497,7 +16473,7 @@
     },
     {
       "id": "food:mext_11091",
-      "displayName": "うし　［副生物］　心臓　生",
+      "displayName": "うし 心臓",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -16509,7 +16485,7 @@
     },
     {
       "id": "food:mext_11092",
-      "displayName": "うし　［副生物］　肝臓　生",
+      "displayName": "うし 肝臓",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -16521,7 +16497,7 @@
     },
     {
       "id": "food:mext_11093",
-      "displayName": "うし　［副生物］　じん臓　生",
+      "displayName": "うし じん臓",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -16533,7 +16509,7 @@
     },
     {
       "id": "food:mext_11094",
-      "displayName": "うし　［副生物］　第一胃　ゆで",
+      "displayName": "うし 第一胃",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -16545,7 +16521,7 @@
     },
     {
       "id": "food:mext_11095",
-      "displayName": "うし　［副生物］　第二胃　ゆで",
+      "displayName": "うし 第二胃",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -16557,7 +16533,7 @@
     },
     {
       "id": "food:mext_11096",
-      "displayName": "うし　［副生物］　第三胃　生",
+      "displayName": "うし 第三胃",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -16569,7 +16545,7 @@
     },
     {
       "id": "food:mext_11097",
-      "displayName": "うし　［副生物］　第四胃　ゆで",
+      "displayName": "うし 第四胃",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -16581,7 +16557,7 @@
     },
     {
       "id": "food:mext_11098",
-      "displayName": "うし　［副生物］　小腸　生",
+      "displayName": "うし 小腸",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -16593,7 +16569,7 @@
     },
     {
       "id": "food:mext_11099",
-      "displayName": "うし　［副生物］　大腸　生",
+      "displayName": "うし 大腸",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -16605,7 +16581,7 @@
     },
     {
       "id": "food:mext_11100",
-      "displayName": "うし　［副生物］　直腸　生",
+      "displayName": "うし 直腸",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -16617,7 +16593,7 @@
     },
     {
       "id": "food:mext_11101",
-      "displayName": "うし　［副生物］　腱　ゆで",
+      "displayName": "うし 腱",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -16629,7 +16605,7 @@
     },
     {
       "id": "food:mext_11102",
-      "displayName": "うし　［副生物］　子宮　ゆで",
+      "displayName": "うし 子宮",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -16641,7 +16617,7 @@
     },
     {
       "id": "food:mext_11103",
-      "displayName": "うし　［副生物］　尾　生",
+      "displayName": "うし 尾",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -16713,7 +16689,7 @@
     },
     {
       "id": "food:mext_11109",
-      "displayName": "うま　肉　赤肉　生",
+      "displayName": "うま 肉 赤肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -16725,7 +16701,7 @@
     },
     {
       "id": "food:mext_11110",
-      "displayName": "くじら　肉　赤肉　生",
+      "displayName": "くじら 肉 赤肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -16737,7 +16713,7 @@
     },
     {
       "id": "food:mext_11111",
-      "displayName": "くじら　うねす　生",
+      "displayName": "くじら うねす",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -16749,7 +16725,7 @@
     },
     {
       "id": "food:mext_11112",
-      "displayName": "くじら　本皮　生",
+      "displayName": "くじら 本皮",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -16773,7 +16749,7 @@
     },
     {
       "id": "food:mext_11114",
-      "displayName": "しか　あかしか　赤肉　生",
+      "displayName": "しか あかしか 赤肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -16785,7 +16761,7 @@
     },
     {
       "id": "food:mext_11275",
-      "displayName": "しか　にほんじか　赤肉　生",
+      "displayName": "しか にほんじか 赤肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -16797,7 +16773,7 @@
     },
     {
       "id": "food:mext_11294",
-      "displayName": "しか　にほんじか　えぞしか　赤肉　生",
+      "displayName": "しか にほんじか えぞしか 赤肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -16809,7 +16785,7 @@
     },
     {
       "id": "food:mext_11295",
-      "displayName": "しか　にほんじか　きゅうしゅうじか　赤肉　生",
+      "displayName": "しか にほんじか きゅうしゅうじか 赤肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -16821,7 +16797,7 @@
     },
     {
       "id": "food:mext_11311",
-      "displayName": "しか　にほんじか　ほんしゅうじか　赤肉　生",
+      "displayName": "しか にほんじか ほんしゅうじか 赤肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -16833,9 +16809,9 @@
     },
     {
       "id": "food:mext_11115",
-      "displayName": "ぶた　［大型種肉］　かた　脂身つき　生",
+      "displayName": "ぶた かた 脂身つき",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11115",
       "isActive": true,
@@ -16845,9 +16821,9 @@
     },
     {
       "id": "food:mext_11116",
-      "displayName": "ぶた　［大型種肉］　かた　皮下脂肪なし　生",
+      "displayName": "ぶた かた 皮下脂肪なし",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11116",
       "isActive": true,
@@ -16857,7 +16833,7 @@
     },
     {
       "id": "food:mext_11117",
-      "displayName": "ぶた　［大型種肉］　かた　赤肉　生",
+      "displayName": "ぶた かた 赤肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -16869,9 +16845,9 @@
     },
     {
       "id": "food:mext_11118",
-      "displayName": "ぶた　［大型種肉］　かた　脂身　生",
+      "displayName": "ぶた かた 脂身",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11118",
       "isActive": true,
@@ -16881,9 +16857,9 @@
     },
     {
       "id": "food:mext_11119",
-      "displayName": "ぶた　［大型種肉］　かたロース　脂身つき　生",
+      "displayName": "ぶた かたロース 脂身つき",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11119",
       "isActive": true,
@@ -16893,9 +16869,9 @@
     },
     {
       "id": "food:mext_11120",
-      "displayName": "ぶた　［大型種肉］　かたロース　皮下脂肪なし　生",
+      "displayName": "ぶた かたロース 皮下脂肪なし",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11120",
       "isActive": true,
@@ -16905,7 +16881,7 @@
     },
     {
       "id": "food:mext_11121",
-      "displayName": "ぶた　［大型種肉］　かたロース　赤肉　生",
+      "displayName": "ぶた かたロース 赤肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -16917,9 +16893,9 @@
     },
     {
       "id": "food:mext_11122",
-      "displayName": "ぶた　［大型種肉］　かたロース　脂身　生",
+      "displayName": "ぶた かたロース 脂身",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11122",
       "isActive": true,
@@ -16941,9 +16917,9 @@
     },
     {
       "id": "food:mext_11126",
-      "displayName": "ぶた　［大型種肉］　ロース　皮下脂肪なし　生",
+      "displayName": "ぶた ロース 皮下脂肪なし",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11126",
       "isActive": true,
@@ -16953,7 +16929,7 @@
     },
     {
       "id": "food:mext_11127",
-      "displayName": "ぶた　［大型種肉］　ロース　赤肉　生",
+      "displayName": "ぶた ロース 赤肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -16965,9 +16941,9 @@
     },
     {
       "id": "food:mext_11128",
-      "displayName": "ぶた　［大型種肉］　ロース　脂身　生",
+      "displayName": "ぶた ロース 脂身",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11128",
       "isActive": true,
@@ -16977,9 +16953,9 @@
     },
     {
       "id": "food:mext_11130",
-      "displayName": "ぶた　［大型種肉］　もも　脂身つき　生",
+      "displayName": "ぶた もも 脂身つき",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11130",
       "isActive": true,
@@ -16989,7 +16965,7 @@
     },
     {
       "id": "food:mext_11134",
-      "displayName": "ぶた　［大型種肉］　もも　赤肉　生",
+      "displayName": "ぶた もも 赤肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -17001,9 +16977,9 @@
     },
     {
       "id": "food:mext_11135",
-      "displayName": "ぶた　［大型種肉］　もも　脂身　生",
+      "displayName": "ぶた もも 脂身",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11135",
       "isActive": true,
@@ -17013,9 +16989,9 @@
     },
     {
       "id": "food:mext_11136",
-      "displayName": "ぶた　［大型種肉］　そともも　脂身つき　生",
+      "displayName": "ぶた そともも 脂身つき",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11136",
       "isActive": true,
@@ -17025,9 +17001,9 @@
     },
     {
       "id": "food:mext_11137",
-      "displayName": "ぶた　［大型種肉］　そともも　皮下脂肪なし　生",
+      "displayName": "ぶた そともも 皮下脂肪なし",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11137",
       "isActive": true,
@@ -17037,7 +17013,7 @@
     },
     {
       "id": "food:mext_11138",
-      "displayName": "ぶた　［大型種肉］　そともも　赤肉　生",
+      "displayName": "ぶた そともも 赤肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -17049,9 +17025,9 @@
     },
     {
       "id": "food:mext_11139",
-      "displayName": "ぶた　［大型種肉］　そともも　脂身　生",
+      "displayName": "ぶた そともも 脂身",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11139",
       "isActive": true,
@@ -17073,9 +17049,9 @@
     },
     {
       "id": "food:mext_11141",
-      "displayName": "ぶた　［中型種肉］　かた　脂身つき　生",
+      "displayName": "ぶた かた 脂身つき",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11141",
       "isActive": true,
@@ -17085,9 +17061,9 @@
     },
     {
       "id": "food:mext_11142",
-      "displayName": "ぶた　［中型種肉］　かた　皮下脂肪なし　生",
+      "displayName": "ぶた かた 皮下脂肪なし",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11142",
       "isActive": true,
@@ -17097,7 +17073,7 @@
     },
     {
       "id": "food:mext_11143",
-      "displayName": "ぶた　［中型種肉］　かた　赤肉　生",
+      "displayName": "ぶた かた 赤肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -17109,9 +17085,9 @@
     },
     {
       "id": "food:mext_11144",
-      "displayName": "ぶた　［中型種肉］　かた　脂身　生",
+      "displayName": "ぶた かた 脂身",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11144",
       "isActive": true,
@@ -17121,9 +17097,9 @@
     },
     {
       "id": "food:mext_11145",
-      "displayName": "ぶた　［中型種肉］　かたロース　脂身つき　生",
+      "displayName": "ぶた かたロース 脂身つき",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11145",
       "isActive": true,
@@ -17133,9 +17109,9 @@
     },
     {
       "id": "food:mext_11146",
-      "displayName": "ぶた　［中型種肉］　かたロース　皮下脂肪なし　生",
+      "displayName": "ぶた かたロース 皮下脂肪なし",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11146",
       "isActive": true,
@@ -17145,7 +17121,7 @@
     },
     {
       "id": "food:mext_11147",
-      "displayName": "ぶた　［中型種肉］　かたロース　赤肉　生",
+      "displayName": "ぶた かたロース 赤肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -17157,9 +17133,9 @@
     },
     {
       "id": "food:mext_11148",
-      "displayName": "ぶた　［中型種肉］　かたロース　脂身　生",
+      "displayName": "ぶた かたロース 脂身",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11148",
       "isActive": true,
@@ -17169,9 +17145,9 @@
     },
     {
       "id": "food:mext_11149",
-      "displayName": "ぶた　［中型種肉］　ロース　脂身つき　生",
+      "displayName": "ぶた ロース 脂身つき",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11149",
       "isActive": true,
@@ -17181,9 +17157,9 @@
     },
     {
       "id": "food:mext_11150",
-      "displayName": "ぶた　［中型種肉］　ロース　皮下脂肪なし　生",
+      "displayName": "ぶた ロース 皮下脂肪なし",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11150",
       "isActive": true,
@@ -17193,7 +17169,7 @@
     },
     {
       "id": "food:mext_11151",
-      "displayName": "ぶた　［中型種肉］　ロース　赤肉　生",
+      "displayName": "ぶた ロース 赤肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -17205,9 +17181,9 @@
     },
     {
       "id": "food:mext_11152",
-      "displayName": "ぶた　［中型種肉］　ロース　脂身　生",
+      "displayName": "ぶた ロース 脂身",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11152",
       "isActive": true,
@@ -17217,9 +17193,9 @@
     },
     {
       "id": "food:mext_11153",
-      "displayName": "ぶた　［中型種肉］　ばら　脂身つき　生",
+      "displayName": "ぶた ばら 脂身つき",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11153",
       "isActive": true,
@@ -17229,9 +17205,9 @@
     },
     {
       "id": "food:mext_11154",
-      "displayName": "ぶた　［中型種肉］　もも　脂身つき　生",
+      "displayName": "ぶた もも 脂身つき",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11154",
       "isActive": true,
@@ -17241,9 +17217,9 @@
     },
     {
       "id": "food:mext_11155",
-      "displayName": "ぶた　［中型種肉］　もも　皮下脂肪なし　生",
+      "displayName": "ぶた もも 皮下脂肪なし",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11155",
       "isActive": true,
@@ -17253,7 +17229,7 @@
     },
     {
       "id": "food:mext_11156",
-      "displayName": "ぶた　［中型種肉］　もも　赤肉　生",
+      "displayName": "ぶた もも 赤肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -17265,9 +17241,9 @@
     },
     {
       "id": "food:mext_11157",
-      "displayName": "ぶた　［中型種肉］　もも　脂身　生",
+      "displayName": "ぶた もも 脂身",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11157",
       "isActive": true,
@@ -17277,9 +17253,9 @@
     },
     {
       "id": "food:mext_11158",
-      "displayName": "ぶた　［中型種肉］　そともも　脂身つき　生",
+      "displayName": "ぶた そともも 脂身つき",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11158",
       "isActive": true,
@@ -17289,9 +17265,9 @@
     },
     {
       "id": "food:mext_11159",
-      "displayName": "ぶた　［中型種肉］　そともも　皮下脂肪なし　生",
+      "displayName": "ぶた そともも 皮下脂肪なし",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11159",
       "isActive": true,
@@ -17301,7 +17277,7 @@
     },
     {
       "id": "food:mext_11160",
-      "displayName": "ぶた　［中型種肉］　そともも　赤肉　生",
+      "displayName": "ぶた そともも 赤肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -17313,9 +17289,9 @@
     },
     {
       "id": "food:mext_11161",
-      "displayName": "ぶた　［中型種肉］　そともも　脂身　生",
+      "displayName": "ぶた そともも 脂身",
       "reading": null,
-      "category": "主菜",
+      "category": "副菜",
       "representativeScore": 0,
       "defaultVariantId": "mext_11161",
       "isActive": true,
@@ -17325,7 +17301,7 @@
     },
     {
       "id": "food:mext_11162",
-      "displayName": "ぶた　［中型種肉］　ヒレ　赤肉　生",
+      "displayName": "ぶた ヒレ 赤肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -17337,7 +17313,7 @@
     },
     {
       "id": "food:mext_11164",
-      "displayName": "ぶた　［副生物］　舌　生",
+      "displayName": "ぶた 舌",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -17349,7 +17325,7 @@
     },
     {
       "id": "food:mext_11165",
-      "displayName": "ぶた　［副生物］　心臓　生",
+      "displayName": "ぶた 心臓",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -17361,7 +17337,7 @@
     },
     {
       "id": "food:mext_11166",
-      "displayName": "ぶた　［副生物］　肝臓　生",
+      "displayName": "ぶた 肝臓",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -17373,7 +17349,7 @@
     },
     {
       "id": "food:mext_11167",
-      "displayName": "ぶた　［副生物］　じん臓　生",
+      "displayName": "ぶた じん臓",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -17385,7 +17361,7 @@
     },
     {
       "id": "food:mext_11168",
-      "displayName": "ぶた　［副生物］　胃　ゆで",
+      "displayName": "ぶた 胃",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -17397,7 +17373,7 @@
     },
     {
       "id": "food:mext_11169",
-      "displayName": "ぶた　［副生物］　小腸　ゆで",
+      "displayName": "ぶた 小腸",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -17409,7 +17385,7 @@
     },
     {
       "id": "food:mext_11170",
-      "displayName": "ぶた　［副生物］　大腸　ゆで",
+      "displayName": "ぶた 大腸",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -17421,7 +17397,7 @@
     },
     {
       "id": "food:mext_11171",
-      "displayName": "ぶた　［副生物］　子宮　生",
+      "displayName": "ぶた 子宮",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -17433,7 +17409,7 @@
     },
     {
       "id": "food:mext_11172",
-      "displayName": "ぶた　［副生物］　豚足　ゆで",
+      "displayName": "ぶた 豚足",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -17445,7 +17421,7 @@
     },
     {
       "id": "food:mext_11173",
-      "displayName": "ぶた　［副生物］　軟骨　ゆで",
+      "displayName": "ぶた 軟骨",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -17757,7 +17733,7 @@
     },
     {
       "id": "food:mext_11245",
-      "displayName": "めんよう　［マトン］　ロース　皮下脂肪なし　生",
+      "displayName": "めんよう ロース 皮下脂肪なし",
       "reading": null,
       "category": "主食",
       "representativeScore": 0,
@@ -17769,7 +17745,7 @@
     },
     {
       "id": "food:mext_11200",
-      "displayName": "めんよう　［マトン］　もも　脂身つき　生",
+      "displayName": "めんよう もも 脂身つき",
       "reading": null,
       "category": "主食",
       "representativeScore": 0,
@@ -17781,7 +17757,7 @@
     },
     {
       "id": "food:mext_11201",
-      "displayName": "めんよう　［ラム］　かた　脂身つき　生",
+      "displayName": "めんよう かた 脂身つき",
       "reading": null,
       "category": "主食",
       "representativeScore": 0,
@@ -17793,7 +17769,7 @@
     },
     {
       "id": "food:mext_11246",
-      "displayName": "めんよう　［ラム］　ロース　皮下脂肪なし　生",
+      "displayName": "めんよう ロース 皮下脂肪なし",
       "reading": null,
       "category": "主食",
       "representativeScore": 0,
@@ -17817,7 +17793,7 @@
     },
     {
       "id": "food:mext_11204",
-      "displayName": "やぎ　肉　赤肉　生",
+      "displayName": "やぎ 肉 赤肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -17829,7 +17805,7 @@
     },
     {
       "id": "food:mext_11207",
-      "displayName": "うずら　肉　皮つき　生",
+      "displayName": "うずら 肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -17841,7 +17817,7 @@
     },
     {
       "id": "food:mext_11239",
-      "displayName": "がちょう　フォアグラ　ゆで",
+      "displayName": "がちょう フォアグラ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -17853,7 +17829,7 @@
     },
     {
       "id": "food:mext_11208",
-      "displayName": "かも　まがも　肉　皮なし　生",
+      "displayName": "かも まがも 肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -17865,7 +17841,7 @@
     },
     {
       "id": "food:mext_11205",
-      "displayName": "かも　あいがも　肉　皮つき　生",
+      "displayName": "かも あいがも 肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -17877,7 +17853,7 @@
     },
     {
       "id": "food:mext_11284",
-      "displayName": "かも　あひる　皮　生",
+      "displayName": "かも あひる 皮",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -17889,7 +17865,7 @@
     },
     {
       "id": "food:mext_11209",
-      "displayName": "きじ　肉　皮なし　生",
+      "displayName": "きじ 肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -17901,7 +17877,7 @@
     },
     {
       "id": "food:mext_11210",
-      "displayName": "しちめんちょう　肉　皮なし　生",
+      "displayName": "しちめんちょう 肉",
       "reading": null,
       "category": "主食",
       "representativeScore": 0,
@@ -17913,7 +17889,7 @@
     },
     {
       "id": "food:mext_11211",
-      "displayName": "すずめ　肉　骨・皮つき　生",
+      "displayName": "すずめ 肉 骨・皮つき",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -17925,7 +17901,7 @@
     },
     {
       "id": "food:mext_11212",
-      "displayName": "にわとり　［親・主品目］　手羽　皮つき　生",
+      "displayName": "にわとり 手羽",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -17937,7 +17913,7 @@
     },
     {
       "id": "food:mext_11218",
-      "displayName": "にわとり　［若どり・主品目］　手羽　皮つき　生",
+      "displayName": "にわとり 手羽",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -17949,7 +17925,7 @@
     },
     {
       "id": "food:mext_11285",
-      "displayName": "にわとり　［若どり・主品目］　手羽さき　皮つき　生",
+      "displayName": "にわとり 手羽さき",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -17961,7 +17937,7 @@
     },
     {
       "id": "food:mext_11286",
-      "displayName": "にわとり　［若どり・主品目］　手羽もと　皮つき　生",
+      "displayName": "にわとり 手羽もと",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -17973,7 +17949,7 @@
     },
     {
       "id": "food:mext_11231",
-      "displayName": "にわとり　［副品目］　心臓　生",
+      "displayName": "にわとり 心臓",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -17985,7 +17961,7 @@
     },
     {
       "id": "food:mext_11232",
-      "displayName": "にわとり　［副品目］　肝臓　生",
+      "displayName": "にわとり 肝臓",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -17997,7 +17973,7 @@
     },
     {
       "id": "food:mext_11233",
-      "displayName": "にわとり　［副品目］　すなぎも　生",
+      "displayName": "にわとり すなぎも",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -18009,7 +17985,7 @@
     },
     {
       "id": "food:mext_11234",
-      "displayName": "にわとり　［副品目］　皮　むね　生",
+      "displayName": "にわとり 皮 むね",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -18021,7 +17997,7 @@
     },
     {
       "id": "food:mext_11235",
-      "displayName": "にわとり　［副品目］　皮　もも　生",
+      "displayName": "にわとり 皮 もも",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -18033,7 +18009,7 @@
     },
     {
       "id": "food:mext_11236",
-      "displayName": "にわとり　［副品目］　なんこつ（胸肉）　生",
+      "displayName": "にわとり なんこつ（胸肉）",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -18081,7 +18057,7 @@
     },
     {
       "id": "food:mext_11238",
-      "displayName": "はと　肉　皮なし　生",
+      "displayName": "はと 肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -18093,7 +18069,7 @@
     },
     {
       "id": "food:mext_11240",
-      "displayName": "ほろほろちょう　肉　皮なし　生",
+      "displayName": "ほろほろちょう 肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -18117,7 +18093,7 @@
     },
     {
       "id": "food:mext_11242",
-      "displayName": "かえる　肉　生",
+      "displayName": "かえる 肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -18129,7 +18105,7 @@
     },
     {
       "id": "food:mext_11243",
-      "displayName": "すっぽん　肉　生",
+      "displayName": "すっぽん 肉",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -18165,7 +18141,7 @@
     },
     {
       "id": "food:mext_12001",
-      "displayName": "うこっけい卵　全卵　生",
+      "displayName": "うこっけい卵 全卵",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -18177,7 +18153,7 @@
     },
     {
       "id": "food:mext_12002",
-      "displayName": "うずら卵　全卵　生",
+      "displayName": "うずら卵 全卵",
       "reading": null,
       "category": "主菜",
       "representativeScore": 0,
@@ -19401,7 +19377,7 @@
     },
     {
       "id": "food:mext_14031",
-      "displayName": "ショートニング　業務用　フライ",
+      "displayName": "（その他） ショートニング 業務用",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -23949,7 +23925,7 @@
     },
     {
       "id": "food:mext_17069",
-      "displayName": "しょうが　おろし",
+      "displayName": "しょうが",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -24045,7 +24021,7 @@
     },
     {
       "id": "food:mext_17076",
-      "displayName": "にんにく　おろし",
+      "displayName": "にんにく",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -24069,7 +24045,7 @@
     },
     {
       "id": "food:mext_17078",
-      "displayName": "パセリ　乾",
+      "displayName": "パセリ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -24129,7 +24105,7 @@
     },
     {
       "id": "food:mext_17083",
-      "displayName": "酵母　パン酵母　乾燥",
+      "displayName": "酵母 パン酵母",
       "reading": null,
       "category": "主食",
       "representativeScore": 0,
@@ -24609,7 +24585,7 @@
     },
     {
       "id": "food:mext_18008",
-      "displayName": "洋風料理　フライ用冷凍食品　いかフライ　冷凍",
+      "displayName": "洋風料理 フライ用冷凍食品 いかフライ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -24621,7 +24597,7 @@
     },
     {
       "id": "food:mext_18009",
-      "displayName": "洋風料理　フライ用冷凍食品　えびフライ　冷凍",
+      "displayName": "洋風料理 フライ用冷凍食品 えびフライ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -24633,7 +24609,7 @@
     },
     {
       "id": "food:mext_18006",
-      "displayName": "洋風料理　フライ用冷凍食品　コロッケ　クリームコロッケ　冷凍",
+      "displayName": "洋風料理 フライ用冷凍食品 コロッケ クリームコロッケ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -24645,7 +24621,7 @@
     },
     {
       "id": "food:mext_18007",
-      "displayName": "洋風料理　フライ用冷凍食品　コロッケ　ポテトコロッケ　冷凍",
+      "displayName": "洋風料理 フライ用冷凍食品 コロッケ ポテトコロッケ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -24657,7 +24633,7 @@
     },
     {
       "id": "food:mext_18010",
-      "displayName": "洋風料理　フライ用冷凍食品　白身フライ　冷凍",
+      "displayName": "洋風料理 フライ用冷凍食品 白身フライ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -24669,7 +24645,7 @@
     },
     {
       "id": "food:mext_18016",
-      "displayName": "洋風料理　フライ用冷凍食品　メンチカツ　冷凍",
+      "displayName": "洋風料理 フライ用冷凍食品 メンチカツ",
       "reading": null,
       "category": "副菜",
       "representativeScore": 0,
@@ -25376,6 +25352,7 @@
     "mext_02019": "vegetable:potato",
     "mext_02063": "vegetable:potato",
     "mext_02064": "vegetable:potato",
+    "mext_02066": "vegetable:potato",
     "mext_06286": "vegetable:sprout",
     "mext_06287": "vegetable:sprout",
     "mext_06288": "vegetable:sprout",
@@ -25768,6 +25745,7 @@
     "mext_06346": "auto:265d0c8198ec",
     "mext_06407": "auto:265d0c8198ec",
     "mext_06408": "auto:265d0c8198ec",
+    "mext_06347": "auto:265d0c8198ec",
     "mext_06216": "auto:265d0c8198ec",
     "mext_06380": "auto:265d0c8198ec",
     "mext_06381": "auto:265d0c8198ec",
@@ -26274,7 +26252,6 @@
     "mext_02005": "food:mext_02005",
     "mext_02009": "food:mext_02009",
     "mext_02065": "food:mext_02065",
-    "mext_02066": "food:mext_02066",
     "mext_02067": "food:mext_02067",
     "mext_02020": "food:mext_02020",
     "mext_02021": "food:mext_02021",
@@ -26531,7 +26508,6 @@
     "mext_06209": "food:mext_06209",
     "mext_06210": "food:mext_06210",
     "mext_06211": "food:mext_06211",
-    "mext_06347": "food:mext_06347",
     "mext_06348": "food:mext_06348",
     "mext_06217": "food:mext_06217",
     "mext_06409": "food:mext_06409",
@@ -35142,10 +35118,10 @@
     },
     "mext_06347": {
       "species": null,
-      "part": "皮",
+      "part": "根",
       "cultivation": null,
       "sourceBean": null,
-      "skin": null,
+      "skin": "皮つき",
       "preparation": "生",
       "processing": null,
       "variety": null
@@ -47422,7 +47398,7 @@
     },
     "mext_11234": {
       "species": "鶏",
-      "part": "むね",
+      "part": "皮",
       "cultivation": null,
       "sourceBean": null,
       "skin": null,
@@ -47432,7 +47408,7 @@
     },
     "mext_11235": {
       "species": "鶏",
-      "part": "もも",
+      "part": "皮",
       "cultivation": null,
       "sourceBean": null,
       "skin": null,

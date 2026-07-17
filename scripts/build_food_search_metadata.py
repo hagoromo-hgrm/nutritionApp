@@ -19,7 +19,8 @@ from typing import Any
 
 
 VARIANT_KEYS = ("species", "part", "cultivation", "sourceBean", "skin", "preparation", "processing", "variety")
-SKIN_VALUES = {"皮つき", "皮なし"}
+SKIN_VALUE_ALIASES = {"皮つき": "皮つき", "皮なし": "皮なし"}
+SKIN_VALUES = set(SKIN_VALUE_ALIASES)
 PREPARATION_VALUES = {
     "生", "ゆで", "焼き", "水煮", "蒸し", "電子レンジ調理", "油いため", "素揚げ",
     "天ぷら", "から揚げ", "ソテー", "フライ", "煮", "あめ色たまねぎ",
@@ -157,7 +158,13 @@ def variant_token(token: str) -> str:
     return token.strip("（）()")
 
 
-def is_grouping_variant_token(token: str) -> bool:
+def standalone_skin_is_attribute(tokens: list[str]) -> bool:
+    # 成分表の「にんじん 根 皮 生」は可食部の皮の有無として扱う。
+    # 鶏皮・あひる皮などの「皮」は独立した部位なので、部位のまま残す。
+    return "皮" in tokens and "にんじん" in tokens
+
+
+def is_grouping_variant_token(token: str, tokens: list[str] | None = None) -> bool:
     normalized_token = variant_token(token)
     return normalized_token in (
         SKIN_VALUES
@@ -165,7 +172,7 @@ def is_grouping_variant_token(token: str) -> bool:
         | PROCESSING_VALUES
         | CULTIVATION_VALUES
         | set(SOURCE_BEAN_VALUES)
-    )
+    ) or (normalized_token == "皮" and tokens is not None and standalone_skin_is_attribute(tokens))
 
 
 def variant_attributes(name: str) -> dict[str, str | None]:
@@ -174,7 +181,9 @@ def variant_attributes(name: str) -> dict[str, str | None]:
     for token in tokens:
         normalized_token = variant_token(token)
         if normalized_token in SKIN_VALUES:
-            attributes["skin"] = normalized_token
+            attributes["skin"] = SKIN_VALUE_ALIASES[normalized_token]
+        elif normalized_token == "皮" and standalone_skin_is_attribute(tokens):
+            attributes["skin"] = "皮つき"
         elif normalized_token in PREPARATION_VALUES:
             attributes["preparation"] = normalized_token
         elif normalized_token in PROCESSING_VALUES:
@@ -194,10 +203,13 @@ def variant_attributes(name: str) -> dict[str, str | None]:
         elif "養殖" in token:
             attributes["variety"] = "養殖"
 
-    for part in sorted(PART_VALUES, key=len, reverse=True):
-        if part in tokens:
-            attributes["part"] = part
-            break
+    if "皮" in tokens and not standalone_skin_is_attribute(tokens):
+        attributes["part"] = "皮"
+    else:
+        for part in sorted(PART_VALUES, key=len, reverse=True):
+            if part in tokens and part != "皮":
+                attributes["part"] = part
+                break
 
     species_map = (("にわとり", "鶏"), ("うし", "牛"), ("ぶた", "豚"), ("ひつじ", "羊"), ("やぎ", "山羊"))
     for token, species in species_map:
@@ -213,7 +225,7 @@ def candidate_signature(name: str) -> str | None:
         return None
     remaining = [
         token for token in tokens
-        if not is_grouping_variant_token(token)
+        if not is_grouping_variant_token(token, tokens)
     ]
     return " ".join(remaining) or None
 
@@ -223,7 +235,7 @@ def display_for_signature(name: str) -> str:
     tokens = [
         token for token in tokens
         if not token.startswith(("［", "["))
-        and not is_grouping_variant_token(token)
+        and not is_grouping_variant_token(token, tokens)
     ]
     if len(tokens) > 1 and tokens[-1] in DISPLAY_SUFFIXES:
         tokens = tokens[:-1]
@@ -372,7 +384,12 @@ def main() -> None:
         if food["id"] in assigned:
             continue
         group_id = f"food:{food['id']}"
-        display = food.get("displayName") or food.get("name") or food.get("officialName") or food["id"]
+        # 単独食品でも、調理状態・皮の有無などの属性を検索結果名へ残さない。
+        # 部位や独立した加工品名は display_for_signature が保持する。
+        official_name = food.get("officialName") or food.get("name") or food["id"]
+        official_tokens = tokens_for(official_name)
+        has_grouping_attribute = any(is_grouping_variant_token(token, official_tokens) for token in official_tokens)
+        display = display_for_signature(official_name) if has_grouping_attribute else (food.get("displayName") or food.get("name") or official_name)
         groups.append({"id": group_id, "displayName": display, "reading": None, "category": category_for(display), "representativeScore": 0, "defaultVariantId": food["id"], "isActive": True, "metadataSource": "rule", "generationVersion": "fallback-v2", "needsReview": True})
 
     for food in foods:

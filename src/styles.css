@@ -475,6 +475,12 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 fieldset { min-width: 0; border: 1px solid var(--line); border-radius: .8rem; padding: .85rem; }
 legend { padding: 0 .35rem; color: var(--muted); font-size: .75rem; font-weight: 800; }
 .nutrient-input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; }
+.metadata-editor { display: grid; gap: .45rem; margin-top: .75rem; }
+.metadata-editor-heading { display: flex; align-items: center; justify-content: space-between; gap: .6rem; color: var(--muted); font-size: .74rem; }
+.metadata-input-row { display: flex; align-items: center; gap: .45rem; }
+.metadata-input-row input { min-width: 0; flex: 1; }
+.metadata-input-row select { width: 6rem; flex: 0 0 auto; }
+.variant-attribute-inputs { margin-top: .25rem; }
 .external-warning { border-left: 3px solid #d89b31; border-radius: .3rem; padding: .6rem .7rem; color: #7a5a22; background: #fff4d9; font-size: .74rem; line-height: 1.5; }
 .source-line { color: var(--muted); font-size: .68rem; line-height: 1.5; }
 .scanner-video { display: block; width: 100%; min-height: 12rem; border-radius: .9rem; background: #182f28; object-fit: cover; }

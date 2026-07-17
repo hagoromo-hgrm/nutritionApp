@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { db, deleteFood, exportBackup, getEntriesForDate, getSettings, initializeDatabase, recordFoodSelection, saveFood, saveMealEntries, saveMealEntry, saveMenu, searchFoodResults, searchMenus } from '../src/db/db'
-import type { Food, MealEntry, Menu } from '../src/types'
+import { db, deleteFood, exportBackup, getEntriesForDate, getSettings, initializeDatabase, recordFoodSelection, saveFood, saveFoodWithMetadata, saveMealEntries, saveMealEntry, saveMenu, searchFoodResults, searchMenus } from '../src/db/db'
+import type { Food, FoodAlias, FoodGroup, FoodRelatedTerm, MealEntry, Menu } from '../src/types'
 
 const addedNutrients = { calciumMg: null, ironMg: null, vitaminAMcg: null, vitaminEMg: null, vitaminB1Mg: null, vitaminB2Mg: null, vitaminCMg: null, saturatedFatG: null }
 
@@ -46,13 +46,23 @@ describe('IndexedDB data safety', () => {
   })
 
   it('人参・大根の調理状態を同一グループにまとめ、品種や部位は分離する', async () => {
-    const carrotRootIds = ['mext_06212', 'mext_06213', 'mext_06214', 'mext_06215', 'mext_06345']
+    const carrotRootIds = ['mext_06212', 'mext_06213', 'mext_06214', 'mext_06215', 'mext_06345', 'mext_06347']
     const carrotGroups = await Promise.all(carrotRootIds.map(async (id) => (await db.foods.get(id))?.foodGroupId))
     expect(new Set(carrotGroups).size).toBe(1)
+    expect((await db.foodGroups.get(carrotGroups[0] ?? ''))?.displayName).toBe('にんじん')
+    expect((await db.foods.get('mext_06347'))?.variantAttributes).toMatchObject({ part: '根', skin: '皮つき', preparation: '生' })
     expect((await db.foods.get('mext_06218'))?.foodGroupId).not.toBe(carrotGroups[0])
     expect((await db.foods.get('mext_06132'))?.foodGroupId).toBe((await db.foods.get('mext_06134'))?.foodGroupId)
     expect((await db.foods.get('mext_06130'))?.foodGroupId).not.toBe((await db.foods.get('mext_06132'))?.foodGroupId)
     expect((await db.foods.get('mext_06136'))?.foodGroupId).not.toBe((await db.foods.get('mext_06132'))?.foodGroupId)
+  })
+
+  it('検索結果のfamily表示名に単独の調理状態を残さない', async () => {
+    const stateTokens = new Set(['生', 'ゆで', '焼き', '水煮', '蒸し', '電子レンジ調理', '油いため', '素揚げ', '天ぷら', 'から揚げ', 'ソテー', 'フライ', '煮', '冷凍', '乾', '乾燥', '水戻し', '塩抜き', '水さらし', 'カット', '常法洗浄', '次亜塩素酸洗浄', 'おろし', '皮つき', '皮なし', '菌床栽培', '原木栽培'])
+    const groups = await db.foodGroups.toArray()
+    expect(groups.filter((group) => group.displayName.split(/\s+/).some((token) => stateTokens.has(token)))).toEqual([])
+    expect((await db.foodGroups.get((await db.foods.get('mext_06347'))?.foodGroupId ?? ''))?.displayName).toBe('にんじん')
+    expect((await db.foodGroups.get((await db.foods.get('mext_02066'))?.foodGroupId ?? ''))?.displayName).toBe('じゃがいも')
   })
 
   it('たまねぎ・しいたけ・もやしの確定分類と属性を保持する', async () => {
@@ -105,16 +115,29 @@ describe('IndexedDB data safety', () => {
     expect(await db.foods.get(userFood.id)).toBeUndefined()
   })
 
+  it('手動食品のfamily・別名・属性を一括保存して検索できる', async () => {
+    const now = '2026-07-15T00:00:00.000Z'
+    const manualFood: Food = { ...userFood, id: 'manual_metadata_food', name: '自家製鶏肉', displayName: '鶏肉', foodGroupId: 'manual:chicken', variantAttributes: { species: '鶏', part: 'もも', skin: '皮なし', preparation: '焼き' }, createdAt: now, updatedAt: now }
+    const group: FoodGroup = { id: 'manual:chicken', displayName: '鶏肉', reading: 'とりにく', category: '主菜', representativeScore: 0, defaultVariantId: manualFood.id, isActive: true, metadataSource: 'manual', generationVersion: 'manual-v1', needsReview: false, createdAt: now, updatedAt: now }
+    const alias: FoodAlias = { id: 'manual:alias:chicken', foodGroupId: group.id, foodVariantId: null, alias: 'とり', normalizedAlias: 'とり', aliasType: 'synonym', priority: 80, isActive: true, metadataSource: 'manual' }
+    const related: FoodRelatedTerm = { id: 'manual:related:chicken', foodGroupId: group.id, term: '炭火串焼き', normalizedTerm: '炭火串焼き', weight: 0.5, isActive: true, metadataSource: 'manual' }
+    await saveFoodWithMetadata(manualFood, { group, aliases: [alias], relatedTerms: [related] })
+    expect((await db.foods.get(manualFood.id))?.foodGroupId).toBe(group.id)
+    expect((await searchFoodResults('とり')).page.results[0]?.group.displayName).toBe('鶏肉')
+    expect((await searchFoodResults('炭火串焼き')).page.results[0]?.group.displayName).toBe('鶏肉')
+  })
+
   it('メニューを保存して名前・区分で検索できる', async () => {
     await saveFood(userFood)
     const menu: Menu = {
-      id: 'menu_test', name: '朝ごはん', category: '主食', foodIds: [userFood.id],
+      id: 'menu_test', name: '朝ごはん', category: '主食', foodIds: [userFood.id], aliases: ['モーニング'],
       createdAt: '2026-07-15T00:00:00.000Z', updatedAt: '2026-07-15T00:00:00.000Z',
     }
     await saveMenu(menu)
     expect(await searchMenus('朝')).toEqual([menu])
     expect(await searchMenus('主食')).toEqual([menu])
     expect(await searchMenus('テスト食品')).toEqual([menu])
+    expect(await searchMenus('モーニング')).toEqual([menu])
   })
 
   it('初期設定に身体情報の既定値を持つ', async () => {
