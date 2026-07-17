@@ -67,6 +67,7 @@ import {
   type NutritionGoals,
 } from './types'
 import { normalizeSearchText, type FoodSearchResult } from './services/foodSearch'
+import { filterVariantsBySelection, getVariantOptionGroups, getVariantSelection, resolveVariantForSelection, variantOptionText, type VariantOptionGroup } from './services/foodVariants'
 import { addDays, currentDateKey, currentMonthRange, formatDateKey, formatDateTime, formatFileTimestamp, isoFromTokyoTimeInput, toTokyoTimeInput, formatTime } from './utils/date'
 import { isPositiveFinite, isValidBarcode, isValidUnit } from './utils/validation'
 import './styles.css'
@@ -997,7 +998,20 @@ function SearchResultsView({ groups, purpose, onSelect, onAddFood, onLoadMore, o
 }
 
 function FoodVariantPickerModal({ result, onSelect, onClose }: { result: FoodSearchResult; onSelect: (food: Food) => void; onClose: () => void }) {
-  return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="食品のバリエーションを選択"><section className="modal-card variant-picker-modal"><div className="modal-heading"><div><span className="eyebrow">VARIATIONS</span><h2>{result.group.displayName}</h2><p className="muted">栄養値を記録するバリエーションを選択</p></div><button className="icon-button" type="button" onClick={onClose} aria-label="閉じる">×</button></div><div className="variant-list">{result.variants.map((food) => <button type="button" className={`variant-row${food.id === result.group.defaultVariantId ? ' is-default' : ''}`} key={food.id} onClick={() => onSelect(food)}><span><strong>{food.displayName ?? food.name}</strong><small>{food.baseAmount}{food.baseUnit} · {formatNutrient(food.nutrients.energyKcal)}kcal</small></span>{food.id === result.group.defaultVariantId && <em>標準</em>}</button>)}</div></section></div>
+  const optionGroups = useMemo(() => getVariantOptionGroups(result.variants), [result.variants])
+  const defaultVariant = result.variants.find((food) => food.id === result.group.defaultVariantId) ?? result.food
+  const [selection, setSelection] = useState(() => getVariantSelection(defaultVariant, optionGroups))
+  const [fallbackVariantId, setFallbackVariantId] = useState(defaultVariant.id)
+  const fallbackGroup: VariantOptionGroup = useMemo(() => ({ key: 'variant', label: 'バリエーション', options: result.variants.map((food) => ({ value: food.id, label: variantOptionText(food) })) }), [result.variants])
+  const groups = optionGroups.length > 0 ? optionGroups : [fallbackGroup]
+  const matchingVariants = optionGroups.length > 0 ? filterVariantsBySelection(result.variants, selection) : result.variants.filter((food) => food.id === fallbackVariantId)
+  const selectedFood = optionGroups.length > 0 ? resolveVariantForSelection(result.variants, selection, result.group.defaultVariantId) : matchingVariants[0] ?? null
+  const isSelected = (group: VariantOptionGroup, value: string | null) => group.key === 'variant' ? fallbackVariantId === value : selection[group.key] === value
+  const chooseOption = (group: VariantOptionGroup, value: string | null) => {
+    if (group.key === 'variant') setFallbackVariantId(value ?? '')
+    else setSelection((current) => ({ ...current, [group.key]: value }))
+  }
+  return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="食品のバリエーションを選択"><section className="modal-card variant-picker-modal"><div className="modal-heading"><div><span className="eyebrow">VARIATIONS</span><h2>{result.group.displayName}</h2><p className="muted">条件ごとに選択してください</p></div><button className="icon-button" type="button" onClick={onClose} aria-label="閉じる">×</button></div><div className="variant-choice-groups">{groups.map((group) => <section className="variant-choice-group" key={group.key}><h3>{group.label}</h3><div className="variant-choice-buttons">{group.options.map((option) => <button className={`variant-choice-button${isSelected(group, option.value) ? ' is-selected' : ''}`} type="button" aria-pressed={isSelected(group, option.value)} key={`${group.key}:${option.value ?? 'none'}`} onClick={() => chooseOption(group, option.value)}>{option.label}</button>)}</div></section>)}</div>{selectedFood ? <div className="variant-picker-summary"><span>選択中</span><strong>{variantOptionText(selectedFood)}</strong><small>{selectedFood.baseAmount}{selectedFood.baseUnit} · {formatNutrient(selectedFood.nutrients.energyKcal)}kcal{matchingVariants.length > 1 ? ` · ${matchingVariants.length}件が該当` : ''}</small></div> : <p className="variant-picker-no-match">この組み合わせに該当する食品がありません。</p>}<button className="button primary variant-picker-confirm" type="button" onClick={() => { if (selectedFood) onSelect(selectedFood) }} disabled={!selectedFood}>この食品を選択</button></section></div>
 }
 
 interface MenuViewProps { menus: Menu[]; menuSets: MenuSet[]; foods: Food[]; onNewMenu: () => void; onEditMenu: (menu: Menu) => void; onDeleteMenu: (menu: Menu) => void; onNewMenuSet: () => void; onEditMenuSet: (menuSet: MenuSet) => void; onDeleteMenuSet: (menuSet: MenuSet) => void; onBack: () => void }

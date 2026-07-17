@@ -41,8 +41,41 @@ describe('IndexedDB data safety', () => {
     expect(seasoning?.baseUnit).toBe('小さじ')
     expect(seasoning?.name).toContain('（小さじ1=')
     expect(foods.filter((food) => food.source === 'mext').some((food) => /^(＜|（|\()/.test(food.name))).toBe(false)
-    expect(await db.foodGroups.count()).toBeGreaterThan(2400)
+    expect(await db.foodGroups.count()).toBeGreaterThan(2000)
     expect(await db.foodAliases.where('normalizedAlias').equals('塩').count()).toBe(1)
+  })
+
+  it('人参・大根の調理状態を同一グループにまとめ、品種や部位は分離する', async () => {
+    const carrotRootIds = ['mext_06212', 'mext_06213', 'mext_06214', 'mext_06215', 'mext_06345']
+    const carrotGroups = await Promise.all(carrotRootIds.map(async (id) => (await db.foods.get(id))?.foodGroupId))
+    expect(new Set(carrotGroups).size).toBe(1)
+    expect((await db.foods.get('mext_06218'))?.foodGroupId).not.toBe(carrotGroups[0])
+    expect((await db.foods.get('mext_06132'))?.foodGroupId).toBe((await db.foods.get('mext_06134'))?.foodGroupId)
+    expect((await db.foods.get('mext_06130'))?.foodGroupId).not.toBe((await db.foods.get('mext_06132'))?.foodGroupId)
+    expect((await db.foods.get('mext_06136'))?.foodGroupId).not.toBe((await db.foods.get('mext_06132'))?.foodGroupId)
+  })
+
+  it('たまねぎ・しいたけ・もやしの確定分類と属性を保持する', async () => {
+    const onionIds = ['mext_06153', 'mext_06154', 'mext_06155', 'mext_06336', 'mext_06389']
+    const onionGroups = await Promise.all(onionIds.map(async (id) => (await db.foods.get(id))?.foodGroupId))
+    expect(new Set(onionGroups).size).toBe(1)
+    expect((await db.foods.get('mext_06389'))?.variantAttributes?.preparation).toBe('あめ色たまねぎ')
+    expect((await db.foods.get('mext_06156'))?.foodGroupId).not.toBe(onionGroups[0])
+
+    const freshShiitakeIds = ['mext_08039', 'mext_08040', 'mext_08041', 'mext_08057', 'mext_08042', 'mext_08043', 'mext_08044']
+    const shiitakeGroups = await Promise.all(freshShiitakeIds.map(async (id) => (await db.foods.get(id))?.foodGroupId))
+    expect(new Set(shiitakeGroups).size).toBe(1)
+    expect((await db.foods.get('mext_08039'))?.variantAttributes?.cultivation).toBe('菌床栽培')
+    expect((await db.foods.get('mext_08042'))?.variantAttributes?.cultivation).toBe('原木栽培')
+    expect((await db.foods.get('mext_08013'))?.foodGroupId).not.toBe(shiitakeGroups[0])
+    expect((await db.foods.get('mext_17022'))?.foodGroupId).not.toBe(shiitakeGroups[0])
+
+    const sproutIds = ['mext_06286', 'mext_06287', 'mext_06288', 'mext_06289', 'mext_06290', 'mext_06291', 'mext_06292', 'mext_06398', 'mext_06412', 'mext_06413']
+    const sproutGroups = await Promise.all(sproutIds.map(async (id) => (await db.foods.get(id))?.foodGroupId))
+    expect(new Set(sproutGroups).size).toBe(1)
+    expect((await db.foods.get('mext_06287'))?.variantAttributes?.sourceBean).toBe('だいず')
+    expect((await db.foods.get('mext_06289'))?.variantAttributes?.sourceBean).toBe('ブラックマッペ')
+    expect((await db.foods.get('mext_18039'))?.foodGroupId).not.toBe(sproutGroups[0])
   })
 
   it('食品グループ単位の関連度検索と個人利用統計を保存できる', async () => {
@@ -52,7 +85,7 @@ describe('IndexedDB data safety', () => {
     await recordFoodSelection(searched.logId, searched.page.results[0].group.id, searched.page.results[0].food.id, 1)
     expect((await db.foodUsageStats.get(searched.page.results[0].food.id))?.selectionCount).toBe(1)
     const backup = await exportBackup()
-    expect(backup.foodGroups?.length).toBeGreaterThan(2400)
+    expect(backup.foodGroups?.length).toBeGreaterThan(2000)
     expect(backup.searchLogs?.[0].selectedFoodGroupId).toBe('seasoning:salt')
     expect(backup.foodUsageStats?.[0].foodId).toBe(searched.page.results[0].food.id)
   })

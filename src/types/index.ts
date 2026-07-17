@@ -79,6 +79,8 @@ export interface Food {
 export interface FoodVariantAttributes {
   species?: string | null
   part?: string | null
+  cultivation?: string | null
+  sourceBean?: string | null
   skin?: string | null
   preparation?: string | null
   processing?: string | null

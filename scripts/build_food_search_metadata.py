@@ -1,25 +1,237 @@
 #!/usr/bin/env python3
 """食品成分表からローカル検索用の確定メタデータを生成する。
 
-本番実行時にLLMやHTTP APIは呼ばない。LLMを利用する場合も、別工程で生成した
-構造化JSONを known-good として確認してから入力する設計にする。
+本番実行時にLLMやHTTP APIは呼ばない。食品名から機械的に判定できる状態違い
+だけを保守的に同一グループへまとめ、判断が必要な候補はレビューJSONへ分離する。
 """
 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import unicodedata
+from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
+
+VARIANT_KEYS = ("species", "part", "cultivation", "sourceBean", "skin", "preparation", "processing", "variety")
+SKIN_VALUES = {"皮つき", "皮なし"}
+PREPARATION_VALUES = {
+    "生", "ゆで", "焼き", "水煮", "蒸し", "電子レンジ調理", "油いため", "素揚げ",
+    "天ぷら", "から揚げ", "ソテー", "フライ", "煮", "あめ色たまねぎ",
+}
+PROCESSING_VALUES = {
+    "冷凍", "乾", "乾燥", "水戻し", "塩抜き", "水さらし", "カット", "常法洗浄",
+    "次亜塩素酸洗浄", "おろし",
+}
+CULTIVATION_VALUES = {"菌床栽培", "原木栽培"}
+SOURCE_BEAN_VALUES = {
+    "アルファルファもやし": "アルファルファ",
+    "だいずもやし": "だいず",
+    "ブラックマッペもやし": "ブラックマッペ",
+    "りょくとうもやし": "りょくとう",
+}
+
+# これらは原材料の単なる状態違いではなく、独立した食品として扱う候補。
+# 自動統合せず、レビュー一覧に残す。
+INDEPENDENT_PRODUCT_TOKENS = {
+    "グラッセ", "ジュース", "缶詰", "漬物", "甘煮", "ナムル", "料理", "スープ",
+    "だし", "ソース", "ペースト", "ピューレー", "ケチャップ", "フライドポテト",
+    "おろし汁", "おろし水洗い", "いぶりがっこ", "ぬかみそ漬", "たくあん漬",
+    "塩押しだいこん漬", "干しだいこん漬", "守口漬", "べったら漬", "みそ漬", "福神漬",
+    "塩漬", "こうじ漬", "からし漬", "しば漬",
+}
+
+PART_VALUES = (
+    "手羽さき", "手羽もと", "ひき肉", "なんこつ（胸肉）", "りん茎及び葉", "結球葉",
+    "生しいたけ", "乾しいたけ", "むね", "もも", "ささみ", "手羽", "心臓", "肝臓",
+    "すなぎも", "皮", "赤身", "脂身", "卵白", "卵黄", "根", "葉", "芽ばえ", "果実",
+    "りん茎", "塊根", "塊茎", "ロース", "ばら", "かた", "そともも", "もも肉",
+)
+
+DISPLAY_SUFFIXES = {"根", "果実", "結球葉", "りん茎", "塊根", "塊茎"}
+
+AMBIGUOUS_FAMILY_RULES = (
+    {
+        "id": "carrot-family",
+        "label": "にんじん類",
+        "terms": ("にんじん", "きんとき", "島にんじん", "ミニキャロット", "葉にんじん"),
+        "reason": "通常のにんじん、品種・サイズ違い、葉の食品を同じグループにするか判断が必要",
+        "recommendation": "通常のにんじんの根だけを同一グループとし、品種・葉は分離する案を推奨",
+        "decision": "通常のにんじんの根だけを同一グループとし、品種・葉は分離",
+    },
+    {
+        "id": "daikon-family",
+        "label": "だいこん類",
+        "terms": ("だいこん", "かいわれだいこん", "葉だいこん", "切干しだいこん", "はつかだいこん"),
+        "reason": "根、葉、芽ばえ、乾燥品、別品種、漬物が同じ分類見出しに含まれる",
+        "recommendation": "だいこん根の皮・調理状態だけを同一グループとし、葉・芽ばえ・乾燥品・漬物は分離する案を推奨",
+        "decision": "だいこん根の皮・調理状態だけを同一グループとし、葉・芽ばえ・乾燥品・漬物は分離",
+    },
+    {
+        "id": "tomato-family",
+        "label": "トマト類",
+        "terms": ("トマト", "ミニトマト", "ドライトマト", "トマトジュース", "トマトピューレー", "トマトペースト", "トマトケチャップ", "トマトソース"),
+        "reason": "品種・乾燥状態・飲料・調味加工品が混在する",
+        "recommendation": "生の赤色トマトだけを基準グループ候補とし、ミニ・黄色・乾燥・加工品は分離する案を推奨",
+        "decision": "生の赤色トマトだけを同一グループとし、ミニ・黄色・乾燥・加工品は分離",
+    },
+    {
+        "id": "cabbage-family",
+        "label": "キャベツ類",
+        "terms": ("キャベツ", "グリーンボール", "レッドキャベツ", "めキャベツ"),
+        "reason": "一般キャベツ、品種違い、芽キャベツを同一グループにするか判断が必要",
+        "recommendation": "一般キャベツの調理状態だけを同一グループとし、品種は分離する案を推奨",
+        "decision": "一般キャベツの調理状態だけを同一グループとし、品種は分離",
+    },
+    {
+        "id": "eggplant-family",
+        "label": "なす類",
+        "terms": ("なす", "べいなす"),
+        "reason": "一般なすとべいなすは品種・大きさが異なる",
+        "recommendation": "なすとべいなすを別グループにする案を推奨",
+        "decision": "なすとべいなすを別グループにする",
+    },
+    {
+        "id": "pumpkin-family",
+        "label": "かぼちゃ類",
+        "terms": ("日本かぼちゃ", "西洋かぼちゃ", "そうめんかぼちゃ"),
+        "reason": "品種が栄養値と食品選択に影響する",
+        "recommendation": "日本・西洋・そうめんを別グループにする案を推奨",
+        "decision": "日本・西洋・そうめんを別グループにする",
+    },
+    {
+        "id": "onion-family",
+        "label": "たまねぎ類",
+        "terms": ("たまねぎ", "赤たまねぎ", "葉たまねぎ", "あめ色たまねぎ"),
+        "reason": "品種、可食部、加工状態が混在する",
+        "recommendation": "通常たまねぎの調理状態だけを同一グループとし、赤・葉は分離する案を推奨",
+        "decision": "あめ色たまねぎを調理状態として通常たまねぎのグループに含め、赤・葉は分離",
+    },
+    {
+        "id": "shiitake-family",
+        "label": "しいたけ類",
+        "terms": ("生しいたけ", "乾しいたけ", "しいたけだし", "菌床栽培", "原木栽培"),
+        "reason": "生鮮・栽培方法・乾燥品・だしが混在する",
+        "recommendation": "生しいたけは栽培方法を属性にし、乾燥品とだしは分離する案を推奨",
+        "decision": "菌床栽培・原木栽培を栽培方法属性として生しいたけを同一グループにし、乾燥品・だしは分離",
+    },
+    {
+        "id": "sprout-family",
+        "label": "もやし類",
+        "terms": ("アルファルファもやし", "だいずもやし", "ブラックマッペもやし", "りょくとうもやし"),
+        "reason": "原料豆の違いが食品名と栄養値に反映される",
+        "recommendation": "もやしを一つのグループとし、原料豆を属性にする案を推奨",
+        "decision": "もやしを一つのグループとし、アルファルファ・だいず・ブラックマッペ・りょくとうを原料豆属性にする",
+    },
+)
 
 
 def normalize(value: str) -> str:
     value = unicodedata.normalize("NFKC", value).lower()
     value = value.translate(str.maketrans({chr(code): chr(code - 0x60) for code in range(0x30A1, 0x30F7)}))
     return re.sub(r"[\s\W_]+", "", value, flags=re.UNICODE)
+
+
+def clean_name(name: str) -> str:
+    value = re.sub(r"（(?:小さじ|大さじ)1=[^)]+）$", "", name)
+    value = re.sub(r"＜[^＞]*＞", " ", value)
+    value = re.sub(r"（[^）]*類）", " ", value)
+    return re.sub(r"\s+", " ", value.replace("　", " ")).strip()
+
+
+def tokens_for(name: str) -> list[str]:
+    value = clean_name(name)
+    return [token for token in re.split(r"\s+", value) if token]
+
+
+def square_content(token: str) -> str:
+    return token.strip("［］[]")
+
+
+def variant_token(token: str) -> str:
+    return token.strip("（）()")
+
+
+def is_grouping_variant_token(token: str) -> bool:
+    normalized_token = variant_token(token)
+    return normalized_token in (
+        SKIN_VALUES
+        | PREPARATION_VALUES
+        | PROCESSING_VALUES
+        | CULTIVATION_VALUES
+        | set(SOURCE_BEAN_VALUES)
+    )
+
+
+def variant_attributes(name: str) -> dict[str, str | None]:
+    tokens = tokens_for(name)
+    attributes: dict[str, str | None] = {key: None for key in VARIANT_KEYS}
+    for token in tokens:
+        normalized_token = variant_token(token)
+        if normalized_token in SKIN_VALUES:
+            attributes["skin"] = normalized_token
+        elif normalized_token in PREPARATION_VALUES:
+            attributes["preparation"] = normalized_token
+        elif normalized_token in PROCESSING_VALUES:
+            attributes["processing"] = normalized_token
+        elif normalized_token in CULTIVATION_VALUES:
+            attributes["cultivation"] = normalized_token
+        elif normalized_token in SOURCE_BEAN_VALUES:
+            attributes["sourceBean"] = SOURCE_BEAN_VALUES[normalized_token]
+
+        content = square_content(token)
+        if "若どり" in content:
+            attributes["variety"] = "若どり"
+        elif "親" in content:
+            attributes["variety"] = "親"
+        elif any(marker in content for marker in ("和牛", "乳用肥育", "交雑", "黒毛")):
+            attributes["variety"] = content
+        elif "養殖" in token:
+            attributes["variety"] = "養殖"
+
+    for part in sorted(PART_VALUES, key=len, reverse=True):
+        if part in tokens:
+            attributes["part"] = part
+            break
+
+    species_map = (("にわとり", "鶏"), ("うし", "牛"), ("ぶた", "豚"), ("ひつじ", "羊"), ("やぎ", "山羊"))
+    for token, species in species_map:
+        if token in tokens:
+            attributes["species"] = species
+            break
+    return attributes
+
+
+def candidate_signature(name: str) -> str | None:
+    tokens = tokens_for(name)
+    if any(independent in token for token in tokens for independent in INDEPENDENT_PRODUCT_TOKENS):
+        return None
+    remaining = [
+        token for token in tokens
+        if not is_grouping_variant_token(token)
+    ]
+    return " ".join(remaining) or None
+
+
+def display_for_signature(name: str) -> str:
+    tokens = tokens_for(name)
+    tokens = [
+        token for token in tokens
+        if not token.startswith(("［", "["))
+        and not is_grouping_variant_token(token)
+    ]
+    if len(tokens) > 1 and tokens[-1] in DISPLAY_SUFFIXES:
+        tokens = tokens[:-1]
+    return " ".join(tokens) or name
+
+
+def auto_group_id(signature: str) -> str:
+    return f"auto:{hashlib.sha1(signature.encode('utf-8')).hexdigest()[:12]}"
 
 
 def category_for(name: str) -> str:
@@ -54,11 +266,21 @@ def validate_known_good(known: dict[str, Any], food_ids: set[str]) -> None:
                 raise ValueError(f"invalid related term in {group_id}")
 
 
+def review_family(rule: dict[str, Any], foods: list[dict[str, Any]], group_by_food_id: dict[str, str]) -> dict[str, Any]:
+    matched = [
+        {"id": food["id"], "name": food.get("displayName") or food.get("name") or food["id"], "groupId": group_by_food_id.get(food["id"]) }
+        for food in foods
+        if any(term in (food.get("officialName") or food.get("name") or "") for term in rule["terms"])
+    ]
+    return {**rule, "foodCount": len(matched), "foods": matched}
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("foods_json", type=Path)
     parser.add_argument("output_json", type=Path)
     parser.add_argument("--known-good", type=Path, required=True)
+    parser.add_argument("--review-output", type=Path)
     args = parser.parse_args()
 
     source = json.loads(args.foods_json.read_text(encoding="utf-8"))
@@ -71,7 +293,13 @@ def main() -> None:
     aliases: list[dict[str, Any]] = []
     related_terms: list[dict[str, Any]] = []
     food_group_by_food_id: dict[str, str] = {}
+    variant_attributes_by_food_id: dict[str, dict[str, str | None]] = {}
+    foods_by_id = {food["id"]: food for food in foods}
     generated_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    generation_version = f"{known.get('generationVersion', 'known-good')}-auto-v1"
+
+    for food in foods:
+        variant_attributes_by_food_id[food["id"]] = variant_attributes(food.get("officialName") or food.get("name") or "")
 
     for group in known["groups"]:
         group_id = group["id"]
@@ -101,23 +329,77 @@ def main() -> None:
             value = related["value"].strip()
             related_terms.append({"id": f"related:{group_id}:{index}", "foodGroupId": group_id, "term": value, "normalizedTerm": normalize(value), "weight": related.get("weight", 0.5), "isActive": True, "metadataSource": "manual"})
 
+    known_signatures: dict[str, list[str]] = defaultdict(list)
+    for food_id in assigned:
+        food = foods_by_id[food_id]
+        signature = candidate_signature(food.get("officialName") or food.get("name") or "")
+        if signature:
+            known_signatures[signature].append(food_group_by_food_id[food_id])
+
+    candidates: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for food in foods:
+        if food["id"] in assigned:
+            continue
+        signature = candidate_signature(food.get("officialName") or food.get("name") or "")
+        if signature:
+            candidates[signature].append(food)
+
+    auto_proposals: list[dict[str, Any]] = []
+    mixed_known_candidates: list[dict[str, Any]] = []
+    for signature in sorted(candidates):
+        members = candidates[signature]
+        if len(members) < 2:
+            continue
+        if signature in known_signatures:
+            mixed_known_candidates.append({"signature": signature, "knownGroupIds": sorted(set(known_signatures[signature])), "foodIds": [food["id"] for food in members], "foods": [food.get("displayName") or food.get("name") for food in members]})
+            continue
+        group_id = auto_group_id(signature)
+        default_id = members[0]["id"]
+        group_name = display_for_signature(members[0].get("officialName") or members[0].get("name") or group_id)
+        groups.append({"id": group_id, "displayName": group_name, "reading": None, "category": category_for(group_name), "representativeScore": 0, "defaultVariantId": default_id, "isActive": True, "metadataSource": "rule", "generationVersion": "auto-group-v1", "needsReview": False})
+        for food in members:
+            assigned.add(food["id"])
+            food_group_by_food_id[food["id"]] = group_id
+        auto_proposals.append({"groupId": group_id, "displayName": group_name, "signature": signature, "foodIds": [food["id"] for food in members], "foods": [food.get("displayName") or food.get("name") for food in members], "variantAttributes": {key: sorted({variant_attributes_by_food_id[food["id"]].get(key) for food in members if variant_attributes_by_food_id[food["id"]].get(key) is not None}) for key in VARIANT_KEYS}})
+
+    # 既知の手動グループと同じ基底候補に残った食品は、勝手に統合せずレビューへ回す。
+    for signature in sorted(candidates):
+        members = candidates[signature]
+        if len(members) == 1 and signature in known_signatures:
+            mixed_known_candidates.append({"signature": signature, "knownGroupIds": sorted(set(known_signatures[signature])), "foodIds": [food["id"] for food in members], "foods": [food.get("displayName") or food.get("name") for food in members]})
+
     for food in foods:
         if food["id"] in assigned:
             continue
         group_id = f"food:{food['id']}"
         display = food.get("displayName") or food.get("name") or food.get("officialName") or food["id"]
-        groups.append({"id": group_id, "displayName": display, "reading": None, "category": category_for(display), "representativeScore": 0, "defaultVariantId": food["id"], "isActive": True, "metadataSource": "rule", "generationVersion": "fallback-v1", "needsReview": True})
+        groups.append({"id": group_id, "displayName": display, "reading": None, "category": category_for(display), "representativeScore": 0, "defaultVariantId": food["id"], "isActive": True, "metadataSource": "rule", "generationVersion": "fallback-v2", "needsReview": True})
+
+    for food in foods:
+        food_group_by_food_id.setdefault(food["id"], f"food:{food['id']}")
 
     output = {
-        "metadata": {"generationVersion": known.get("generationVersion", "known-good"), "generatedAt": generated_at, "sourceFoodCount": len(foods), "llmRuntime": False},
+        "metadata": {"generationVersion": generation_version, "generatedAt": generated_at, "sourceFoodCount": len(foods), "llmRuntime": False, "groupingPolicy": "deterministic-conservative-v1"},
         "groups": groups,
         "aliases": aliases,
         "relatedTerms": related_terms,
         "foodGroupByFoodId": food_group_by_food_id,
+        "variantAttributesByFoodId": variant_attributes_by_food_id,
     }
     args.output_json.parent.mkdir(parents=True, exist_ok=True)
     args.output_json.write_text(json.dumps(output, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print(f"generated groups={len(groups)} aliases={len(aliases)} related_terms={len(related_terms)} output={args.output_json}")
+
+    family_decisions = [review_family(rule, foods, food_group_by_food_id) for rule in AMBIGUOUS_FAMILY_RULES]
+    review = {
+        "metadata": {"generatedAt": generated_at, "sourceFoodCount": len(foods), "generationVersion": generation_version, "autoGroupCount": len(auto_proposals), "autoGroupedFoodCount": sum(len(item["foodIds"]) for item in auto_proposals), "fallbackGroupCount": sum(1 for group in groups if group["needsReview"]), "policy": "同一基底名から状態・調理・皮の有無だけを除去して一致するもののみ自動統合。判断が必要な品種・加工品は統合しない。"},
+        "autoGroupProposals": auto_proposals,
+        "mixedWithKnownGroups": mixed_known_candidates,
+        "familyDecisions": family_decisions,
+        "ambiguousFamilies": [item for item in family_decisions if not item.get("decision")],
+    }
+    review_output = args.review_output or args.output_json.with_name("food_group_review.json")
+    review_output.write_text(json.dumps(review, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    print(f"generated groups={len(groups)} auto_groups={len(auto_proposals)} aliases={len(aliases)} related_terms={len(related_terms)} review={review_output} output={args.output_json}")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,8937 @@
+{
+  "metadata": {
+    "generatedAt": "2026-07-17T05:15:09.657504Z",
+    "sourceFoodCount": 2538,
+    "generationVersion": "known-good-v1-auto-v1",
+    "autoGroupCount": 286,
+    "autoGroupedFoodCount": 707,
+    "fallbackGroupCount": 1765,
+    "policy": "同一基底名から状態・調理・皮の有無だけを除去して一致するもののみ自動統合。判断が必要な品種・加工品は統合しない。"
+  },
+  "autoGroupProposals": [
+    {
+      "groupId": "auto:f5ce53b81396",
+      "displayName": "あさつき 葉",
+      "signature": "あさつき 葉",
+      "foodIds": [
+        "mext_06003",
+        "mext_06004"
+      ],
+      "foods": [
+        "あさつき　葉　生",
+        "あさつき　葉　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "葉"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:9402a19e9652",
+      "displayName": "あさり",
+      "signature": "あさり",
+      "foodIds": [
+        "mext_10281",
+        "mext_10466"
+      ],
+      "foods": [
+        "あさり　生",
+        "あさり　蒸し"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "生",
+          "蒸し"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:14dfcd883deb",
+      "displayName": "あしたば 茎葉",
+      "signature": "あしたば 茎葉",
+      "foodIds": [
+        "mext_06005",
+        "mext_06006"
+      ],
+      "foods": [
+        "あしたば　茎葉　生",
+        "あしたば　茎葉　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:2ad98eb30dc4",
+      "displayName": "あずき 全粒",
+      "signature": "あずき 全粒",
+      "foodIds": [
+        "mext_04001",
+        "mext_04002"
+      ],
+      "foods": [
+        "あずき　全粒　乾",
+        "あずき　全粒　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:a665fe3293e0",
+      "displayName": "あなご",
+      "signature": "あなご",
+      "foodIds": [
+        "mext_10015",
+        "mext_10016"
+      ],
+      "foods": [
+        "あなご　生",
+        "あなご　蒸し"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "生",
+          "蒸し"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:79b43d9e48df",
+      "displayName": "あまだい",
+      "signature": "あまだい",
+      "foodIds": [
+        "mext_10018",
+        "mext_10019",
+        "mext_10020"
+      ],
+      "foods": [
+        "あまだい　生",
+        "あまだい　水煮",
+        "あまだい　焼き"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "水煮",
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:e56568e667be",
+      "displayName": "あゆ 天然",
+      "signature": "あゆ 天然",
+      "foodIds": [
+        "mext_10021",
+        "mext_10022"
+      ],
+      "foods": [
+        "あゆ　天然　生",
+        "あゆ　天然　焼き"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:8079ec394c19",
+      "displayName": "あゆ 天然 内臓",
+      "signature": "あゆ 天然 内臓",
+      "foodIds": [
+        "mext_10023",
+        "mext_10024"
+      ],
+      "foods": [
+        "あゆ　天然　内臓　生",
+        "あゆ　天然　内臓　焼き"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:f6ebb47c4518",
+      "displayName": "あゆ 養殖",
+      "signature": "あゆ 養殖",
+      "foodIds": [
+        "mext_10025",
+        "mext_10026"
+      ],
+      "foods": [
+        "あゆ　養殖　生",
+        "あゆ　養殖　焼き"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": [
+          "養殖"
+        ]
+      }
+    },
+    {
+      "groupId": "auto:f9e7309fab57",
+      "displayName": "あゆ 養殖 内臓",
+      "signature": "あゆ 養殖 内臓",
+      "foodIds": [
+        "mext_10027",
+        "mext_10028"
+      ],
+      "foods": [
+        "あゆ　養殖　内臓　生",
+        "あゆ　養殖　内臓　焼き"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": [
+          "養殖"
+        ]
+      }
+    },
+    {
+      "groupId": "auto:59be42333c8e",
+      "displayName": "あらげきくらげ",
+      "signature": "あらげきくらげ",
+      "foodIds": [
+        "mext_08054",
+        "mext_08004",
+        "mext_08005",
+        "mext_08038"
+      ],
+      "foods": [
+        "あらげきくらげ　生",
+        "あらげきくらげ　乾",
+        "あらげきくらげ　ゆで",
+        "あらげきくらげ　油いため"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "油いため",
+          "生"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:d6df01a3bc46",
+      "displayName": "あんず",
+      "signature": "あんず",
+      "foodIds": [
+        "mext_07007",
+        "mext_07008"
+      ],
+      "foods": [
+        "あんず　生",
+        "あんず　乾"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "生"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:4e325762999a",
+      "displayName": "いちご",
+      "signature": "いちご",
+      "foodIds": [
+        "mext_07012",
+        "mext_07160"
+      ],
+      "foods": [
+        "いちご　生",
+        "いちご　乾"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "生"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:b32d56e1e9bf",
+      "displayName": "いちじく",
+      "signature": "いちじく",
+      "foodIds": [
+        "mext_07015",
+        "mext_07016"
+      ],
+      "foods": [
+        "いちじく　生",
+        "いちじく　乾"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "生"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:5fce89b2b37d",
+      "displayName": "いんげんまめ さやいんげん 若ざや",
+      "signature": "いんげんまめ さやいんげん 若ざや",
+      "foodIds": [
+        "mext_06010",
+        "mext_06011"
+      ],
+      "foods": [
+        "いんげんまめ　さやいんげん　若ざや　生",
+        "いんげんまめ　さやいんげん　若ざや　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:4a23ee89664e",
+      "displayName": "いんげんまめ 全粒",
+      "signature": "いんげんまめ 全粒",
+      "foodIds": [
+        "mext_04007",
+        "mext_04008"
+      ],
+      "foods": [
+        "いんげんまめ　全粒　乾",
+        "いんげんまめ　全粒　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:392eba4b17e9",
+      "displayName": "うし",
+      "signature": "うし ［ひき肉］",
+      "foodIds": [
+        "mext_11089",
+        "mext_11272"
+      ],
+      "foods": [
+        "うし　［ひき肉］　生",
+        "うし　［ひき肉］　焼き"
+      ],
+      "variantAttributes": {
+        "species": [
+          "牛"
+        ],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:f1e47673fffa",
+      "displayName": "うし かた 脂身つき",
+      "signature": "うし ［乳用肥育牛肉］ かた 脂身つき",
+      "foodIds": [
+        "mext_11030",
+        "mext_11309",
+        "mext_11310"
+      ],
+      "foods": [
+        "うし　［乳用肥育牛肉］　かた　脂身つき　生",
+        "うし　［乳用肥育牛肉］　かた　脂身つき　ゆで",
+        "うし　［乳用肥育牛肉］　かた　脂身つき　焼き"
+      ],
+      "variantAttributes": {
+        "species": [
+          "牛"
+        ],
+        "part": [
+          "かた"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": [
+          "乳用肥育牛肉"
+        ]
+      }
+    },
+    {
+      "groupId": "auto:16235da7cead",
+      "displayName": "うし かた 赤肉",
+      "signature": "うし ［乳用肥育牛肉］ かた 赤肉",
+      "foodIds": [
+        "mext_11032",
+        "mext_11301",
+        "mext_11302"
+      ],
+      "foods": [
+        "うし　［乳用肥育牛肉］　かた　赤肉　生",
+        "うし　［乳用肥育牛肉］　かた　赤肉　ゆで",
+        "うし　［乳用肥育牛肉］　かた　赤肉　焼き"
+      ],
+      "variantAttributes": {
+        "species": [
+          "牛"
+        ],
+        "part": [
+          "かた"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": [
+          "乳用肥育牛肉"
+        ]
+      }
+    },
+    {
+      "groupId": "auto:8b428d910052",
+      "displayName": "うし ばら 脂身つき",
+      "signature": "うし ［乳用肥育牛肉］ ばら 脂身つき",
+      "foodIds": [
+        "mext_11046",
+        "mext_11252"
+      ],
+      "foods": [
+        "うし　［乳用肥育牛肉］　ばら　脂身つき　生",
+        "うし　［乳用肥育牛肉］　ばら　脂身つき　焼き"
+      ],
+      "variantAttributes": {
+        "species": [
+          "牛"
+        ],
+        "part": [
+          "ばら"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": [
+          "乳用肥育牛肉"
+        ]
+      }
+    },
+    {
+      "groupId": "auto:dca299b42732",
+      "displayName": "うし もも 皮下脂肪なし",
+      "signature": "うし ［乳用肥育牛肉］ もも 皮下脂肪なし",
+      "foodIds": [
+        "mext_11048",
+        "mext_11050",
+        "mext_11049"
+      ],
+      "foods": [
+        "うし　［乳用肥育牛肉］　もも　皮下脂肪なし　生",
+        "うし　［乳用肥育牛肉］　もも　皮下脂肪なし　ゆで",
+        "うし　［乳用肥育牛肉］　もも　皮下脂肪なし　焼き"
+      ],
+      "variantAttributes": {
+        "species": [
+          "牛"
+        ],
+        "part": [
+          "もも"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": [
+          "乳用肥育牛肉"
+        ]
+      }
+    },
+    {
+      "groupId": "auto:223d6cc7354d",
+      "displayName": "うし ヒレ 赤肉",
+      "signature": "うし ［乳用肥育牛肉］ ヒレ 赤肉",
+      "foodIds": [
+        "mext_11059",
+        "mext_11253"
+      ],
+      "foods": [
+        "うし　［乳用肥育牛肉］　ヒレ　赤肉　生",
+        "うし　［乳用肥育牛肉］　ヒレ　赤肉　焼き"
+      ],
+      "variantAttributes": {
+        "species": [
+          "牛"
+        ],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": [
+          "乳用肥育牛肉"
+        ]
+      }
+    },
+    {
+      "groupId": "auto:237309807dde",
+      "displayName": "うし リブロース 脂身つき",
+      "signature": "うし ［乳用肥育牛肉］ リブロース 脂身つき",
+      "foodIds": [
+        "mext_11037",
+        "mext_11039",
+        "mext_11038"
+      ],
+      "foods": [
+        "うし　［乳用肥育牛肉］　リブロース　脂身つき　生",
+        "うし　［乳用肥育牛肉］　リブロース　脂身つき　ゆで",
+        "うし　［乳用肥育牛肉］　リブロース　脂身つき　焼き"
+      ],
+      "variantAttributes": {
+        "species": [
+          "牛"
+        ],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": [
+          "乳用肥育牛肉"
+        ]
+      }
+    },
+    {
+      "groupId": "auto:f363b2da3158",
+      "displayName": "うし もも 皮下脂肪なし",
+      "signature": "うし ［交雑牛肉］ もも 皮下脂肪なし",
+      "foodIds": [
+        "mext_11262",
+        "mext_11264",
+        "mext_11263"
+      ],
+      "foods": [
+        "うし　［交雑牛肉］　もも　皮下脂肪なし　生",
+        "うし　［交雑牛肉］　もも　皮下脂肪なし　ゆで",
+        "うし　［交雑牛肉］　もも　皮下脂肪なし　焼き"
+      ],
+      "variantAttributes": {
+        "species": [
+          "牛"
+        ],
+        "part": [
+          "もも"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": [
+          "交雑牛肉"
+        ]
+      }
+    },
+    {
+      "groupId": "auto:c007ce8c1115",
+      "displayName": "うし リブロース 脂身つき",
+      "signature": "うし ［交雑牛肉］ リブロース 脂身つき",
+      "foodIds": [
+        "mext_11254",
+        "mext_11256",
+        "mext_11255"
+      ],
+      "foods": [
+        "うし　［交雑牛肉］　リブロース　脂身つき　生",
+        "うし　［交雑牛肉］　リブロース　脂身つき　ゆで",
+        "うし　［交雑牛肉］　リブロース　脂身つき　焼き"
+      ],
+      "variantAttributes": {
+        "species": [
+          "牛"
+        ],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": [
+          "交雑牛肉"
+        ]
+      }
+    },
+    {
+      "groupId": "auto:c35c852cd485",
+      "displayName": "うし 横隔膜",
+      "signature": "うし ［副生物］ 横隔膜",
+      "foodIds": [
+        "mext_11274",
+        "mext_11296",
+        "mext_11297"
+      ],
+      "foods": [
+        "うし　［副生物］　横隔膜　生",
+        "うし　［副生物］　横隔膜　ゆで",
+        "うし　［副生物］　横隔膜　焼き"
+      ],
+      "variantAttributes": {
+        "species": [
+          "牛"
+        ],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:29fb41cf4b7b",
+      "displayName": "うし 舌",
+      "signature": "うし ［副生物］ 舌",
+      "foodIds": [
+        "mext_11090",
+        "mext_11273"
+      ],
+      "foods": [
+        "うし　［副生物］　舌　生",
+        "うし　［副生物］　舌　焼き"
+      ],
+      "variantAttributes": {
+        "species": [
+          "牛"
+        ],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:ef237f645161",
+      "displayName": "うし もも 皮下脂肪なし",
+      "signature": "うし ［和牛肉］ もも 皮下脂肪なし",
+      "foodIds": [
+        "mext_11020",
+        "mext_11251",
+        "mext_11250"
+      ],
+      "foods": [
+        "うし　［和牛肉］　もも　皮下脂肪なし　生",
+        "うし　［和牛肉］　もも　皮下脂肪なし　ゆで",
+        "うし　［和牛肉］　もも　皮下脂肪なし　焼き"
+      ],
+      "variantAttributes": {
+        "species": [
+          "牛"
+        ],
+        "part": [
+          "もも"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": [
+          "和牛肉"
+        ]
+      }
+    },
+    {
+      "groupId": "auto:499deb7ee2b5",
+      "displayName": "うし リブロース 脂身つき",
+      "signature": "うし ［和牛肉］ リブロース 脂身つき",
+      "foodIds": [
+        "mext_11011",
+        "mext_11249",
+        "mext_11248"
+      ],
+      "foods": [
+        "うし　［和牛肉］　リブロース　脂身つき　生",
+        "うし　［和牛肉］　リブロース　脂身つき　ゆで",
+        "うし　［和牛肉］　リブロース　脂身つき　焼き"
+      ],
+      "variantAttributes": {
+        "species": [
+          "牛"
+        ],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": [
+          "和牛肉"
+        ]
+      }
+    },
+    {
+      "groupId": "auto:cb66e7524b22",
+      "displayName": "うし もも 皮下脂肪なし",
+      "signature": "うし ［輸入牛肉］ もも 皮下脂肪なし",
+      "foodIds": [
+        "mext_11076",
+        "mext_11271",
+        "mext_11270"
+      ],
+      "foods": [
+        "うし　［輸入牛肉］　もも　皮下脂肪なし　生",
+        "うし　［輸入牛肉］　もも　皮下脂肪なし　ゆで",
+        "うし　［輸入牛肉］　もも　皮下脂肪なし　焼き"
+      ],
+      "variantAttributes": {
+        "species": [
+          "牛"
+        ],
+        "part": [
+          "もも"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:d2cb0158ced8",
+      "displayName": "うし リブロース 脂身つき",
+      "signature": "うし ［輸入牛肉］ リブロース 脂身つき",
+      "foodIds": [
+        "mext_11067",
+        "mext_11269",
+        "mext_11268"
+      ],
+      "foods": [
+        "うし　［輸入牛肉］　リブロース　脂身つき　生",
+        "うし　［輸入牛肉］　リブロース　脂身つき　ゆで",
+        "うし　［輸入牛肉］　リブロース　脂身つき　焼き"
+      ],
+      "variantAttributes": {
+        "species": [
+          "牛"
+        ],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:63819b22ec24",
+      "displayName": "うど 茎",
+      "signature": "うど 茎",
+      "foodIds": [
+        "mext_06012",
+        "mext_06013"
+      ],
+      "foods": [
+        "うど　茎　生",
+        "うど　茎　水さらし"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "生"
+        ],
+        "processing": [
+          "水さらし"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:c2a4ec00fcf2",
+      "displayName": "えだまめ",
+      "signature": "えだまめ",
+      "foodIds": [
+        "mext_06015",
+        "mext_06016",
+        "mext_06017"
+      ],
+      "foods": [
+        "えだまめ　生",
+        "えだまめ　ゆで",
+        "えだまめ　冷凍"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [
+          "冷凍"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:312892cf2969",
+      "displayName": "えのきたけ",
+      "signature": "えのきたけ",
+      "foodIds": [
+        "mext_08001",
+        "mext_08002",
+        "mext_08037"
+      ],
+      "foods": [
+        "えのきたけ　生",
+        "えのきたけ　ゆで",
+        "えのきたけ　油いため"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "油いため",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:d20122561242",
+      "displayName": "えんどう 全粒 赤えんどう",
+      "signature": "えんどう 全粒 赤えんどう",
+      "foodIds": [
+        "mext_04074",
+        "mext_04075"
+      ],
+      "foods": [
+        "えんどう　全粒　赤えんどう　乾",
+        "えんどう　全粒　赤えんどう　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:735cd5572596",
+      "displayName": "えんどう 全粒 青えんどう",
+      "signature": "えんどう 全粒 青えんどう",
+      "foodIds": [
+        "mext_04012",
+        "mext_04013"
+      ],
+      "foods": [
+        "えんどう　全粒　青えんどう　乾",
+        "えんどう　全粒　青えんどう　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:590a6e64ec76",
+      "displayName": "おおさかしろな 葉",
+      "signature": "おおさかしろな 葉",
+      "foodIds": [
+        "mext_06027",
+        "mext_06028"
+      ],
+      "foods": [
+        "おおさかしろな　葉　生",
+        "おおさかしろな　葉　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "葉"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:61088ca1504c",
+      "displayName": "おおむぎ 大麦めん",
+      "signature": "おおむぎ 大麦めん",
+      "foodIds": [
+        "mext_01008",
+        "mext_01009"
+      ],
+      "foods": [
+        "おおむぎ　大麦めん　乾",
+        "おおむぎ　大麦めん　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:449861c729a9",
+      "displayName": "おかひじき 茎葉",
+      "signature": "おかひじき 茎葉",
+      "foodIds": [
+        "mext_06030",
+        "mext_06031"
+      ],
+      "foods": [
+        "おかひじき　茎葉　生",
+        "おかひじき　茎葉　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:8d865b21ef1f",
+      "displayName": "おきあみ",
+      "signature": "おきあみ",
+      "foodIds": [
+        "mext_10368",
+        "mext_10369"
+      ],
+      "foods": [
+        "おきあみ　生",
+        "おきあみ　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:a2b1656a6b23",
+      "displayName": "かき 養殖",
+      "signature": "かき 養殖",
+      "foodIds": [
+        "mext_10292",
+        "mext_10293",
+        "mext_10430"
+      ],
+      "foods": [
+        "かき　養殖　生",
+        "かき　養殖　水煮",
+        "かき　養殖　フライ"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "フライ",
+          "水煮",
+          "生"
+        ],
+        "processing": [],
+        "variety": [
+          "養殖"
+        ]
+      }
+    },
+    {
+      "groupId": "auto:5b4953973055",
+      "displayName": "かじか",
+      "signature": "かじか",
+      "foodIds": [
+        "mext_10080",
+        "mext_10081"
+      ],
+      "foods": [
+        "かじか　生",
+        "かじか　水煮"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "水煮",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:655db9d4a9e4",
+      "displayName": "かぶ",
+      "signature": "かぶ 根",
+      "foodIds": [
+        "mext_06036",
+        "mext_06037",
+        "mext_06038",
+        "mext_06039"
+      ],
+      "foods": [
+        "かぶ　根　皮つき　生",
+        "かぶ　根　皮つき　ゆで",
+        "かぶ　根　皮なし　生",
+        "かぶ　根　皮なし　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "根"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [
+          "皮つき",
+          "皮なし"
+        ],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:d0a32fad4a52",
+      "displayName": "かぶ 葉",
+      "signature": "かぶ 葉",
+      "foodIds": [
+        "mext_06034",
+        "mext_06035"
+      ],
+      "foods": [
+        "かぶ　葉　生",
+        "かぶ　葉　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "葉"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:d973b82870c6",
+      "displayName": "かます",
+      "signature": "かます",
+      "foodIds": [
+        "mext_10098",
+        "mext_10099"
+      ],
+      "foods": [
+        "かます　生",
+        "かます　焼き"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:df898f6e6414",
+      "displayName": "かも あひる 肉",
+      "signature": "かも あひる 肉",
+      "foodIds": [
+        "mext_11206",
+        "mext_11247"
+      ],
+      "foods": [
+        "かも　あひる　肉　皮つき　生",
+        "かも　あひる　肉　皮なし　生"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [
+          "皮つき",
+          "皮なし"
+        ],
+        "preparation": [
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:bd0c889294bf",
+      "displayName": "からふとししゃも 生干し",
+      "signature": "からふとししゃも 生干し",
+      "foodIds": [
+        "mext_10182",
+        "mext_10183"
+      ],
+      "foods": [
+        "からふとししゃも　生干し　生",
+        "からふとししゃも　生干し　焼き"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:be58d08c53bb",
+      "displayName": "からふとます",
+      "signature": "からふとます",
+      "foodIds": [
+        "mext_10126",
+        "mext_10127"
+      ],
+      "foods": [
+        "からふとます　生",
+        "からふとます　焼き"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:6fad3eaf05a2",
+      "displayName": "かんぴょう",
+      "signature": "かんぴょう",
+      "foodIds": [
+        "mext_06056",
+        "mext_06057"
+      ],
+      "foods": [
+        "かんぴょう　乾",
+        "かんぴょう　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:ecc6ec52da9b",
+      "displayName": "きく 花びら",
+      "signature": "きく 花びら",
+      "foodIds": [
+        "mext_06058",
+        "mext_06059"
+      ],
+      "foods": [
+        "きく　花びら　生",
+        "きく　花びら　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:591edace93f7",
+      "displayName": "きくいも",
+      "signature": "きくいも 塊茎",
+      "foodIds": [
+        "mext_02001",
+        "mext_02041"
+      ],
+      "foods": [
+        "きくいも　塊茎　生",
+        "きくいも　塊茎　水煮"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "塊茎"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "水煮",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:9694cf2dda77",
+      "displayName": "きくらげ",
+      "signature": "きくらげ",
+      "foodIds": [
+        "mext_08006",
+        "mext_08007"
+      ],
+      "foods": [
+        "きくらげ　乾",
+        "きくらげ　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:d7352a3265fb",
+      "displayName": "きす",
+      "signature": "きす",
+      "foodIds": [
+        "mext_10109",
+        "mext_10400"
+      ],
+      "foods": [
+        "きす　生",
+        "きす　天ぷら"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "天ぷら",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:cc31323a4989",
+      "displayName": "きんとき",
+      "signature": "きんとき 根",
+      "foodIds": [
+        "mext_06218",
+        "mext_06219",
+        "mext_06220",
+        "mext_06221"
+      ],
+      "foods": [
+        "きんとき　根　皮つき　生",
+        "きんとき　根　皮つき　ゆで",
+        "きんとき　根　皮なし　生",
+        "きんとき　根　皮なし　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "根"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [
+          "皮つき",
+          "皮なし"
+        ],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:3498e3ffc537",
+      "displayName": "ぎんざけ 養殖",
+      "signature": "ぎんざけ 養殖",
+      "foodIds": [
+        "mext_10130",
+        "mext_10131"
+      ],
+      "foods": [
+        "ぎんざけ　養殖　生",
+        "ぎんざけ　養殖　焼き"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": [
+          "養殖"
+        ]
+      }
+    },
+    {
+      "groupId": "auto:1a96b9a30692",
+      "displayName": "ぎんだら",
+      "signature": "ぎんだら",
+      "foodIds": [
+        "mext_10115",
+        "mext_10401"
+      ],
+      "foods": [
+        "ぎんだら　生",
+        "ぎんだら　水煮"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "水煮",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:5cf272965637",
+      "displayName": "ぎんなん",
+      "signature": "ぎんなん",
+      "foodIds": [
+        "mext_05008",
+        "mext_05009"
+      ],
+      "foods": [
+        "ぎんなん　生",
+        "ぎんなん　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:b865700bdcf2",
+      "displayName": "くるまえび 養殖",
+      "signature": "くるまえび 養殖",
+      "foodIds": [
+        "mext_10321",
+        "mext_10322",
+        "mext_10323"
+      ],
+      "foods": [
+        "くるまえび　養殖　生",
+        "くるまえび　養殖　ゆで",
+        "くるまえび　養殖　焼き"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": [
+          "養殖"
+        ]
+      }
+    },
+    {
+      "groupId": "auto:5dc5f309eebb",
+      "displayName": "くろまぐろ 養殖 脂身",
+      "signature": "くろまぐろ 養殖 脂身",
+      "foodIds": [
+        "mext_10459",
+        "mext_10460",
+        "mext_10461",
+        "mext_10462",
+        "mext_10463",
+        "mext_10464",
+        "mext_10465"
+      ],
+      "foods": [
+        "くろまぐろ　養殖　脂身　生",
+        "くろまぐろ　養殖　脂身　水煮",
+        "くろまぐろ　養殖　脂身　蒸し",
+        "くろまぐろ　養殖　脂身　電子レンジ調理",
+        "くろまぐろ　養殖　脂身　焼き",
+        "くろまぐろ　養殖　脂身　ソテー",
+        "くろまぐろ　養殖　脂身　天ぷら"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "脂身"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ソテー",
+          "天ぷら",
+          "水煮",
+          "焼き",
+          "生",
+          "蒸し",
+          "電子レンジ調理"
+        ],
+        "processing": [],
+        "variety": [
+          "養殖"
+        ]
+      }
+    },
+    {
+      "groupId": "auto:86d0a4d7f345",
+      "displayName": "くろまぐろ 養殖 赤身",
+      "signature": "くろまぐろ 養殖 赤身",
+      "foodIds": [
+        "mext_10450",
+        "mext_10451",
+        "mext_10452",
+        "mext_10453",
+        "mext_10454",
+        "mext_10455",
+        "mext_10456"
+      ],
+      "foods": [
+        "くろまぐろ　養殖　赤身　生",
+        "くろまぐろ　養殖　赤身　水煮",
+        "くろまぐろ　養殖　赤身　蒸し",
+        "くろまぐろ　養殖　赤身　電子レンジ調理",
+        "くろまぐろ　養殖　赤身　焼き",
+        "くろまぐろ　養殖　赤身　ソテー",
+        "くろまぐろ　養殖　赤身　天ぷら"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "赤身"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ソテー",
+          "天ぷら",
+          "水煮",
+          "焼き",
+          "生",
+          "蒸し",
+          "電子レンジ調理"
+        ],
+        "processing": [],
+        "variety": [
+          "養殖"
+        ]
+      }
+    },
+    {
+      "groupId": "auto:a8646fcf9b5f",
+      "displayName": "くわい",
+      "signature": "くわい 塊茎",
+      "foodIds": [
+        "mext_06078",
+        "mext_06079"
+      ],
+      "foods": [
+        "くわい　塊茎　生",
+        "くわい　塊茎　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "塊茎"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:98cec0326dd1",
+      "displayName": "ぐち",
+      "signature": "ぐち",
+      "foodIds": [
+        "mext_10117",
+        "mext_10118"
+      ],
+      "foods": [
+        "ぐち　生",
+        "ぐち　焼き"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:4c6cb20d2f0a",
+      "displayName": "こい 養殖",
+      "signature": "こい 養殖",
+      "foodIds": [
+        "mext_10119",
+        "mext_10120"
+      ],
+      "foods": [
+        "こい　養殖　生",
+        "こい　養殖　水煮"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "水煮",
+          "生"
+        ],
+        "processing": [],
+        "variety": [
+          "養殖"
+        ]
+      }
+    },
+    {
+      "groupId": "auto:d941885d2b08",
+      "displayName": "こまつな 葉",
+      "signature": "こまつな 葉",
+      "foodIds": [
+        "mext_06086",
+        "mext_06087"
+      ],
+      "foods": [
+        "こまつな　葉　生",
+        "こまつな　葉　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "葉"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:bf4559d4560f",
+      "displayName": "こむぎ うどん",
+      "signature": "こむぎ ［うどん・そうめん類］ うどん",
+      "foodIds": [
+        "mext_01038",
+        "mext_01039"
+      ],
+      "foods": [
+        "こむぎ　［うどん・そうめん類］　うどん　生",
+        "こむぎ　［うどん・そうめん類］　うどん　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:5f81d7685cc1",
+      "displayName": "こむぎ そうめん・ひやむぎ",
+      "signature": "こむぎ ［うどん・そうめん類］ そうめん・ひやむぎ",
+      "foodIds": [
+        "mext_01043",
+        "mext_01044"
+      ],
+      "foods": [
+        "こむぎ　［うどん・そうめん類］　そうめん・ひやむぎ　乾",
+        "こむぎ　［うどん・そうめん類］　そうめん・ひやむぎ　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:cd05ad6dcad0",
+      "displayName": "こむぎ 干しうどん",
+      "signature": "こむぎ ［うどん・そうめん類］ 干しうどん",
+      "foodIds": [
+        "mext_01041",
+        "mext_01042"
+      ],
+      "foods": [
+        "こむぎ　［うどん・そうめん類］　干しうどん　乾",
+        "こむぎ　［うどん・そうめん類］　干しうどん　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:2cda1a03d6d6",
+      "displayName": "こむぎ 手延そうめん・手延ひやむぎ",
+      "signature": "こむぎ ［うどん・そうめん類］ 手延そうめん・手延ひやむぎ",
+      "foodIds": [
+        "mext_01045",
+        "mext_01046"
+      ],
+      "foods": [
+        "こむぎ　［うどん・そうめん類］　手延そうめん・手延ひやむぎ　乾",
+        "こむぎ　［うどん・そうめん類］　手延そうめん・手延ひやむぎ　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:4ab2fab53a38",
+      "displayName": "こむぎ パン粉",
+      "signature": "こむぎ ［その他］ パン粉",
+      "foodIds": [
+        "mext_01077",
+        "mext_01079"
+      ],
+      "foods": [
+        "こむぎ　［その他］　パン粉　生",
+        "こむぎ　［その他］　パン粉　乾燥"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "生"
+        ],
+        "processing": [
+          "乾燥"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:13271ac6ab23",
+      "displayName": "こむぎ マカロニ・スパゲッティ",
+      "signature": "こむぎ ［マカロニ・スパゲッティ類］ マカロニ・スパゲッティ",
+      "foodIds": [
+        "mext_01063",
+        "mext_01064",
+        "mext_01173"
+      ],
+      "foods": [
+        "こむぎ　［マカロニ・スパゲッティ類］　マカロニ・スパゲッティ　乾",
+        "こむぎ　［マカロニ・スパゲッティ類］　マカロニ・スパゲッティ　ゆで",
+        "こむぎ　［マカロニ・スパゲッティ類］　マカロニ・スパゲッティ　ソテー"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "ソテー"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:b93845ada7cf",
+      "displayName": "こむぎ 中華めん",
+      "signature": "こむぎ ［中華めん類］ 中華めん",
+      "foodIds": [
+        "mext_01047",
+        "mext_01048"
+      ],
+      "foods": [
+        "こむぎ　［中華めん類］　中華めん　生",
+        "こむぎ　［中華めん類］　中華めん　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:adea0958ffb0",
+      "displayName": "こむぎ 干し中華めん",
+      "signature": "こむぎ ［中華めん類］ 干し中華めん",
+      "foodIds": [
+        "mext_01050",
+        "mext_01051"
+      ],
+      "foods": [
+        "こむぎ　［中華めん類］　干し中華めん　乾",
+        "こむぎ　［中華めん類］　干し中華めん　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:f72cc4454d7b",
+      "displayName": "こむぎ 干し沖縄そば",
+      "signature": "こむぎ ［中華めん類］ 干し沖縄そば",
+      "foodIds": [
+        "mext_01054",
+        "mext_01055"
+      ],
+      "foods": [
+        "こむぎ　［中華めん類］　干し沖縄そば　乾",
+        "こむぎ　［中華めん類］　干し沖縄そば　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:08e5bd57e3c5",
+      "displayName": "こむぎ 沖縄そば",
+      "signature": "こむぎ ［中華めん類］ 沖縄そば",
+      "foodIds": [
+        "mext_01052",
+        "mext_01053"
+      ],
+      "foods": [
+        "こむぎ　［中華めん類］　沖縄そば　生",
+        "こむぎ　［中華めん類］　沖縄そば　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:6d7974c07399",
+      "displayName": "こむぎ 即席中華めん 油揚げ （添付調味料等を含まないもの）",
+      "signature": "こむぎ ［即席めん類］ 即席中華めん 油揚げ （添付調味料等を含まないもの）",
+      "foodIds": [
+        "mext_01189",
+        "mext_01144"
+      ],
+      "foods": [
+        "こむぎ　［即席めん類］　即席中華めん　油揚げ　ゆで　（添付調味料等を含まないもの）",
+        "こむぎ　［即席めん類］　即席中華めん　油揚げ　乾　（添付調味料等を含まないもの）"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:314786bde86e",
+      "displayName": "こむぎ 即席中華めん 非油揚げ （添付調味料等を含まないもの）",
+      "signature": "こむぎ ［即席めん類］ 即席中華めん 非油揚げ （添付調味料等を含まないもの）",
+      "foodIds": [
+        "mext_01190",
+        "mext_01145"
+      ],
+      "foods": [
+        "こむぎ　［即席めん類］　即席中華めん　非油揚げ　ゆで　（添付調味料等を含まないもの）",
+        "こむぎ　［即席めん類］　即席中華めん　非油揚げ　乾　（添付調味料等を含まないもの）"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:5677bbd4a084",
+      "displayName": "こんにゃく 凍みこんにゃく",
+      "signature": "こんにゃく 凍みこんにゃく",
+      "foodIds": [
+        "mext_02043",
+        "mext_02044"
+      ],
+      "foods": [
+        "こんにゃく　凍みこんにゃく　乾",
+        "こんにゃく　凍みこんにゃく　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:2a41fcc0b746",
+      "displayName": "ごぼう",
+      "signature": "ごぼう 根",
+      "foodIds": [
+        "mext_06084",
+        "mext_06085"
+      ],
+      "foods": [
+        "ごぼう　根　生",
+        "ごぼう　根　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "根"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:6b1f8f9b0ea1",
+      "displayName": "ごまさば",
+      "signature": "ごまさば",
+      "foodIds": [
+        "mext_10404",
+        "mext_10405",
+        "mext_10406"
+      ],
+      "foods": [
+        "ごまさば　生",
+        "ごまさば　水煮",
+        "ごまさば　焼き"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "水煮",
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:0b5a64fbc839",
+      "displayName": "さくらえび",
+      "signature": "さくらえび",
+      "foodIds": [
+        "mext_10431",
+        "mext_10324"
+      ],
+      "foods": [
+        "さくらえび　生",
+        "さくらえび　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:f08a6775d877",
+      "displayName": "さくらます",
+      "signature": "さくらます",
+      "foodIds": [
+        "mext_10132",
+        "mext_10133"
+      ],
+      "foods": [
+        "さくらます　生",
+        "さくらます　焼き"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:c735042196e7",
+      "displayName": "ささげ 全粒",
+      "signature": "ささげ 全粒",
+      "foodIds": [
+        "mext_04017",
+        "mext_04018"
+      ],
+      "foods": [
+        "ささげ　全粒　乾",
+        "ささげ　全粒　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:4688c3e7e58f",
+      "displayName": "さざえ",
+      "signature": "さざえ",
+      "foodIds": [
+        "mext_10295",
+        "mext_10296"
+      ],
+      "foods": [
+        "さざえ　生",
+        "さざえ　焼き"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:2e57d575556e",
+      "displayName": "さつまいも",
+      "signature": "さつまいも 塊根",
+      "foodIds": [
+        "mext_02045",
+        "mext_02046",
+        "mext_02047",
+        "mext_02006",
+        "mext_02007",
+        "mext_02008"
+      ],
+      "foods": [
+        "さつまいも　塊根　皮つき　生",
+        "さつまいも　塊根　皮つき　蒸し",
+        "さつまいも　塊根　皮つき　天ぷら",
+        "さつまいも　塊根　皮なし　生",
+        "さつまいも　塊根　皮なし　蒸し",
+        "さつまいも　塊根　皮なし　焼き"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "塊根"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [
+          "皮つき",
+          "皮なし"
+        ],
+        "preparation": [
+          "天ぷら",
+          "焼き",
+          "生",
+          "蒸し"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:2eaf025b3881",
+      "displayName": "さといも 球茎",
+      "signature": "さといも 球茎",
+      "foodIds": [
+        "mext_02010",
+        "mext_02011",
+        "mext_02012"
+      ],
+      "foods": [
+        "さといも　球茎　生",
+        "さといも　球茎　水煮",
+        "さといも　球茎　冷凍"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "水煮",
+          "生"
+        ],
+        "processing": [
+          "冷凍"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:dfde1ea8d9ba",
+      "displayName": "さやえんどう 若ざや",
+      "signature": "さやえんどう 若ざや",
+      "foodIds": [
+        "mext_06020",
+        "mext_06021"
+      ],
+      "foods": [
+        "さやえんどう　若ざや　生",
+        "さやえんどう　若ざや　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:a8b5e6736396",
+      "displayName": "さわら",
+      "signature": "さわら",
+      "foodIds": [
+        "mext_10171",
+        "mext_10172"
+      ],
+      "foods": [
+        "さわら　生",
+        "さわら　焼き"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:347103032a17",
+      "displayName": "さんとうさい 葉",
+      "signature": "さんとうさい 葉",
+      "foodIds": [
+        "mext_06089",
+        "mext_06090"
+      ],
+      "foods": [
+        "さんとうさい　葉　生",
+        "さんとうさい　葉　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "葉"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:e177c1626cec",
+      "displayName": "さんま",
+      "signature": "さんま",
+      "foodIds": [
+        "mext_10173",
+        "mext_10407",
+        "mext_10174"
+      ],
+      "foods": [
+        "さんま　皮つき　生",
+        "さんま　皮なし　生",
+        "さんま　皮つき　焼き"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [
+          "皮つき",
+          "皮なし"
+        ],
+        "preparation": [
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:f7127cb5595d",
+      "displayName": "しいたけ 乾しいたけ",
+      "signature": "しいたけ 乾しいたけ",
+      "foodIds": [
+        "mext_08013",
+        "mext_08014"
+      ],
+      "foods": [
+        "しいたけ　乾しいたけ　乾",
+        "しいたけ　乾しいたけ　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "乾しいたけ"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:9227932142ec",
+      "displayName": "しいたけ 生しいたけ",
+      "signature": "しいたけ 生しいたけ",
+      "foodIds": [
+        "mext_08039",
+        "mext_08040",
+        "mext_08041",
+        "mext_08057",
+        "mext_08042",
+        "mext_08043",
+        "mext_08044"
+      ],
+      "foods": [
+        "しいたけ　生しいたけ　菌床栽培　生",
+        "しいたけ　生しいたけ　菌床栽培　ゆで",
+        "しいたけ　生しいたけ　菌床栽培　油いため",
+        "しいたけ　生しいたけ　菌床栽培　天ぷら",
+        "しいたけ　生しいたけ　原木栽培　生",
+        "しいたけ　生しいたけ　原木栽培　ゆで",
+        "しいたけ　生しいたけ　原木栽培　油いため"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "生しいたけ"
+        ],
+        "cultivation": [
+          "原木栽培",
+          "菌床栽培"
+        ],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "天ぷら",
+          "油いため",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:4514f1c2a238",
+      "displayName": "ししとう",
+      "signature": "ししとう 果実",
+      "foodIds": [
+        "mext_06093",
+        "mext_06094"
+      ],
+      "foods": [
+        "ししとう　果実　生",
+        "ししとう　果実　油いため"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "果実"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "油いため",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:1e32003d9639",
+      "displayName": "ししゃも 生干し",
+      "signature": "ししゃも 生干し",
+      "foodIds": [
+        "mext_10180",
+        "mext_10181"
+      ],
+      "foods": [
+        "ししゃも　生干し　生",
+        "ししゃも　生干し　焼き"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:9f6f895b132a",
+      "displayName": "しじみ",
+      "signature": "しじみ",
+      "foodIds": [
+        "mext_10297",
+        "mext_10413"
+      ],
+      "foods": [
+        "しじみ　生",
+        "しじみ　水煮"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "水煮",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:aaa2c7af3aa4",
+      "displayName": "しゅんぎく 葉",
+      "signature": "しゅんぎく 葉",
+      "foodIds": [
+        "mext_06099",
+        "mext_06100"
+      ],
+      "foods": [
+        "しゅんぎく　葉　生",
+        "しゅんぎく　葉　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "葉"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:5f67bc7c577f",
+      "displayName": "しょうが 根茎",
+      "signature": "しょうが 根茎",
+      "foodIds": [
+        "mext_06103",
+        "mext_06365"
+      ],
+      "foods": [
+        "しょうが　根茎　皮なし　生",
+        "しょうが　根茎　皮なし　生　おろし"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [
+          "皮なし"
+        ],
+        "preparation": [
+          "生"
+        ],
+        "processing": [
+          "おろし"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:1abcca53026e",
+      "displayName": "しろきくらげ",
+      "signature": "しろきくらげ",
+      "foodIds": [
+        "mext_08008",
+        "mext_08009"
+      ],
+      "foods": [
+        "しろきくらげ　乾",
+        "しろきくらげ　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:e20378d38531",
+      "displayName": "しろさけ",
+      "signature": "しろさけ",
+      "foodIds": [
+        "mext_10134",
+        "mext_10135",
+        "mext_10136"
+      ],
+      "foods": [
+        "しろさけ　生",
+        "しろさけ　水煮",
+        "しろさけ　焼き"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "水煮",
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:6cf7517aa401",
+      "displayName": "しろさけ 新巻き",
+      "signature": "しろさけ 新巻き",
+      "foodIds": [
+        "mext_10137",
+        "mext_10138"
+      ],
+      "foods": [
+        "しろさけ　新巻き　生",
+        "しろさけ　新巻き　焼き"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:f542f767aa4d",
+      "displayName": "じゅうろくささげ 若ざや",
+      "signature": "じゅうろくささげ 若ざや",
+      "foodIds": [
+        "mext_06097",
+        "mext_06098"
+      ],
+      "foods": [
+        "じゅうろくささげ　若ざや　生",
+        "じゅうろくささげ　若ざや　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:9f65cd19382b",
+      "displayName": "すけとうだら",
+      "signature": "すけとうだら",
+      "foodIds": [
+        "mext_10199",
+        "mext_10409"
+      ],
+      "foods": [
+        "すけとうだら　生",
+        "すけとうだら　フライ"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "フライ",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:3d73cdbf017e",
+      "displayName": "すけとうだら たらこ",
+      "signature": "すけとうだら たらこ",
+      "foodIds": [
+        "mext_10202",
+        "mext_10203"
+      ],
+      "foods": [
+        "すけとうだら　たらこ　生",
+        "すけとうだら　たらこ　焼き"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:62977d119467",
+      "displayName": "するめいか",
+      "signature": "するめいか",
+      "foodIds": [
+        "mext_10345",
+        "mext_10346",
+        "mext_10347"
+      ],
+      "foods": [
+        "するめいか　生",
+        "するめいか　水煮",
+        "するめいか　焼き"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "水煮",
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:9e1ebea4310f",
+      "displayName": "するめいか 胴",
+      "signature": "するめいか 胴",
+      "foodIds": [
+        "mext_10417",
+        "mext_10418",
+        "mext_10419",
+        "mext_10470"
+      ],
+      "foods": [
+        "するめいか　胴　皮つき　生",
+        "するめいか　胴　皮なし　生",
+        "するめいか　胴　皮なし　天ぷら",
+        "するめいか　胴　皮なし　フライ"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [
+          "皮つき",
+          "皮なし"
+        ],
+        "preparation": [
+          "フライ",
+          "天ぷら",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:937e67683824",
+      "displayName": "ずいき 干しずいき",
+      "signature": "ずいき 干しずいき",
+      "foodIds": [
+        "mext_06111",
+        "mext_06112"
+      ],
+      "foods": [
+        "ずいき　干しずいき　乾",
+        "ずいき　干しずいき　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:1381cab981d7",
+      "displayName": "ずいき 生ずいき",
+      "signature": "ずいき 生ずいき",
+      "foodIds": [
+        "mext_06109",
+        "mext_06110"
+      ],
+      "foods": [
+        "ずいき　生ずいき　生",
+        "ずいき　生ずいき　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:1d11bf897db4",
+      "displayName": "ずわいがに",
+      "signature": "ずわいがに",
+      "foodIds": [
+        "mext_10335",
+        "mext_10336"
+      ],
+      "foods": [
+        "ずわいがに　生",
+        "ずわいがに　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:8609d1907e52",
+      "displayName": "せり 茎葉",
+      "signature": "せり 茎葉",
+      "foodIds": [
+        "mext_06117",
+        "mext_06118"
+      ],
+      "foods": [
+        "せり　茎葉　生",
+        "せり　茎葉　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:a5e4205b77bf",
+      "displayName": "ぜんまい 干しぜんまい 干し若芽",
+      "signature": "ぜんまい 干しぜんまい 干し若芽",
+      "foodIds": [
+        "mext_06122",
+        "mext_06123"
+      ],
+      "foods": [
+        "ぜんまい　干しぜんまい　干し若芽　乾",
+        "ぜんまい　干しぜんまい　干し若芽　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:9d68f30ecc24",
+      "displayName": "ぜんまい 生ぜんまい 若芽",
+      "signature": "ぜんまい 生ぜんまい 若芽",
+      "foodIds": [
+        "mext_06120",
+        "mext_06121"
+      ],
+      "foods": [
+        "ぜんまい　生ぜんまい　若芽　生",
+        "ぜんまい　生ぜんまい　若芽　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:55edaf8b208b",
+      "displayName": "そば そば",
+      "signature": "そば そば",
+      "foodIds": [
+        "mext_01127",
+        "mext_01128"
+      ],
+      "foods": [
+        "そば　そば　生",
+        "そば　そば　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:ceac561dcabe",
+      "displayName": "そば 干しそば",
+      "signature": "そば 干しそば",
+      "foodIds": [
+        "mext_01129",
+        "mext_01130"
+      ],
+      "foods": [
+        "そば　干しそば　乾",
+        "そば　干しそば　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:669fb6e2c4d4",
+      "displayName": "そらまめ 未熟豆",
+      "signature": "そらまめ 未熟豆",
+      "foodIds": [
+        "mext_06124",
+        "mext_06125"
+      ],
+      "foods": [
+        "そらまめ　未熟豆　生",
+        "そらまめ　未熟豆　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:fecb3afbf6c6",
+      "displayName": "たいせいようさけ 養殖",
+      "signature": "たいせいようさけ 養殖",
+      "foodIds": [
+        "mext_10144",
+        "mext_10433",
+        "mext_10434",
+        "mext_10435",
+        "mext_10145",
+        "mext_10436",
+        "mext_10437",
+        "mext_10438",
+        "mext_10439",
+        "mext_10440",
+        "mext_10441",
+        "mext_10442",
+        "mext_10443",
+        "mext_10444"
+      ],
+      "foods": [
+        "たいせいようさけ　養殖　皮つき　生",
+        "たいせいようさけ　養殖　皮つき　水煮",
+        "たいせいようさけ　養殖　皮つき　蒸し",
+        "たいせいようさけ　養殖　皮つき　電子レンジ調理",
+        "たいせいようさけ　養殖　皮つき　焼き",
+        "たいせいようさけ　養殖　皮つき　ソテー",
+        "たいせいようさけ　養殖　皮つき　天ぷら",
+        "たいせいようさけ　養殖　皮なし　生",
+        "たいせいようさけ　養殖　皮なし　水煮",
+        "たいせいようさけ　養殖　皮なし　蒸し",
+        "たいせいようさけ　養殖　皮なし　電子レンジ調理",
+        "たいせいようさけ　養殖　皮なし　焼き",
+        "たいせいようさけ　養殖　皮なし　ソテー",
+        "たいせいようさけ　養殖　皮なし　天ぷら"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [
+          "皮つき",
+          "皮なし"
+        ],
+        "preparation": [
+          "ソテー",
+          "天ぷら",
+          "水煮",
+          "焼き",
+          "生",
+          "蒸し",
+          "電子レンジ調理"
+        ],
+        "processing": [],
+        "variety": [
+          "養殖"
+        ]
+      }
+    },
+    {
+      "groupId": "auto:8a4cf92bf6eb",
+      "displayName": "たいせいようさば",
+      "signature": "たいせいようさば",
+      "foodIds": [
+        "mext_10158",
+        "mext_10159",
+        "mext_10160"
+      ],
+      "foods": [
+        "たいせいようさば　生",
+        "たいせいようさば　水煮",
+        "たいせいようさば　焼き"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "水煮",
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:c84701abd336",
+      "displayName": "たけのこ 若茎",
+      "signature": "たけのこ 若茎",
+      "foodIds": [
+        "mext_06149",
+        "mext_06150"
+      ],
+      "foods": [
+        "たけのこ　若茎　生",
+        "たけのこ　若茎　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:d3f2e39df519",
+      "displayName": "たけのこいも 球茎",
+      "signature": "たけのこいも 球茎",
+      "foodIds": [
+        "mext_02052",
+        "mext_02053"
+      ],
+      "foods": [
+        "たけのこいも　球茎　生",
+        "たけのこいも　球茎　水煮"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "水煮",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:3f9f6b2f3fc8",
+      "displayName": "たまねぎ",
+      "signature": "たまねぎ りん茎",
+      "foodIds": [
+        "mext_06153",
+        "mext_06154",
+        "mext_06155",
+        "mext_06336",
+        "mext_06389"
+      ],
+      "foods": [
+        "たまねぎ　りん茎　生",
+        "たまねぎ　りん茎　水さらし",
+        "たまねぎ　りん茎　ゆで",
+        "たまねぎ　りん茎　油いため",
+        "たまねぎ　りん茎　油いため　（あめ色たまねぎ）"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "りん茎"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "あめ色たまねぎ",
+          "ゆで",
+          "油いため",
+          "生"
+        ],
+        "processing": [
+          "水さらし"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:b3661d2fd981",
+      "displayName": "たらのめ 若芽",
+      "signature": "たらのめ 若芽",
+      "foodIds": [
+        "mext_06157",
+        "mext_06158"
+      ],
+      "foods": [
+        "たらのめ　若芽　生",
+        "たらのめ　若芽　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:dd531cc3121c",
+      "displayName": "たらばがに",
+      "signature": "たらばがに",
+      "foodIds": [
+        "mext_10338",
+        "mext_10339"
+      ],
+      "foods": [
+        "たらばがに　生",
+        "たらばがに　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:09ae597edebb",
+      "displayName": "だいこん",
+      "signature": "だいこん 根",
+      "foodIds": [
+        "mext_06132",
+        "mext_06133",
+        "mext_06134",
+        "mext_06367",
+        "mext_06135"
+      ],
+      "foods": [
+        "だいこん　根　皮つき　生",
+        "だいこん　根　皮つき　ゆで",
+        "だいこん　根　皮なし　生",
+        "だいこん　根　皮なし　生　おろし",
+        "だいこん　根　皮なし　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "根"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [
+          "皮つき",
+          "皮なし"
+        ],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [
+          "おろし"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:694b2e385db5",
+      "displayName": "だいこん 葉",
+      "signature": "だいこん 葉",
+      "foodIds": [
+        "mext_06130",
+        "mext_06131"
+      ],
+      "foods": [
+        "だいこん　葉　生",
+        "だいこん　葉　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "葉"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:e6bcbb149089",
+      "displayName": "だいず おから",
+      "signature": "だいず ［その他］ おから",
+      "foodIds": [
+        "mext_04051",
+        "mext_04089"
+      ],
+      "foods": [
+        "だいず　［その他］　おから　生",
+        "だいず　［その他］　おから　乾燥"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "生"
+        ],
+        "processing": [
+          "乾燥"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:30c0d59e524d",
+      "displayName": "だいず 全粒 青大豆 国産",
+      "signature": "だいず ［全粒・全粒製品］ 全粒 青大豆 国産",
+      "foodIds": [
+        "mext_04104",
+        "mext_04105"
+      ],
+      "foods": [
+        "だいず　［全粒・全粒製品］　全粒　青大豆　国産　乾",
+        "だいず　［全粒・全粒製品］　全粒　青大豆　国産　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:611f89c3d757",
+      "displayName": "だいず 全粒 黄大豆 国産",
+      "signature": "だいず ［全粒・全粒製品］ 全粒 黄大豆 国産",
+      "foodIds": [
+        "mext_04023",
+        "mext_04024"
+      ],
+      "foods": [
+        "だいず　［全粒・全粒製品］　全粒　黄大豆　国産　乾",
+        "だいず　［全粒・全粒製品］　全粒　黄大豆　国産　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:6fb1feec1560",
+      "displayName": "だいず 全粒 黒大豆 国産",
+      "signature": "だいず ［全粒・全粒製品］ 全粒 黒大豆 国産",
+      "foodIds": [
+        "mext_04077",
+        "mext_04106"
+      ],
+      "foods": [
+        "だいず　［全粒・全粒製品］　全粒　黒大豆　国産　乾",
+        "だいず　［全粒・全粒製品］　全粒　黒大豆　国産　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:289a4f4c3ec1",
+      "displayName": "だいず 凍り豆腐",
+      "signature": "だいず ［豆腐・油揚げ類］ 凍り豆腐",
+      "foodIds": [
+        "mext_04042",
+        "mext_04087"
+      ],
+      "foods": [
+        "だいず　［豆腐・油揚げ類］　凍り豆腐　乾",
+        "だいず　［豆腐・油揚げ類］　凍り豆腐　水煮"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "水煮"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:73579d8f7b2c",
+      "displayName": "だいず 油揚げ 油抜き",
+      "signature": "だいず ［豆腐・油揚げ類］ 油揚げ 油抜き",
+      "foodIds": [
+        "mext_04084",
+        "mext_04086",
+        "mext_04085"
+      ],
+      "foods": [
+        "だいず　［豆腐・油揚げ類］　油揚げ　油抜き　生",
+        "だいず　［豆腐・油揚げ類］　油揚げ　油抜き　ゆで",
+        "だいず　［豆腐・油揚げ類］　油揚げ　油抜き　焼き"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:1c4fe3e55731",
+      "displayName": "だいず 豆腐竹輪",
+      "signature": "だいず ［豆腐・油揚げ類］ 豆腐竹輪",
+      "foodIds": [
+        "mext_04044",
+        "mext_04045"
+      ],
+      "foods": [
+        "だいず　［豆腐・油揚げ類］　豆腐竹輪　蒸し",
+        "だいず　［豆腐・油揚げ類］　豆腐竹輪　焼き"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "焼き",
+          "蒸し"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:f2236ce81802",
+      "displayName": "ちぢみゆきな 葉",
+      "signature": "ちぢみゆきな 葉",
+      "foodIds": [
+        "mext_06376",
+        "mext_06377"
+      ],
+      "foods": [
+        "ちぢみゆきな　葉　生",
+        "ちぢみゆきな　葉　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "葉"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:d1c5fa29c711",
+      "displayName": "つくし 胞子茎",
+      "signature": "つくし 胞子茎",
+      "foodIds": [
+        "mext_06162",
+        "mext_06163"
+      ],
+      "foods": [
+        "つくし　胞子茎　生",
+        "つくし　胞子茎　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:30eaa2065c62",
+      "displayName": "つるあずき 全粒",
+      "signature": "つるあずき 全粒",
+      "foodIds": [
+        "mext_04064",
+        "mext_04092"
+      ],
+      "foods": [
+        "つるあずき　全粒　乾",
+        "つるあずき　全粒　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:42d50fa4d5d5",
+      "displayName": "つるむらさき 茎葉",
+      "signature": "つるむらさき 茎葉",
+      "foodIds": [
+        "mext_06165",
+        "mext_06166"
+      ],
+      "foods": [
+        "つるむらさき　茎葉　生",
+        "つるむらさき　茎葉　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:c91c230ceecb",
+      "displayName": "つわぶき 葉柄",
+      "signature": "つわぶき 葉柄",
+      "foodIds": [
+        "mext_06167",
+        "mext_06168"
+      ],
+      "foods": [
+        "つわぶき　葉柄　生",
+        "つわぶき　葉柄　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:95d21f56b659",
+      "displayName": "とうがらし",
+      "signature": "とうがらし 果実",
+      "foodIds": [
+        "mext_06171",
+        "mext_06172"
+      ],
+      "foods": [
+        "とうがらし　果実　生",
+        "とうがらし　果実　乾"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "果実"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "生"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:9361844984e0",
+      "displayName": "とうがらし 葉･果実",
+      "signature": "とうがらし 葉･果実",
+      "foodIds": [
+        "mext_06169",
+        "mext_06170"
+      ],
+      "foods": [
+        "とうがらし　葉･果実　生",
+        "とうがらし　葉･果実　油いため"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "油いため",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:4dfd0b02109e",
+      "displayName": "とうがん",
+      "signature": "とうがん 果実",
+      "foodIds": [
+        "mext_06173",
+        "mext_06174"
+      ],
+      "foods": [
+        "とうがん　果実　生",
+        "とうがん　果実　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "果実"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:787385892e72",
+      "displayName": "とうびし",
+      "signature": "とうびし",
+      "foodIds": [
+        "mext_05047",
+        "mext_05048"
+      ],
+      "foods": [
+        "とうびし　生",
+        "とうびし　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:cffadb34d195",
+      "displayName": "どじょう",
+      "signature": "どじょう",
+      "foodIds": [
+        "mext_10213",
+        "mext_10214"
+      ],
+      "foods": [
+        "どじょう　生",
+        "どじょう　水煮"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "水煮",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:8bbdf1970dd3",
+      "displayName": "ながいも ながいも",
+      "signature": "ながいも ながいも 塊根",
+      "foodIds": [
+        "mext_02023",
+        "mext_02024"
+      ],
+      "foods": [
+        "ながいも　ながいも　塊根　生",
+        "ながいも　ながいも　塊根　水煮"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "塊根"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "水煮",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:a6162916b721",
+      "displayName": "ながさきはくさい 葉",
+      "signature": "ながさきはくさい 葉",
+      "foodIds": [
+        "mext_06189",
+        "mext_06190"
+      ],
+      "foods": [
+        "ながさきはくさい　葉　生",
+        "ながさきはくさい　葉　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "葉"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:06e6287f8956",
+      "displayName": "なす",
+      "signature": "なす 果実",
+      "foodIds": [
+        "mext_06191",
+        "mext_06192",
+        "mext_06342",
+        "mext_06343"
+      ],
+      "foods": [
+        "なす　果実　生",
+        "なす　果実　ゆで",
+        "なす　果実　油いため",
+        "なす　果実　天ぷら"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "果実"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "天ぷら",
+          "油いため",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:329281c3347a",
+      "displayName": "なめこ 株採り",
+      "signature": "なめこ 株採り",
+      "foodIds": [
+        "mext_08020",
+        "mext_08021"
+      ],
+      "foods": [
+        "なめこ　株採り　生",
+        "なめこ　株採り　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:b14ffc68e094",
+      "displayName": "にがうり",
+      "signature": "にがうり 果実",
+      "foodIds": [
+        "mext_06205",
+        "mext_06206"
+      ],
+      "foods": [
+        "にがうり　果実　生",
+        "にがうり　果実　油いため"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "果実"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "油いため",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:38c3ae9f6348",
+      "displayName": "にしまあじ",
+      "signature": "にしまあじ",
+      "foodIds": [
+        "mext_10008",
+        "mext_10009",
+        "mext_10010"
+      ],
+      "foods": [
+        "にしまあじ　生",
+        "にしまあじ　水煮",
+        "にしまあじ　焼き"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "水煮",
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:e45abe0b9164",
+      "displayName": "にしまあじ 開き干し",
+      "signature": "にしまあじ 開き干し",
+      "foodIds": [
+        "mext_10457",
+        "mext_10458"
+      ],
+      "foods": [
+        "にしまあじ　開き干し　生",
+        "にしまあじ　開き干し　焼き"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:688a5ff6777a",
+      "displayName": "にしん かずのこ",
+      "signature": "にしん かずのこ",
+      "foodIds": [
+        "mext_10222",
+        "mext_10223"
+      ],
+      "foods": [
+        "にしん　かずのこ　生",
+        "にしん　かずのこ　乾"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "生"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:85e9b8c495db",
+      "displayName": "にじます 海面養殖",
+      "signature": "にじます 海面養殖",
+      "foodIds": [
+        "mext_10146",
+        "mext_10402",
+        "mext_10147"
+      ],
+      "foods": [
+        "にじます　海面養殖　皮つき　生",
+        "にじます　海面養殖　皮なし　生",
+        "にじます　海面養殖　皮つき　焼き"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [
+          "皮つき",
+          "皮なし"
+        ],
+        "preparation": [
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": [
+          "養殖"
+        ]
+      }
+    },
+    {
+      "groupId": "auto:01479b323726",
+      "displayName": "にら 葉",
+      "signature": "にら 葉",
+      "foodIds": [
+        "mext_06207",
+        "mext_06208",
+        "mext_06344"
+      ],
+      "foods": [
+        "にら　葉　生",
+        "にら　葉　ゆで",
+        "にら　葉　油いため"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "葉"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "油いため",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:b7800f2d4235",
+      "displayName": "にわとり ひき肉",
+      "signature": "にわとり ［二次品目］ ひき肉",
+      "foodIds": [
+        "mext_11230",
+        "mext_11291"
+      ],
+      "foods": [
+        "にわとり　［二次品目］　ひき肉　生",
+        "にわとり　［二次品目］　ひき肉　焼き"
+      ],
+      "variantAttributes": {
+        "species": [
+          "鶏"
+        ],
+        "part": [
+          "ひき肉"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:265d0c8198ec",
+      "displayName": "にんじん",
+      "signature": "にんじん 根",
+      "foodIds": [
+        "mext_06212",
+        "mext_06213",
+        "mext_06214",
+        "mext_06215",
+        "mext_06345",
+        "mext_06346",
+        "mext_06407",
+        "mext_06408",
+        "mext_06216",
+        "mext_06380",
+        "mext_06381"
+      ],
+      "foods": [
+        "にんじん　根　皮つき　生",
+        "にんじん　根　皮つき　ゆで",
+        "にんじん　根　皮なし　生",
+        "にんじん　根　皮なし　ゆで",
+        "にんじん　根　皮なし　油いため",
+        "にんじん　根　皮なし　素揚げ",
+        "にんじん　根　皮なし　カット　常法洗浄",
+        "にんじん　根　皮なし　カット　次亜塩素酸洗浄",
+        "にんじん　根　冷凍",
+        "にんじん　根　冷凍　ゆで",
+        "にんじん　根　冷凍　油いため"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "根"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [
+          "皮つき",
+          "皮なし"
+        ],
+        "preparation": [
+          "ゆで",
+          "油いため",
+          "生",
+          "素揚げ"
+        ],
+        "processing": [
+          "冷凍",
+          "常法洗浄",
+          "次亜塩素酸洗浄"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:c59cfc1541cc",
+      "displayName": "にんにく",
+      "signature": "にんにく りん茎",
+      "foodIds": [
+        "mext_06223",
+        "mext_06349"
+      ],
+      "foods": [
+        "にんにく　りん茎　生",
+        "にんにく　りん茎　油いため"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "りん茎"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "油いため",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:f656af3e7b6d",
+      "displayName": "はくさい",
+      "signature": "はくさい 結球葉",
+      "foodIds": [
+        "mext_06233",
+        "mext_06234"
+      ],
+      "foods": [
+        "はくさい　結球葉　生",
+        "はくさい　結球葉　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "結球葉"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:89f6b86d80f9",
+      "displayName": "はす 成熟",
+      "signature": "はす 成熟",
+      "foodIds": [
+        "mext_05024",
+        "mext_05043"
+      ],
+      "foods": [
+        "はす　成熟　乾",
+        "はす　成熟　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:0eec8b55c6aa",
+      "displayName": "はたけしめじ",
+      "signature": "はたけしめじ",
+      "foodIds": [
+        "mext_08015",
+        "mext_08045"
+      ],
+      "foods": [
+        "はたけしめじ　生",
+        "はたけしめじ　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:7de5a1f57dcf",
+      "displayName": "はまぐり",
+      "signature": "はまぐり",
+      "foodIds": [
+        "mext_10306",
+        "mext_10307",
+        "mext_10308"
+      ],
+      "foods": [
+        "はまぐり　生",
+        "はまぐり　水煮",
+        "はまぐり　焼き"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "水煮",
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:b36a1fa46f3b",
+      "displayName": "ひじき ほしひじき ステンレス釜",
+      "signature": "ひじき ほしひじき ステンレス釜",
+      "foodIds": [
+        "mext_09050",
+        "mext_09051",
+        "mext_09052"
+      ],
+      "foods": [
+        "ひじき　ほしひじき　ステンレス釜　乾",
+        "ひじき　ほしひじき　ステンレス釜　ゆで",
+        "ひじき　ほしひじき　ステンレス釜　油いため"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "油いため"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:c9588dd7b0ef",
+      "displayName": "ひじき ほしひじき 鉄釜",
+      "signature": "ひじき ほしひじき 鉄釜",
+      "foodIds": [
+        "mext_09053",
+        "mext_09054",
+        "mext_09055"
+      ],
+      "foods": [
+        "ひじき　ほしひじき　鉄釜　乾",
+        "ひじき　ほしひじき　鉄釜　ゆで",
+        "ひじき　ほしひじき　鉄釜　油いため"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "油いため"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:4995dcb1c81c",
+      "displayName": "ひよこまめ 全粒",
+      "signature": "ひよこまめ 全粒",
+      "foodIds": [
+        "mext_04065",
+        "mext_04066"
+      ],
+      "foods": [
+        "ひよこまめ　全粒　乾",
+        "ひよこまめ　全粒　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:4e4a00f31d68",
+      "displayName": "ひらたけ",
+      "signature": "ひらたけ",
+      "foodIds": [
+        "mext_08026",
+        "mext_08027"
+      ],
+      "foods": [
+        "ひらたけ　生",
+        "ひらたけ　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:8c2691840741",
+      "displayName": "ひらめ 養殖",
+      "signature": "ひらめ 養殖",
+      "foodIds": [
+        "mext_10235",
+        "mext_10410"
+      ],
+      "foods": [
+        "ひらめ　養殖　皮つき　生",
+        "ひらめ　養殖　皮なし　生"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [
+          "皮つき",
+          "皮なし"
+        ],
+        "preparation": [
+          "生"
+        ],
+        "processing": [],
+        "variety": [
+          "養殖"
+        ]
+      }
+    },
+    {
+      "groupId": "auto:fac9ba3b6e6a",
+      "displayName": "ふき 葉柄",
+      "signature": "ふき 葉柄",
+      "foodIds": [
+        "mext_06256",
+        "mext_06257"
+      ],
+      "foods": [
+        "ふき　葉柄　生",
+        "ふき　葉柄　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:22b171e84787",
+      "displayName": "ふきのとう 花序",
+      "signature": "ふきのとう 花序",
+      "foodIds": [
+        "mext_06258",
+        "mext_06259"
+      ],
+      "foods": [
+        "ふきのとう　花序　生",
+        "ふきのとう　花序　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:e3c03160ff9d",
+      "displayName": "ふだんそう 葉",
+      "signature": "ふだんそう 葉",
+      "foodIds": [
+        "mext_06261",
+        "mext_06262"
+      ],
+      "foods": [
+        "ふだんそう　葉　生",
+        "ふだんそう　葉　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "葉"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:e7ef448b281c",
+      "displayName": "ふな",
+      "signature": "ふな",
+      "foodIds": [
+        "mext_10238",
+        "mext_10239"
+      ],
+      "foods": [
+        "ふな　生",
+        "ふな　水煮"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "水煮",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:6d166cc70466",
+      "displayName": "ぶた",
+      "signature": "ぶた ［ひき肉］",
+      "foodIds": [
+        "mext_11163",
+        "mext_11280"
+      ],
+      "foods": [
+        "ぶた　［ひき肉］　生",
+        "ぶた　［ひき肉］　焼き"
+      ],
+      "variantAttributes": {
+        "species": [
+          "豚"
+        ],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:7eaf662e4605",
+      "displayName": "ぶた ウインナーソーセージ",
+      "signature": "ぶた ［ソーセージ類］ ウインナーソーセージ",
+      "foodIds": [
+        "mext_11306",
+        "mext_11307",
+        "mext_11308"
+      ],
+      "foods": [
+        "ぶた　［ソーセージ類］　ウインナーソーセージ　ゆで",
+        "ぶた　［ソーセージ類］　ウインナーソーセージ　焼き",
+        "ぶた　［ソーセージ類］　ウインナーソーセージ　フライ"
+      ],
+      "variantAttributes": {
+        "species": [
+          "豚"
+        ],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "フライ",
+          "焼き"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:627b23759226",
+      "displayName": "ぶた ロースハム",
+      "signature": "ぶた ［ハム類］ ロースハム",
+      "foodIds": [
+        "mext_11303",
+        "mext_11304",
+        "mext_11305"
+      ],
+      "foods": [
+        "ぶた　［ハム類］　ロースハム　ゆで",
+        "ぶた　［ハム類］　ロースハム　焼き",
+        "ぶた　［ハム類］　ロースハム　フライ"
+      ],
+      "variantAttributes": {
+        "species": [
+          "豚"
+        ],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "フライ",
+          "焼き"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:3a252aea825e",
+      "displayName": "ぶた ばらベーコン",
+      "signature": "ぶた ［ベーコン類］ ばらベーコン",
+      "foodIds": [
+        "mext_11314",
+        "mext_11315",
+        "mext_11316"
+      ],
+      "foods": [
+        "ぶた　［ベーコン類］　ばらベーコン　ゆで",
+        "ぶた　［ベーコン類］　ばらベーコン　焼き",
+        "ぶた　［ベーコン類］　ばらベーコン　油いため"
+      ],
+      "variantAttributes": {
+        "species": [
+          "豚"
+        ],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "油いため",
+          "焼き"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:d23016de2d36",
+      "displayName": "ぶた 頭部 ジョウルミート",
+      "signature": "ぶた ［副生物］ 頭部 ジョウルミート",
+      "foodIds": [
+        "mext_11312",
+        "mext_11313"
+      ],
+      "foods": [
+        "ぶた　［副生物］　頭部　ジョウルミート　生",
+        "ぶた　［副生物］　頭部　ジョウルミート　焼き"
+      ],
+      "variantAttributes": {
+        "species": [
+          "豚"
+        ],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:00d1d4495c03",
+      "displayName": "ぶた ばら 脂身つき",
+      "signature": "ぶた ［大型種肉］ ばら 脂身つき",
+      "foodIds": [
+        "mext_11129",
+        "mext_11277"
+      ],
+      "foods": [
+        "ぶた　［大型種肉］　ばら　脂身つき　生",
+        "ぶた　［大型種肉］　ばら　脂身つき　焼き"
+      ],
+      "variantAttributes": {
+        "species": [
+          "豚"
+        ],
+        "part": [
+          "ばら"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:7b93c1d1f6cb",
+      "displayName": "ぶた もも 皮下脂肪なし",
+      "signature": "ぶた ［大型種肉］ もも 皮下脂肪なし",
+      "foodIds": [
+        "mext_11131",
+        "mext_11133",
+        "mext_11132"
+      ],
+      "foods": [
+        "ぶた　［大型種肉］　もも　皮下脂肪なし　生",
+        "ぶた　［大型種肉］　もも　皮下脂肪なし　ゆで",
+        "ぶた　［大型種肉］　もも　皮下脂肪なし　焼き"
+      ],
+      "variantAttributes": {
+        "species": [
+          "豚"
+        ],
+        "part": [
+          "もも"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:7ef69d53cd35",
+      "displayName": "ぶた ヒレ 赤肉",
+      "signature": "ぶた ［大型種肉］ ヒレ 赤肉",
+      "foodIds": [
+        "mext_11140",
+        "mext_11278"
+      ],
+      "foods": [
+        "ぶた　［大型種肉］　ヒレ　赤肉　生",
+        "ぶた　［大型種肉］　ヒレ　赤肉　焼き"
+      ],
+      "variantAttributes": {
+        "species": [
+          "豚"
+        ],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:2fcc8ff3d183",
+      "displayName": "ぶた ロース 脂身つき",
+      "signature": "ぶた ［大型種肉］ ロース 脂身つき",
+      "foodIds": [
+        "mext_11123",
+        "mext_11125",
+        "mext_11124"
+      ],
+      "foods": [
+        "ぶた　［大型種肉］　ロース　脂身つき　生",
+        "ぶた　［大型種肉］　ロース　脂身つき　ゆで",
+        "ぶた　［大型種肉］　ロース　脂身つき　焼き"
+      ],
+      "variantAttributes": {
+        "species": [
+          "豚"
+        ],
+        "part": [
+          "ロース"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:b66d49f3c143",
+      "displayName": "ぶどう",
+      "signature": "ぶどう",
+      "foodIds": [
+        "mext_07116",
+        "mext_07178"
+      ],
+      "foods": [
+        "ぶどう　皮なし　生",
+        "ぶどう　皮つき　生"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [
+          "皮つき",
+          "皮なし"
+        ],
+        "preparation": [
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:c4eaaa453aac",
+      "displayName": "ぶなしめじ",
+      "signature": "ぶなしめじ",
+      "foodIds": [
+        "mext_08016",
+        "mext_08017",
+        "mext_08046",
+        "mext_08055",
+        "mext_08056"
+      ],
+      "foods": [
+        "ぶなしめじ　生",
+        "ぶなしめじ　ゆで",
+        "ぶなしめじ　油いため",
+        "ぶなしめじ　素揚げ",
+        "ぶなしめじ　天ぷら"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "天ぷら",
+          "油いため",
+          "生",
+          "素揚げ"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:df40f093814b",
+      "displayName": "ぶり はまち 養殖",
+      "signature": "ぶり はまち 養殖",
+      "foodIds": [
+        "mext_10243",
+        "mext_10411"
+      ],
+      "foods": [
+        "ぶり　はまち　養殖　皮つき　生",
+        "ぶり　はまち　養殖　皮なし　生"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [
+          "皮つき",
+          "皮なし"
+        ],
+        "preparation": [
+          "生"
+        ],
+        "processing": [],
+        "variety": [
+          "養殖"
+        ]
+      }
+    },
+    {
+      "groupId": "auto:c1f74547d93b",
+      "displayName": "ぶり 成魚",
+      "signature": "ぶり 成魚",
+      "foodIds": [
+        "mext_10241",
+        "mext_10242"
+      ],
+      "foods": [
+        "ぶり　成魚　生",
+        "ぶり　成魚　焼き"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:9e32a7ae0aad",
+      "displayName": "へちま",
+      "signature": "へちま 果実",
+      "foodIds": [
+        "mext_06265",
+        "mext_06266"
+      ],
+      "foods": [
+        "へちま　果実　生",
+        "へちま　果実　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "果実"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:50da4d501641",
+      "displayName": "べいなす",
+      "signature": "べいなす 果実",
+      "foodIds": [
+        "mext_06193",
+        "mext_06194"
+      ],
+      "foods": [
+        "べいなす　果実　生",
+        "べいなす　果実　素揚げ"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "果実"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "生",
+          "素揚げ"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:c07d31225b8e",
+      "displayName": "べにざけ",
+      "signature": "べにざけ",
+      "foodIds": [
+        "mext_10149",
+        "mext_10150"
+      ],
+      "foods": [
+        "べにざけ　生",
+        "べにざけ　焼き"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:d0e90cd9d867",
+      "displayName": "べにばないんげん 全粒",
+      "signature": "べにばないんげん 全粒",
+      "foodIds": [
+        "mext_04068",
+        "mext_04069"
+      ],
+      "foods": [
+        "べにばないんげん　全粒　乾",
+        "べにばないんげん　全粒　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:1cc4b77b730f",
+      "displayName": "ほうれんそう 葉",
+      "signature": "ほうれんそう 葉",
+      "foodIds": [
+        "mext_06269",
+        "mext_06372",
+        "mext_06373"
+      ],
+      "foods": [
+        "ほうれんそう　葉　冷凍",
+        "ほうれんそう　葉　冷凍　ゆで",
+        "ほうれんそう　葉　冷凍　油いため"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "葉"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "油いため"
+        ],
+        "processing": [
+          "冷凍"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:b38eaa0799e6",
+      "displayName": "ほうれんそう 葉 冬採り",
+      "signature": "ほうれんそう 葉 冬採り",
+      "foodIds": [
+        "mext_06356",
+        "mext_06358"
+      ],
+      "foods": [
+        "ほうれんそう　葉　冬採り　生",
+        "ほうれんそう　葉　冬採り　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "葉"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:8699b8569e19",
+      "displayName": "ほうれんそう 葉 夏採り",
+      "signature": "ほうれんそう 葉 夏採り",
+      "foodIds": [
+        "mext_06355",
+        "mext_06357"
+      ],
+      "foods": [
+        "ほうれんそう　葉　夏採り　生",
+        "ほうれんそう　葉　夏採り　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "葉"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:e126bb082db2",
+      "displayName": "ほうれんそう 葉 通年平均",
+      "signature": "ほうれんそう 葉 通年平均",
+      "foodIds": [
+        "mext_06267",
+        "mext_06268",
+        "mext_06359"
+      ],
+      "foods": [
+        "ほうれんそう　葉　通年平均　生",
+        "ほうれんそう　葉　通年平均　ゆで",
+        "ほうれんそう　葉　通年平均　油いため"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "葉"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "油いため",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:66e8c3fdad6b",
+      "displayName": "ほたてがい",
+      "signature": "ほたてがい",
+      "foodIds": [
+        "mext_10311",
+        "mext_10312"
+      ],
+      "foods": [
+        "ほたてがい　生",
+        "ほたてがい　水煮"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "水煮",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:6e7217f5d5a3",
+      "displayName": "ほたてがい 貝柱",
+      "signature": "ほたてがい 貝柱",
+      "foodIds": [
+        "mext_10313",
+        "mext_10414"
+      ],
+      "foods": [
+        "ほたてがい　貝柱　生",
+        "ほたてがい　貝柱　焼き"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:194cba8e4172",
+      "displayName": "ほたるいか",
+      "signature": "ほたるいか",
+      "foodIds": [
+        "mext_10348",
+        "mext_10349"
+      ],
+      "foods": [
+        "ほたるいか　生",
+        "ほたるいか　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:b7af0f61dc09",
+      "displayName": "ほっけ 開き干し",
+      "signature": "ほっけ 開き干し",
+      "foodIds": [
+        "mext_10248",
+        "mext_10412"
+      ],
+      "foods": [
+        "ほっけ　開き干し　生",
+        "ほっけ　開き干し　焼き"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:fdad375b3e67",
+      "displayName": "ほんしめじ",
+      "signature": "ほんしめじ",
+      "foodIds": [
+        "mext_08018",
+        "mext_08047"
+      ],
+      "foods": [
+        "ほんしめじ　生",
+        "ほんしめじ　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:f07b0479f2cf",
+      "displayName": "まあじ",
+      "signature": "まあじ",
+      "foodIds": [
+        "mext_10003",
+        "mext_10389",
+        "mext_10004",
+        "mext_10005",
+        "mext_10390"
+      ],
+      "foods": [
+        "まあじ　皮つき　生",
+        "まあじ　皮なし　生",
+        "まあじ　皮つき　水煮",
+        "まあじ　皮つき　焼き",
+        "まあじ　皮つき　フライ"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [
+          "皮つき",
+          "皮なし"
+        ],
+        "preparation": [
+          "フライ",
+          "水煮",
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:a38d49d65e93",
+      "displayName": "まあじ 小型 骨付き",
+      "signature": "まあじ 小型 骨付き",
+      "foodIds": [
+        "mext_10391",
+        "mext_10392"
+      ],
+      "foods": [
+        "まあじ　小型　骨付き　生",
+        "まあじ　小型　骨付き　から揚げ"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "から揚げ",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:a4ba3aed2fd6",
+      "displayName": "まあじ 開き干し",
+      "signature": "まあじ 開き干し",
+      "foodIds": [
+        "mext_10006",
+        "mext_10007"
+      ],
+      "foods": [
+        "まあじ　開き干し　生",
+        "まあじ　開き干し　焼き"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:fc519907ce33",
+      "displayName": "まいたけ",
+      "signature": "まいたけ",
+      "foodIds": [
+        "mext_08028",
+        "mext_08029",
+        "mext_08051",
+        "mext_08030"
+      ],
+      "foods": [
+        "まいたけ　生",
+        "まいたけ　ゆで",
+        "まいたけ　油いため",
+        "まいたけ　乾"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "油いため",
+          "生"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:3e0973049d48",
+      "displayName": "まいわし",
+      "signature": "まいわし",
+      "foodIds": [
+        "mext_10047",
+        "mext_10048",
+        "mext_10049",
+        "mext_10395"
+      ],
+      "foods": [
+        "まいわし　生",
+        "まいわし　水煮",
+        "まいわし　焼き",
+        "まいわし　フライ"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "フライ",
+          "水煮",
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:840be9b9ce1b",
+      "displayName": "まがれい",
+      "signature": "まがれい",
+      "foodIds": [
+        "mext_10100",
+        "mext_10101",
+        "mext_10102"
+      ],
+      "foods": [
+        "まがれい　生",
+        "まがれい　水煮",
+        "まがれい　焼き"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "水煮",
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:7c61c5217770",
+      "displayName": "まこがれい",
+      "signature": "まこがれい",
+      "foodIds": [
+        "mext_10103",
+        "mext_10399"
+      ],
+      "foods": [
+        "まこがれい　生",
+        "まこがれい　焼き"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:35e986e4df01",
+      "displayName": "まこんぶ 素干し",
+      "signature": "まこんぶ 素干し",
+      "foodIds": [
+        "mext_09017",
+        "mext_09056"
+      ],
+      "foods": [
+        "まこんぶ　素干し　乾",
+        "まこんぶ　素干し　水煮"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "水煮"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:20f06108bbc9",
+      "displayName": "まさば",
+      "signature": "まさば",
+      "foodIds": [
+        "mext_10154",
+        "mext_10155",
+        "mext_10156",
+        "mext_10403"
+      ],
+      "foods": [
+        "まさば　生",
+        "まさば　水煮",
+        "まさば　焼き",
+        "まさば　フライ"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "フライ",
+          "水煮",
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:7a4534b4e051",
+      "displayName": "ますのすけ",
+      "signature": "ますのすけ",
+      "foodIds": [
+        "mext_10152",
+        "mext_10153"
+      ],
+      "foods": [
+        "ますのすけ　生",
+        "ますのすけ　焼き"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:34f7066e558c",
+      "displayName": "まだい 養殖",
+      "signature": "まだい 養殖",
+      "foodIds": [
+        "mext_10193",
+        "mext_10194",
+        "mext_10195",
+        "mext_10408"
+      ],
+      "foods": [
+        "まだい　養殖　皮つき　生",
+        "まだい　養殖　皮つき　水煮",
+        "まだい　養殖　皮つき　焼き",
+        "まだい　養殖　皮なし　生"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [
+          "皮つき",
+          "皮なし"
+        ],
+        "preparation": [
+          "水煮",
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": [
+          "養殖"
+        ]
+      }
+    },
+    {
+      "groupId": "auto:3e80b721ad65",
+      "displayName": "まだこ",
+      "signature": "まだこ",
+      "foodIds": [
+        "mext_10361",
+        "mext_10471",
+        "mext_10362"
+      ],
+      "foods": [
+        "まだこ　皮つき　生",
+        "まだこ　皮なし　生",
+        "まだこ　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [
+          "皮つき",
+          "皮なし"
+        ],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:9cf7ef29e3e7",
+      "displayName": "まだこ 蒸しだこ",
+      "signature": "まだこ 蒸しだこ",
+      "foodIds": [
+        "mext_10472",
+        "mext_10473",
+        "mext_10474"
+      ],
+      "foods": [
+        "まだこ　蒸しだこ",
+        "まだこ　蒸しだこ　油いため",
+        "まだこ　蒸しだこ　素揚げ"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "油いため",
+          "素揚げ"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:4221636ac4d7",
+      "displayName": "まだら",
+      "signature": "まだら",
+      "foodIds": [
+        "mext_10205",
+        "mext_10206"
+      ],
+      "foods": [
+        "まだら　生",
+        "まだら　焼き"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:5e800c73bb88",
+      "displayName": "まるあじ",
+      "signature": "まるあじ",
+      "foodIds": [
+        "mext_10393",
+        "mext_10394"
+      ],
+      "foods": [
+        "まるあじ　生",
+        "まるあじ　焼き"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:574832dd3ad8",
+      "displayName": "みずいも 球茎",
+      "signature": "みずいも 球茎",
+      "foodIds": [
+        "mext_02013",
+        "mext_02014"
+      ],
+      "foods": [
+        "みずいも　球茎　生",
+        "みずいも　球茎　水煮"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "水煮",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:315b28e0469e",
+      "displayName": "みずな 葉",
+      "signature": "みずな 葉",
+      "foodIds": [
+        "mext_06072",
+        "mext_06073"
+      ],
+      "foods": [
+        "みずな　葉　生",
+        "みずな　葉　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "葉"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:2592d2a6acf8",
+      "displayName": "むつ",
+      "signature": "むつ",
+      "foodIds": [
+        "mext_10268",
+        "mext_10269"
+      ],
+      "foods": [
+        "むつ　生",
+        "むつ　水煮"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "水煮",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:a5e3a9590bbd",
+      "displayName": "むらさきいも",
+      "signature": "むらさきいも 塊根",
+      "foodIds": [
+        "mext_02048",
+        "mext_02049"
+      ],
+      "foods": [
+        "むらさきいも　塊根　皮なし　生",
+        "むらさきいも　塊根　皮なし　蒸し"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "塊根"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [
+          "皮なし"
+        ],
+        "preparation": [
+          "生",
+          "蒸し"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:91d20859bb98",
+      "displayName": "むろあじ",
+      "signature": "むろあじ",
+      "foodIds": [
+        "mext_10011",
+        "mext_10012"
+      ],
+      "foods": [
+        "むろあじ　生",
+        "むろあじ　焼き"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:d2c54366f5bf",
+      "displayName": "めかじき",
+      "signature": "めかじき",
+      "foodIds": [
+        "mext_10085",
+        "mext_10398"
+      ],
+      "foods": [
+        "めかじき　生",
+        "めかじき　焼き"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:cfe83b2f7421",
+      "displayName": "めざし",
+      "signature": "めざし",
+      "foodIds": [
+        "mext_10053",
+        "mext_10054"
+      ],
+      "foods": [
+        "めざし　生",
+        "めざし　焼き"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:cebdea196cbd",
+      "displayName": "めんよう ロース 脂身つき",
+      "signature": "めんよう ［マトン］ ロース 脂身つき",
+      "foodIds": [
+        "mext_11199",
+        "mext_11281"
+      ],
+      "foods": [
+        "めんよう　［マトン］　ロース　脂身つき　生",
+        "めんよう　［マトン］　ロース　脂身つき　焼き"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "ロース"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:049ba7be882f",
+      "displayName": "めんよう もも 脂身つき",
+      "signature": "めんよう ［ラム］ もも 脂身つき",
+      "foodIds": [
+        "mext_11203",
+        "mext_11283"
+      ],
+      "foods": [
+        "めんよう　［ラム］　もも　脂身つき　生",
+        "めんよう　［ラム］　もも　脂身つき　焼き"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "もも"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:042d780ad8bc",
+      "displayName": "めんよう ロース 脂身つき",
+      "signature": "めんよう ［ラム］ ロース 脂身つき",
+      "foodIds": [
+        "mext_11202",
+        "mext_11282"
+      ],
+      "foods": [
+        "めんよう　［ラム］　ロース　脂身つき　生",
+        "めんよう　［ラム］　ロース　脂身つき　焼き"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "ロース"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:d85d1217ef34",
+      "displayName": "めキャベツ",
+      "signature": "めキャベツ 結球葉",
+      "foodIds": [
+        "mext_06283",
+        "mext_06284"
+      ],
+      "foods": [
+        "めキャベツ　結球葉　生",
+        "めキャベツ　結球葉　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "結球葉"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:416f33497383",
+      "displayName": "やつがしら 球茎",
+      "signature": "やつがしら 球茎",
+      "foodIds": [
+        "mext_02015",
+        "mext_02016"
+      ],
+      "foods": [
+        "やつがしら　球茎　生",
+        "やつがしら　球茎　水煮"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "水煮",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:81cc55b110b8",
+      "displayName": "やぶまめ",
+      "signature": "やぶまめ",
+      "foodIds": [
+        "mext_04108",
+        "mext_06401"
+      ],
+      "foods": [
+        "やぶまめ　乾",
+        "やぶまめ　生"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "生"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:d98aa48a06bc",
+      "displayName": "ゆりね",
+      "signature": "ゆりね りん茎",
+      "foodIds": [
+        "mext_06296",
+        "mext_06297"
+      ],
+      "foods": [
+        "ゆりね　りん茎　生",
+        "ゆりね　りん茎　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "りん茎"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:4e017d36d570",
+      "displayName": "ようさい 茎葉",
+      "signature": "ようさい 茎葉",
+      "foodIds": [
+        "mext_06298",
+        "mext_06299"
+      ],
+      "foods": [
+        "ようさい　茎葉　生",
+        "ようさい　茎葉　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:f185bc293c0b",
+      "displayName": "よもぎ 葉",
+      "signature": "よもぎ 葉",
+      "foodIds": [
+        "mext_06301",
+        "mext_06302"
+      ],
+      "foods": [
+        "よもぎ　葉　生",
+        "よもぎ　葉　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "葉"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:790e6c43b340",
+      "displayName": "らいまめ 全粒",
+      "signature": "らいまめ 全粒",
+      "foodIds": [
+        "mext_04070",
+        "mext_04093"
+      ],
+      "foods": [
+        "らいまめ　全粒　乾",
+        "らいまめ　全粒　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:f1774d122657",
+      "displayName": "らっかせい 未熟豆",
+      "signature": "らっかせい 未熟豆",
+      "foodIds": [
+        "mext_06303",
+        "mext_06304"
+      ],
+      "foods": [
+        "らっかせい　未熟豆　生",
+        "らっかせい　未熟豆　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:f5832f3a1942",
+      "displayName": "りょくとう 全粒",
+      "signature": "りょくとう 全粒",
+      "foodIds": [
+        "mext_04071",
+        "mext_04072"
+      ],
+      "foods": [
+        "りょくとう　全粒　乾",
+        "りょくとう　全粒　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:82d841dc167f",
+      "displayName": "れんこん 根茎",
+      "signature": "れんこん 根茎",
+      "foodIds": [
+        "mext_06317",
+        "mext_06318"
+      ],
+      "foods": [
+        "れんこん　根茎　生",
+        "れんこん　根茎　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:ae142e24e21d",
+      "displayName": "わかめ 乾燥わかめ 素干し",
+      "signature": "わかめ 乾燥わかめ 素干し",
+      "foodIds": [
+        "mext_09040",
+        "mext_09041",
+        "mext_09060"
+      ],
+      "foods": [
+        "わかめ　乾燥わかめ　素干し",
+        "わかめ　乾燥わかめ　素干し　水戻し",
+        "わかめ　乾燥わかめ　素干し　水戻し　水煮"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "水煮"
+        ],
+        "processing": [
+          "水戻し"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:682e6ba43680",
+      "displayName": "わかめ 湯通し塩蔵わかめ",
+      "signature": "わかめ 湯通し塩蔵わかめ",
+      "foodIds": [
+        "mext_09045",
+        "mext_09057"
+      ],
+      "foods": [
+        "わかめ　湯通し塩蔵わかめ　塩抜き　生",
+        "わかめ　湯通し塩蔵わかめ　塩抜き　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [
+          "塩抜き"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:d2bc8c30e874",
+      "displayName": "わけぎ 葉",
+      "signature": "わけぎ 葉",
+      "foodIds": [
+        "mext_06320",
+        "mext_06321"
+      ],
+      "foods": [
+        "わけぎ　葉　生",
+        "わけぎ　葉　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "葉"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:dfc713f52174",
+      "displayName": "わらび 生わらび",
+      "signature": "わらび 生わらび",
+      "foodIds": [
+        "mext_06324",
+        "mext_06325"
+      ],
+      "foods": [
+        "わらび　生わらび　生",
+        "わらび　生わらび　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:2321de570ec9",
+      "displayName": "アスパラガス 若茎",
+      "signature": "アスパラガス 若茎",
+      "foodIds": [
+        "mext_06007",
+        "mext_06008",
+        "mext_06327"
+      ],
+      "foods": [
+        "アスパラガス　若茎　生",
+        "アスパラガス　若茎　ゆで",
+        "アスパラガス　若茎　油いため"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "油いため",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:1ee9efe1c02f",
+      "displayName": "アメリカほどいも",
+      "signature": "アメリカほどいも 塊根",
+      "foodIds": [
+        "mext_02068",
+        "mext_02069"
+      ],
+      "foods": [
+        "アメリカほどいも　塊根　生",
+        "アメリカほどいも　塊根　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "塊根"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:ba3058b3557b",
+      "displayName": "アルゼンチンあかえび",
+      "signature": "アルゼンチンあかえび",
+      "foodIds": [
+        "mext_10467",
+        "mext_10468",
+        "mext_10469"
+      ],
+      "foods": [
+        "アルゼンチンあかえび　生",
+        "アルゼンチンあかえび　ゆで",
+        "アルゼンチンあかえび　焼き"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:f38896d32793",
+      "displayName": "アーティチョーク 花らい",
+      "signature": "アーティチョーク 花らい",
+      "foodIds": [
+        "mext_06001",
+        "mext_06002"
+      ],
+      "foods": [
+        "アーティチョーク　花らい　生",
+        "アーティチョーク　花らい　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:acbc64437846",
+      "displayName": "エリンギ",
+      "signature": "エリンギ",
+      "foodIds": [
+        "mext_08025",
+        "mext_08048",
+        "mext_08049",
+        "mext_08050"
+      ],
+      "foods": [
+        "エリンギ　生",
+        "エリンギ　ゆで",
+        "エリンギ　焼き",
+        "エリンギ　油いため"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "油いため",
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:ab9c03a3b1e1",
+      "displayName": "オクラ",
+      "signature": "オクラ 果実",
+      "foodIds": [
+        "mext_06032",
+        "mext_06033"
+      ],
+      "foods": [
+        "オクラ　果実　生",
+        "オクラ　果実　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "果実"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:7025353bce06",
+      "displayName": "オレンジピーマン",
+      "signature": "オレンジピーマン 果実",
+      "foodIds": [
+        "mext_06393",
+        "mext_06394"
+      ],
+      "foods": [
+        "オレンジピーマン　果実　生",
+        "オレンジピーマン　果実　油いため"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "果実"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "油いため",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:964ea906072b",
+      "displayName": "カリフラワー 花序",
+      "signature": "カリフラワー 花序",
+      "foodIds": [
+        "mext_06054",
+        "mext_06055"
+      ],
+      "foods": [
+        "カリフラワー　花序　生",
+        "カリフラワー　花序　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:abcf1e9b94eb",
+      "displayName": "キャベツ",
+      "signature": "キャベツ 結球葉",
+      "foodIds": [
+        "mext_06061",
+        "mext_06062",
+        "mext_06333",
+        "mext_06403",
+        "mext_06404"
+      ],
+      "foods": [
+        "キャベツ　結球葉　生",
+        "キャベツ　結球葉　ゆで",
+        "キャベツ　結球葉　油いため",
+        "キャベツ　結球葉　カット　常法洗浄",
+        "キャベツ　結球葉　カット　次亜塩素酸洗浄"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "結球葉"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "油いため",
+          "生"
+        ],
+        "processing": [
+          "常法洗浄",
+          "次亜塩素酸洗浄"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:ed0bfa7d2c43",
+      "displayName": "キンサイ 茎葉",
+      "signature": "キンサイ 茎葉",
+      "foodIds": [
+        "mext_06075",
+        "mext_06076"
+      ],
+      "foods": [
+        "キンサイ　茎葉　生",
+        "キンサイ　茎葉　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:5b7e56b0fbc8",
+      "displayName": "グリンピース",
+      "signature": "グリンピース",
+      "foodIds": [
+        "mext_06023",
+        "mext_06024",
+        "mext_06025",
+        "mext_06374",
+        "mext_06375"
+      ],
+      "foods": [
+        "グリンピース　生",
+        "グリンピース　ゆで",
+        "グリンピース　冷凍",
+        "グリンピース　冷凍　ゆで",
+        "グリンピース　冷凍　油いため"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "油いため",
+          "生"
+        ],
+        "processing": [
+          "冷凍"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:77c2ff9389d4",
+      "displayName": "コールラビ 球茎",
+      "signature": "コールラビ 球茎",
+      "foodIds": [
+        "mext_06081",
+        "mext_06082"
+      ],
+      "foods": [
+        "コールラビ　球茎　生",
+        "コールラビ　球茎　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:8743c2e4a5b3",
+      "displayName": "スイートコーン 未熟種子",
+      "signature": "スイートコーン 未熟種子",
+      "foodIds": [
+        "mext_06175",
+        "mext_06176",
+        "mext_06339"
+      ],
+      "foods": [
+        "スイートコーン　未熟種子　生",
+        "スイートコーン　未熟種子　ゆで",
+        "スイートコーン　未熟種子　電子レンジ調理"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生",
+          "電子レンジ調理"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:2b1d45256409",
+      "displayName": "スイートコーン 未熟種子 カーネル",
+      "signature": "スイートコーン 未熟種子 カーネル",
+      "foodIds": [
+        "mext_06178",
+        "mext_06378",
+        "mext_06379"
+      ],
+      "foods": [
+        "スイートコーン　未熟種子　カーネル　冷凍",
+        "スイートコーン　未熟種子　カーネル　冷凍　ゆで",
+        "スイートコーン　未熟種子　カーネル　冷凍　油いため"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "油いため"
+        ],
+        "processing": [
+          "冷凍"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:92dda1704638",
+      "displayName": "セレベス 球茎",
+      "signature": "セレベス 球茎",
+      "foodIds": [
+        "mext_02050",
+        "mext_02051"
+      ],
+      "foods": [
+        "セレベス　球茎　生",
+        "セレベス　球茎　水煮"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "水煮",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:64a1348152e4",
+      "displayName": "タアサイ 葉",
+      "signature": "タアサイ 葉",
+      "foodIds": [
+        "mext_06126",
+        "mext_06127"
+      ],
+      "foods": [
+        "タアサイ　葉　生",
+        "タアサイ　葉　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "葉"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:83d1d067b8b6",
+      "displayName": "チンゲンサイ 葉",
+      "signature": "チンゲンサイ 葉",
+      "foodIds": [
+        "mext_06160",
+        "mext_06161",
+        "mext_06338"
+      ],
+      "foods": [
+        "チンゲンサイ　葉　生",
+        "チンゲンサイ　葉　ゆで",
+        "チンゲンサイ　葉　油いため"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "葉"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "油いため",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:d69ee0b55962",
+      "displayName": "トウミョウ 芽ばえ",
+      "signature": "トウミョウ 芽ばえ",
+      "foodIds": [
+        "mext_06329",
+        "mext_06330",
+        "mext_06331"
+      ],
+      "foods": [
+        "トウミョウ　芽ばえ　生",
+        "トウミョウ　芽ばえ　ゆで",
+        "トウミョウ　芽ばえ　油いため"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "芽ばえ"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "油いため",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:dc763cd3855c",
+      "displayName": "バナメイえび 養殖",
+      "signature": "バナメイえび 養殖",
+      "foodIds": [
+        "mext_10415",
+        "mext_10416"
+      ],
+      "foods": [
+        "バナメイえび　養殖　生",
+        "バナメイえび　養殖　天ぷら"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "天ぷら",
+          "生"
+        ],
+        "processing": [],
+        "variety": [
+          "養殖"
+        ]
+      }
+    },
+    {
+      "groupId": "auto:004b3804786a",
+      "displayName": "パインアップル",
+      "signature": "パインアップル",
+      "foodIds": [
+        "mext_07097",
+        "mext_07177"
+      ],
+      "foods": [
+        "パインアップル　生",
+        "パインアップル　焼き"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "焼き",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:1acd5f8efbd9",
+      "displayName": "ビーツ",
+      "signature": "ビーツ 根",
+      "foodIds": [
+        "mext_06243",
+        "mext_06244"
+      ],
+      "foods": [
+        "ビーツ　根　生",
+        "ビーツ　根　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "根"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:781476b271f5",
+      "displayName": "ブルーベリー",
+      "signature": "ブルーベリー",
+      "foodIds": [
+        "mext_07124",
+        "mext_07172"
+      ],
+      "foods": [
+        "ブルーベリー　生",
+        "ブルーベリー　乾"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "生"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:1b34faea4950",
+      "displayName": "ブロッコリー 花序",
+      "signature": "ブロッコリー 花序",
+      "foodIds": [
+        "mext_06263",
+        "mext_06264",
+        "mext_06395",
+        "mext_06396",
+        "mext_06397"
+      ],
+      "foods": [
+        "ブロッコリー　花序　生",
+        "ブロッコリー　花序　ゆで",
+        "ブロッコリー　花序　電子レンジ調理",
+        "ブロッコリー　花序　焼き",
+        "ブロッコリー　花序　油いため"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "油いため",
+          "焼き",
+          "生",
+          "電子レンジ調理"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:bb11f817799f",
+      "displayName": "プルーン",
+      "signature": "プルーン",
+      "foodIds": [
+        "mext_07081",
+        "mext_07082"
+      ],
+      "foods": [
+        "プルーン　生",
+        "プルーン　乾"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "生"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:76dbc35de5a3",
+      "displayName": "マッシュルーム",
+      "signature": "マッシュルーム",
+      "foodIds": [
+        "mext_08031",
+        "mext_08032",
+        "mext_08052"
+      ],
+      "foods": [
+        "マッシュルーム　生",
+        "マッシュルーム　ゆで",
+        "マッシュルーム　油いため"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "油いため",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:b046c8bc2d77",
+      "displayName": "モロヘイヤ 茎葉",
+      "signature": "モロヘイヤ 茎葉",
+      "foodIds": [
+        "mext_06293",
+        "mext_06294"
+      ],
+      "foods": [
+        "モロヘイヤ　茎葉　生",
+        "モロヘイヤ　茎葉　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:ac48b8e12a89",
+      "displayName": "ヤーコン",
+      "signature": "ヤーコン 塊根",
+      "foodIds": [
+        "mext_02054",
+        "mext_02055"
+      ],
+      "foods": [
+        "ヤーコン　塊根　生",
+        "ヤーコン　塊根　水煮"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "塊根"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "水煮",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:fabdbadd06ae",
+      "displayName": "リーキ りん茎葉",
+      "signature": "リーキ りん茎葉",
+      "foodIds": [
+        "mext_06308",
+        "mext_06309"
+      ],
+      "foods": [
+        "リーキ　りん茎葉　生",
+        "リーキ　りん茎葉　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:214b5da90ce2",
+      "displayName": "ルバーブ 葉柄",
+      "signature": "ルバーブ 葉柄",
+      "foodIds": [
+        "mext_06310",
+        "mext_06311"
+      ],
+      "foods": [
+        "ルバーブ　葉柄　生",
+        "ルバーブ　葉柄　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:1e929dfe0268",
+      "displayName": "レンズまめ 全粒",
+      "signature": "レンズまめ 全粒",
+      "foodIds": [
+        "mext_04073",
+        "mext_04094"
+      ],
+      "foods": [
+        "レンズまめ　全粒　乾",
+        "レンズまめ　全粒　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:8651a999b5e3",
+      "displayName": "切りみつば 葉",
+      "signature": "切りみつば 葉",
+      "foodIds": [
+        "mext_06274",
+        "mext_06275"
+      ],
+      "foods": [
+        "切りみつば　葉　生",
+        "切りみつば　葉　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "葉"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:cb7da26ac547",
+      "displayName": "切干しだいこん",
+      "signature": "切干しだいこん",
+      "foodIds": [
+        "mext_06136",
+        "mext_06334",
+        "mext_06335"
+      ],
+      "foods": [
+        "切干しだいこん　乾",
+        "切干しだいこん　ゆで",
+        "切干しだいこん　油いため"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "油いため"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:ed966afb3131",
+      "displayName": "加工品 塩辛",
+      "signature": "加工品 塩辛",
+      "foodIds": [
+        "mext_10095",
+        "mext_10358"
+      ],
+      "foods": [
+        "加工品　塩辛",
+        "加工品　塩辛"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:5a5fe88db5b1",
+      "displayName": "和種なばな 花らい・茎",
+      "signature": "和種なばな 花らい・茎",
+      "foodIds": [
+        "mext_06201",
+        "mext_06202"
+      ],
+      "foods": [
+        "和種なばな　花らい・茎　生",
+        "和種なばな　花らい・茎　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:67ba1d5a9103",
+      "displayName": "子持ちがれい",
+      "signature": "子持ちがれい",
+      "foodIds": [
+        "mext_10104",
+        "mext_10105"
+      ],
+      "foods": [
+        "子持ちがれい　生",
+        "子持ちがれい　水煮"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "水煮",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:e9ad5ef147f6",
+      "displayName": "日本かぼちゃ",
+      "signature": "日本かぼちゃ 果実",
+      "foodIds": [
+        "mext_06046",
+        "mext_06047"
+      ],
+      "foods": [
+        "日本かぼちゃ　果実　生",
+        "日本かぼちゃ　果実　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "果実"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:b48271bc144f",
+      "displayName": "日本ぐり",
+      "signature": "日本ぐり",
+      "foodIds": [
+        "mext_05010",
+        "mext_05011"
+      ],
+      "foods": [
+        "日本ぐり　生",
+        "日本ぐり　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:a79a7b83dd61",
+      "displayName": "根みつば 葉",
+      "signature": "根みつば 葉",
+      "foodIds": [
+        "mext_06276",
+        "mext_06277"
+      ],
+      "foods": [
+        "根みつば　葉　生",
+        "根みつば　葉　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "葉"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:3d1cbf3c950c",
+      "displayName": "根深ねぎ 葉 軟白",
+      "signature": "根深ねぎ 葉 軟白",
+      "foodIds": [
+        "mext_06226",
+        "mext_06350",
+        "mext_06351"
+      ],
+      "foods": [
+        "根深ねぎ　葉　軟白　生",
+        "根深ねぎ　葉　軟白　ゆで",
+        "根深ねぎ　葉　軟白　油いため"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "葉"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "油いため",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:5ade82febafc",
+      "displayName": "毛がに",
+      "signature": "毛がに",
+      "foodIds": [
+        "mext_10333",
+        "mext_10334"
+      ],
+      "foods": [
+        "毛がに　生",
+        "毛がに　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:8209cd86cc28",
+      "displayName": "洋種なばな 茎葉",
+      "signature": "洋種なばな 茎葉",
+      "foodIds": [
+        "mext_06203",
+        "mext_06204"
+      ],
+      "foods": [
+        "洋種なばな　茎葉　生",
+        "洋種なばな　茎葉　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:571131e9b9e4",
+      "displayName": "糸みつば 葉",
+      "signature": "糸みつば 葉",
+      "foodIds": [
+        "mext_06278",
+        "mext_06279"
+      ],
+      "foods": [
+        "糸みつば　葉　生",
+        "糸みつば　葉　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "葉"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:0f10d0218371",
+      "displayName": "茎にんにく 花茎",
+      "signature": "茎にんにく 花茎",
+      "foodIds": [
+        "mext_06224",
+        "mext_06225"
+      ],
+      "foods": [
+        "茎にんにく　花茎　生",
+        "茎にんにく　花茎　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:03040dc44a05",
+      "displayName": "葉ねぎ 葉",
+      "signature": "葉ねぎ 葉",
+      "foodIds": [
+        "mext_06227",
+        "mext_06352"
+      ],
+      "foods": [
+        "葉ねぎ　葉　生",
+        "葉ねぎ　葉　油いため"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "葉"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "油いため",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:b21190e8d82b",
+      "displayName": "西洋かぼちゃ",
+      "signature": "西洋かぼちゃ 果実",
+      "foodIds": [
+        "mext_06048",
+        "mext_06049",
+        "mext_06332",
+        "mext_06050"
+      ],
+      "foods": [
+        "西洋かぼちゃ　果実　生",
+        "西洋かぼちゃ　果実　ゆで",
+        "西洋かぼちゃ　果実　焼き",
+        "西洋かぼちゃ　果実　冷凍"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "果実"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "焼き",
+          "生"
+        ],
+        "processing": [
+          "冷凍"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:0c76d346ecbf",
+      "displayName": "赤ピーマン",
+      "signature": "赤ピーマン 果実",
+      "foodIds": [
+        "mext_06247",
+        "mext_06248"
+      ],
+      "foods": [
+        "赤ピーマン　果実　生",
+        "赤ピーマン　果実　油いため"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "果実"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "油いため",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:f4c41409dc70",
+      "displayName": "青ピーマン",
+      "signature": "青ピーマン 果実",
+      "foodIds": [
+        "mext_06245",
+        "mext_06246"
+      ],
+      "foods": [
+        "青ピーマン　果実　生",
+        "青ピーマン　果実　油いため"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "果実"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "油いため",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:66138a49f6da",
+      "displayName": "鶏卵 卵白",
+      "signature": "鶏卵 卵白",
+      "foodIds": [
+        "mext_12014",
+        "mext_12015"
+      ],
+      "foods": [
+        "鶏卵　卵白　生",
+        "鶏卵　卵白　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "卵白"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:2b63c65bbfaf",
+      "displayName": "鶏卵 卵黄",
+      "signature": "鶏卵 卵黄",
+      "foodIds": [
+        "mext_12010",
+        "mext_12011"
+      ],
+      "foods": [
+        "鶏卵　卵黄　生",
+        "鶏卵　卵黄　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "卵黄"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:c7ca5db50dc6",
+      "displayName": "黄ピーマン",
+      "signature": "黄ピーマン 果実",
+      "foodIds": [
+        "mext_06249",
+        "mext_06250"
+      ],
+      "foods": [
+        "黄ピーマン　果実　生",
+        "黄ピーマン　果実　油いため"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [
+          "果実"
+        ],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "油いため",
+          "生"
+        ],
+        "processing": [],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:dc06f9ed25fc",
+      "displayName": "（その他） ミックスベジタブル",
+      "signature": "（その他） ミックスベジタブル",
+      "foodIds": [
+        "mext_06382",
+        "mext_06383",
+        "mext_06384"
+      ],
+      "foods": [
+        "ミックスベジタブル　冷凍",
+        "ミックスベジタブル　冷凍　ゆで",
+        "ミックスベジタブル　冷凍　油いため"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "油いため"
+        ],
+        "processing": [
+          "冷凍"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:e0d9d8026eb2",
+      "displayName": "（でん粉製品） くずきり",
+      "signature": "（でん粉製品） くずきり",
+      "foodIds": [
+        "mext_02036",
+        "mext_02037"
+      ],
+      "foods": [
+        "くずきり　乾",
+        "くずきり　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:450fd49004c0",
+      "displayName": "（でん粉製品） でん粉めん",
+      "signature": "（でん粉製品） でん粉めん",
+      "foodIds": [
+        "mext_02058",
+        "mext_02059",
+        "mext_02060"
+      ],
+      "foods": [
+        "でん粉めん　生",
+        "でん粉めん　乾",
+        "でん粉めん　乾　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで",
+          "生"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:da2c26a18047",
+      "displayName": "（でん粉製品） はるさめ 普通はるさめ",
+      "signature": "（でん粉製品） はるさめ 普通はるさめ",
+      "foodIds": [
+        "mext_02040",
+        "mext_02062"
+      ],
+      "foods": [
+        "はるさめ　普通はるさめ　乾",
+        "はるさめ　普通はるさめ　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:9dfb3abb3088",
+      "displayName": "（でん粉製品） はるさめ 緑豆はるさめ",
+      "signature": "（でん粉製品） はるさめ 緑豆はるさめ",
+      "foodIds": [
+        "mext_02039",
+        "mext_02061"
+      ],
+      "foods": [
+        "はるさめ　緑豆はるさめ　乾",
+        "はるさめ　緑豆はるさめ　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    },
+    {
+      "groupId": "auto:9ef980712e28",
+      "displayName": "（でん粉製品） タピオカパール",
+      "signature": "（でん粉製品） タピオカパール",
+      "foodIds": [
+        "mext_02038",
+        "mext_02057"
+      ],
+      "foods": [
+        "タピオカパール　乾",
+        "タピオカパール　ゆで"
+      ],
+      "variantAttributes": {
+        "species": [],
+        "part": [],
+        "cultivation": [],
+        "sourceBean": [],
+        "skin": [],
+        "preparation": [
+          "ゆで"
+        ],
+        "processing": [
+          "乾"
+        ],
+        "variety": []
+      }
+    }
+  ],
+  "mixedWithKnownGroups": [
+    {
+      "signature": "じゃがいも 塊茎",
+      "knownGroupIds": [
+        "vegetable:potato"
+      ],
+      "foodIds": [
+        "mext_02066"
+      ],
+      "foods": [
+        "じゃがいも　塊茎　皮なし　電子レンジ調理"
+      ]
+    }
+  ],
+  "familyDecisions": [
+    {
+      "id": "carrot-family",
+      "label": "にんじん類",
+      "terms": [
+        "にんじん",
+        "きんとき",
+        "島にんじん",
+        "ミニキャロット",
+        "葉にんじん"
+      ],
+      "reason": "通常のにんじん、品種・サイズ違い、葉の食品を同じグループにするか判断が必要",
+      "recommendation": "通常のにんじんの根だけを同一グループとし、品種・葉は分離する案を推奨",
+      "decision": "通常のにんじんの根だけを同一グループとし、品種・葉は分離",
+      "foodCount": 22,
+      "foods": [
+        {
+          "id": "mext_06390",
+          "name": "つるにんじん　根　生",
+          "groupId": "food:mext_06390"
+        },
+        {
+          "id": "mext_06211",
+          "name": "葉にんじん　葉　生",
+          "groupId": "food:mext_06211"
+        },
+        {
+          "id": "mext_06212",
+          "name": "にんじん　根　皮つき　生",
+          "groupId": "auto:265d0c8198ec"
+        },
+        {
+          "id": "mext_06213",
+          "name": "にんじん　根　皮つき　ゆで",
+          "groupId": "auto:265d0c8198ec"
+        },
+        {
+          "id": "mext_06214",
+          "name": "にんじん　根　皮なし　生",
+          "groupId": "auto:265d0c8198ec"
+        },
+        {
+          "id": "mext_06215",
+          "name": "にんじん　根　皮なし　ゆで",
+          "groupId": "auto:265d0c8198ec"
+        },
+        {
+          "id": "mext_06345",
+          "name": "にんじん　根　皮なし　油いため",
+          "groupId": "auto:265d0c8198ec"
+        },
+        {
+          "id": "mext_06346",
+          "name": "にんじん　根　皮なし　素揚げ",
+          "groupId": "auto:265d0c8198ec"
+        },
+        {
+          "id": "mext_06407",
+          "name": "にんじん　根　皮なし　カット　常法洗浄",
+          "groupId": "auto:265d0c8198ec"
+        },
+        {
+          "id": "mext_06408",
+          "name": "にんじん　根　皮なし　カット　次亜塩素酸洗浄",
+          "groupId": "auto:265d0c8198ec"
+        },
+        {
+          "id": "mext_06347",
+          "name": "にんじん　根　皮　生",
+          "groupId": "food:mext_06347"
+        },
+        {
+          "id": "mext_06216",
+          "name": "にんじん　根　冷凍",
+          "groupId": "auto:265d0c8198ec"
+        },
+        {
+          "id": "mext_06380",
+          "name": "にんじん　根　冷凍　ゆで",
+          "groupId": "auto:265d0c8198ec"
+        },
+        {
+          "id": "mext_06381",
+          "name": "にんじん　根　冷凍　油いため",
+          "groupId": "auto:265d0c8198ec"
+        },
+        {
+          "id": "mext_06348",
+          "name": "にんじん　グラッセ",
+          "groupId": "food:mext_06348"
+        },
+        {
+          "id": "mext_06217",
+          "name": "にんじん　ジュース　缶詰",
+          "groupId": "food:mext_06217"
+        },
+        {
+          "id": "mext_06218",
+          "name": "きんとき　根　皮つき　生",
+          "groupId": "auto:cc31323a4989"
+        },
+        {
+          "id": "mext_06219",
+          "name": "きんとき　根　皮つき　ゆで",
+          "groupId": "auto:cc31323a4989"
+        },
+        {
+          "id": "mext_06220",
+          "name": "きんとき　根　皮なし　生",
+          "groupId": "auto:cc31323a4989"
+        },
+        {
+          "id": "mext_06221",
+          "name": "きんとき　根　皮なし　ゆで",
+          "groupId": "auto:cc31323a4989"
+        },
+        {
+          "id": "mext_06409",
+          "name": "島にんじん　根　皮なし　生",
+          "groupId": "food:mext_06409"
+        },
+        {
+          "id": "mext_06222",
+          "name": "ミニキャロット　根　生",
+          "groupId": "food:mext_06222"
+        }
+      ]
+    },
+    {
+      "id": "daikon-family",
+      "label": "だいこん類",
+      "terms": [
+        "だいこん",
+        "かいわれだいこん",
+        "葉だいこん",
+        "切干しだいこん",
+        "はつかだいこん"
+      ],
+      "reason": "根、葉、芽ばえ、乾燥品、別品種、漬物が同じ分類見出しに含まれる",
+      "recommendation": "だいこん根の皮・調理状態だけを同一グループとし、葉・芽ばえ・乾燥品・漬物は分離する案を推奨",
+      "decision": "だいこん根の皮・調理状態だけを同一グループとし、葉・芽ばえ・乾燥品・漬物は分離",
+      "foodCount": 23,
+      "foods": [
+        {
+          "id": "mext_06128",
+          "name": "かいわれだいこん　芽ばえ　生",
+          "groupId": "food:mext_06128"
+        },
+        {
+          "id": "mext_06129",
+          "name": "葉だいこん　葉　生",
+          "groupId": "food:mext_06129"
+        },
+        {
+          "id": "mext_06130",
+          "name": "だいこん　葉　生",
+          "groupId": "auto:694b2e385db5"
+        },
+        {
+          "id": "mext_06131",
+          "name": "だいこん　葉　ゆで",
+          "groupId": "auto:694b2e385db5"
+        },
+        {
+          "id": "mext_06132",
+          "name": "だいこん　根　皮つき　生",
+          "groupId": "auto:09ae597edebb"
+        },
+        {
+          "id": "mext_06133",
+          "name": "だいこん　根　皮つき　ゆで",
+          "groupId": "auto:09ae597edebb"
+        },
+        {
+          "id": "mext_06134",
+          "name": "だいこん　根　皮なし　生",
+          "groupId": "auto:09ae597edebb"
+        },
+        {
+          "id": "mext_06367",
+          "name": "だいこん　根　皮なし　生　おろし",
+          "groupId": "auto:09ae597edebb"
+        },
+        {
+          "id": "mext_06368",
+          "name": "だいこん　根　皮なし　生　おろし汁",
+          "groupId": "food:mext_06368"
+        },
+        {
+          "id": "mext_06369",
+          "name": "だいこん　根　皮なし　生　おろし水洗い",
+          "groupId": "food:mext_06369"
+        },
+        {
+          "id": "mext_06135",
+          "name": "だいこん　根　皮なし　ゆで",
+          "groupId": "auto:09ae597edebb"
+        },
+        {
+          "id": "mext_06136",
+          "name": "切干しだいこん　乾",
+          "groupId": "auto:cb7da26ac547"
+        },
+        {
+          "id": "mext_06334",
+          "name": "切干しだいこん　ゆで",
+          "groupId": "auto:cb7da26ac547"
+        },
+        {
+          "id": "mext_06335",
+          "name": "切干しだいこん　油いため",
+          "groupId": "auto:cb7da26ac547"
+        },
+        {
+          "id": "mext_06388",
+          "name": "漬物　いぶりがっこ",
+          "groupId": "food:mext_06388"
+        },
+        {
+          "id": "mext_06137",
+          "name": "漬物　ぬかみそ漬",
+          "groupId": "food:mext_06137"
+        },
+        {
+          "id": "mext_06138",
+          "name": "漬物　たくあん漬　塩押しだいこん漬",
+          "groupId": "food:mext_06138"
+        },
+        {
+          "id": "mext_06139",
+          "name": "漬物　たくあん漬　干しだいこん漬",
+          "groupId": "food:mext_06139"
+        },
+        {
+          "id": "mext_06140",
+          "name": "漬物　守口漬",
+          "groupId": "food:mext_06140"
+        },
+        {
+          "id": "mext_06141",
+          "name": "漬物　べったら漬",
+          "groupId": "food:mext_06141"
+        },
+        {
+          "id": "mext_06142",
+          "name": "漬物　みそ漬",
+          "groupId": "food:mext_06142"
+        },
+        {
+          "id": "mext_06143",
+          "name": "漬物　福神漬",
+          "groupId": "food:mext_06143"
+        },
+        {
+          "id": "mext_06240",
+          "name": "はつかだいこん　根　生",
+          "groupId": "food:mext_06240"
+        }
+      ]
+    },
+    {
+      "id": "tomato-family",
+      "label": "トマト類",
+      "terms": [
+        "トマト",
+        "ミニトマト",
+        "ドライトマト",
+        "トマトジュース",
+        "トマトピューレー",
+        "トマトペースト",
+        "トマトケチャップ",
+        "トマトソース"
+      ],
+      "reason": "品種・乾燥状態・飲料・調味加工品が混在する",
+      "recommendation": "生の赤色トマトだけを基準グループ候補とし、ミニ・黄色・乾燥・加工品は分離する案を推奨",
+      "decision": "生の赤色トマトだけを同一グループとし、ミニ・黄色・乾燥・加工品は分離",
+      "foodCount": 15,
+      "foods": [
+        {
+          "id": "mext_06182",
+          "name": "赤色トマト　果実　生",
+          "groupId": "food:mext_06182"
+        },
+        {
+          "id": "mext_06183",
+          "name": "赤色ミニトマト　果実　生",
+          "groupId": "food:mext_06183"
+        },
+        {
+          "id": "mext_06391",
+          "name": "黄色トマト　果実　生",
+          "groupId": "food:mext_06391"
+        },
+        {
+          "id": "mext_06370",
+          "name": "ドライトマト",
+          "groupId": "food:mext_06370"
+        },
+        {
+          "id": "mext_06184",
+          "name": "加工品　ホール　食塩無添加",
+          "groupId": "food:mext_06184"
+        },
+        {
+          "id": "mext_06185",
+          "name": "加工品　トマトジュース　食塩添加",
+          "groupId": "food:mext_06185"
+        },
+        {
+          "id": "mext_06340",
+          "name": "加工品　トマトジュース　食塩無添加",
+          "groupId": "food:mext_06340"
+        },
+        {
+          "id": "mext_06186",
+          "name": "加工品　ミックスジュース　食塩添加",
+          "groupId": "food:mext_06186"
+        },
+        {
+          "id": "mext_06341",
+          "name": "加工品　ミックスジュース　食塩無添加",
+          "groupId": "food:mext_06341"
+        },
+        {
+          "id": "mext_10062",
+          "name": "缶詰　トマト漬",
+          "groupId": "food:mext_10062"
+        },
+        {
+          "id": "mext_17034",
+          "name": "トマトピューレー（小さじ1=5g）",
+          "groupId": "food:mext_17034"
+        },
+        {
+          "id": "mext_17035",
+          "name": "トマトペースト（小さじ1=5g）",
+          "groupId": "food:mext_17035"
+        },
+        {
+          "id": "mext_17036",
+          "name": "トマトケチャップ（小さじ1=5g）",
+          "groupId": "food:mext_17036"
+        },
+        {
+          "id": "mext_17037",
+          "name": "トマトソース（小さじ1=6g）",
+          "groupId": "food:mext_17037"
+        },
+        {
+          "id": "mext_17038",
+          "name": "チリソース（小さじ1=6g）",
+          "groupId": "food:mext_17038"
+        }
+      ]
+    },
+    {
+      "id": "cabbage-family",
+      "label": "キャベツ類",
+      "terms": [
+        "キャベツ",
+        "グリーンボール",
+        "レッドキャベツ",
+        "めキャベツ"
+      ],
+      "reason": "一般キャベツ、品種違い、芽キャベツを同一グループにするか判断が必要",
+      "recommendation": "一般キャベツの調理状態だけを同一グループとし、品種は分離する案を推奨",
+      "decision": "一般キャベツの調理状態だけを同一グループとし、品種は分離",
+      "foodCount": 9,
+      "foods": [
+        {
+          "id": "mext_06061",
+          "name": "キャベツ　結球葉　生",
+          "groupId": "auto:abcf1e9b94eb"
+        },
+        {
+          "id": "mext_06062",
+          "name": "キャベツ　結球葉　ゆで",
+          "groupId": "auto:abcf1e9b94eb"
+        },
+        {
+          "id": "mext_06333",
+          "name": "キャベツ　結球葉　油いため",
+          "groupId": "auto:abcf1e9b94eb"
+        },
+        {
+          "id": "mext_06403",
+          "name": "キャベツ　結球葉　カット　常法洗浄",
+          "groupId": "auto:abcf1e9b94eb"
+        },
+        {
+          "id": "mext_06404",
+          "name": "キャベツ　結球葉　カット　次亜塩素酸洗浄",
+          "groupId": "auto:abcf1e9b94eb"
+        },
+        {
+          "id": "mext_06063",
+          "name": "グリーンボール　結球葉　生",
+          "groupId": "food:mext_06063"
+        },
+        {
+          "id": "mext_06064",
+          "name": "レッドキャベツ　結球葉　生",
+          "groupId": "food:mext_06064"
+        },
+        {
+          "id": "mext_06283",
+          "name": "めキャベツ　結球葉　生",
+          "groupId": "auto:d85d1217ef34"
+        },
+        {
+          "id": "mext_06284",
+          "name": "めキャベツ　結球葉　ゆで",
+          "groupId": "auto:d85d1217ef34"
+        }
+      ]
+    },
+    {
+      "id": "eggplant-family",
+      "label": "なす類",
+      "terms": [
+        "なす",
+        "べいなす"
+      ],
+      "reason": "一般なすとべいなすは品種・大きさが異なる",
+      "recommendation": "なすとべいなすを別グループにする案を推奨",
+      "decision": "なすとべいなすを別グループにする",
+      "foodCount": 11,
+      "foods": [
+        {
+          "id": "mext_06191",
+          "name": "なす　果実　生",
+          "groupId": "auto:06e6287f8956"
+        },
+        {
+          "id": "mext_06192",
+          "name": "なす　果実　ゆで",
+          "groupId": "auto:06e6287f8956"
+        },
+        {
+          "id": "mext_06342",
+          "name": "なす　果実　油いため",
+          "groupId": "auto:06e6287f8956"
+        },
+        {
+          "id": "mext_06343",
+          "name": "なす　果実　天ぷら",
+          "groupId": "auto:06e6287f8956"
+        },
+        {
+          "id": "mext_06193",
+          "name": "べいなす　果実　生",
+          "groupId": "auto:50da4d501641"
+        },
+        {
+          "id": "mext_06194",
+          "name": "べいなす　果実　素揚げ",
+          "groupId": "auto:50da4d501641"
+        },
+        {
+          "id": "mext_06195",
+          "name": "漬物　塩漬",
+          "groupId": "food:mext_06195"
+        },
+        {
+          "id": "mext_06196",
+          "name": "漬物　ぬかみそ漬",
+          "groupId": "food:mext_06196"
+        },
+        {
+          "id": "mext_06197",
+          "name": "漬物　こうじ漬",
+          "groupId": "food:mext_06197"
+        },
+        {
+          "id": "mext_06198",
+          "name": "漬物　からし漬",
+          "groupId": "food:mext_06198"
+        },
+        {
+          "id": "mext_06199",
+          "name": "漬物　しば漬",
+          "groupId": "food:mext_06199"
+        }
+      ]
+    },
+    {
+      "id": "pumpkin-family",
+      "label": "かぼちゃ類",
+      "terms": [
+        "日本かぼちゃ",
+        "西洋かぼちゃ",
+        "そうめんかぼちゃ"
+      ],
+      "reason": "品種が栄養値と食品選択に影響する",
+      "recommendation": "日本・西洋・そうめんを別グループにする案を推奨",
+      "decision": "日本・西洋・そうめんを別グループにする",
+      "foodCount": 7,
+      "foods": [
+        {
+          "id": "mext_06046",
+          "name": "日本かぼちゃ　果実　生",
+          "groupId": "auto:e9ad5ef147f6"
+        },
+        {
+          "id": "mext_06047",
+          "name": "日本かぼちゃ　果実　ゆで",
+          "groupId": "auto:e9ad5ef147f6"
+        },
+        {
+          "id": "mext_06048",
+          "name": "西洋かぼちゃ　果実　生",
+          "groupId": "auto:b21190e8d82b"
+        },
+        {
+          "id": "mext_06049",
+          "name": "西洋かぼちゃ　果実　ゆで",
+          "groupId": "auto:b21190e8d82b"
+        },
+        {
+          "id": "mext_06332",
+          "name": "西洋かぼちゃ　果実　焼き",
+          "groupId": "auto:b21190e8d82b"
+        },
+        {
+          "id": "mext_06050",
+          "name": "西洋かぼちゃ　果実　冷凍",
+          "groupId": "auto:b21190e8d82b"
+        },
+        {
+          "id": "mext_06051",
+          "name": "そうめんかぼちゃ　果実　生",
+          "groupId": "food:mext_06051"
+        }
+      ]
+    },
+    {
+      "id": "onion-family",
+      "label": "たまねぎ類",
+      "terms": [
+        "たまねぎ",
+        "赤たまねぎ",
+        "葉たまねぎ",
+        "あめ色たまねぎ"
+      ],
+      "reason": "品種、可食部、加工状態が混在する",
+      "recommendation": "通常たまねぎの調理状態だけを同一グループとし、赤・葉は分離する案を推奨",
+      "decision": "あめ色たまねぎを調理状態として通常たまねぎのグループに含め、赤・葉は分離",
+      "foodCount": 7,
+      "foods": [
+        {
+          "id": "mext_06153",
+          "name": "たまねぎ　りん茎　生",
+          "groupId": "auto:3f9f6b2f3fc8"
+        },
+        {
+          "id": "mext_06154",
+          "name": "たまねぎ　りん茎　水さらし",
+          "groupId": "auto:3f9f6b2f3fc8"
+        },
+        {
+          "id": "mext_06155",
+          "name": "たまねぎ　りん茎　ゆで",
+          "groupId": "auto:3f9f6b2f3fc8"
+        },
+        {
+          "id": "mext_06336",
+          "name": "たまねぎ　りん茎　油いため",
+          "groupId": "auto:3f9f6b2f3fc8"
+        },
+        {
+          "id": "mext_06389",
+          "name": "たまねぎ　りん茎　油いため　（あめ色たまねぎ）",
+          "groupId": "auto:3f9f6b2f3fc8"
+        },
+        {
+          "id": "mext_06156",
+          "name": "赤たまねぎ　りん茎　生",
+          "groupId": "food:mext_06156"
+        },
+        {
+          "id": "mext_06337",
+          "name": "葉たまねぎ　りん茎及び葉　生",
+          "groupId": "food:mext_06337"
+        }
+      ]
+    },
+    {
+      "id": "shiitake-family",
+      "label": "しいたけ類",
+      "terms": [
+        "生しいたけ",
+        "乾しいたけ",
+        "しいたけだし",
+        "菌床栽培",
+        "原木栽培"
+      ],
+      "reason": "生鮮・栽培方法・乾燥品・だしが混在する",
+      "recommendation": "生しいたけは栽培方法を属性にし、乾燥品とだしは分離する案を推奨",
+      "decision": "菌床栽培・原木栽培を栽培方法属性として生しいたけを同一グループにし、乾燥品・だしは分離",
+      "foodCount": 11,
+      "foods": [
+        {
+          "id": "mext_08039",
+          "name": "しいたけ　生しいたけ　菌床栽培　生",
+          "groupId": "auto:9227932142ec"
+        },
+        {
+          "id": "mext_08040",
+          "name": "しいたけ　生しいたけ　菌床栽培　ゆで",
+          "groupId": "auto:9227932142ec"
+        },
+        {
+          "id": "mext_08041",
+          "name": "しいたけ　生しいたけ　菌床栽培　油いため",
+          "groupId": "auto:9227932142ec"
+        },
+        {
+          "id": "mext_08057",
+          "name": "しいたけ　生しいたけ　菌床栽培　天ぷら",
+          "groupId": "auto:9227932142ec"
+        },
+        {
+          "id": "mext_08042",
+          "name": "しいたけ　生しいたけ　原木栽培　生",
+          "groupId": "auto:9227932142ec"
+        },
+        {
+          "id": "mext_08043",
+          "name": "しいたけ　生しいたけ　原木栽培　ゆで",
+          "groupId": "auto:9227932142ec"
+        },
+        {
+          "id": "mext_08044",
+          "name": "しいたけ　生しいたけ　原木栽培　油いため",
+          "groupId": "auto:9227932142ec"
+        },
+        {
+          "id": "mext_08013",
+          "name": "しいたけ　乾しいたけ　乾",
+          "groupId": "auto:f7127cb5595d"
+        },
+        {
+          "id": "mext_08014",
+          "name": "しいたけ　乾しいたけ　ゆで",
+          "groupId": "auto:f7127cb5595d"
+        },
+        {
+          "id": "mext_08053",
+          "name": "しいたけ　乾しいたけ　甘煮",
+          "groupId": "food:mext_08053"
+        },
+        {
+          "id": "mext_17022",
+          "name": "しいたけだし（小さじ1=6g）",
+          "groupId": "food:mext_17022"
+        }
+      ]
+    },
+    {
+      "id": "sprout-family",
+      "label": "もやし類",
+      "terms": [
+        "アルファルファもやし",
+        "だいずもやし",
+        "ブラックマッペもやし",
+        "りょくとうもやし"
+      ],
+      "reason": "原料豆の違いが食品名と栄養値に反映される",
+      "recommendation": "もやしを一つのグループとし、原料豆を属性にする案を推奨",
+      "decision": "もやしを一つのグループとし、アルファルファ・だいず・ブラックマッペ・りょくとうを原料豆属性にする",
+      "foodCount": 10,
+      "foods": [
+        {
+          "id": "mext_06286",
+          "name": "アルファルファもやし　生",
+          "groupId": "vegetable:sprout"
+        },
+        {
+          "id": "mext_06287",
+          "name": "だいずもやし　生",
+          "groupId": "vegetable:sprout"
+        },
+        {
+          "id": "mext_06288",
+          "name": "だいずもやし　ゆで",
+          "groupId": "vegetable:sprout"
+        },
+        {
+          "id": "mext_06412",
+          "name": "だいずもやし　油いため",
+          "groupId": "vegetable:sprout"
+        },
+        {
+          "id": "mext_06289",
+          "name": "ブラックマッペもやし　生",
+          "groupId": "vegetable:sprout"
+        },
+        {
+          "id": "mext_06290",
+          "name": "ブラックマッペもやし　ゆで",
+          "groupId": "vegetable:sprout"
+        },
+        {
+          "id": "mext_06398",
+          "name": "ブラックマッペもやし　油いため",
+          "groupId": "vegetable:sprout"
+        },
+        {
+          "id": "mext_06291",
+          "name": "りょくとうもやし　生",
+          "groupId": "vegetable:sprout"
+        },
+        {
+          "id": "mext_06292",
+          "name": "りょくとうもやし　ゆで",
+          "groupId": "vegetable:sprout"
+        },
+        {
+          "id": "mext_06413",
+          "name": "りょくとうもやし　油いため",
+          "groupId": "vegetable:sprout"
+        }
+      ]
+    }
+  ],
+  "ambiguousFamilies": []
+}

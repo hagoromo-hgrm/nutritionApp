@@ -333,14 +333,19 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .search-load-more { width: calc(100% - 1.8rem); margin: .8rem .9rem; }
 .variant-picker-modal { padding-bottom: 1rem; }
 .variant-picker-modal .muted { margin-top: .35rem; }
-.variant-list { display: grid; gap: .45rem; }
-.variant-row { display: flex; align-items: center; justify-content: space-between; gap: .7rem; width: 100%; border: 1px solid var(--line); border-radius: .75rem; padding: .7rem .75rem; color: var(--ink); background: white; text-align: left; }
-.variant-row:hover, .variant-row.is-default { border-color: #9ec5ed; background: #f4f9ff; }
-.variant-row > span { display: grid; min-width: 0; gap: .2rem; }
-.variant-row strong, .variant-row small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.variant-row strong { font-size: .78rem; }
-.variant-row small { color: var(--muted); font-size: .65rem; }
-.variant-row em { flex: 0 0 auto; border-radius: 99px; padding: .2rem .4rem; color: var(--accent-deep); background: #e8f3ff; font-size: .62rem; font-style: normal; font-weight: 800; }
+.variant-choice-groups { display: grid; gap: .9rem; }
+.variant-choice-group { display: grid; gap: .45rem; }
+.variant-choice-group h3 { color: var(--muted); font-size: .7rem; }
+.variant-choice-buttons { display: flex; flex-wrap: wrap; gap: .45rem; }
+.variant-choice-button { border: 1px solid var(--line); border-radius: 999px; padding: .55rem .75rem; color: var(--ink); background: white; font-size: .74rem; font-weight: 700; }
+.variant-choice-button:hover, .variant-choice-button.is-selected { border-color: var(--accent); color: var(--accent-deep); background: #e8f3ff; }
+.variant-choice-button.is-selected { box-shadow: 0 0 0 2px rgba(67, 145, 217, .12); }
+.variant-picker-summary { display: grid; gap: .2rem; margin-top: 1rem; border-radius: .8rem; padding: .7rem .8rem; background: #f4f9ff; }
+.variant-picker-summary span, .variant-picker-summary small { color: var(--muted); font-size: .65rem; }
+.variant-picker-summary strong { color: var(--accent-deep); font-size: .82rem; }
+.variant-picker-no-match { margin-top: 1rem; color: #b14958; font-size: .74rem; }
+.variant-picker-confirm { width: 100%; margin-top: 1rem; }
+.variant-picker-confirm:disabled { cursor: not-allowed; opacity: .5; }
 .menu-list { display: grid; gap: .65rem; }
 .menu-card { display: flex; align-items: center; justify-content: space-between; gap: .8rem; border: 1px solid var(--line); border-radius: 1rem; padding: .9rem; background: white; }
 .menu-card > div:first-child { min-width: 0; display: grid; gap: .35rem; }
