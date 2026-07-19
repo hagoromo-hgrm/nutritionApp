@@ -1,34 +1,33 @@
-# 食品グループ再検証レビュー
+# 食品グループ再分類の準備状態
 
-食品グループを全食品について再生成しました。自動採用したのは、正式名称から次の状態属性だけを除去したときに同一の基底名となる食品です。
+食品グループを完全にリセットし、新しい分類を開始するための初期状態です。分類判断はまだ反映していません。
 
-- 皮つき・皮なし
-- 生・ゆで・焼きなどの調理方法
-- 冷凍・乾燥・水戻し・洗浄などの加工状態
+## リセット状態
 
-品種、部位、原材料と加工食品の違いは自動統合していません。判定結果とレビュー候補は [food_group_review.json](/Users/hagoromo/Private/app/nutritionApp/data/mext/food_group_review.json) に食品ID、現在のグループ、候補理由、推奨案とともにまとめています。確定済みの分類は `familyDecisions`、未確定の候補は `ambiguousFamilies` です。
+- `food_group_known_good.json` のfamily定義は空
+- 旧LLM判定JSONは削除済み
+- MEXT食品2538件はすべて `food:<食品ID>` の単独family
+- すべて `needsReview: true`
+- 旧familyの自動統合は行わない
+- aliases・related termsは空
+- 先頭語完全一致の `firstTokenReviewGroups` に再分類対象を収録
+- 食品ID、食品名、基準量、栄養値は保持
 
-要確認候補の文脈判定にはSubagentの `gpt-5.6-luna`（reasoning effort: `xhigh`）を使用しました。判定記録は [food_group_llm_review.json](/Users/hagoromo/Private/app/nutritionApp/data/mext/food_group_llm_review.json) に保存し、`clear-variant` と `clear-separate` の判定だけを生成処理で取り込みます。`ambiguous` は自動採用せず、ユーザー判断を `food_group_known_good.json` に反映します。実行時にLLMや通信は使用しません。
+生成には次のコマンドを使用します。
 
-今回の再検証では、通常の「にんじん 根」と「だいこん 根」が、皮・調理状態違いを持つ食品グループとして自動採用されています。一方、きんとき・島にんじん・葉にんじん、だいこんの葉・かいわれ・切干し・漬物などは同じグループへ統合していません。
+```bash
+python3 scripts/build_food_search_metadata.py \
+  data/mext/processed/mext_foods.json \
+  data/mext/processed/mext_search_metadata.json \
+  --known-good data/mext/food_group_known_good.json \
+  --reset-groups \
+  --review-output data/mext/food_group_review.json
+```
 
-今回の確定判断は次のとおりです。
+新しい分類が確定した後は、`food_group_known_good.json` を更新して `--reset-groups` を外し、必要に応じて新しいLLM判定JSONを `--llm-review` で指定します。
 
-- あめ色たまねぎは調理状態として通常たまねぎのグループに含め、赤たまねぎ・葉たまねぎは分離
-- 生しいたけは菌床栽培・原木栽培を「栽培方法」属性として同一グループにし、乾しいたけ・しいたけだしは分離
-- もやしは一つのグループとし、アルファルファ・だいず・ブラックマッペ・りょくとうを「原料豆」属性にする
-- なす、べいなす、なすの漬物はそれぞれ別グループにする
-- あずきは小豆あんを一つのfamilyとし、ゆで小豆缶詰は分離
-- あまのりは味付けのりを分離
-- からしとマスタードを分離し、からしは粉・練り、マスタードは練り・粒入りを属性化
-- まんじゅうは種類ごとに分離し、各family内のこしあん・つぶしあんだけを属性化
-- コーヒーとゼリーは食品ごとに分離
-- デニッシュペストリーはタイプ・具、ドーナッツは製法・具を属性化
-- ドレッシングは乳化液状を味・配合ごと、分離液状を食品ごとに分離し、半固体状は属性化
-- 米菓は菓子種ごとに分離
+## IndexedDBへの影響
 
-## 判定結果
+アプリ更新時にはMEXT食品の `foodGroupId`、family、variant属性をリセット状態へ同期します。旧生成family、旧aliases、旧related terms、旧検索ログは新分類の前提にならないため整理します。一方、`food` 本体、食事記録の栄養スナップショット、お気に入り、食品利用統計、メニューの食品IDは保持します。
 
-詳細な全自動グループ候補、既知の手動グループと基底名が近い未統合食品、食品ファミリーの判定結果は、生成時点のレビューJSONを正本とします。今回の指定により、`ambiguousFamilies` は空になっています。
-
-`needsReview` の単独食品は、LLM判定JSONを指定しない生成時に `firstTokenReviewGroups` へ収録されます。各項目は分類見出しを除去して空白分割した先頭語の完全一致でまとめたレビュー用候補で、`AA` と `AAB` は別項目です。`isCandidateGroup` が `true` の項目は同じ先頭語を持つ食品が複数ありますが、これは確認作業をまとめるための一覧であり、LLM判定を指定する前の自動family確定結果ではありません。LLM判定を取り込んだ現在の生成物では、全食品が既知familyまたはLLM確定familyに割り当てられます。LLMが抽出した名称差は「名称仕様」属性としてvariant選択に表示します。
+`manual-v1` のユーザー登録familyと、それに紐付く手動登録食品・aliases・related termsは保持します。新分類では、手動登録食品を必要に応じて新しいfamilyへ再所属させます。

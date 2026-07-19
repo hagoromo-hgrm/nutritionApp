@@ -56,82 +56,6 @@ PART_VALUES = (
 
 DISPLAY_SUFFIXES = {"根", "果実", "結球葉", "りん茎", "塊根", "塊茎"}
 
-AMBIGUOUS_FAMILY_RULES = (
-    {
-        "id": "carrot-family",
-        "label": "にんじん類",
-        "terms": ("にんじん", "きんとき", "島にんじん", "ミニキャロット", "葉にんじん"),
-        "reason": "通常のにんじん、品種・サイズ違い、葉の食品を同じグループにするか判断が必要",
-        "recommendation": "通常のにんじんの根だけを同一グループとし、品種・葉は分離する案を推奨",
-        "decision": "通常のにんじんの根だけを同一グループとし、品種・葉は分離",
-    },
-    {
-        "id": "daikon-family",
-        "label": "だいこん類",
-        "terms": ("だいこん", "かいわれだいこん", "葉だいこん", "切干しだいこん", "はつかだいこん"),
-        "reason": "根、葉、芽ばえ、乾燥品、別品種、漬物が同じ分類見出しに含まれる",
-        "recommendation": "だいこん根の皮・調理状態だけを同一グループとし、葉・芽ばえ・乾燥品・漬物は分離する案を推奨",
-        "decision": "だいこん根の皮・調理状態だけを同一グループとし、葉・芽ばえ・乾燥品・漬物は分離",
-    },
-    {
-        "id": "tomato-family",
-        "label": "トマト類",
-        "terms": ("トマト", "ミニトマト", "ドライトマト", "トマトジュース", "トマトピューレー", "トマトペースト", "トマトケチャップ", "トマトソース"),
-        "reason": "品種・乾燥状態・飲料・調味加工品が混在する",
-        "recommendation": "生の赤色トマトだけを基準グループ候補とし、ミニ・黄色・乾燥・加工品は分離する案を推奨",
-        "decision": "生の赤色トマトだけを同一グループとし、ミニ・黄色・乾燥・加工品は分離",
-    },
-    {
-        "id": "cabbage-family",
-        "label": "キャベツ類",
-        "terms": ("キャベツ", "グリーンボール", "レッドキャベツ", "めキャベツ"),
-        "reason": "一般キャベツ、品種違い、芽キャベツを同一グループにするか判断が必要",
-        "recommendation": "一般キャベツの調理状態だけを同一グループとし、品種は分離する案を推奨",
-        "decision": "一般キャベツの調理状態だけを同一グループとし、品種は分離",
-    },
-    {
-        "id": "eggplant-family",
-        "label": "なす類",
-        "terms": ("なす", "べいなす"),
-        "reason": "一般なす、べいなす、漬物が同じ分類見出しに含まれる",
-        "recommendation": "通常なす、べいなす、なすの漬物を別グループにする案を推奨",
-        "decision": "通常なす、べいなす、なすの漬物を別グループにする",
-    },
-    {
-        "id": "pumpkin-family",
-        "label": "かぼちゃ類",
-        "terms": ("日本かぼちゃ", "西洋かぼちゃ", "そうめんかぼちゃ"),
-        "reason": "品種が栄養値と食品選択に影響する",
-        "recommendation": "日本・西洋・そうめんを別グループにする案を推奨",
-        "decision": "日本・西洋・そうめんを別グループにする",
-    },
-    {
-        "id": "onion-family",
-        "label": "たまねぎ類",
-        "terms": ("たまねぎ", "赤たまねぎ", "葉たまねぎ", "あめ色たまねぎ"),
-        "reason": "品種、可食部、加工状態が混在する",
-        "recommendation": "通常たまねぎの調理状態だけを同一グループとし、赤・葉は分離する案を推奨",
-        "decision": "あめ色たまねぎを調理状態として通常たまねぎのグループに含め、赤・葉は分離",
-    },
-    {
-        "id": "shiitake-family",
-        "label": "しいたけ類",
-        "terms": ("生しいたけ", "乾しいたけ", "しいたけだし", "菌床栽培", "原木栽培"),
-        "reason": "生鮮・栽培方法・乾燥品・だしが混在する",
-        "recommendation": "生しいたけは栽培方法を属性にし、乾燥品とだしは分離する案を推奨",
-        "decision": "菌床栽培・原木栽培を栽培方法属性として生しいたけを同一グループにし、乾燥品・だしは分離",
-    },
-    {
-        "id": "sprout-family",
-        "label": "もやし類",
-        "terms": ("アルファルファもやし", "だいずもやし", "ブラックマッペもやし", "りょくとうもやし"),
-        "reason": "原料豆の違いが食品名と栄養値に反映される",
-        "recommendation": "もやしを一つのグループとし、原料豆を属性にする案を推奨",
-        "decision": "もやしを一つのグループとし、アルファルファ・だいず・ブラックマッペ・りょくとうを原料豆属性にする",
-    },
-)
-
-
 def normalize(value: str) -> str:
     value = unicodedata.normalize("NFKC", value).lower()
     value = value.translate(str.maketrans({chr(code): chr(code - 0x60) for code in range(0x30A1, 0x30F7)}))
@@ -217,60 +141,6 @@ def variant_attributes(name: str) -> dict[str, str | None]:
             attributes["species"] = species
             break
 
-    # LLMレビューで確定した、成分表上のfamily内選択に使う属性。
-    if "あずき" in tokens and "あん" in tokens:
-        if "こし生あん" in name:
-            attributes["variety"] = "こしあん（生）"
-        elif "さらしあん" in name:
-            attributes["variety"] = "さらしあん（乾燥）"
-        elif "並あん" in name:
-            attributes["variety"] = "こしあん（並）"
-        elif "中割りあん" in name:
-            attributes["variety"] = "こしあん（中割り）"
-        elif "もなかあん" in name:
-            attributes["variety"] = "こしあん（もなか）"
-        elif "つぶし生あん" in name:
-            attributes["variety"] = "つぶしあん（生）"
-        elif "つぶし練りあん" in name:
-            attributes["variety"] = "つぶしあん（練り）"
-    if "あまのり" in tokens:
-        if "ほしのり" in name:
-            attributes["processing"] = "ほしのり"
-        elif "焼きのり" in name:
-            attributes["processing"] = "焼きのり"
-        elif "味付けのり" in name:
-            attributes["processing"] = "味付けのり"
-    if "からし" in tokens:
-        if "粒入りマスタード" in name:
-            attributes["processing"] = "粒入り"
-        elif "練りマスタード" in name:
-            attributes["processing"] = "練り"
-        elif "粉" in tokens:
-            attributes["processing"] = "粉"
-        elif "練り" in tokens:
-            attributes["processing"] = "練り"
-    if "こしあん入り" in name:
-        attributes["variety"] = "こしあん"
-    elif "つぶしあん入り" in name:
-        attributes["variety"] = "つぶしあん"
-    if "アメリカンタイプ" in name:
-        attributes["processing"] = "アメリカンタイプ"
-    elif "デンマークタイプ" in name:
-        attributes["processing"] = "デンマークタイプ"
-    if "プレーン" in tokens:
-        attributes["variety"] = "プレーン"
-    elif "カスタードクリーム" in name:
-        attributes["variety"] = "カスタードクリーム"
-    if "イーストドーナッツ" in name:
-        attributes["processing"] = "イーストドーナッツ"
-    elif "ケーキドーナッツ" in name:
-        attributes["processing"] = "ケーキドーナッツ"
-    if "全卵型" in name:
-        attributes["variety"] = "全卵型"
-    elif "卵黄型" in name:
-        attributes["variety"] = "卵黄型"
-    elif "低カロリータイプ" in name:
-        attributes["variety"] = "低カロリータイプ"
     return attributes
 
 
@@ -495,29 +365,26 @@ def build_llm_confirmed_groups(
     return groups, imported_food_ids, food_group_by_food_id
 
 
-def review_family(rule: dict[str, Any], foods: list[dict[str, Any]], group_by_food_id: dict[str, str]) -> dict[str, Any]:
-    matched = [
-        {"id": food["id"], "name": food.get("displayName") or food.get("name") or food["id"], "groupId": group_by_food_id.get(food["id"]) }
-        for food in foods
-        if any(term in (food.get("officialName") or food.get("name") or "") for term in rule["terms"])
-    ]
-    return {**rule, "foodCount": len(matched), "foods": matched}
-
-
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("foods_json", type=Path)
     parser.add_argument("output_json", type=Path)
     parser.add_argument("--known-good", type=Path, required=True)
     parser.add_argument("--llm-review", type=Path)
+    parser.add_argument("--reset-groups", action="store_true")
     parser.add_argument("--review-output", type=Path)
     args = parser.parse_args()
+
+    if args.reset_groups and args.llm_review:
+        parser.error("--reset-groups and --llm-review cannot be used together")
 
     source = json.loads(args.foods_json.read_text(encoding="utf-8"))
     foods = source["foods"]
     known = json.loads(args.known_good.read_text(encoding="utf-8"))
     food_ids = {food["id"] for food in foods}
     validate_known_good(known, food_ids)
+    if args.reset_groups and known.get("groups"):
+        raise ValueError("--reset-groups requires an empty known-good groups list")
     assigned: set[str] = set()
     groups: list[dict[str, Any]] = []
     aliases: list[dict[str, Any]] = []
@@ -527,7 +394,7 @@ def main() -> None:
     review_foods: list[dict[str, Any]] = []
     foods_by_id = {food["id"]: food for food in foods}
     generated_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
-    generation_version = f"{known.get('generationVersion', 'known-good')}-auto-v1"
+    generation_version = "classification-reset-v1" if args.reset_groups else f"{known.get('generationVersion', 'known-good')}-auto-v1"
 
     for food in foods:
         variant_attributes_by_food_id[food["id"]] = variant_attributes(food.get("officialName") or food.get("name") or "")
@@ -595,6 +462,8 @@ def main() -> None:
     mixed_known_candidates: list[dict[str, Any]] = []
     for signature in sorted(candidates):
         members = candidates[signature]
+        if args.reset_groups:
+            continue
         if len(members) < 2:
             continue
         if signature in known_signatures:
@@ -612,6 +481,8 @@ def main() -> None:
     # 既知の手動グループと同じ基底候補に残った食品は、勝手に統合せずレビューへ回す。
     for signature in sorted(candidates):
         members = candidates[signature]
+        if args.reset_groups:
+            continue
         if len(members) == 1 and signature in known_signatures:
             mixed_known_candidates.append({"signature": signature, "knownGroupIds": sorted(set(known_signatures[signature])), "foodIds": [food["id"] for food in members], "foods": [food.get("displayName") or food.get("name") for food in members]})
 
@@ -632,7 +503,7 @@ def main() -> None:
         food_group_by_food_id.setdefault(food["id"], f"food:{food['id']}")
 
     output = {
-        "metadata": {"generationVersion": generation_version, "generatedAt": generated_at, "sourceFoodCount": len(foods), "llmRuntime": False, "llmReviewSource": args.llm_review.name if args.llm_review else None, "llmReviewGroupCount": len(llm_groups), "llmReviewFoodCount": len(llm_food_ids), "groupingPolicy": "static-llm-review-plus-deterministic-conservative-v1" if args.llm_review else "deterministic-conservative-v1"},
+        "metadata": {"generationVersion": generation_version, "generatedAt": generated_at, "sourceFoodCount": len(foods), "llmRuntime": False, "classificationReset": args.reset_groups, "llmReviewSource": args.llm_review.name if args.llm_review else None, "llmReviewGroupCount": len(llm_groups), "llmReviewFoodCount": len(llm_food_ids), "groupingPolicy": "classification-reset-v1" if args.reset_groups else ("static-llm-review-plus-deterministic-conservative-v1" if args.llm_review else "deterministic-conservative-v1")},
         "groups": groups,
         "aliases": aliases,
         "relatedTerms": related_terms,
@@ -649,7 +520,7 @@ def main() -> None:
         groups_by_id,
         variant_attributes_by_food_id,
     )
-    family_decisions = [review_family(rule, foods, food_group_by_food_id) for rule in AMBIGUOUS_FAMILY_RULES]
+    family_decisions: list[dict[str, Any]] = []
     review = {
         "metadata": {
             "generatedAt": generated_at,
@@ -663,7 +534,7 @@ def main() -> None:
             "reviewFoodCount": len(review_foods),
             "firstTokenReviewGroupCount": len(first_token_review_groups),
             "multiFoodFirstTokenReviewGroupCount": sum(1 for item in first_token_review_groups if item["isCandidateGroup"]),
-            "policy": "同一基底名から状態・調理・皮の有無だけを除去して一致するもののみ自動統合。判断が必要な品種・加工品は統合しない。",
+            "policy": "classification-reset-v1: 既存のfamily判断を使わず、全食品を単独familyとして再分類待ちにする。" if args.reset_groups else "同一基底名から状態・調理・皮の有無だけを除去して一致するもののみ自動統合。判断が必要な品種・加工品は統合しない。",
         },
         "autoGroupProposals": auto_proposals,
         "mixedWithKnownGroups": mixed_known_candidates,
