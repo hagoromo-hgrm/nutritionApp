@@ -93,9 +93,9 @@ AMBIGUOUS_FAMILY_RULES = (
         "id": "eggplant-family",
         "label": "なす類",
         "terms": ("なす", "べいなす"),
-        "reason": "一般なすとべいなすは品種・大きさが異なる",
-        "recommendation": "なすとべいなすを別グループにする案を推奨",
-        "decision": "なすとべいなすを別グループにする",
+        "reason": "一般なす、べいなす、漬物が同じ分類見出しに含まれる",
+        "recommendation": "通常なす、べいなす、なすの漬物を別グループにする案を推奨",
+        "decision": "通常なす、べいなす、なすの漬物を別グループにする",
     },
     {
         "id": "pumpkin-family",
@@ -242,6 +242,58 @@ def display_for_signature(name: str) -> str:
     return " ".join(tokens) or name
 
 
+def first_token_for_review(name: str) -> str | None:
+    """分類見出しを除去した食品名の先頭語を返す。
+
+    レビュー候補のまとまりを作るためだけに使う。normalize() は通さず、
+    ``AA`` と ``AAB`` のような語を完全一致で別候補として扱う。
+    """
+    tokens = tokens_for(name)
+    return tokens[0] if tokens else None
+
+
+def build_first_token_review_groups(
+    foods: list[dict[str, Any]],
+    group_by_food_id: dict[str, str],
+    groups_by_id: dict[str, dict[str, Any]],
+    variant_attributes_by_food_id: dict[str, dict[str, str | None]],
+) -> list[dict[str, Any]]:
+    """needsReview 食品を先頭語の完全一致でレビュー用にまとめる。
+
+    ここで作るのは人手確認用の候補一覧であり、family の自動確定は行わない。
+    """
+    grouped: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for food in foods:
+        official_name = food.get("officialName") or food.get("name") or food["id"]
+        clean = clean_name(official_name)
+        first_token = first_token_for_review(official_name)
+        if first_token is None:
+            continue
+        group_id = group_by_food_id.get(food["id"])
+        group = groups_by_id.get(group_id or "")
+        grouped[first_token].append({
+            "id": food["id"],
+            "name": food.get("displayName") or food.get("name") or official_name,
+            "officialName": official_name,
+            "cleanName": clean,
+            "tokens": tokens_for(official_name),
+            "groupId": group_id,
+            "groupDisplayName": group.get("displayName") if group else None,
+            "variantAttributes": variant_attributes_by_food_id.get(food["id"], {}),
+        })
+
+    return [
+        {
+            "firstToken": first_token,
+            "foodCount": len(members),
+            "isCandidateGroup": len(members) >= 2,
+            "foodIds": [member["id"] for member in members],
+            "foods": members,
+        }
+        for first_token, members in sorted(grouped.items())
+    ]
+
+
 def auto_group_id(signature: str) -> str:
     return f"auto:{hashlib.sha1(signature.encode('utf-8')).hexdigest()[:12]}"
 
@@ -306,6 +358,7 @@ def main() -> None:
     related_terms: list[dict[str, Any]] = []
     food_group_by_food_id: dict[str, str] = {}
     variant_attributes_by_food_id: dict[str, dict[str, str | None]] = {}
+    review_foods: list[dict[str, Any]] = []
     foods_by_id = {food["id"]: food for food in foods}
     generated_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     generation_version = f"{known.get('generationVersion', 'known-good')}-auto-v1"
@@ -391,6 +444,7 @@ def main() -> None:
         has_grouping_attribute = any(is_grouping_variant_token(token, official_tokens) for token in official_tokens)
         display = display_for_signature(official_name) if has_grouping_attribute else (food.get("displayName") or food.get("name") or official_name)
         groups.append({"id": group_id, "displayName": display, "reading": None, "category": category_for(display), "representativeScore": 0, "defaultVariantId": food["id"], "isActive": True, "metadataSource": "rule", "generationVersion": "fallback-v2", "needsReview": True})
+        review_foods.append(food)
 
     for food in foods:
         food_group_by_food_id.setdefault(food["id"], f"food:{food['id']}")
@@ -406,11 +460,30 @@ def main() -> None:
     args.output_json.parent.mkdir(parents=True, exist_ok=True)
     args.output_json.write_text(json.dumps(output, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
+    groups_by_id = {group["id"]: group for group in groups}
+    first_token_review_groups = build_first_token_review_groups(
+        review_foods,
+        food_group_by_food_id,
+        groups_by_id,
+        variant_attributes_by_food_id,
+    )
     family_decisions = [review_family(rule, foods, food_group_by_food_id) for rule in AMBIGUOUS_FAMILY_RULES]
     review = {
-        "metadata": {"generatedAt": generated_at, "sourceFoodCount": len(foods), "generationVersion": generation_version, "autoGroupCount": len(auto_proposals), "autoGroupedFoodCount": sum(len(item["foodIds"]) for item in auto_proposals), "fallbackGroupCount": sum(1 for group in groups if group["needsReview"]), "policy": "同一基底名から状態・調理・皮の有無だけを除去して一致するもののみ自動統合。判断が必要な品種・加工品は統合しない。"},
+        "metadata": {
+            "generatedAt": generated_at,
+            "sourceFoodCount": len(foods),
+            "generationVersion": generation_version,
+            "autoGroupCount": len(auto_proposals),
+            "autoGroupedFoodCount": sum(len(item["foodIds"]) for item in auto_proposals),
+            "fallbackGroupCount": sum(1 for group in groups if group["needsReview"]),
+            "reviewFoodCount": len(review_foods),
+            "firstTokenReviewGroupCount": len(first_token_review_groups),
+            "multiFoodFirstTokenReviewGroupCount": sum(1 for item in first_token_review_groups if item["isCandidateGroup"]),
+            "policy": "同一基底名から状態・調理・皮の有無だけを除去して一致するもののみ自動統合。判断が必要な品種・加工品は統合しない。",
+        },
         "autoGroupProposals": auto_proposals,
         "mixedWithKnownGroups": mixed_known_candidates,
+        "firstTokenReviewGroups": first_token_review_groups,
         "familyDecisions": family_decisions,
         "ambiguousFamilies": [item for item in family_decisions if not item.get("decision")],
     }

@@ -26,7 +26,7 @@ python scripts/convert_food_data.py data/mext/processed/mext_foods.csv data/mext
 
 変換時に食品名の先頭にある成分表の分類見出し（例: `＜調味料類＞`、`（調味ソース類）`）を除去します。食品の状態や調理方法などの注記は保持します。小さじ・個・合などへ換算した食品は、元データの100g基準値をその代表重量に比例換算しています。換算根拠がない食品は推測で変換せず、100g基準のままです。
 
-検索用メタデータは、`food_group_known_good.json` の確認済み候補と、食品名から状態・調理・皮の有無などの属性を機械的に除去して一致する候補をオフライン生成します。品種、部位、加工食品など判断が必要なものは自動統合せず、`food_group_review.json` に判定結果とレビュー候補を一覧化します。しいたけの菌床・原木は栽培方法属性、もやしの原料豆は原料豆属性として保持します。
+検索用メタデータは、`food_group_known_good.json` の確認済み候補と、食品名から状態・調理・皮の有無などの属性を機械的に除去して一致する候補をオフライン生成します。品種、部位、加工食品など判断が必要なものは自動統合せず、`food_group_review.json` に判定結果とレビュー候補を一覧化します。`needsReview` の食品は分類見出し除去後の先頭語完全一致でも `firstTokenReviewGroups` にまとめますが、これは人手確認用であり自動統合には使いません。しいたけの菌床・原木は栽培方法属性、もやしの原料豆は原料豆属性として保持します。
 
 ```bash
 python scripts/build_food_search_metadata.py data/mext/processed/mext_foods.json data/mext/processed/mext_search_metadata.json --known-good data/mext/food_group_known_good.json --review-output data/mext/food_group_review.json
