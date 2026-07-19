@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """食品成分表からローカル検索用の確定メタデータを生成する。
 
-本番実行時にLLMやHTTP APIは呼ばない。食品名から機械的に判定できる状態違い
-だけを保守的に同一グループへまとめ、判断が必要な候補はレビューJSONへ分離する。
+本番実行時にLLMやHTTP APIは呼ばない。事前にSubagentが作成した静的なLLM判定JSONを
+明示的に指定した場合だけ、その確定判定を取り込み、残りは決定的なルールで処理する。
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ from pathlib import Path
 from typing import Any
 
 
-VARIANT_KEYS = ("species", "part", "cultivation", "sourceBean", "skin", "preparation", "processing", "variety")
+VARIANT_KEYS = ("species", "part", "cultivation", "sourceBean", "skin", "preparation", "processing", "variety", "nameSpecification")
 SKIN_VALUE_ALIASES = {"皮つき": "皮つき", "皮なし": "皮なし"}
 SKIN_VALUES = set(SKIN_VALUE_ALIASES)
 PREPARATION_VALUES = {
@@ -216,6 +216,61 @@ def variant_attributes(name: str) -> dict[str, str | None]:
         if token in tokens:
             attributes["species"] = species
             break
+
+    # LLMレビューで確定した、成分表上のfamily内選択に使う属性。
+    if "あずき" in tokens and "あん" in tokens:
+        if "こし生あん" in name:
+            attributes["variety"] = "こしあん（生）"
+        elif "さらしあん" in name:
+            attributes["variety"] = "さらしあん（乾燥）"
+        elif "並あん" in name:
+            attributes["variety"] = "こしあん（並）"
+        elif "中割りあん" in name:
+            attributes["variety"] = "こしあん（中割り）"
+        elif "もなかあん" in name:
+            attributes["variety"] = "こしあん（もなか）"
+        elif "つぶし生あん" in name:
+            attributes["variety"] = "つぶしあん（生）"
+        elif "つぶし練りあん" in name:
+            attributes["variety"] = "つぶしあん（練り）"
+    if "あまのり" in tokens:
+        if "ほしのり" in name:
+            attributes["processing"] = "ほしのり"
+        elif "焼きのり" in name:
+            attributes["processing"] = "焼きのり"
+        elif "味付けのり" in name:
+            attributes["processing"] = "味付けのり"
+    if "からし" in tokens:
+        if "粒入りマスタード" in name:
+            attributes["processing"] = "粒入り"
+        elif "練りマスタード" in name:
+            attributes["processing"] = "練り"
+        elif "粉" in tokens:
+            attributes["processing"] = "粉"
+        elif "練り" in tokens:
+            attributes["processing"] = "練り"
+    if "こしあん入り" in name:
+        attributes["variety"] = "こしあん"
+    elif "つぶしあん入り" in name:
+        attributes["variety"] = "つぶしあん"
+    if "アメリカンタイプ" in name:
+        attributes["processing"] = "アメリカンタイプ"
+    elif "デンマークタイプ" in name:
+        attributes["processing"] = "デンマークタイプ"
+    if "プレーン" in tokens:
+        attributes["variety"] = "プレーン"
+    elif "カスタードクリーム" in name:
+        attributes["variety"] = "カスタードクリーム"
+    if "イーストドーナッツ" in name:
+        attributes["processing"] = "イーストドーナッツ"
+    elif "ケーキドーナッツ" in name:
+        attributes["processing"] = "ケーキドーナッツ"
+    if "全卵型" in name:
+        attributes["variety"] = "全卵型"
+    elif "卵黄型" in name:
+        attributes["variety"] = "卵黄型"
+    elif "低カロリータイプ" in name:
+        attributes["variety"] = "低カロリータイプ"
     return attributes
 
 
@@ -312,6 +367,7 @@ def category_for(name: str) -> str:
 
 def validate_known_good(known: dict[str, Any], food_ids: set[str]) -> None:
     seen: set[str] = set()
+    seen_food_ids: set[str] = set()
     for group in known.get("groups", []):
         group_id = group.get("id")
         if not isinstance(group_id, str) or group_id in seen:
@@ -320,6 +376,9 @@ def validate_known_good(known: dict[str, Any], food_ids: set[str]) -> None:
         ids = group.get("foodIds", [])
         if not all(isinstance(food_id, str) and food_id in food_ids for food_id in ids):
             raise ValueError(f"unknown food id in {group_id}")
+        if seen_food_ids.intersection(ids):
+            raise ValueError(f"food id is assigned to multiple known groups in {group_id}")
+        seen_food_ids.update(ids)
         if not isinstance(group.get("representativeScore"), (int, float)) or not 0 <= group["representativeScore"] <= 15:
             raise ValueError(f"invalid representative score in {group_id}")
         for alias in group.get("aliases", []):
@@ -328,6 +387,112 @@ def validate_known_good(known: dict[str, Any], food_ids: set[str]) -> None:
         for related in group.get("relatedTerms", []):
             if not isinstance(related.get("value"), str) or not related["value"].strip():
                 raise ValueError(f"invalid related term in {group_id}")
+
+
+def _string_list(value: Any) -> list[str]:
+    if value is None:
+        return []
+    values = value if isinstance(value, list) else [value]
+    return [item for item in values if isinstance(item, str) and item.strip()]
+
+
+def _llm_spec_label(value: str) -> str:
+    label = clean_name(value)
+    return label or "標準"
+
+
+def _match_llm_name_spec(food: dict[str, Any], specifications: list[str]) -> str | None:
+    official_name = food.get("officialName") or food.get("name") or ""
+    normalized_name = normalize(clean_name(official_name))
+    matches = []
+    for specification in specifications:
+        label = _llm_spec_label(specification)
+        normalized_specification = normalize(label)
+        if normalized_specification and normalized_specification in normalized_name:
+            matches.append((len(normalized_specification), label))
+    if not matches:
+        return None
+    return max(matches, key=lambda item: item[0])[1]
+
+
+def _llm_group_id(first_token: str, family_index: int, display_name: str, food_ids: list[str]) -> str:
+    normalized_display_name = clean_name(display_name).strip()
+    signature = f"{first_token}\0{family_index}\0{normalized_display_name}\0{'/'.join(food_ids)}"
+    return f"llm:{hashlib.sha1(signature.encode('utf-8')).hexdigest()[:12]}"
+
+
+def build_llm_confirmed_groups(
+    llm_review: dict[str, Any],
+    foods_by_id: dict[str, dict[str, Any]],
+    assigned: set[str],
+    variant_attributes_by_food_id: dict[str, dict[str, str | None]],
+) -> tuple[list[dict[str, Any]], set[str], dict[str, str]]:
+    """Subagentの静的判定から、clear判定だけを確定familyとして取り込む。
+
+    ambiguousはユーザー判断を反映したknown-good側に置くため、ここでは取り込まない。
+    判定済みJSONのfoodId重複・欠落は、静かに補正せずエラーにする。
+    """
+    groups: list[dict[str, Any]] = []
+    imported_food_ids: set[str] = set()
+    imported_group_ids: set[str] = set()
+    expected_clear_food_ids: set[str] = set()
+    food_group_by_food_id: dict[str, str] = {}
+    clear_classifications = {"clear-variant", "clear-separate"}
+
+    for review_group in llm_review.get("groups", []):
+        classification = review_group.get("classification")
+        source_ids = review_group.get("sourceFoodIds", [])
+        proposed_families = review_group.get("proposedFamilies", [])
+        if not all(food_id in foods_by_id for food_id in source_ids):
+            raise ValueError(f"unknown food ID in LLM review group {review_group.get('firstToken')}")
+        if classification not in clear_classifications:
+            continue
+        proposed_ids = [food_id for family in proposed_families for food_id in family.get("foodIds", [])]
+        if len(proposed_ids) != len(set(proposed_ids)) or set(source_ids) != set(proposed_ids):
+            raise ValueError(f"LLM review food IDs do not match in {review_group.get('firstToken')}")
+        expected_clear_food_ids.update(source_ids)
+        if assigned.intersection(source_ids):
+            raise ValueError(f"LLM clear group overlaps known-good food IDs in {review_group.get('firstToken')}")
+
+        for family_index, family in enumerate(proposed_families):
+            food_ids = family.get("foodIds", [])
+            if not food_ids:
+                raise ValueError(f"empty LLM family in {review_group.get('firstToken')}")
+            if imported_food_ids.intersection(food_ids):
+                raise ValueError(f"food ID is assigned to multiple LLM families in {review_group.get('firstToken')}")
+            display_name = family.get("displayName")
+            if not isinstance(display_name, str) or not display_name.strip():
+                raise ValueError(f"invalid LLM family name in {review_group.get('firstToken')}")
+            display_name = clean_name(display_name).strip()
+            group_id = _llm_group_id(review_group.get("firstToken", ""), family_index, display_name, food_ids)
+            if group_id in imported_group_ids:
+                raise ValueError(f"duplicate generated LLM group ID: {group_id}")
+            imported_group_ids.add(group_id)
+            groups.append({
+                "id": group_id,
+                "displayName": display_name.strip(),
+                "reading": None,
+                "category": category_for(display_name),
+                "representativeScore": 7 if len(food_ids) > 1 else 5,
+                "defaultVariantId": food_ids[0],
+                "isActive": True,
+                "metadataSource": "llm",
+                "generationVersion": "llm-review-v1",
+                "needsReview": False,
+            })
+            specifications = _string_list(family.get("variantAttributes", {}).get("nameSpecification"))
+            for food_id in food_ids:
+                imported_food_ids.add(food_id)
+                food_group_by_food_id[food_id] = group_id
+                if specifications:
+                    variant_attributes_by_food_id[food_id]["nameSpecification"] = _match_llm_name_spec(foods_by_id[food_id], specifications) or "標準"
+
+    if imported_food_ids != expected_clear_food_ids:
+        raise ValueError("LLM clear food IDs were not imported exactly")
+    summary = llm_review.get("summary", {})
+    if summary.get("clearFoodCount") is not None and summary["clearFoodCount"] != len(imported_food_ids):
+        raise ValueError("LLM review clearFoodCount does not match imported food IDs")
+    return groups, imported_food_ids, food_group_by_food_id
 
 
 def review_family(rule: dict[str, Any], foods: list[dict[str, Any]], group_by_food_id: dict[str, str]) -> dict[str, Any]:
@@ -344,6 +509,7 @@ def main() -> None:
     parser.add_argument("foods_json", type=Path)
     parser.add_argument("output_json", type=Path)
     parser.add_argument("--known-good", type=Path, required=True)
+    parser.add_argument("--llm-review", type=Path)
     parser.add_argument("--review-output", type=Path)
     args = parser.parse_args()
 
@@ -393,6 +559,22 @@ def main() -> None:
         for index, related in enumerate(group.get("relatedTerms", [])):
             value = related["value"].strip()
             related_terms.append({"id": f"related:{group_id}:{index}", "foodGroupId": group_id, "term": value, "normalizedTerm": normalize(value), "weight": related.get("weight", 0.5), "isActive": True, "metadataSource": "manual"})
+
+    llm_groups: list[dict[str, Any]] = []
+    llm_food_ids: set[str] = set()
+    if args.llm_review:
+        llm_review = json.loads(args.llm_review.read_text(encoding="utf-8"))
+        llm_groups, llm_food_ids, llm_food_group_by_food_id = build_llm_confirmed_groups(
+            llm_review,
+            foods_by_id,
+            assigned,
+            variant_attributes_by_food_id,
+        )
+        for food_id, group_id in llm_food_group_by_food_id.items():
+            assigned.add(food_id)
+            food_group_by_food_id[food_id] = group_id
+        groups.extend(llm_groups)
+        generation_version = f"{generation_version}-llm-review-v1"
 
     known_signatures: dict[str, list[str]] = defaultdict(list)
     for food_id in assigned:
@@ -450,7 +632,7 @@ def main() -> None:
         food_group_by_food_id.setdefault(food["id"], f"food:{food['id']}")
 
     output = {
-        "metadata": {"generationVersion": generation_version, "generatedAt": generated_at, "sourceFoodCount": len(foods), "llmRuntime": False, "groupingPolicy": "deterministic-conservative-v1"},
+        "metadata": {"generationVersion": generation_version, "generatedAt": generated_at, "sourceFoodCount": len(foods), "llmRuntime": False, "llmReviewSource": args.llm_review.name if args.llm_review else None, "llmReviewGroupCount": len(llm_groups), "llmReviewFoodCount": len(llm_food_ids), "groupingPolicy": "static-llm-review-plus-deterministic-conservative-v1" if args.llm_review else "deterministic-conservative-v1"},
         "groups": groups,
         "aliases": aliases,
         "relatedTerms": related_terms,
@@ -476,6 +658,8 @@ def main() -> None:
             "autoGroupCount": len(auto_proposals),
             "autoGroupedFoodCount": sum(len(item["foodIds"]) for item in auto_proposals),
             "fallbackGroupCount": sum(1 for group in groups if group["needsReview"]),
+            "llmReviewGroupCount": len(llm_groups),
+            "llmReviewFoodCount": len(llm_food_ids),
             "reviewFoodCount": len(review_foods),
             "firstTokenReviewGroupCount": len(first_token_review_groups),
             "multiFoodFirstTokenReviewGroupCount": sum(1 for item in first_token_review_groups if item["isCandidateGroup"]),

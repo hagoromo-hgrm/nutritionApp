@@ -171,9 +171,9 @@ const SETTINGS_ICON_ASSET = `${ASSET_BASE_URL}assets/settings-icon.png`
 
 const nutrientKeys = [...NUTRIENT_KEYS]
 const emptyNutrientInputs = (): Record<NutrientKey, string> => Object.fromEntries(nutrientKeys.map((key) => [key, ''])) as Record<NutrientKey, string>
-const variantAttributeKeys: Array<keyof FoodVariantAttributes> = ['species', 'part', 'variety', 'cultivation', 'sourceBean', 'skin', 'preparation', 'processing']
+const variantAttributeKeys: Array<keyof FoodVariantAttributes> = ['species', 'part', 'variety', 'nameSpecification', 'cultivation', 'sourceBean', 'skin', 'preparation', 'processing']
 const variantAttributeLabels: Record<keyof FoodVariantAttributes, string> = {
-  species: '種類', part: '部位', variety: '品種・区分', cultivation: '栽培方法', sourceBean: '原料豆', skin: '皮の状態', preparation: '調理方法', processing: '加工状態',
+  species: '種類', part: '部位', variety: '品種・区分', nameSpecification: '名称仕様', cultivation: '栽培方法', sourceBean: '原料豆', skin: '皮の状態', preparation: '調理方法', processing: '加工状態',
 }
 const emptyVariantInputs = (): Record<keyof FoodVariantAttributes, string> => Object.fromEntries(variantAttributeKeys.map((key) => [key, ''])) as Record<keyof FoodVariantAttributes, string>
 

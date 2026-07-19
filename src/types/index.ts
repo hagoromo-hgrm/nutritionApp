@@ -85,6 +85,7 @@ export interface FoodVariantAttributes {
   preparation?: string | null
   processing?: string | null
   variety?: string | null
+  nameSpecification?: string | null
 }
 
 export interface FoodGroup {

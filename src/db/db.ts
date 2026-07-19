@@ -25,7 +25,7 @@ import { estimateDailyGoals } from '../services/nutrition'
 import { normalizeSearchText, searchFoodResults as searchFoodResultsPure, type FoodSearchPage } from '../services/foodSearch'
 
 const INITIAL_FOODS_VERSION = 6
-const SEARCH_METADATA_VERSION = 5
+const SEARCH_METADATA_VERSION = 6
 
 interface BundledSearchMetadata {
   metadata: { generationVersion: string }

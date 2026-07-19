@@ -13,7 +13,7 @@ export interface VariantOptionGroup {
   options: VariantOption[]
 }
 
-const ATTRIBUTE_ORDER: VariantAttributeKey[] = ['species', 'part', 'variety', 'cultivation', 'sourceBean', 'skin', 'preparation', 'processing']
+const ATTRIBUTE_ORDER: VariantAttributeKey[] = ['species', 'part', 'variety', 'nameSpecification', 'cultivation', 'sourceBean', 'skin', 'preparation', 'processing']
 const ATTRIBUTE_LABELS: Record<VariantAttributeKey, string> = {
   species: '種類',
   part: '部位',
@@ -23,6 +23,7 @@ const ATTRIBUTE_LABELS: Record<VariantAttributeKey, string> = {
   preparation: '調理方法',
   processing: '加工状態',
   variety: '区分',
+  nameSpecification: '名称仕様',
 }
 const SKIN_VALUE_ALIASES = new Map([['皮つき', '皮つき'], ['皮なし', '皮なし']])
 const SKIN_VALUES = new Set(SKIN_VALUE_ALIASES.keys())

@@ -41,7 +41,7 @@ describe('IndexedDB data safety', () => {
     expect(seasoning?.baseUnit).toBe('小さじ')
     expect(seasoning?.name).toContain('（小さじ1=')
     expect(foods.filter((food) => food.source === 'mext').some((food) => /^(＜|（|\()/.test(food.name))).toBe(false)
-    expect(await db.foodGroups.count()).toBeGreaterThan(2000)
+    expect(await db.foodGroups.count()).toBeGreaterThan(1900)
     expect(await db.foodAliases.where('normalizedAlias').equals('塩').count()).toBe(1)
   })
 
@@ -88,6 +88,38 @@ describe('IndexedDB data safety', () => {
     expect((await db.foods.get('mext_18039'))?.foodGroupId).not.toBe(sproutGroups[0])
   })
 
+  it('LLMで確定したfamily分離と属性を保持する', async () => {
+    expect((await db.foods.get('mext_04004'))?.foodGroupId).toBe('bean:azuki:an')
+    expect((await db.foods.get('mext_04003'))?.foodGroupId).toBe('bean:azuki:canned')
+    expect((await db.foods.get('mext_04004'))?.variantAttributes?.variety).toBe('こしあん（生）')
+
+    expect((await db.foods.get('mext_17057'))?.foodGroupId).toBe('seasoning:mustard:karashi')
+    expect((await db.foods.get('mext_17059'))?.foodGroupId).toBe('seasoning:mustard:mustard')
+    expect((await db.foods.get('mext_17057'))?.variantAttributes?.processing).toBe('粉')
+    expect((await db.foods.get('mext_17060'))?.variantAttributes?.processing).toBe('粒入り')
+
+    expect((await db.foods.get('mext_15029'))?.foodGroupId).toBe('sweets:manju:castella')
+    expect((await db.foods.get('mext_15159'))?.variantAttributes?.variety).toBe('つぶしあん')
+    expect((await db.foods.get('mext_15160'))?.foodGroupId).toBe('sweets:manju:karukan')
+    expect((await db.foods.get('mext_15035'))?.foodGroupId).toBe('sweets:manju:meat')
+
+    expect((await db.foods.get('mext_15182'))?.variantAttributes).toMatchObject({ processing: 'アメリカンタイプ', variety: 'プレーン' })
+    expect((await db.foods.get('mext_15173'))?.variantAttributes).toMatchObject({ processing: 'デンマークタイプ', variety: 'カスタードクリーム' })
+    expect((await db.foods.get('mext_15077'))?.variantAttributes).toMatchObject({ processing: 'イーストドーナッツ', variety: 'プレーン' })
+    expect((await db.foods.get('mext_15179'))?.variantAttributes).toMatchObject({ processing: 'ケーキドーナッツ', variety: 'カスタードクリーム' })
+
+    expect((await db.foods.get('mext_17042'))?.foodGroupId).toBe('seasoning:dressing:semi-solid')
+    expect((await db.foods.get('mext_17118'))?.variantAttributes?.variety).toBe('低カロリータイプ')
+    expect((await db.foods.get('mext_15057'))?.foodGroupId).toBe('sweets:rice-cracker:age')
+    expect((await db.foods.get('mext_15059'))?.foodGroupId).toBe('sweets:rice-cracker:arare')
+
+    const anpanGroupId = (await db.foods.get('mext_15069'))?.foodGroupId
+    expect(anpanGroupId).toBe((await db.foods.get('mext_15168'))?.foodGroupId)
+    expect((await db.foodGroups.get(anpanGroupId ?? ''))?.metadataSource).toBe('llm')
+    expect((await db.foods.get('mext_15069'))?.variantAttributes?.nameSpecification).toBe('こしあん入り')
+    expect((await db.foods.get('mext_15168'))?.variantAttributes?.nameSpecification).toBe('つぶしあん入り')
+  })
+
   it('食品グループ単位の関連度検索と個人利用統計を保存できる', async () => {
     const searched = await searchFoodResults('塩')
     expect(searched.page.results[0].group.displayName).toBe('食塩')
@@ -95,7 +127,7 @@ describe('IndexedDB data safety', () => {
     await recordFoodSelection(searched.logId, searched.page.results[0].group.id, searched.page.results[0].food.id, 1)
     expect((await db.foodUsageStats.get(searched.page.results[0].food.id))?.selectionCount).toBe(1)
     const backup = await exportBackup()
-    expect(backup.foodGroups?.length).toBeGreaterThan(2000)
+    expect(backup.foodGroups?.length).toBeGreaterThan(1900)
     expect(backup.searchLogs?.[0].selectedFoodGroupId).toBe('seasoning:salt')
     expect(backup.foodUsageStats?.[0].foodId).toBe(searched.page.results[0].food.id)
   })
