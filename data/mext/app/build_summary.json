@@ -1,0 +1,21 @@
+{
+  "inputFoodGroupCount": 1494,
+  "inputMappingCount": 2538,
+  "outputFoodGroupCount": 1494,
+  "outputVariantCount": 2538,
+  "selectableAttributeGroupCount": 478,
+  "fixedAttributeOnlyGroupCount": 403,
+  "noAttributeGroupCount": 613,
+  "attributeDefinitionCount": 712,
+  "fixedAttributeCount": 703,
+  "attributeValueCount": 1775,
+  "searchTermCount": 1690,
+  "variantCollisionCount": 0,
+  "duplicateFoodGroupIdCount": 0,
+  "duplicateSourceIdCount": 0,
+  "missingSourceIdCount": 0,
+  "invalidAttributeReferenceCount": 0,
+  "groupsWithoutResolvableVariantCount": 0,
+  "jsonReloadErrorCount": 0,
+  "validationPassed": true
+}

@@ -76,6 +76,15 @@ import {
 } from './types'
 import { normalizeSearchText, type FoodSearchResult } from './services/foodSearch'
 import { filterVariantsBySelection, getVariantOptionGroups, getVariantSelection, resolveVariantForSelection, variantOptionText, type VariantOptionGroup } from './services/foodVariants'
+import {
+  AmbiguousFoodVariant,
+  getDefaultSelectedAttributes,
+  getFoodVariantBySourceId,
+  getSelectableAttributes,
+  hasFoodGroup as hasMextFoodGroup,
+  MissingRequiredAttribute,
+  resolveFoodVariantForUi,
+} from './services/mextFoodData'
 import { addDays, currentDateKey, currentMonthRange, formatDateKey, formatDateTime, formatFileTimestamp, isoFromTokyoTimeInput, toTokyoTimeInput, formatTime } from './utils/date'
 import { isPositiveFinite, isValidBarcode, isValidUnit } from './utils/validation'
 import './styles.css'
@@ -525,6 +534,7 @@ function App() {
       const groupId = foodDraft.foodGroupId.trim() || createNewFoodGroupId()
       const groupDisplayName = foodDraft.groupDisplayName.trim() || foodDraft.name.trim()
       const existingGroup = foodGroups.find((group) => group.id === groupId)
+      const isBundledMextGroup = hasMextFoodGroup(groupId)
       const variantAttributes = Object.fromEntries(variantAttributeKeys.map((key) => [key, foodDraft.variantAttributes[key].trim() || null])) as FoodVariantAttributes
       const food: Food = {
         id: foodId, name: foodDraft.name.trim(), officialName: foodDraft.name.trim(), displayName: groupDisplayName, maker: foodDraft.maker.trim(), barcode: foodDraft.barcode.trim(),
@@ -533,9 +543,15 @@ function App() {
         createdAt: foodDraft.id ? (foods.find((item) => item.id === foodDraft.id)?.createdAt ?? now) : now, updatedAt: now,
       }
       const group: FoodGroup = {
-        id: groupId, displayName: groupDisplayName, reading: foodDraft.groupReading.trim() || null, category: foodDraft.groupCategory.trim() || null,
+        id: groupId,
+        displayName: isBundledMextGroup ? (existingGroup?.displayName ?? groupDisplayName) : groupDisplayName,
+        reading: isBundledMextGroup ? (existingGroup?.reading ?? null) : (foodDraft.groupReading.trim() || null),
+        category: isBundledMextGroup ? (existingGroup?.category ?? null) : (foodDraft.groupCategory.trim() || null),
         representativeScore: existingGroup?.representativeScore ?? 0, defaultVariantId: existingGroup?.defaultVariantId ?? foodId, isActive: true,
-        metadataSource: 'manual', generationVersion: 'manual-v1', needsReview: false, createdAt: existingGroup?.createdAt ?? now, updatedAt: now,
+        metadataSource: isBundledMextGroup ? (existingGroup?.metadataSource ?? 'imported') : 'manual',
+        generationVersion: isBundledMextGroup ? (existingGroup?.generationVersion ?? 'mext-app-v2') : 'manual-v1',
+        needsReview: isBundledMextGroup ? (existingGroup?.needsReview ?? false) : false,
+        createdAt: existingGroup?.createdAt ?? now, updatedAt: now,
       }
       const aliasValues = new Map<string, { value: string; type: FoodAliasType }>()
       for (const alias of foodDraft.aliases) {
@@ -543,19 +559,29 @@ function App() {
         const normalized = normalizeSearchText(value)
         if (value && normalized && !aliasValues.has(normalized)) aliasValues.set(normalized, { value, type: alias.type })
       }
-      const aliases: FoodAlias[] = [...aliasValues.values()].map((alias, index) => ({
+      const existingBundledAliases = new Set(foodAliases
+        .filter((alias) => alias.foodGroupId === groupId && alias.metadataSource !== 'manual')
+        .map((alias) => alias.normalizedAlias))
+      const aliases: FoodAlias[] = [...aliasValues.values()]
+        .filter((alias) => !isBundledMextGroup || !existingBundledAliases.has(normalizeSearchText(alias.value)))
+        .map((alias, index) => ({
         id: `manual:alias:${groupId}:${index}`, foodGroupId: groupId, foodVariantId: null, alias: alias.value, normalizedAlias: normalizeSearchText(alias.value),
         aliasType: alias.type, priority: 80, isActive: true, metadataSource: 'manual',
-      }))
+        }))
       const relatedValues = new Map<string, string>()
       for (const term of foodDraft.relatedTerms) {
         const value = term.trim()
         const normalized = normalizeSearchText(value)
         if (value && normalized && !relatedValues.has(normalized)) relatedValues.set(normalized, value)
       }
-      const related: FoodRelatedTerm[] = [...relatedValues.values()].map((term) => ({
+      const existingBundledRelatedTerms = new Set(foodRelatedTerms
+        .filter((term) => term.foodGroupId === groupId && term.metadataSource !== 'manual')
+        .map((term) => term.normalizedTerm))
+      const related: FoodRelatedTerm[] = [...relatedValues.values()]
+        .filter((term) => !isBundledMextGroup || !existingBundledRelatedTerms.has(normalizeSearchText(term)))
+        .map((term) => ({
         id: `manual:related:${groupId}:${normalizeSearchText(term)}`, foodGroupId: groupId, term, normalizedTerm: normalizeSearchText(term), weight: 0.5, isActive: true, metadataSource: 'manual',
-      }))
+        }))
       const returnMealType = foodFormMealType
       const returnSearchQuery = foodFormSearchQuery
       await saveFoodWithMetadata(food, { group, aliases, relatedTerms: related })
@@ -1088,7 +1114,66 @@ function SearchResultsView({ groups, purpose, onSelect, onAddFood, onLoadMore, o
   return <><section className="page-heading"><div><span className="eyebrow">SEARCH RESULTS</span><h1>検索結果</h1><p className="muted">{helperText}</p></div><button className="button ghost" type="button" onClick={onBack}>← 検索画面へ</button></section><div className="search-result-groups">{groups.map((group, groupIndex) => <section className="search-result-group" key={`${group.query}:${groupIndex}`}><div className="search-result-heading"><strong>検索結果：</strong><span>{group.query}</span></div><div className="food-results">{group.items.map((item) => <button className="search-result-row" type="button" key={`${item.kind}:${item.id}`} onClick={() => onSelect(group.query, item)}><span className="source-badge">{item.kind === 'food' ? '食品' : item.kind === 'menu' ? 'メニュー' : 'セット'}</span><span className="search-result-copy"><strong>{item.title}</strong><small>{item.subtitle}</small>{item.kind === 'food' && <span className="search-result-meta">{item.recentlyUsed && <em>最近使った</em>}{item.variants.length > 1 && <span>{item.variants.length}種類から選択</span>}</span>}</span><b>›</b></button>)}{group.items.length === 0 && <div className="search-empty-state"><p>一致する食品・メニューがありません。</p><button className="button secondary" type="button" onClick={() => onAddFood(group.query === '最近・お気に入り' ? '' : group.query)}>食品を追加</button></div>}{group.nextCursor && <button className="button secondary search-load-more" type="button" onClick={() => onLoadMore(groupIndex)}>さらに表示</button>}</div></section>)}{groups.length === 0 && <div className="empty-state">検索結果はありません。検索画面へ戻って再検索してください。</div>}</div></>
 }
 
-function FoodVariantPickerModal({ result, onSelect, onClose, mealMode = false, onSubmitMeal }: { result: FoodSearchResult; onSelect: (food: Food) => void; onClose: () => void; mealMode?: boolean; onSubmitMeal?: (food: Food, amount: string) => void | Promise<void> }) {
+interface FoodVariantPickerModalProps {
+  result: FoodSearchResult
+  onSelect: (food: Food) => void
+  onClose: () => void
+  mealMode?: boolean
+  onSubmitMeal?: (food: Food, amount: string) => void | Promise<void>
+}
+
+function FoodVariantPickerModal(props: FoodVariantPickerModalProps) {
+  return hasMextFoodGroup(props.result.group.id)
+    ? <MextFoodVariantPickerModal {...props} />
+    : <LegacyFoodVariantPickerModal {...props} />
+}
+
+function MextFoodVariantPickerModal({ result, onSelect, onClose, mealMode = false, onSubmitMeal }: FoodVariantPickerModalProps) {
+  const attributes = useMemo(() => getSelectableAttributes(result.group.id), [result.group.id])
+  const visibleAttributes = useMemo(() => attributes.filter((attribute) => attribute.visibility !== 'hidden'), [attributes])
+  const hiddenAttributes = useMemo(() => attributes.filter((attribute) => attribute.visibility === 'hidden'), [attributes])
+  const supplementalFoods = useMemo(() => result.variants.filter((food) => !getFoodVariantBySourceId(food.id)), [result.variants])
+  const [selection, setSelection] = useState<Record<string, string>>(() => {
+    const visibleAttributeIds = new Set(visibleAttributes.map((attribute) => attribute.id))
+    return Object.fromEntries(Object.entries(getDefaultSelectedAttributes(result.group.id)).filter(([attributeId]) => visibleAttributeIds.has(attributeId)))
+  })
+  const [supplementalFoodId, setSupplementalFoodId] = useState<string | null>(null)
+  const resolution = useMemo(() => {
+    try {
+      return { variant: resolveFoodVariantForUi(result.group.id, selection), error: null, requiresHiddenSelection: false }
+    } catch (error) {
+      if (error instanceof MissingRequiredAttribute) return { variant: null, error: '必要な属性を選択してください。', requiresHiddenSelection: false }
+      if (error instanceof AmbiguousFoodVariant) return { variant: null, error: '食品を一意に決めるため、追加の属性を選択してください。', requiresHiddenSelection: true }
+      return { variant: null, error: error instanceof Error ? error.message : '食品を決定できません。', requiresHiddenSelection: false }
+    }
+  }, [result.group.id, selection])
+  const supplementalFood = supplementalFoods.find((food) => food.id === supplementalFoodId) ?? null
+  const resolvedMextFood = resolution.variant
+    ? result.variants.find((food) => food.id === resolution.variant?.sourceId) ?? null
+    : null
+  const selectedFood = supplementalFood ?? resolvedMextFood
+  const attributesToShow = resolution.requiresHiddenSelection ? attributes : visibleAttributes
+  const selectedFoodId = selectedFood?.id
+  const selectedFoodDefaultAmount = selectedFood ? String(selectedFood.servingAmount ?? selectedFood.baseAmount) : ''
+  const selectedFoodName = supplementalFood ? (supplementalFood.officialName ?? supplementalFood.name) : resolution.variant?.sourceName
+  const [amount, setAmount] = useState(selectedFoodDefaultAmount)
+  useEffect(() => {
+    setAmount(selectedFoodDefaultAmount)
+  }, [selectedFoodDefaultAmount, selectedFoodId])
+
+  const chooseAttribute = (attributeId: string, valueId: string, hidden: boolean) => {
+    setSupplementalFoodId(null)
+    setSelection((current) => {
+      const next = { ...current, [attributeId]: valueId }
+      if (!hidden) hiddenAttributes.forEach((attribute) => { delete next[attribute.id] })
+      return next
+    })
+  }
+
+  return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="食品のバリエーションを選択"><section className="modal-card variant-picker-modal"><div className="modal-heading"><div><span className="eyebrow">VARIATIONS</span><h2>{result.group.displayName}</h2><p className="muted">条件ごとに選択してください</p></div><button className="icon-button" type="button" onClick={onClose} aria-label="閉じる">×</button></div>{supplementalFoods.length > 0 && <div className="variant-choice-groups"><section className="variant-choice-group"><h3>手動登録食品</h3><div className="variant-choice-buttons">{supplementalFoods.map((food) => <button className={`variant-choice-button${supplementalFoodId === food.id ? ' is-selected' : ''}`} type="button" aria-pressed={supplementalFoodId === food.id} key={food.id} onClick={() => setSupplementalFoodId(food.id)}>{food.officialName ?? food.name}</button>)}</div></section></div>}{attributesToShow.length > 0 && <div className="variant-choice-groups">{attributesToShow.map((attribute) => <section className="variant-choice-group" key={attribute.id}><h3>{attribute.displayName}</h3><div className="variant-choice-buttons">{attribute.values.map((value) => <button className={`variant-choice-button${selection[attribute.id] === value.id ? ' is-selected' : ''}`} type="button" aria-pressed={selection[attribute.id] === value.id} key={`${attribute.id}:${value.id}`} onClick={() => chooseAttribute(attribute.id, value.id, attribute.visibility === 'hidden')}>{value.displayName}</button>)}</div></section>)}</div>}{selectedFood ? <div className="variant-picker-summary"><span>選択中</span><strong>{selectedFoodName}</strong><small>{selectedFood.baseAmount}{selectedFood.baseUnit} · {formatNutrient(selectedFood.nutrients.energyKcal)}kcal</small></div> : <p className="variant-picker-no-match">{resolution.error}</p>}{mealMode && selectedFood && <label>分量<div className="amount-input-row"><div className="amount-input"><input type="number" min="0.01" max="100000" step="any" value={amount} onChange={(event) => setAmount(event.target.value)} required /><span className="field-suffix">{selectedFood.baseUnit}</span></div><button className="amount-increment" type="button" onClick={() => setAmount(String(incrementByBaseAmount(Number(amount), selectedFood.baseAmount)))} aria-label={`分量を基準量1つ分（${selectedFood.baseAmount}${selectedFood.baseUnit}）増やす`}>＋1</button></div></label>}{mealMode && selectedFood ? <button className="button primary variant-picker-confirm" type="button" onClick={() => { void onSubmitMeal?.(selectedFood, amount) }}>食事として登録</button> : <button className="button primary variant-picker-confirm" type="button" onClick={() => { if (selectedFood) onSelect(selectedFood) }} disabled={!selectedFood}>この食品を選択</button>}</section></div>
+}
+
+function LegacyFoodVariantPickerModal({ result, onSelect, onClose, mealMode = false, onSubmitMeal }: FoodVariantPickerModalProps) {
   const optionGroups = useMemo(() => getVariantOptionGroups(result.variants), [result.variants])
   const defaultVariant = result.variants.find((food) => food.id === result.group.defaultVariantId) ?? result.food
   const [selection, setSelection] = useState(() => getVariantSelection(defaultVariant, optionGroups))
@@ -1189,7 +1274,7 @@ function MenuFoodSelection({ selectedIds, foods, recentFoods, favoriteFoods, fav
               <div className="menu-food-section-heading"><span className="eyebrow">SEARCH RESULTS</span><h4>検索結果：{foodQuery.trim()}</h4></div>
               <div className="menu-food-search-results">
                 {searchResults.length > 0
-                  ? searchResults.map((result) => <button className="menu-food-search-result" type="button" key={result.group.id} onClick={() => chooseSearchResult(result)}><span className="source-badge">食品</span><span><strong>{displaySearchFoodName(result.group, result.food)}</strong><small>{result.group.category ?? '食品'} · {result.variants.length > 1 ? `${result.variants.length}バリエーション` : `${result.food.baseAmount}${result.food.baseUnit}`} · ${formatNutrient(result.food.nutrients.energyKcal)}kcal</small></span><b>›</b></button>)
+                  ? searchResults.map((result) => <button className="menu-food-search-result" type="button" key={result.group.id} onClick={() => chooseSearchResult(result)}><span className="source-badge">食品</span><span><strong>{displaySearchFoodName(result.group, result.food)}</strong><small>{result.group.category ?? '食品'} · {result.variants.length > 1 ? `${result.variants.length}バリエーション` : `${result.food.baseAmount}${result.food.baseUnit}`} · {formatNutrient(result.food.nutrients.energyKcal)}kcal</small></span><b>›</b></button>)
                   : <p className="menu-food-empty">検索に一致する食品がありません。</p>}
               </div>
             </>

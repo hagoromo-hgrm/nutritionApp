@@ -28,6 +28,8 @@ export default defineConfig(({ mode }) => {
         workbox: {
           navigateFallback: `${base}index.html`,
           globPatterns: ['**/*.{js,css,html,svg,ico,png,json}'],
+          // 確定済みMEXTグループとvariant解決表をオフラインでも利用する。
+          maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         },
       }),
     ],

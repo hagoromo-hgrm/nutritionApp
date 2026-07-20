@@ -1,0 +1,6259 @@
+[
+  {
+    "food_group_id": "fg_000007",
+    "canonical_name": "せん茶",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_not_applicable_value",
+    "changed_fields": [
+      "selectable_attributes",
+      "mappings.attribute_values",
+      "mappings.variant_key",
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称の「茶」と「浸出液」が明示的に区別されるため、茶レコードを「該当なし」に変更",
+    "source_ids": [
+      "mext_16036",
+      "mext_16037"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000008",
+    "canonical_name": "ほうじ茶",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_not_applicable_value",
+    "changed_fields": [
+      "selectable_attributes",
+      "mappings.attribute_values",
+      "mappings.variant_key",
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称の「茶」と「浸出液」が明示的に区別されるため、茶レコードを「該当なし」に変更",
+    "source_ids": [
+      "mext_16040",
+      "mext_16063"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000010",
+    "canonical_name": "玉露",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_not_applicable_value",
+    "changed_fields": [
+      "selectable_attributes",
+      "mappings.attribute_values",
+      "mappings.variant_key",
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称の「茶」と「浸出液」が明示的に区別されるため、茶レコードを「該当なし」に変更",
+    "source_ids": [
+      "mext_16033",
+      "mext_16034"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000011",
+    "canonical_name": "番茶",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_not_applicable_value",
+    "changed_fields": [
+      "selectable_attributes",
+      "mappings.attribute_values",
+      "mappings.variant_key",
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称の「茶」と「浸出液」が明示的に区別されるため、茶レコードを「該当なし」に変更",
+    "source_ids": [
+      "mext_16039",
+      "mext_16062"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000012",
+    "canonical_name": "紅茶",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_not_applicable_value",
+    "changed_fields": [
+      "selectable_attributes",
+      "mappings.attribute_values",
+      "mappings.variant_key",
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称の「茶」と「浸出液」が明示的に区別されるため、茶レコードを「該当なし」に変更",
+    "source_ids": [
+      "mext_16043",
+      "mext_16044"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000028",
+    "canonical_name": "ビール",
+    "original_issue_types": [
+      "attribute_dimension_mismatch"
+    ],
+    "resolution_type": "move_attribute_dimension",
+    "changed_fields": [
+      "selectable_attributes",
+      "mappings.attribute_values",
+      "mappings.variant_key",
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "同一の選択軸に分散していた値を標準属性次元へ統合",
+    "source_ids": [
+      "mext_16006",
+      "mext_16007",
+      "mext_16008"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000028",
+    "canonical_name": "ビール",
+    "original_issue_types": [
+      "attribute_dimension_mismatch"
+    ],
+    "resolution_type": "move_attribute_dimension",
+    "changed_fields": [
+      "selectable_attributes",
+      "mappings.attribute_values",
+      "mappings.variant_key",
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "同一の選択軸に分散していた値を標準属性次元へ統合",
+    "source_ids": [
+      "mext_16006",
+      "mext_16007",
+      "mext_16008"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000068",
+    "canonical_name": "イーストドーナッツ",
+    "original_issue_types": [
+      "partial_attribute_presence",
+      "ui_attribute_merge_issue"
+    ],
+    "resolution_type": "move_attribute_dimension",
+    "changed_fields": [
+      "selectable_attributes",
+      "mappings.attribute_values",
+      "mappings.variant_key",
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "プレーンを種類ではなく「中身なし」として中身属性へ移動",
+    "source_ids": [
+      "mext_15077",
+      "mext_15174",
+      "mext_15175",
+      "mext_15176"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000068",
+    "canonical_name": "イーストドーナッツ",
+    "original_issue_types": [
+      "partial_attribute_presence",
+      "ui_attribute_merge_issue"
+    ],
+    "resolution_type": "merge_ui_attribute",
+    "changed_fields": [
+      "selectable_attributes",
+      "mappings.attribute_values",
+      "mappings.variant_key",
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "中身と中身の材料を一つの中身選択へ統合し、元次元をsource_dimensionsに保持",
+    "source_ids": [
+      "mext_15077",
+      "mext_15174",
+      "mext_15175",
+      "mext_15176"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000068",
+    "canonical_name": "イーストドーナッツ",
+    "original_issue_types": [
+      "partial_attribute_presence",
+      "ui_attribute_merge_issue"
+    ],
+    "resolution_type": "merge_ui_attribute",
+    "changed_fields": [
+      "selectable_attributes",
+      "mappings.attribute_values",
+      "mappings.variant_key",
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "中身と中身の材料を一つの中身選択へ統合し、元次元をsource_dimensionsに保持",
+    "source_ids": [
+      "mext_15077",
+      "mext_15174",
+      "mext_15175",
+      "mext_15176"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000069",
+    "canonical_name": "ケーキドーナッツ",
+    "original_issue_types": [
+      "partial_attribute_presence",
+      "ui_attribute_merge_issue"
+    ],
+    "resolution_type": "move_attribute_dimension",
+    "changed_fields": [
+      "selectable_attributes",
+      "mappings.attribute_values",
+      "mappings.variant_key",
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "プレーンを種類ではなく「中身なし」として中身属性へ移動",
+    "source_ids": [
+      "mext_15078",
+      "mext_15177",
+      "mext_15178",
+      "mext_15179"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000069",
+    "canonical_name": "ケーキドーナッツ",
+    "original_issue_types": [
+      "partial_attribute_presence",
+      "ui_attribute_merge_issue"
+    ],
+    "resolution_type": "merge_ui_attribute",
+    "changed_fields": [
+      "selectable_attributes",
+      "mappings.attribute_values",
+      "mappings.variant_key",
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "中身と中身の材料を一つの中身選択へ統合し、元次元をsource_dimensionsに保持",
+    "source_ids": [
+      "mext_15078",
+      "mext_15177",
+      "mext_15178",
+      "mext_15179"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000069",
+    "canonical_name": "ケーキドーナッツ",
+    "original_issue_types": [
+      "partial_attribute_presence",
+      "ui_attribute_merge_issue"
+    ],
+    "resolution_type": "merge_ui_attribute",
+    "changed_fields": [
+      "selectable_attributes",
+      "mappings.attribute_values",
+      "mappings.variant_key",
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "中身と中身の材料を一つの中身選択へ統合し、元次元をsource_dimensionsに保持",
+    "source_ids": [
+      "mext_15078",
+      "mext_15177",
+      "mext_15178",
+      "mext_15179"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000084",
+    "canonical_name": "あんパン",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_15069",
+      "mext_15126",
+      "mext_15168",
+      "mext_15169"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000099",
+    "canonical_name": "くずもち",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_15121",
+      "mext_15122"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000117",
+    "canonical_name": "ウエハース",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_15092",
+      "mext_15141"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000122",
+    "canonical_name": "カレーパン",
+    "original_issue_types": [
+      "attribute_dimension_mismatch"
+    ],
+    "resolution_type": "move_attribute_dimension",
+    "changed_fields": [
+      "selectable_attributes",
+      "mappings.attribute_values",
+      "mappings.variant_key",
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "同一の選択軸に分散していた値を標準属性次元へ統合",
+    "source_ids": [
+      "mext_15127",
+      "mext_15128",
+      "mext_15129"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000122",
+    "canonical_name": "カレーパン",
+    "original_issue_types": [
+      "attribute_dimension_mismatch"
+    ],
+    "resolution_type": "move_attribute_dimension",
+    "changed_fields": [
+      "selectable_attributes",
+      "mappings.attribute_values",
+      "mappings.variant_key",
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "同一の選択軸に分散していた値を標準属性次元へ統合",
+    "source_ids": [
+      "mext_15127",
+      "mext_15128",
+      "mext_15129"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000122",
+    "canonical_name": "カレーパン",
+    "original_issue_types": [
+      "attribute_dimension_mismatch"
+    ],
+    "resolution_type": "move_attribute_dimension",
+    "changed_fields": [
+      "selectable_attributes",
+      "mappings.attribute_values",
+      "mappings.variant_key",
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "同一の選択軸に分散していた値を標準属性次元へ統合",
+    "source_ids": [
+      "mext_15127",
+      "mext_15128",
+      "mext_15129"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000124",
+    "canonical_name": "クリームパン",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_15070",
+      "mext_15130"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000128",
+    "canonical_name": "ショートケーキ",
+    "original_issue_types": [
+      "attribute_dimension_mismatch"
+    ],
+    "resolution_type": "move_attribute_dimension",
+    "changed_fields": [
+      "selectable_attributes",
+      "mappings.attribute_values",
+      "mappings.variant_key",
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "同一の選択軸に分散していた値を標準属性次元へ統合",
+    "source_ids": [
+      "mext_15075",
+      "mext_15170"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000128",
+    "canonical_name": "ショートケーキ",
+    "original_issue_types": [
+      "attribute_dimension_mismatch"
+    ],
+    "resolution_type": "move_attribute_dimension",
+    "changed_fields": [
+      "selectable_attributes",
+      "mappings.attribute_values",
+      "mappings.variant_key",
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "同一の選択軸に分散していた値を標準属性次元へ統合",
+    "source_ids": [
+      "mext_15075",
+      "mext_15170"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000130",
+    "canonical_name": "スイートチョコレート",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_15186",
+      "mext_15187"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000139",
+    "canonical_name": "デニッシュペストリー",
+    "original_issue_types": [
+      "partial_attribute_presence",
+      "ui_attribute_merge_issue"
+    ],
+    "resolution_type": "merge_ui_attribute",
+    "changed_fields": [
+      "selectable_attributes",
+      "mappings.attribute_values",
+      "mappings.variant_key",
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "中身と中身の材料を一つの中身選択へ統合し、元次元をsource_dimensionsに保持",
+    "source_ids": [
+      "mext_15076",
+      "mext_15171",
+      "mext_15172",
+      "mext_15173",
+      "mext_15182",
+      "mext_15183",
+      "mext_15184",
+      "mext_15185"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000139",
+    "canonical_name": "デニッシュペストリー",
+    "original_issue_types": [
+      "partial_attribute_presence",
+      "ui_attribute_merge_issue"
+    ],
+    "resolution_type": "merge_ui_attribute",
+    "changed_fields": [
+      "selectable_attributes",
+      "mappings.attribute_values",
+      "mappings.variant_key",
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "中身と中身の材料を一つの中身選択へ統合し、元次元をsource_dimensionsに保持",
+    "source_ids": [
+      "mext_15076",
+      "mext_15171",
+      "mext_15172",
+      "mext_15173",
+      "mext_15182",
+      "mext_15183",
+      "mext_15184",
+      "mext_15185"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000172",
+    "canonical_name": "生八つ橋",
+    "original_issue_types": [
+      "partial_attribute_presence",
+      "ui_attribute_merge_issue"
+    ],
+    "resolution_type": "merge_ui_attribute",
+    "changed_fields": [
+      "selectable_attributes",
+      "mappings.attribute_values",
+      "mappings.variant_key",
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "中身と中身の材料を一つの中身選択へ統合し、元次元をsource_dimensionsに保持",
+    "source_ids": [
+      "mext_15004",
+      "mext_15157",
+      "mext_15158"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000206",
+    "canonical_name": "いかフライ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_18008",
+      "mext_18019"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000210",
+    "canonical_name": "えびフライ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_18009",
+      "mext_18020"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000235",
+    "canonical_name": "ポテトコロッケ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_18007",
+      "mext_18018"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000238",
+    "canonical_name": "メンチカツ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_18016",
+      "mext_18022"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000246",
+    "canonical_name": "白身フライ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_18010",
+      "mext_18021"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000260",
+    "canonical_name": "アイスクリーム",
+    "original_issue_types": [
+      "attribute_dimension_mismatch"
+    ],
+    "resolution_type": "move_attribute_dimension",
+    "changed_fields": [
+      "selectable_attributes",
+      "mappings.attribute_values",
+      "mappings.variant_key",
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "同一の選択軸に分散していた値を標準属性次元へ統合",
+    "source_ids": [
+      "mext_13042",
+      "mext_13043"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000260",
+    "canonical_name": "アイスクリーム",
+    "original_issue_types": [
+      "attribute_dimension_mismatch"
+    ],
+    "resolution_type": "move_attribute_dimension",
+    "changed_fields": [
+      "selectable_attributes",
+      "mappings.attribute_values",
+      "mappings.variant_key",
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "同一の選択軸に分散していた値を標準属性次元へ統合",
+    "source_ids": [
+      "mext_13042",
+      "mext_13043"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000263",
+    "canonical_name": "クリーム",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_13014",
+      "mext_13015",
+      "mext_13016",
+      "mext_13035"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000268",
+    "canonical_name": "マーガリン",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_14020",
+      "mext_14029",
+      "mext_14033",
+      "mext_14034"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000269",
+    "canonical_name": "ヨーグルト",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_13025",
+      "mext_13026",
+      "mext_13027",
+      "mext_13053",
+      "mext_13054"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000269",
+    "canonical_name": "ヨーグルト",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_13025",
+      "mext_13026",
+      "mext_13027",
+      "mext_13053",
+      "mext_13054"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000269",
+    "canonical_name": "ヨーグルト",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_13025",
+      "mext_13026",
+      "mext_13027",
+      "mext_13053",
+      "mext_13054"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000274",
+    "canonical_name": "野菜ミックスジュース",
+    "original_issue_types": [
+      "attribute_dimension_mismatch"
+    ],
+    "resolution_type": "move_attribute_dimension",
+    "changed_fields": [
+      "selectable_attributes",
+      "mappings.attribute_values",
+      "mappings.variant_key",
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "同一の選択軸に分散していた値を標準属性次元へ統合",
+    "source_ids": [
+      "mext_06399",
+      "mext_06400"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000274",
+    "canonical_name": "野菜ミックスジュース",
+    "original_issue_types": [
+      "attribute_dimension_mismatch"
+    ],
+    "resolution_type": "move_attribute_dimension",
+    "changed_fields": [
+      "selectable_attributes",
+      "mappings.attribute_values",
+      "mappings.variant_key",
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "同一の選択軸に分散していた値を標準属性次元へ統合",
+    "source_ids": [
+      "mext_06399",
+      "mext_06400"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000289",
+    "canonical_name": "うんしゅうみかん缶詰",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_07035",
+      "mext_07036"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000289",
+    "canonical_name": "うんしゅうみかん缶詰",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_07035",
+      "mext_07036"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000295",
+    "canonical_name": "かぶ漬物",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06040",
+      "mext_06041",
+      "mext_06042",
+      "mext_06043",
+      "mext_06044",
+      "mext_06045"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000297",
+    "canonical_name": "きゅうり漬物",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06066",
+      "mext_06067",
+      "mext_06068",
+      "mext_06069",
+      "mext_06070"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000311",
+    "canonical_name": "中華スタイル即席カップめん",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_01060",
+      "mext_01061",
+      "mext_01191",
+      "mext_01192",
+      "mext_01193",
+      "mext_01194",
+      "mext_01195",
+      "mext_01200",
+      "mext_01201",
+      "mext_01202",
+      "mext_01203"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000311",
+    "canonical_name": "中華スタイル即席カップめん",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_01060",
+      "mext_01061",
+      "mext_01191",
+      "mext_01192",
+      "mext_01193",
+      "mext_01194",
+      "mext_01195",
+      "mext_01200",
+      "mext_01201",
+      "mext_01202",
+      "mext_01203"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000311",
+    "canonical_name": "中華スタイル即席カップめん",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_01060",
+      "mext_01061",
+      "mext_01191",
+      "mext_01192",
+      "mext_01193",
+      "mext_01194",
+      "mext_01195",
+      "mext_01200",
+      "mext_01201",
+      "mext_01202",
+      "mext_01203"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000314",
+    "canonical_name": "即席中華めん",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_01056",
+      "mext_01057",
+      "mext_01058",
+      "mext_01144",
+      "mext_01145",
+      "mext_01189",
+      "mext_01190",
+      "mext_01198",
+      "mext_01199"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000314",
+    "canonical_name": "即席中華めん",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_01056",
+      "mext_01057",
+      "mext_01058",
+      "mext_01144",
+      "mext_01145",
+      "mext_01189",
+      "mext_01190",
+      "mext_01198",
+      "mext_01199"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000314",
+    "canonical_name": "即席中華めん",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_01056",
+      "mext_01057",
+      "mext_01058",
+      "mext_01144",
+      "mext_01145",
+      "mext_01189",
+      "mext_01190",
+      "mext_01198",
+      "mext_01199"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000315",
+    "canonical_name": "和風スタイル即席カップめん",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_01062",
+      "mext_01196",
+      "mext_01204"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000315",
+    "canonical_name": "和風スタイル即席カップめん",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_01062",
+      "mext_01196",
+      "mext_01204"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000322",
+    "canonical_name": "蒸し中華めん",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_01049",
+      "mext_01188"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000360",
+    "canonical_name": "木綿豆腐",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_04032",
+      "mext_04097",
+      "mext_04098"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000364",
+    "canonical_name": "絹ごし豆腐",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_04033",
+      "mext_04099",
+      "mext_04100"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000384",
+    "canonical_name": "まぐろ缶詰",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_10260",
+      "mext_10261",
+      "mext_10262",
+      "mext_10263",
+      "mext_10264"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000385",
+    "canonical_name": "もも缶詰",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_07138",
+      "mext_07139",
+      "mext_07175"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000385",
+    "canonical_name": "もも缶詰",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_07138",
+      "mext_07139",
+      "mext_07175"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000385",
+    "canonical_name": "もも缶詰",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_07138",
+      "mext_07139",
+      "mext_07175"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000402",
+    "canonical_name": "トマトジュース",
+    "original_issue_types": [
+      "attribute_dimension_mismatch"
+    ],
+    "resolution_type": "move_attribute_dimension",
+    "changed_fields": [
+      "selectable_attributes",
+      "mappings.attribute_values",
+      "mappings.variant_key",
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "同一の選択軸に分散していた値を標準属性次元へ統合",
+    "source_ids": [
+      "mext_06185",
+      "mext_06340"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000402",
+    "canonical_name": "トマトジュース",
+    "original_issue_types": [
+      "attribute_dimension_mismatch"
+    ],
+    "resolution_type": "move_attribute_dimension",
+    "changed_fields": [
+      "selectable_attributes",
+      "mappings.attribute_values",
+      "mappings.variant_key",
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "同一の選択軸に分散していた値を標準属性次元へ統合",
+    "source_ids": [
+      "mext_06185",
+      "mext_06340"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000403",
+    "canonical_name": "ミックスジュース",
+    "original_issue_types": [
+      "attribute_dimension_mismatch"
+    ],
+    "resolution_type": "move_attribute_dimension",
+    "changed_fields": [
+      "selectable_attributes",
+      "mappings.attribute_values",
+      "mappings.variant_key",
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "同一の選択軸に分散していた値を標準属性次元へ統合",
+    "source_ids": [
+      "mext_06186",
+      "mext_06341"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000403",
+    "canonical_name": "ミックスジュース",
+    "original_issue_types": [
+      "attribute_dimension_mismatch"
+    ],
+    "resolution_type": "move_attribute_dimension",
+    "changed_fields": [
+      "selectable_attributes",
+      "mappings.attribute_values",
+      "mappings.variant_key",
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "同一の選択軸に分散していた値を標準属性次元へ統合",
+    "source_ids": [
+      "mext_06186",
+      "mext_06341"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000411",
+    "canonical_name": "角形食パン",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_01026",
+      "mext_01174",
+      "mext_01175",
+      "mext_01176"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000411",
+    "canonical_name": "角形食パン",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_01026",
+      "mext_01174",
+      "mext_01175",
+      "mext_01176"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000411",
+    "canonical_name": "角形食パン",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_01026",
+      "mext_01174",
+      "mext_01175",
+      "mext_01176"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000416",
+    "canonical_name": "湯葉",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_04059",
+      "mext_04060",
+      "mext_04091"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000416",
+    "canonical_name": "湯葉",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_04059",
+      "mext_04060",
+      "mext_04091"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000416",
+    "canonical_name": "湯葉",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_04059",
+      "mext_04060",
+      "mext_04091"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000432",
+    "canonical_name": "水稲玄米全かゆ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_01090",
+      "mext_01214"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000437",
+    "canonical_name": "水稲精白米全かゆ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_01093",
+      "mext_01215"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000454",
+    "canonical_name": "でん粉めん",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_02058",
+      "mext_02059",
+      "mext_02060"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000454",
+    "canonical_name": "でん粉めん",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_02058",
+      "mext_02059",
+      "mext_02060"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000458",
+    "canonical_name": "ひまわり油",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_14011",
+      "mext_14026",
+      "mext_14027"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000458",
+    "canonical_name": "ひまわり油",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_14011",
+      "mext_14026",
+      "mext_14027"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000506",
+    "canonical_name": "油揚げ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_04040",
+      "mext_04084",
+      "mext_04085",
+      "mext_04086",
+      "mext_04095"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000509",
+    "canonical_name": "天ぷら粉",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_01025",
+      "mext_01171",
+      "mext_01172"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000509",
+    "canonical_name": "天ぷら粉",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_01025",
+      "mext_01171",
+      "mext_01172"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000509",
+    "canonical_name": "天ぷら粉",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_01025",
+      "mext_01171",
+      "mext_01172"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000518",
+    "canonical_name": "あけび",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_07001",
+      "mext_07002"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000518",
+    "canonical_name": "あけび",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_07001",
+      "mext_07002"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000525",
+    "canonical_name": "あずき",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_04001",
+      "mext_04002"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000525",
+    "canonical_name": "あずき",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_04001",
+      "mext_04002"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000538",
+    "canonical_name": "あわび",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_10286",
+      "mext_10287",
+      "mext_10427",
+      "mext_10428",
+      "mext_10429"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000553",
+    "canonical_name": "いんげんまめ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_04007",
+      "mext_04008",
+      "mext_06010",
+      "mext_06011"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000553",
+    "canonical_name": "いんげんまめ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_04007",
+      "mext_04008",
+      "mext_06010",
+      "mext_06011"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000553",
+    "canonical_name": "いんげんまめ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_04007",
+      "mext_04008",
+      "mext_06010",
+      "mext_06011"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000553",
+    "canonical_name": "いんげんまめ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_04007",
+      "mext_04008",
+      "mext_06010",
+      "mext_06011"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000553",
+    "canonical_name": "いんげんまめ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_04007",
+      "mext_04008",
+      "mext_06010",
+      "mext_06011"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000559",
+    "canonical_name": "うなぎ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_10067",
+      "mext_10069"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000575",
+    "canonical_name": "おおさかしろな",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06027",
+      "mext_06028",
+      "mext_06029"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000584",
+    "canonical_name": "かき",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_07049",
+      "mext_07050",
+      "mext_07051",
+      "mext_10292",
+      "mext_10293",
+      "mext_10430"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000584",
+    "canonical_name": "かき",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_07049",
+      "mext_07050",
+      "mext_07051",
+      "mext_10292",
+      "mext_10293",
+      "mext_10430"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000589",
+    "canonical_name": "かぶ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06034",
+      "mext_06035",
+      "mext_06036",
+      "mext_06037",
+      "mext_06038",
+      "mext_06039"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000594",
+    "canonical_name": "からしな",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06052",
+      "mext_06053"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000606",
+    "canonical_name": "きく",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06058",
+      "mext_06059",
+      "mext_06060"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000612",
+    "canonical_name": "きはだ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_07183",
+      "mext_10252"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000652",
+    "canonical_name": "ささげ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_04017",
+      "mext_04018"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000652",
+    "canonical_name": "ささげ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_04017",
+      "mext_04018"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000654",
+    "canonical_name": "さつまいも",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_02006",
+      "mext_02007",
+      "mext_02008",
+      "mext_02009",
+      "mext_02045",
+      "mext_02046"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000654",
+    "canonical_name": "さつまいも",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_02006",
+      "mext_02007",
+      "mext_02008",
+      "mext_02009",
+      "mext_02045",
+      "mext_02046"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000660",
+    "canonical_name": "さんとうさい",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06089",
+      "mext_06090",
+      "mext_06091"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000662",
+    "canonical_name": "さんま",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_10173",
+      "mext_10174",
+      "mext_10175",
+      "mext_10176",
+      "mext_10407"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000665",
+    "canonical_name": "しいたけ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_08013",
+      "mext_08014",
+      "mext_08039",
+      "mext_08040",
+      "mext_08041",
+      "mext_08042",
+      "mext_08043",
+      "mext_08044",
+      "mext_08053"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000665",
+    "canonical_name": "しいたけ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_08013",
+      "mext_08014",
+      "mext_08039",
+      "mext_08040",
+      "mext_08041",
+      "mext_08042",
+      "mext_08043",
+      "mext_08044",
+      "mext_08053"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000665",
+    "canonical_name": "しいたけ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_08013",
+      "mext_08014",
+      "mext_08039",
+      "mext_08040",
+      "mext_08041",
+      "mext_08042",
+      "mext_08043",
+      "mext_08044",
+      "mext_08053"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000665",
+    "canonical_name": "しいたけ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_08013",
+      "mext_08014",
+      "mext_08039",
+      "mext_08040",
+      "mext_08041",
+      "mext_08042",
+      "mext_08043",
+      "mext_08044",
+      "mext_08053"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000679",
+    "canonical_name": "しょうが",
+    "original_issue_types": [
+      "food_form_mismatch"
+    ],
+    "resolution_type": "normalize_food_form",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "グループの既存food_formを採用し、個別の形態差は既存の属性で保持",
+    "source_ids": [
+      "mext_06103",
+      "mext_06365",
+      "mext_17068",
+      "mext_17069"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000679",
+    "canonical_name": "しょうが",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06103",
+      "mext_06365",
+      "mext_17068",
+      "mext_17069"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000679",
+    "canonical_name": "しょうが",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06103",
+      "mext_06365",
+      "mext_17068",
+      "mext_17069"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000679",
+    "canonical_name": "しょうが",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06103",
+      "mext_06365",
+      "mext_17068",
+      "mext_17069"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000679",
+    "canonical_name": "しょうが",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06103",
+      "mext_06365",
+      "mext_17068",
+      "mext_17069"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000679",
+    "canonical_name": "しょうが",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06103",
+      "mext_06365",
+      "mext_17068",
+      "mext_17069"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000685",
+    "canonical_name": "しろさけ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_10134",
+      "mext_10135",
+      "mext_10136",
+      "mext_10137",
+      "mext_10138",
+      "mext_10139",
+      "mext_10447"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000685",
+    "canonical_name": "しろさけ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_10134",
+      "mext_10135",
+      "mext_10136",
+      "mext_10137",
+      "mext_10138",
+      "mext_10139",
+      "mext_10447"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000687",
+    "canonical_name": "じゃがいも",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_02017",
+      "mext_02018",
+      "mext_02019",
+      "mext_02021",
+      "mext_02063",
+      "mext_02064",
+      "mext_02066"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000687",
+    "canonical_name": "じゃがいも",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_02017",
+      "mext_02018",
+      "mext_02019",
+      "mext_02021",
+      "mext_02063",
+      "mext_02064",
+      "mext_02066"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000690",
+    "canonical_name": "すいか",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_05021",
+      "mext_07077",
+      "mext_07171"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000693",
+    "canonical_name": "すぐきな",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06113",
+      "mext_06114",
+      "mext_06115"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000694",
+    "canonical_name": "すけとうだら",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_10199",
+      "mext_10200",
+      "mext_10201",
+      "mext_10202",
+      "mext_10203",
+      "mext_10204",
+      "mext_10409"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000694",
+    "canonical_name": "すけとうだら",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_10199",
+      "mext_10200",
+      "mext_10201",
+      "mext_10202",
+      "mext_10203",
+      "mext_10204",
+      "mext_10409"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000699",
+    "canonical_name": "ずいき",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06109",
+      "mext_06110",
+      "mext_06111",
+      "mext_06112"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000699",
+    "canonical_name": "ずいき",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06109",
+      "mext_06110",
+      "mext_06111",
+      "mext_06112"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000699",
+    "canonical_name": "ずいき",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06109",
+      "mext_06110",
+      "mext_06111",
+      "mext_06112"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000703",
+    "canonical_name": "ぜんまい",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06120",
+      "mext_06121",
+      "mext_06122",
+      "mext_06123"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000703",
+    "canonical_name": "ぜんまい",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06120",
+      "mext_06121",
+      "mext_06122",
+      "mext_06123"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000703",
+    "canonical_name": "ぜんまい",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06120",
+      "mext_06121",
+      "mext_06122",
+      "mext_06123"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000703",
+    "canonical_name": "ぜんまい",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06120",
+      "mext_06121",
+      "mext_06122",
+      "mext_06123"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000706",
+    "canonical_name": "そらまめ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_04019",
+      "mext_06124",
+      "mext_06125"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000706",
+    "canonical_name": "そらまめ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_04019",
+      "mext_06124",
+      "mext_06125"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000706",
+    "canonical_name": "そらまめ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_04019",
+      "mext_06124",
+      "mext_06125"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000706",
+    "canonical_name": "そらまめ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_04019",
+      "mext_06124",
+      "mext_06125"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000707",
+    "canonical_name": "たいさい",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06145",
+      "mext_06146"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000711",
+    "canonical_name": "たかな",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06147",
+      "mext_06148"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000713",
+    "canonical_name": "たけのこ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06149",
+      "mext_06150",
+      "mext_06152"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000713",
+    "canonical_name": "たけのこ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06149",
+      "mext_06150",
+      "mext_06152"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000718",
+    "canonical_name": "たまねぎ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06153",
+      "mext_06154",
+      "mext_06155",
+      "mext_06336",
+      "mext_06389"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000723",
+    "canonical_name": "だいこん",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06130",
+      "mext_06131",
+      "mext_06132",
+      "mext_06133",
+      "mext_06134",
+      "mext_06135",
+      "mext_06367",
+      "mext_06369"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000723",
+    "canonical_name": "だいこん",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06130",
+      "mext_06131",
+      "mext_06132",
+      "mext_06133",
+      "mext_06134",
+      "mext_06135",
+      "mext_06367",
+      "mext_06369"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000725",
+    "canonical_name": "だいず",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_04023",
+      "mext_04024",
+      "mext_04025",
+      "mext_04026",
+      "mext_04027",
+      "mext_04077",
+      "mext_04104",
+      "mext_04105",
+      "mext_04106"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000725",
+    "canonical_name": "だいず",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_04023",
+      "mext_04024",
+      "mext_04025",
+      "mext_04026",
+      "mext_04027",
+      "mext_04077",
+      "mext_04104",
+      "mext_04105",
+      "mext_04106"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000725",
+    "canonical_name": "だいず",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_04023",
+      "mext_04024",
+      "mext_04025",
+      "mext_04026",
+      "mext_04027",
+      "mext_04077",
+      "mext_04104",
+      "mext_04105",
+      "mext_04106"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000725",
+    "canonical_name": "だいず",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_04023",
+      "mext_04024",
+      "mext_04025",
+      "mext_04026",
+      "mext_04027",
+      "mext_04077",
+      "mext_04104",
+      "mext_04105",
+      "mext_04106"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000736",
+    "canonical_name": "つるあずき",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_04064",
+      "mext_04092"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000736",
+    "canonical_name": "つるあずき",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_04064",
+      "mext_04092"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000743",
+    "canonical_name": "とうがらし",
+    "original_issue_types": [
+      "food_form_mismatch"
+    ],
+    "resolution_type": "normalize_food_form",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "グループの既存food_formを採用し、個別の形態差は既存の属性で保持",
+    "source_ids": [
+      "mext_06169",
+      "mext_06170",
+      "mext_06171",
+      "mext_06172",
+      "mext_17073"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000743",
+    "canonical_name": "とうがらし",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06169",
+      "mext_06170",
+      "mext_06171",
+      "mext_06172",
+      "mext_17073"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000743",
+    "canonical_name": "とうがらし",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06169",
+      "mext_06170",
+      "mext_06171",
+      "mext_06172",
+      "mext_17073"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000743",
+    "canonical_name": "とうがらし",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06169",
+      "mext_06170",
+      "mext_06171",
+      "mext_06172",
+      "mext_17073"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000763",
+    "canonical_name": "なめこ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_08020",
+      "mext_08021",
+      "mext_08058"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000763",
+    "canonical_name": "なめこ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_08020",
+      "mext_08021",
+      "mext_08058"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000767",
+    "canonical_name": "にしまあじ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_10008",
+      "mext_10009",
+      "mext_10010",
+      "mext_10457",
+      "mext_10458"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000772",
+    "canonical_name": "にんじん",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06212",
+      "mext_06213",
+      "mext_06214",
+      "mext_06215",
+      "mext_06216",
+      "mext_06345",
+      "mext_06346",
+      "mext_06347",
+      "mext_06348",
+      "mext_06380",
+      "mext_06381",
+      "mext_06407",
+      "mext_06408"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000772",
+    "canonical_name": "にんじん",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06212",
+      "mext_06213",
+      "mext_06214",
+      "mext_06215",
+      "mext_06216",
+      "mext_06345",
+      "mext_06346",
+      "mext_06347",
+      "mext_06348",
+      "mext_06380",
+      "mext_06381",
+      "mext_06407",
+      "mext_06408"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000772",
+    "canonical_name": "にんじん",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06212",
+      "mext_06213",
+      "mext_06214",
+      "mext_06215",
+      "mext_06216",
+      "mext_06345",
+      "mext_06346",
+      "mext_06347",
+      "mext_06348",
+      "mext_06380",
+      "mext_06381",
+      "mext_06407",
+      "mext_06408"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000772",
+    "canonical_name": "にんじん",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06212",
+      "mext_06213",
+      "mext_06214",
+      "mext_06215",
+      "mext_06216",
+      "mext_06345",
+      "mext_06346",
+      "mext_06347",
+      "mext_06348",
+      "mext_06380",
+      "mext_06381",
+      "mext_06407",
+      "mext_06408"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000772",
+    "canonical_name": "にんじん",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06212",
+      "mext_06213",
+      "mext_06214",
+      "mext_06215",
+      "mext_06216",
+      "mext_06345",
+      "mext_06346",
+      "mext_06347",
+      "mext_06348",
+      "mext_06380",
+      "mext_06381",
+      "mext_06407",
+      "mext_06408"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000773",
+    "canonical_name": "にんにく",
+    "original_issue_types": [
+      "food_form_mismatch"
+    ],
+    "resolution_type": "normalize_food_form",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "グループの既存food_formを採用し、個別の形態差は既存の属性で保持",
+    "source_ids": [
+      "mext_06223",
+      "mext_06349",
+      "mext_17076"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000773",
+    "canonical_name": "にんにく",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06223",
+      "mext_06349",
+      "mext_17076"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000778",
+    "canonical_name": "はす",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_05023",
+      "mext_05024",
+      "mext_05043"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000778",
+    "canonical_name": "はす",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_05023",
+      "mext_05024",
+      "mext_05043"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000782",
+    "canonical_name": "はちみつ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_03022",
+      "mext_03033"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000797",
+    "canonical_name": "ひじき",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_09050",
+      "mext_09051",
+      "mext_09052",
+      "mext_09053",
+      "mext_09054",
+      "mext_09055"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000797",
+    "canonical_name": "ひじき",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_09050",
+      "mext_09051",
+      "mext_09052",
+      "mext_09053",
+      "mext_09054",
+      "mext_09055"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000802",
+    "canonical_name": "ひよこまめ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_04065",
+      "mext_04066",
+      "mext_04067"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000802",
+    "canonical_name": "ひよこまめ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_04065",
+      "mext_04066",
+      "mext_04067"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000805",
+    "canonical_name": "ひらめ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_10234",
+      "mext_10235",
+      "mext_10410"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000806",
+    "canonical_name": "ひろしまな",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06254",
+      "mext_06255"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000816",
+    "canonical_name": "ぶどう",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_07116",
+      "mext_07117",
+      "mext_07178",
+      "mext_07187"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000816",
+    "canonical_name": "ぶどう",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_07116",
+      "mext_07117",
+      "mext_07178",
+      "mext_07187"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000818",
+    "canonical_name": "ぶり",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_10241",
+      "mext_10242",
+      "mext_10243",
+      "mext_10411"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000818",
+    "canonical_name": "ぶり",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_10241",
+      "mext_10242",
+      "mext_10243",
+      "mext_10411"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000819",
+    "canonical_name": "ぶんたん",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_07126",
+      "mext_07127"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000823",
+    "canonical_name": "べにばないんげん",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_04068",
+      "mext_04069"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000823",
+    "canonical_name": "べにばないんげん",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_04068",
+      "mext_04069"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000825",
+    "canonical_name": "ほうれんそう",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06267",
+      "mext_06268",
+      "mext_06269",
+      "mext_06355",
+      "mext_06356",
+      "mext_06357",
+      "mext_06358",
+      "mext_06359",
+      "mext_06372",
+      "mext_06373"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000825",
+    "canonical_name": "ほうれんそう",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06267",
+      "mext_06268",
+      "mext_06269",
+      "mext_06355",
+      "mext_06356",
+      "mext_06357",
+      "mext_06358",
+      "mext_06359",
+      "mext_06372",
+      "mext_06373"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000825",
+    "canonical_name": "ほうれんそう",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06267",
+      "mext_06268",
+      "mext_06269",
+      "mext_06355",
+      "mext_06356",
+      "mext_06357",
+      "mext_06358",
+      "mext_06359",
+      "mext_06372",
+      "mext_06373"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000825",
+    "canonical_name": "ほうれんそう",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06267",
+      "mext_06268",
+      "mext_06269",
+      "mext_06355",
+      "mext_06356",
+      "mext_06357",
+      "mext_06358",
+      "mext_06359",
+      "mext_06372",
+      "mext_06373"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000830",
+    "canonical_name": "ほっけ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_10246",
+      "mext_10247",
+      "mext_10248",
+      "mext_10412"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000830",
+    "canonical_name": "ほっけ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_10246",
+      "mext_10247",
+      "mext_10248",
+      "mext_10412"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000836",
+    "canonical_name": "まあじ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_10003",
+      "mext_10004",
+      "mext_10005",
+      "mext_10006",
+      "mext_10007",
+      "mext_10389",
+      "mext_10390",
+      "mext_10391"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000836",
+    "canonical_name": "まあじ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_10003",
+      "mext_10004",
+      "mext_10005",
+      "mext_10006",
+      "mext_10007",
+      "mext_10389",
+      "mext_10390",
+      "mext_10391"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000836",
+    "canonical_name": "まあじ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_10003",
+      "mext_10004",
+      "mext_10005",
+      "mext_10006",
+      "mext_10007",
+      "mext_10389",
+      "mext_10390",
+      "mext_10391"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000836",
+    "canonical_name": "まあじ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_10003",
+      "mext_10004",
+      "mext_10005",
+      "mext_10006",
+      "mext_10007",
+      "mext_10389",
+      "mext_10390",
+      "mext_10391"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000844",
+    "canonical_name": "まこんぶ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_09017",
+      "mext_09056"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000844",
+    "canonical_name": "まこんぶ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_09017",
+      "mext_09056"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000848",
+    "canonical_name": "まだい",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_10192",
+      "mext_10193",
+      "mext_10194",
+      "mext_10195",
+      "mext_10408"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000849",
+    "canonical_name": "まだこ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_10361",
+      "mext_10362",
+      "mext_10471",
+      "mext_10472",
+      "mext_10473",
+      "mext_10474"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000858",
+    "canonical_name": "みずかけな",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06272",
+      "mext_06273"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000860",
+    "canonical_name": "みずな",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06072",
+      "mext_06073",
+      "mext_06074"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000902",
+    "canonical_name": "らいまめ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_04070",
+      "mext_04093"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000902",
+    "canonical_name": "らいまめ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_04070",
+      "mext_04093"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000903",
+    "canonical_name": "らっかせい",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_05034",
+      "mext_05035",
+      "mext_05044",
+      "mext_05045",
+      "mext_06303",
+      "mext_06304"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000903",
+    "canonical_name": "らっかせい",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_05034",
+      "mext_05035",
+      "mext_05044",
+      "mext_05045",
+      "mext_06303",
+      "mext_06304"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000904",
+    "canonical_name": "らっきょう",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06305",
+      "mext_06306"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000907",
+    "canonical_name": "りょくとう",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_04071",
+      "mext_04072"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000907",
+    "canonical_name": "りょくとう",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_04071",
+      "mext_04072"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000910",
+    "canonical_name": "れんこん",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06317",
+      "mext_06318",
+      "mext_06371"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000912",
+    "canonical_name": "わかめ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_09039",
+      "mext_09040",
+      "mext_09041",
+      "mext_09042",
+      "mext_09043",
+      "mext_09044",
+      "mext_09045",
+      "mext_09046",
+      "mext_09047",
+      "mext_09057",
+      "mext_09058",
+      "mext_09059",
+      "mext_09060"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000912",
+    "canonical_name": "わかめ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_09039",
+      "mext_09040",
+      "mext_09041",
+      "mext_09042",
+      "mext_09043",
+      "mext_09044",
+      "mext_09045",
+      "mext_09046",
+      "mext_09047",
+      "mext_09057",
+      "mext_09058",
+      "mext_09059",
+      "mext_09060"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000912",
+    "canonical_name": "わかめ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_09039",
+      "mext_09040",
+      "mext_09041",
+      "mext_09042",
+      "mext_09043",
+      "mext_09044",
+      "mext_09045",
+      "mext_09046",
+      "mext_09047",
+      "mext_09057",
+      "mext_09058",
+      "mext_09059",
+      "mext_09060"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000912",
+    "canonical_name": "わかめ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_09039",
+      "mext_09040",
+      "mext_09041",
+      "mext_09042",
+      "mext_09043",
+      "mext_09044",
+      "mext_09045",
+      "mext_09046",
+      "mext_09047",
+      "mext_09057",
+      "mext_09058",
+      "mext_09059",
+      "mext_09060"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000912",
+    "canonical_name": "わかめ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_09039",
+      "mext_09040",
+      "mext_09041",
+      "mext_09042",
+      "mext_09043",
+      "mext_09044",
+      "mext_09045",
+      "mext_09046",
+      "mext_09047",
+      "mext_09057",
+      "mext_09058",
+      "mext_09059",
+      "mext_09060"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000914",
+    "canonical_name": "わさび",
+    "original_issue_types": [
+      "food_form_mismatch"
+    ],
+    "resolution_type": "normalize_food_form",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "グループの既存food_formを採用し、個別の形態差は既存の属性で保持",
+    "source_ids": [
+      "mext_06322",
+      "mext_06323",
+      "mext_17080",
+      "mext_17081"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000914",
+    "canonical_name": "わさび",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06322",
+      "mext_06323",
+      "mext_17080",
+      "mext_17081"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000914",
+    "canonical_name": "わさび",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06322",
+      "mext_06323",
+      "mext_17080",
+      "mext_17081"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000914",
+    "canonical_name": "わさび",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06322",
+      "mext_06323",
+      "mext_17080",
+      "mext_17081"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000915",
+    "canonical_name": "わらび",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06324",
+      "mext_06325",
+      "mext_06326"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000915",
+    "canonical_name": "わらび",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06324",
+      "mext_06325",
+      "mext_06326"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000915",
+    "canonical_name": "わらび",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06324",
+      "mext_06325",
+      "mext_06326"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000929",
+    "canonical_name": "アーモンド",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_05001",
+      "mext_05002",
+      "mext_05040"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000929",
+    "canonical_name": "アーモンド",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_05001",
+      "mext_05002",
+      "mext_05040"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000929",
+    "canonical_name": "アーモンド",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_05001",
+      "mext_05002",
+      "mext_05040"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000929",
+    "canonical_name": "アーモンド",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_05001",
+      "mext_05002",
+      "mext_05040"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000935",
+    "canonical_name": "オレンジ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_07040",
+      "mext_07041",
+      "mext_07161"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000950",
+    "canonical_name": "グリンピース",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06023",
+      "mext_06024",
+      "mext_06025",
+      "mext_06374",
+      "mext_06375"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000950",
+    "canonical_name": "グリンピース",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06023",
+      "mext_06024",
+      "mext_06025",
+      "mext_06374",
+      "mext_06375"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000964",
+    "canonical_name": "ショートニング",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_14022",
+      "mext_14030",
+      "mext_14031"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000964",
+    "canonical_name": "ショートニング",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_14022",
+      "mext_14030",
+      "mext_14031"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000966",
+    "canonical_name": "スイートコーン",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06175",
+      "mext_06176",
+      "mext_06177",
+      "mext_06178",
+      "mext_06179",
+      "mext_06180",
+      "mext_06339",
+      "mext_06378",
+      "mext_06379"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000966",
+    "canonical_name": "スイートコーン",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06175",
+      "mext_06176",
+      "mext_06177",
+      "mext_06178",
+      "mext_06179",
+      "mext_06180",
+      "mext_06339",
+      "mext_06378",
+      "mext_06379"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000966",
+    "canonical_name": "スイートコーン",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06175",
+      "mext_06176",
+      "mext_06177",
+      "mext_06178",
+      "mext_06179",
+      "mext_06180",
+      "mext_06339",
+      "mext_06378",
+      "mext_06379"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000966",
+    "canonical_name": "スイートコーン",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06175",
+      "mext_06176",
+      "mext_06177",
+      "mext_06178",
+      "mext_06179",
+      "mext_06180",
+      "mext_06339",
+      "mext_06378",
+      "mext_06379"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000966",
+    "canonical_name": "スイートコーン",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06175",
+      "mext_06176",
+      "mext_06177",
+      "mext_06178",
+      "mext_06179",
+      "mext_06180",
+      "mext_06339",
+      "mext_06378",
+      "mext_06379"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000980",
+    "canonical_name": "トウミョウ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06019",
+      "mext_06329",
+      "mext_06330",
+      "mext_06331"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000980",
+    "canonical_name": "トウミョウ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06019",
+      "mext_06329",
+      "mext_06330",
+      "mext_06331"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000989",
+    "canonical_name": "バジル",
+    "original_issue_types": [
+      "food_form_mismatch"
+    ],
+    "resolution_type": "normalize_food_form",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "グループの既存food_formを採用し、個別の形態差は既存の属性で保持",
+    "source_ids": [
+      "mext_06238",
+      "mext_17077"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000989",
+    "canonical_name": "バジル",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06238",
+      "mext_17077"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000989",
+    "canonical_name": "バジル",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06238",
+      "mext_17077"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000989",
+    "canonical_name": "バジル",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06238",
+      "mext_17077"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000994",
+    "canonical_name": "パセリ",
+    "original_issue_types": [
+      "food_form_mismatch"
+    ],
+    "resolution_type": "normalize_food_form",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "グループの既存food_formを採用し、個別の形態差は既存の属性で保持",
+    "source_ids": [
+      "mext_06239",
+      "mext_17078"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_000994",
+    "canonical_name": "パセリ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06239",
+      "mext_17078"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001003",
+    "canonical_name": "ブロッコリー",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06263",
+      "mext_06264",
+      "mext_06354",
+      "mext_06395",
+      "mext_06396",
+      "mext_06397"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001003",
+    "canonical_name": "ブロッコリー",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06263",
+      "mext_06264",
+      "mext_06354",
+      "mext_06395",
+      "mext_06396",
+      "mext_06397"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001012",
+    "canonical_name": "マッシュルーム",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_08031",
+      "mext_08032",
+      "mext_08052",
+      "mext_08059"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001016",
+    "canonical_name": "ミックスベジタブル",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_06382",
+      "mext_06383",
+      "mext_06384"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001035",
+    "canonical_name": "レンズまめ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_04073",
+      "mext_04094"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001035",
+    "canonical_name": "レンズまめ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_04073",
+      "mext_04094"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001045",
+    "canonical_name": "加工乳",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_13004",
+      "mext_13005"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001045",
+    "canonical_name": "加工乳",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_13004",
+      "mext_13005"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001119",
+    "canonical_name": "赤えんどう",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_04074",
+      "mext_04075"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001119",
+    "canonical_name": "赤えんどう",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_04074",
+      "mext_04075"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001120",
+    "canonical_name": "青えんどう",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_04012",
+      "mext_04013"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001120",
+    "canonical_name": "青えんどう",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_04012",
+      "mext_04013"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001150",
+    "canonical_name": "小麦たんぱく",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_01071",
+      "mext_01072",
+      "mext_01073"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001150",
+    "canonical_name": "小麦たんぱく",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_01071",
+      "mext_01072",
+      "mext_01073"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001206",
+    "canonical_name": "にしんかずのこ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_10222",
+      "mext_10223",
+      "mext_10224"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001206",
+    "canonical_name": "にしんかずのこ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_10222",
+      "mext_10223",
+      "mext_10224"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001206",
+    "canonical_name": "にしんかずのこ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_10222",
+      "mext_10223",
+      "mext_10224"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001245",
+    "canonical_name": "牛かたロース肉",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_11008",
+      "mext_11009",
+      "mext_11010",
+      "mext_11034",
+      "mext_11035",
+      "mext_11036",
+      "mext_11064",
+      "mext_11065",
+      "mext_11066"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001245",
+    "canonical_name": "牛かたロース肉",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_11008",
+      "mext_11009",
+      "mext_11010",
+      "mext_11034",
+      "mext_11035",
+      "mext_11036",
+      "mext_11064",
+      "mext_11065",
+      "mext_11066"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001246",
+    "canonical_name": "牛かた肉",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_11004",
+      "mext_11005",
+      "mext_11006",
+      "mext_11007",
+      "mext_11030",
+      "mext_11031",
+      "mext_11032",
+      "mext_11033",
+      "mext_11060",
+      "mext_11061",
+      "mext_11062",
+      "mext_11063",
+      "mext_11301",
+      "mext_11302",
+      "mext_11309",
+      "mext_11310"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001246",
+    "canonical_name": "牛かた肉",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_11004",
+      "mext_11005",
+      "mext_11006",
+      "mext_11007",
+      "mext_11030",
+      "mext_11031",
+      "mext_11032",
+      "mext_11033",
+      "mext_11060",
+      "mext_11061",
+      "mext_11062",
+      "mext_11063",
+      "mext_11301",
+      "mext_11302",
+      "mext_11309",
+      "mext_11310"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001248",
+    "canonical_name": "牛そともも肉",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_11023",
+      "mext_11024",
+      "mext_11025",
+      "mext_11053",
+      "mext_11054",
+      "mext_11055",
+      "mext_11079",
+      "mext_11080",
+      "mext_11081"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001248",
+    "canonical_name": "牛そともも肉",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_11023",
+      "mext_11024",
+      "mext_11025",
+      "mext_11053",
+      "mext_11054",
+      "mext_11055",
+      "mext_11079",
+      "mext_11080",
+      "mext_11081"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001249",
+    "canonical_name": "牛ばら肉",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_11018",
+      "mext_11046",
+      "mext_11074",
+      "mext_11087",
+      "mext_11252",
+      "mext_11260"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001249",
+    "canonical_name": "牛ばら肉",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_11018",
+      "mext_11046",
+      "mext_11074",
+      "mext_11087",
+      "mext_11252",
+      "mext_11260"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001249",
+    "canonical_name": "牛ばら肉",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_11018",
+      "mext_11046",
+      "mext_11074",
+      "mext_11087",
+      "mext_11252",
+      "mext_11260"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001250",
+    "canonical_name": "牛もも肉",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_11019",
+      "mext_11020",
+      "mext_11021",
+      "mext_11022",
+      "mext_11047",
+      "mext_11048",
+      "mext_11049",
+      "mext_11050",
+      "mext_11051",
+      "mext_11052",
+      "mext_11075",
+      "mext_11076",
+      "mext_11077",
+      "mext_11078",
+      "mext_11088",
+      "mext_11250",
+      "mext_11251",
+      "mext_11261",
+      "mext_11262",
+      "mext_11263",
+      "mext_11264",
+      "mext_11265",
+      "mext_11266",
+      "mext_11270",
+      "mext_11271"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001250",
+    "canonical_name": "牛もも肉",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_11019",
+      "mext_11020",
+      "mext_11021",
+      "mext_11022",
+      "mext_11047",
+      "mext_11048",
+      "mext_11049",
+      "mext_11050",
+      "mext_11051",
+      "mext_11052",
+      "mext_11075",
+      "mext_11076",
+      "mext_11077",
+      "mext_11078",
+      "mext_11088",
+      "mext_11250",
+      "mext_11251",
+      "mext_11261",
+      "mext_11262",
+      "mext_11263",
+      "mext_11264",
+      "mext_11265",
+      "mext_11266",
+      "mext_11270",
+      "mext_11271"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001250",
+    "canonical_name": "牛もも肉",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_11019",
+      "mext_11020",
+      "mext_11021",
+      "mext_11022",
+      "mext_11047",
+      "mext_11048",
+      "mext_11049",
+      "mext_11050",
+      "mext_11051",
+      "mext_11052",
+      "mext_11075",
+      "mext_11076",
+      "mext_11077",
+      "mext_11078",
+      "mext_11088",
+      "mext_11250",
+      "mext_11251",
+      "mext_11261",
+      "mext_11262",
+      "mext_11263",
+      "mext_11264",
+      "mext_11265",
+      "mext_11266",
+      "mext_11270",
+      "mext_11271"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001251",
+    "canonical_name": "牛サーロイン肉",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_11015",
+      "mext_11016",
+      "mext_11017",
+      "mext_11043",
+      "mext_11044",
+      "mext_11045",
+      "mext_11071",
+      "mext_11072",
+      "mext_11073"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001251",
+    "canonical_name": "牛サーロイン肉",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_11015",
+      "mext_11016",
+      "mext_11017",
+      "mext_11043",
+      "mext_11044",
+      "mext_11045",
+      "mext_11071",
+      "mext_11072",
+      "mext_11073"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001253",
+    "canonical_name": "牛ヒレ肉",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_11029",
+      "mext_11059",
+      "mext_11085",
+      "mext_11253",
+      "mext_11267"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001253",
+    "canonical_name": "牛ヒレ肉",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_11029",
+      "mext_11059",
+      "mext_11085",
+      "mext_11253",
+      "mext_11267"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001255",
+    "canonical_name": "牛ランプ肉",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_11026",
+      "mext_11027",
+      "mext_11028",
+      "mext_11056",
+      "mext_11057",
+      "mext_11058",
+      "mext_11082",
+      "mext_11083",
+      "mext_11084"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001255",
+    "canonical_name": "牛ランプ肉",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_11026",
+      "mext_11027",
+      "mext_11028",
+      "mext_11056",
+      "mext_11057",
+      "mext_11058",
+      "mext_11082",
+      "mext_11083",
+      "mext_11084"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001256",
+    "canonical_name": "牛リブロース肉",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_11011",
+      "mext_11012",
+      "mext_11013",
+      "mext_11014",
+      "mext_11037",
+      "mext_11038",
+      "mext_11039",
+      "mext_11040",
+      "mext_11041",
+      "mext_11042",
+      "mext_11067",
+      "mext_11068",
+      "mext_11069",
+      "mext_11070",
+      "mext_11086",
+      "mext_11248",
+      "mext_11249",
+      "mext_11254",
+      "mext_11255",
+      "mext_11256",
+      "mext_11257",
+      "mext_11258",
+      "mext_11259",
+      "mext_11268",
+      "mext_11269"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001256",
+    "canonical_name": "牛リブロース肉",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_11011",
+      "mext_11012",
+      "mext_11013",
+      "mext_11014",
+      "mext_11037",
+      "mext_11038",
+      "mext_11039",
+      "mext_11040",
+      "mext_11041",
+      "mext_11042",
+      "mext_11067",
+      "mext_11068",
+      "mext_11069",
+      "mext_11070",
+      "mext_11086",
+      "mext_11248",
+      "mext_11249",
+      "mext_11254",
+      "mext_11255",
+      "mext_11256",
+      "mext_11257",
+      "mext_11258",
+      "mext_11259",
+      "mext_11268",
+      "mext_11269"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001256",
+    "canonical_name": "牛リブロース肉",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_11011",
+      "mext_11012",
+      "mext_11013",
+      "mext_11014",
+      "mext_11037",
+      "mext_11038",
+      "mext_11039",
+      "mext_11040",
+      "mext_11041",
+      "mext_11042",
+      "mext_11067",
+      "mext_11068",
+      "mext_11069",
+      "mext_11070",
+      "mext_11086",
+      "mext_11248",
+      "mext_11249",
+      "mext_11254",
+      "mext_11255",
+      "mext_11256",
+      "mext_11257",
+      "mext_11258",
+      "mext_11259",
+      "mext_11268",
+      "mext_11269"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001314",
+    "canonical_name": "ばらベーコン",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_11183",
+      "mext_11314",
+      "mext_11315",
+      "mext_11316"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001316",
+    "canonical_name": "ウインナーソーセージ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_11186",
+      "mext_11306",
+      "mext_11307",
+      "mext_11308"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001331",
+    "canonical_name": "ロースハム",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_11176",
+      "mext_11303",
+      "mext_11304",
+      "mext_11305"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001370",
+    "canonical_name": "鶏むね肉",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_11213",
+      "mext_11214",
+      "mext_11219",
+      "mext_11220",
+      "mext_11234",
+      "mext_11287",
+      "mext_11288"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001370",
+    "canonical_name": "鶏むね肉",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_11213",
+      "mext_11214",
+      "mext_11219",
+      "mext_11220",
+      "mext_11234",
+      "mext_11287",
+      "mext_11288"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001371",
+    "canonical_name": "鶏もも肉",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_11215",
+      "mext_11216",
+      "mext_11221",
+      "mext_11222",
+      "mext_11223",
+      "mext_11224",
+      "mext_11225",
+      "mext_11226",
+      "mext_11235"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001371",
+    "canonical_name": "鶏もも肉",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_11215",
+      "mext_11216",
+      "mext_11221",
+      "mext_11222",
+      "mext_11223",
+      "mext_11224",
+      "mext_11225",
+      "mext_11226",
+      "mext_11235"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001379",
+    "canonical_name": "ガーリックパウダー",
+    "original_issue_types": [
+      "attribute_dimension_mismatch"
+    ],
+    "resolution_type": "move_attribute_dimension",
+    "changed_fields": [
+      "selectable_attributes",
+      "mappings.attribute_values",
+      "mappings.variant_key",
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "同一の選択軸に分散していた値を標準属性次元へ統合",
+    "source_ids": [
+      "mext_17075",
+      "mext_17128"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001379",
+    "canonical_name": "ガーリックパウダー",
+    "original_issue_types": [
+      "attribute_dimension_mismatch"
+    ],
+    "resolution_type": "move_attribute_dimension",
+    "changed_fields": [
+      "selectable_attributes",
+      "mappings.attribute_values",
+      "mappings.variant_key",
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "同一の選択軸に分散していた値を標準属性次元へ統合",
+    "source_ids": [
+      "mext_17075",
+      "mext_17128"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001382",
+    "canonical_name": "フレンチドレッシング",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_17040",
+      "mext_17149"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001388",
+    "canonical_name": "だし入りみそ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_17120",
+      "mext_17145"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001393",
+    "canonical_name": "うすくちしょうゆ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_17008",
+      "mext_17139"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001398",
+    "canonical_name": "からし",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_17057",
+      "mext_17058"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001398",
+    "canonical_name": "からし",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_17057",
+      "mext_17058"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001399",
+    "canonical_name": "こいくちしょうゆ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_17007",
+      "mext_17086"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001400",
+    "canonical_name": "こしょう",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_17063",
+      "mext_17064",
+      "mext_17065"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001400",
+    "canonical_name": "こしょう",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_17063",
+      "mext_17064",
+      "mext_17065"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001413",
+    "canonical_name": "ぽん酢しょうゆ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_17110",
+      "mext_17137"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001460",
+    "canonical_name": "即席みそ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_17049",
+      "mext_17050"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001460",
+    "canonical_name": "即席みそ",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_17049",
+      "mext_17050"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001463",
+    "canonical_name": "昆布だし",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_17020",
+      "mext_17132"
+    ],
+    "resolved": true
+  },
+  {
+    "food_group_id": "fg_001463",
+    "canonical_name": "昆布だし",
+    "original_issue_types": [
+      "partial_attribute_presence"
+    ],
+    "resolution_type": "add_unspecified_value",
+    "changed_fields": [
+      "needs_review",
+      "group_warnings"
+    ],
+    "description": "名称から非該当を断定できないため、v1で追加済みの「指定なし」を確定",
+    "source_ids": [
+      "mext_17020",
+      "mext_17132"
+    ],
+    "resolved": true
+  }
+]

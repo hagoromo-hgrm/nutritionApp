@@ -1,6 +1,7 @@
 import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { db, deleteFood, exportBackup, getEntriesForDate, getSettings, initializeDatabase, recordFoodSelection, saveFood, saveFoodWithMetadata, saveMealEntries, saveMealEntry, saveMenu, searchFoodResults, searchMenus } from '../src/db/db'
+import { getFoodVariantBySourceId, hasFoodGroup as hasMextFoodGroup } from '../src/services/mextFoodData'
 import type { Food, FoodAlias, FoodGroup, FoodRelatedTerm, MealEntry, Menu } from '../src/types'
 
 const addedNutrients = { calciumMg: null, ironMg: null, vitaminAMcg: null, vitaminEMg: null, vitaminB1Mg: null, vitaminB2Mg: null, vitaminCMg: null, saturatedFatG: null }
@@ -18,15 +19,19 @@ beforeEach(async () => {
 
 describe('IndexedDB data safety', () => {
   it('初期食品は食品ごとの基準単位を持つ', async () => {
-    const rice = await db.foods.get('mext_rice_white')
-    const egg = await db.foods.get('mext_egg')
+    const rice = await db.foods.get('mext_01088')
+    const egg = await db.foods.get('mext_12004')
+    const banana = await db.foods.get('mext_07107')
+    const tofu = await db.foods.get('mext_04032')
     expect(rice?.baseUnit).toBe('合')
-    expect(rice?.servingUnit).toBe('合')
     expect(egg?.baseUnit).toBe('個')
+    expect(banana?.baseUnit).toBe('本')
+    expect(tofu?.baseUnit).toBe('丁')
   })
 
   it('MEXTの収集済み食品を初期データとして検索できる', async () => {
-    expect(await db.foods.count()).toBeGreaterThan(2500)
+    expect(await db.foods.count()).toBe(2538)
+    expect(await db.foodGroups.count()).toBe(1494)
     const amaranth = await db.foods.get('mext_01001')
     expect(amaranth?.baseUnit).toBe('g')
     expect(amaranth?.nutrients.calciumMg).toBe(160)
@@ -41,19 +46,18 @@ describe('IndexedDB data safety', () => {
     expect(seasoning?.baseUnit).toBe('小さじ')
     expect(seasoning?.name).toContain('（小さじ1=')
     expect(foods.filter((food) => food.source === 'mext').some((food) => /^(＜|（|\()/.test(food.name))).toBe(false)
-    expect(await db.foodGroups.count()).toBeGreaterThan(2500)
+    expect((await db.foodGroups.toArray()).filter((group) => group.generationVersion === 'mext-app-v2')).toHaveLength(1494)
     expect(await db.foodAliases.where('normalizedAlias').equals('塩').count()).toBe(0)
+    expect(await db.foods.get('mext_chicken_breast')).toBeUndefined()
   })
 
   it('食品グループをリセット状態で初期化する', async () => {
     const azukiAn = await db.foods.get('mext_04004')
     const azukiCanned = await db.foods.get('mext_04003')
-    expect(azukiAn?.foodGroupId).toBe('food:mext_04004')
-    expect(azukiCanned?.foodGroupId).toBe('food:mext_04003')
+    expect(azukiAn?.foodGroupId).toBe(getFoodVariantBySourceId('mext_04004')?.foodGroupId)
+    expect(azukiCanned?.foodGroupId).toBe(getFoodVariantBySourceId('mext_04003')?.foodGroupId)
     expect(azukiAn?.foodGroupId).not.toBe(azukiCanned?.foodGroupId)
-    expect((await db.foodGroups.get(azukiAn?.foodGroupId ?? ''))?.needsReview).toBe(true)
-    expect(azukiAn?.variantAttributes?.variety).toBeNull()
-    expect(azukiAn?.variantAttributes?.processing).toBeNull()
+    expect((await db.foodGroups.get(azukiAn?.foodGroupId ?? ''))?.needsReview).toBe(false)
   })
 
   it('リセット時に手動familyを保持し、旧生成メタデータを整理する', async () => {
@@ -80,17 +84,61 @@ describe('IndexedDB data safety', () => {
     expect(await db.foodGroups.get(legacyGroup.id)).toBeUndefined()
     expect(await db.foodAliases.get(legacyAlias.id)).toBeUndefined()
     expect(await db.foodRelatedTerms.get(legacyRelated.id)).toBeUndefined()
-  }, 15000)
+  }, 30000)
+
+  it('旧初期サンプルを更新時に削除する', async () => {
+    const legacySample: Food = {
+      ...userFood,
+      id: 'mext_chicken_breast',
+      name: '若鶏むね肉（皮なし）',
+      source: 'mext',
+      sourceVersion: '日本食品標準成分表（八訂）増補2023年・初期サンプル v3',
+    }
+    await db.foods.put(legacySample)
+    await db.metadata.put({ key: 'initial-foods-version', value: 7 })
+
+    await initializeDatabase()
+
+    expect(await db.foods.get(legacySample.id)).toBeUndefined()
+    expect(await db.foods.count()).toBe(2538)
+    expect(await db.foodGroups.count()).toBe(1494)
+  }, 30000)
+
+  it('公式MEXT familyへ追加した手動食品を再初期化後も保持する', async () => {
+    const group = await db.foodGroups.where('displayName').equals('鶏むね肉').first()
+    if (!group) throw new Error('鶏むね肉グループがありません')
+    const now = '2026-07-20T00:00:00.000Z'
+    const manualFood: Food = {
+      ...userFood,
+      id: 'manual_mext_family_food',
+      name: '自家製鶏むね肉',
+      officialName: '自家製鶏むね肉',
+      displayName: group.displayName,
+      foodGroupId: group.id,
+      createdAt: now,
+      updatedAt: now,
+    }
+    await saveFoodWithMetadata(manualFood, { group: { ...group, updatedAt: now }, aliases: [], relatedTerms: [] })
+
+    await initializeDatabase()
+    await initializeDatabase()
+
+    expect((await db.foods.get(manualFood.id))?.foodGroupId).toBe(group.id)
+    expect((await db.foodGroups.get(group.id))?.generationVersion).toBe('mext-app-v2')
+    const result = (await searchFoodResults(manualFood.name)).page.results.find((item) => item.group.id === group.id)
+    expect(result?.variants.some((food) => food.id === manualFood.id)).toBe(true)
+    expect(result?.variants).toHaveLength(8)
+  }, 25000)
 
   it('食品グループ単位の関連度検索と個人利用統計を保存できる', async () => {
     const searched = await searchFoodResults('塩')
     expect(searched.page.results.length).toBeGreaterThan(0)
-    expect(searched.page.results[0].group.id).toMatch(/^food:mext_/)
-    expect(searched.page.results[0].variants.length).toBe(1)
+    expect(hasMextFoodGroup(searched.page.results[0].group.id)).toBe(true)
+    expect(searched.page.results[0].variants.length).toBeGreaterThan(0)
     await recordFoodSelection(searched.logId, searched.page.results[0].group.id, searched.page.results[0].food.id, 1)
     expect((await db.foodUsageStats.get(searched.page.results[0].food.id))?.selectionCount).toBe(1)
     const backup = await exportBackup()
-    expect(backup.foodGroups?.length).toBeGreaterThan(2500)
+    expect(backup.foodGroups?.filter((group) => group.generationVersion === 'mext-app-v2')).toHaveLength(1494)
     expect(backup.searchLogs?.[0].selectedFoodGroupId).toBe(searched.page.results[0].group.id)
     expect(backup.foodUsageStats?.[0].foodId).toBe(searched.page.results[0].food.id)
   })

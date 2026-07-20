@@ -12,6 +12,37 @@
 
 文部科学省の案内に従い、アプリ内の出典は「日本食品標準成分表（八訂）増補2023年から引用」とします。括弧付きの推定値は数値として扱い、`-`・`Tr`・`(Tr)`は未設定として扱います。`0`・`(0)`は元データの意味を保って0として扱います。
 
+## 確定済み食品グループから本番データを生成する
+
+アプリが使用する食品グループとバリエーションは、次の確認済みv2 JSONを入力とします。これらは分類判断の正本なので、本番データ生成時に上書きしません。
+
+- `processed/mext_food_groups_v2.json`
+- `processed/mext_food_group_mappings_v2.json`
+- `processed/mext_food_group_review_v2.json`
+- `processed/mext_food_group_resolution_log_v2.json`
+- `processed/mext_food_group_summary_v2.json`
+
+macOSまたはVisual Studio Codeのプロジェクトルートで、次を実行します。
+
+```bash
+python3 scripts/build_mext_food_app_data.py
+python3 scripts/validate_mext_food_app_data.py
+python3 -m unittest tests/test_mext_food_app_data.py
+```
+
+生成先は `data/mext/app/` です。
+
+- `food_groups.json`: 食品グループ本体
+- `food_group_attributes.json`: UIで選択する属性と属性値
+- `food_group_fixed_attributes.json`: 選択UIに出さない固定属性
+- `food_variants.json`: 属性値の組合せとMEXT `source_id` の対応
+- `food_search_index.json`: 確定済み名称・検索語・親概念の検索インデックス
+- `build_summary.json`: 件数と整合性検証結果
+
+書き込みは一時ファイルからの置換で行い、同じ入力から同じ順序・内容を再生成します。`build_summary.json` の `validationPassed` が `true` にならない場合、生成物をアプリ用として使用してはいけません。分類や名称を変更する場合はこの変換スクリプトを編集せず、上流の確認済みJSONを再作成してください。
+
+アプリは `src/services/mextFoodData.ts` をデータアクセス層として使用します。検索、選択属性取得、固定属性取得、属性値からの `source_id` 解決はこの層を経由し、UIから生成JSONを直接走査しません。Dexie初期化時には同じデータからMEXT食品の `foodGroupId` と検索語を投入します。
+
 変換:
 
 ```bash
@@ -26,13 +57,13 @@ python scripts/convert_food_data.py data/mext/processed/mext_foods.csv data/mext
 
 変換時に食品名の先頭にある成分表の分類見出し（例: `＜調味料類＞`、`（調味ソース類）`）を除去します。食品の状態や調理方法などの注記は保持します。小さじ・個・合などへ換算した食品は、元データの100g基準値をその代表重量に比例換算しています。換算根拠がない食品は推測で変換せず、100g基準のままです。
 
-検索用メタデータは、`food_group_known_good.json` の確認済み候補と、食品名から状態・調理・皮の有無などの属性を機械的に除去して一致する候補をオフライン生成します。品種、部位、加工食品など判断が必要なものは自動統合せず、`food_group_review.json` に判定結果とレビュー候補を一覧化します。`needsReview` の食品は分類見出し除去後の先頭語完全一致でも `firstTokenReviewGroups` にまとめますが、これは人手確認用であり自動統合には使いません。しいたけの菌床・原木は栽培方法属性、もやしの原料豆は原料豆属性として保持します。
+以下の旧検索メタデータ生成経路は、上流データの調査・回帰確認用として残しています。`mext_search_metadata.json` は本番の食品グループ・バリエーション解決には使用せず、確定済みv2 JSONから生成した `data/mext/app/` を使用します。
 
 ```bash
 python scripts/build_food_search_metadata.py data/mext/processed/mext_foods.json data/mext/processed/mext_search_metadata.json --known-good data/mext/food_group_known_good.json --review-output data/mext/food_group_review.json
 python scripts/validate_food_master.py data/mext/processed/mext_search_metadata.json
 ```
 
-生成済みの `variantAttributesByFoodId` は、検索結果で「皮つき／皮なし」「生／ゆで／焼き」のような独立した選択ボタンを構成するために使用します。
+旧 `variantAttributesByFoodId` は調査用です。本番UIの属性ボタンは `food_group_attributes.json`、元レコード解決は `food_variants.json` を正本とします。
 
 LLMを使う場合も、`scripts/generate_food_master_candidates.py` で候補入力・構造化出力の検証を別工程として行い、アプリ実行時には呼び出しません。

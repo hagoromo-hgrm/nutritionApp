@@ -1,5 +1,4 @@
 import Dexie, { type Table } from 'dexie'
-import bundledSearchMetadata from '../../data/mext/processed/mext_search_metadata.json'
 import {
   DEFAULT_SETTINGS,
   DEFAULT_BODY_PROFILE,
@@ -11,7 +10,6 @@ import {
   type FoodAlias,
   type FoodGroup,
   type FoodRelatedTerm,
-  type FoodVariantAttributes,
   type FoodUsageStat,
   type MealEntry,
   type MetadataRecord,
@@ -23,25 +21,24 @@ import {
 import { createId } from '../utils/id'
 import { estimateDailyGoals } from '../services/nutrition'
 import { normalizeSearchText, searchFoodResults as searchFoodResultsPure, type FoodSearchPage } from '../services/foodSearch'
+import {
+  getFoodGroup as getMextFoodGroup,
+  getFoodVariantBySourceId,
+  mextFoodGroups,
+  type MextFoodGroup,
+} from '../services/mextFoodData'
 
-const INITIAL_FOODS_VERSION = 6
-const SEARCH_METADATA_VERSION = 7
-
-interface BundledSearchMetadata {
-  metadata: { generationVersion: string; classificationReset?: boolean }
-  groups: FoodGroup[]
-  aliases: FoodAlias[]
-  relatedTerms: FoodRelatedTerm[]
-  foodGroupByFoodId: Record<string, string>
-  variantAttributesByFoodId: Record<string, FoodVariantAttributes>
-}
-
-const bundledMetadata = bundledSearchMetadata as unknown as BundledSearchMetadata
-const bundledGroupsById = new Map(bundledMetadata.groups.map((group) => [group.id, group]))
-
-function sameVariantAttributes(left: FoodVariantAttributes | undefined, right: FoodVariantAttributes | undefined): boolean {
-  return JSON.stringify(left ?? null) === JSON.stringify(right ?? null)
-}
+const INITIAL_FOODS_VERSION = 8
+const SEARCH_METADATA_VERSION = 8
+const LEGACY_INITIAL_FOOD_IDS = [
+  'mext_rice_white',
+  'mext_chicken_breast',
+  'mext_egg',
+  'mext_banana',
+  'mext_milk',
+  'mext_tofu',
+] as const
+const mextFoodGroupIds = new Set(mextFoodGroups.map((group) => group.id))
 
 function isUserManualGroup(group: FoodGroup | undefined): boolean {
   return group?.metadataSource === 'manual' && group.generationVersion === 'manual-v1'
@@ -137,16 +134,47 @@ export class NutritionDatabase extends Dexie {
 
 export const db = new NutritionDatabase()
 
+function mextGroupForSearch(group: MextFoodGroup, createdAt: string, updatedAt: string): FoodGroup {
+  return {
+    id: group.id,
+    displayName: group.displayName,
+    reading: null,
+    category: group.parentConcept ?? group.foodForm,
+    representativeScore: 0,
+    defaultVariantId: group.defaultSourceId,
+    isActive: true,
+    metadataSource: 'imported',
+    generationVersion: 'mext-app-v2',
+    needsReview: false,
+    createdAt,
+    updatedAt,
+  }
+}
+
+function mextSearchAliases(): FoodAlias[] {
+  return mextFoodGroups.flatMap((group) => group.searchTerms.map((alias, index) => ({
+    id: `mext-app:${group.id}:${String(index).padStart(3, '0')}`,
+    foodGroupId: group.id,
+    foodVariantId: null,
+    alias,
+    normalizedAlias: normalizeSearchText(alias),
+    aliasType: 'synonym' as const,
+    priority: 80,
+    isActive: true,
+    metadataSource: 'imported' as const,
+  })))
+}
+
 function enrichFoodForSearch(food: Food): Food {
-  const groupId = food.source === 'mext'
-    ? bundledMetadata.foodGroupByFoodId[food.id] ?? food.foodGroupId ?? `food:${food.id}`
-    : food.foodGroupId ?? bundledMetadata.foodGroupByFoodId[food.id] ?? `food:${food.id}`
-  const group = bundledGroupsById.get(groupId)
-  const bundledVariantAttributes = bundledMetadata.variantAttributesByFoodId[food.id]
-  const variantAttributes = food.source === 'mext' && bundledVariantAttributes
-    ? bundledVariantAttributes
-    : food.variantAttributes ?? bundledVariantAttributes
-  return { ...food, foodGroupId: groupId, displayName: food.displayName ?? group?.displayName ?? food.name, officialName: food.officialName ?? food.name, ...(variantAttributes ? { variantAttributes } : {}) }
+  const mextVariant = food.source === 'mext' ? getFoodVariantBySourceId(food.id) : undefined
+  const groupId = mextVariant?.foodGroupId ?? food.foodGroupId ?? `food:${food.id}`
+  const mextGroup = mextFoodGroupIds.has(groupId) ? getMextFoodGroup(groupId) : undefined
+  return {
+    ...food,
+    foodGroupId: groupId,
+    displayName: mextGroup?.displayName ?? food.displayName ?? food.name,
+    officialName: food.officialName ?? food.name,
+  }
 }
 
 async function ensureSearchMetadata(): Promise<void> {
@@ -155,60 +183,52 @@ async function ensureSearchMetadata(): Promise<void> {
     const existingGroups = new Map((await db.foodGroups.toArray()).map((group) => [group.id, group]))
     const metadataVersion = await db.metadata.get('search-metadata-version')
     const metadataChanged = metadataVersion?.value !== SEARCH_METADATA_VERSION
-    const classificationReset = bundledMetadata.metadata.classificationReset === true
     const now = new Date().toISOString()
     const groupsToPut = new Map<string, FoodGroup>()
     const foodsToPut: Food[] = []
+    const validGroupIds = new Set<string>()
+    for (const group of mextFoodGroups) {
+      const existingGroup = existingGroups.get(group.id)
+      groupsToPut.set(group.id, mextGroupForSearch(group, existingGroup?.createdAt ?? now, now))
+      validGroupIds.add(group.id)
+    }
     for (const food of foods) {
-      const previousGroupId = food.source === 'mext'
-        ? food.foodGroupId ?? `food:${food.id}`
-        : food.foodGroupId ?? bundledMetadata.foodGroupByFoodId[food.id] ?? `food:${food.id}`
+      const previousGroupId = food.foodGroupId ?? `food:${food.id}`
       const previousGroup = existingGroups.get(previousGroupId)
-      const candidateGroupId = food.source === 'mext'
-        ? bundledMetadata.foodGroupByFoodId[food.id] ?? previousGroupId
-        : previousGroupId
-      const groupId = classificationReset && food.source !== 'mext' && !isUserManualGroup(previousGroup)
-        ? `food:${food.id}`
-        : candidateGroupId
-      const bundledGroup = bundledGroupsById.get(groupId)
+      const mextVariant = food.source === 'mext' ? getFoodVariantBySourceId(food.id) : undefined
+      const groupId = mextVariant?.foodGroupId
+        ?? (mextFoodGroupIds.has(previousGroupId) || isUserManualGroup(previousGroup) ? previousGroupId : `food:${food.id}`)
       const existingGroup = existingGroups.get(groupId)
-      if (bundledGroup && (!existingGroup || existingGroup.metadataSource !== 'manual')) {
-        groupsToPut.set(groupId, { ...bundledGroup, createdAt: existingGroup?.createdAt ?? now, updatedAt: now })
-      } else if (!existingGroup) {
+      validGroupIds.add(groupId)
+      if (!mextVariant && !existingGroup) {
         groupsToPut.set(groupId, { id: groupId, displayName: food.displayName ?? food.name, reading: food.reading ?? null, category: null, representativeScore: 0, defaultVariantId: food.id, isActive: true, metadataSource: 'rule', generationVersion: 'runtime-fallback', needsReview: true, createdAt: food.createdAt, updatedAt: food.updatedAt })
       }
-      const bundledVariantAttributes = bundledMetadata.variantAttributesByFoodId[food.id]
-      if (
-        food.foodGroupId !== groupId
-        || (metadataChanged && food.source === 'mext' && !sameVariantAttributes(food.variantAttributes, bundledVariantAttributes))
-      ) foodsToPut.push(enrichFoodForSearch({ ...food, foodGroupId: groupId }))
+      const enriched = enrichFoodForSearch({ ...food, foodGroupId: groupId })
+      if (food.foodGroupId !== enriched.foodGroupId || food.displayName !== enriched.displayName) foodsToPut.push(enriched)
     }
     if (groupsToPut.size > 0) await db.foodGroups.bulkPut([...groupsToPut.values()])
     if (foodsToPut.length > 0) await db.foods.bulkPut(foodsToPut)
-    const currentGroupIds = new Set(Object.values(bundledMetadata.foodGroupByFoodId))
     const staleGroupIds = [...existingGroups.values()]
-      .filter((group) => !currentGroupIds.has(group.id) && (classificationReset ? !isUserManualGroup(group) : group.metadataSource !== 'manual'))
+      .filter((group) => !validGroupIds.has(group.id) && !isUserManualGroup(group))
       .map((group) => group.id)
     if (staleGroupIds.length > 0) await db.foodGroups.bulkDelete(staleGroupIds)
+    const bundledAliases = mextSearchAliases()
     const currentAliases = new Map((await db.foodAliases.toArray()).map((alias) => [alias.id, alias]))
-    const currentAliasIds = new Set(bundledMetadata.aliases.map((alias) => alias.id))
+    const currentAliasIds = new Set(bundledAliases.map((alias) => alias.id))
     const obsoleteAliasIds = [...currentAliases.values()]
       .filter((alias) => !currentAliasIds.has(alias.id) && !alias.id.startsWith('manual:'))
       .map((alias) => alias.id)
     if (obsoleteAliasIds.length > 0) await db.foodAliases.bulkDelete(obsoleteAliasIds)
     const currentRelated = new Map((await db.foodRelatedTerms.toArray()).map((term) => [term.id, term]))
-    const currentRelatedIds = new Set(bundledMetadata.relatedTerms.map((term) => term.id))
     const obsoleteRelatedIds = [...currentRelated.values()]
-      .filter((term) => !currentRelatedIds.has(term.id) && !term.id.startsWith('manual:'))
+      .filter((term) => !term.id.startsWith('manual:'))
       .map((term) => term.id)
     if (obsoleteRelatedIds.length > 0) await db.foodRelatedTerms.bulkDelete(obsoleteRelatedIds)
     if (metadataChanged) {
-      const aliasesToPut = bundledMetadata.aliases.filter((alias) => currentAliases.get(alias.id)?.metadataSource !== 'manual')
-      const relatedToPut = bundledMetadata.relatedTerms.filter((term) => currentRelated.get(term.id)?.metadataSource !== 'manual')
+      const aliasesToPut = bundledAliases.filter((alias) => currentAliases.get(alias.id)?.metadataSource !== 'manual')
       if (aliasesToPut.length > 0) await db.foodAliases.bulkPut(aliasesToPut)
-      if (relatedToPut.length > 0) await db.foodRelatedTerms.bulkPut(relatedToPut)
       await db.metadata.put({ key: 'search-metadata-version', value: SEARCH_METADATA_VERSION })
-      if (classificationReset) await db.searchLogs.clear()
+      await db.searchLogs.clear()
     }
   })
 }
@@ -230,11 +250,18 @@ export async function initializeDatabase(): Promise<void> {
     })
   } else if (seedVersion?.value !== INITIAL_FOODS_VERSION) {
     await db.transaction('rw', [db.foods, db.metadata], async () => {
+      const bundledFoodIds = initialFoods.map((food) => food.id)
+      const existingFoods = new Map(
+        (await db.foods.bulkGet(bundledFoodIds))
+          .filter((food): food is Food => Boolean(food))
+          .map((food) => [food.id, food]),
+      )
+      const foodsToPut: Food[] = []
       for (const bundledFood of initialFoods) {
         const enrichedFood = enrichFoodForSearch(bundledFood)
-        const existing = await db.foods.get(bundledFood.id)
+        const existing = existingFoods.get(bundledFood.id)
         if (!existing) {
-          await db.foods.add(enrichedFood)
+          foodsToPut.push(enrichedFood)
         } else if (
           existing.source === 'mext'
           && existing.createdAt === existing.updatedAt
@@ -243,9 +270,16 @@ export async function initializeDatabase(): Promise<void> {
             || existing.sourceVersion.includes('初期サンプル')
           )
         ) {
-          await db.foods.put(enrichedFood)
+          foodsToPut.push(enrichedFood)
         }
       }
+      if (foodsToPut.length > 0) await db.foods.bulkPut(foodsToPut)
+      const legacyFoods = await db.foods.bulkGet([...LEGACY_INITIAL_FOOD_IDS])
+      const legacyIdsToDelete = legacyFoods
+        .filter((food): food is Food => Boolean(food))
+        .filter((food) => food.source === 'mext' && food.sourceVersion.includes('初期サンプル'))
+        .map((food) => food.id)
+      if (legacyIdsToDelete.length > 0) await db.foods.bulkDelete(legacyIdsToDelete)
       await db.metadata.put({ key: 'initial-foods-version', value: INITIAL_FOODS_VERSION })
       await db.metadata.put({ key: 'schema-version', value: 5 })
     })

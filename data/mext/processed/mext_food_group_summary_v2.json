@@ -1,0 +1,28 @@
+{
+  "input_record_count": 2538,
+  "output_mapping_count": 2538,
+  "food_group_count": 1494,
+  "groups_with_selectable_attributes": 478,
+  "groups_with_fixed_attributes_only": 403,
+  "groups_without_any_attributes": 613,
+  "review_group_count_before": 152,
+  "review_item_count_before": 293,
+  "review_group_count_after": 0,
+  "review_item_count_after": 0,
+  "resolved_review_group_count": 152,
+  "resolved_review_item_count": 293,
+  "resolution_type_counts": {
+    "add_not_applicable_value": 5,
+    "add_unspecified_value": 256,
+    "merge_ui_attribute": 7,
+    "move_attribute_dimension": 19,
+    "normalize_food_form": 6
+  },
+  "variant_collision_count": 0,
+  "duplicate_source_id_count": 0,
+  "missing_source_id_count": 0,
+  "food_form_normalization_count": 6,
+  "unspecified_value_addition_count": 256,
+  "not_applicable_value_addition_count": 5,
+  "hidden_attribute_conversion_count": 0
+}
