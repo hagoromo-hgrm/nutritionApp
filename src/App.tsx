@@ -40,7 +40,7 @@ import {
   searchMenuSets,
   setFavorite,
 } from './db/db'
-import { searchExternalFood, type ExternalFoodPreview } from './services/externalFoodApi'
+import { externalFoodErrorMessage, searchExternalFood, type ExternalFoodPreview } from './services/externalFoodApi'
 import { backupToJson, downloadBlob, parseBackupText } from './services/backup'
 import { mealsToCsv, parseMealsCsv } from './services/csv'
 import { calculateBmi, calculateNutrients, estimateDailyGoals, formatNutrient, goalRate, incrementByBaseAmount, nutrientRangeForGoals, scaleNutritionGoals, sumByMealType, sumEntries, sumNutrients } from './services/nutrition'
@@ -571,8 +571,8 @@ function App() {
             return
           }
           notify('商品が見つかりませんでした。バーコードを保持して手入力登録へ進みます。')
-        } catch {
-          notify('外部商品APIに接続できません。バーコードを保持して手入力登録へ進みます。')
+        } catch (error) {
+          notify(`${externalFoodErrorMessage(error)} バーコードを保持して手入力登録へ進みます。`)
         }
       }
       openFoodForm(undefined, normalized, 'food-screen', recordingMealType)

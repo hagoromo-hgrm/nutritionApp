@@ -507,7 +507,15 @@ legend { padding: 0 .35rem; color: var(--muted); font-size: .75rem; font-weight:
 .variant-attribute-inputs { margin-top: .25rem; }
 .external-warning { border-left: 3px solid #d89b31; border-radius: .3rem; padding: .6rem .7rem; color: #7a5a22; background: #fff4d9; font-size: .74rem; line-height: 1.5; }
 .source-line { color: var(--muted); font-size: .68rem; line-height: 1.5; }
-.scanner-video { display: block; width: 100%; min-height: 12rem; border-radius: .9rem; background: #182f28; object-fit: cover; }
+.scanner-preview { position: relative; overflow: hidden; border-radius: .9rem; background: #182f28; }
+.scanner-video { display: block; width: 100%; min-height: 12rem; aspect-ratio: 4 / 3; object-fit: cover; }
+.scanner-guide { position: absolute; top: 50%; left: 50%; width: min(82%, 28rem); height: 29%; transform: translate(-50%, -50%); border: 2px solid rgba(255, 255, 255, .95); border-radius: .65rem; box-shadow: 0 0 0 999px rgba(15, 31, 41, .28), inset 0 0 1.2rem rgba(255, 255, 255, .12); pointer-events: none; }
+.scanner-camera-controls { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-top: .7rem; }
+.scanner-zoom { display: grid; grid-template-columns: auto minmax(7rem, 1fr) 2.4rem; align-items: center; gap: .5rem; min-width: 0; flex: 1; color: var(--muted); font-size: .72rem; }
+.scanner-zoom input { min-width: 0; padding: 0; }
+.scanner-zoom strong { color: var(--accent-deep); font-size: .74rem; text-align: right; }
+.scanner-torch { flex: 0 0 auto; padding: .55rem .7rem; }
+.scanner-tip { margin-top: .2rem; color: var(--muted); font-size: .68rem; line-height: 1.5; }
 .inline-form { display: flex; gap: .5rem; }
 .inline-form input { flex: 1; }
 .divider-label { display: flex; align-items: center; gap: .6rem; margin: 1rem 0 .6rem; color: var(--muted); font-size: .7rem; }
