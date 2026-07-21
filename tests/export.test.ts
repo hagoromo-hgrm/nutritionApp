@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { validateBackup } from '../src/services/backup'
 import { CSV_HEADERS, mealsToCsv, parseMealsCsv } from '../src/services/csv'
-import type { BackupData, MealEntry } from '../src/types'
+import type { BackupData, Food, MealEntry } from '../src/types'
 
 const addedNutrients = { calciumMg: null, ironMg: null, vitaminAMcg: null, vitaminEMg: null, vitaminB1Mg: null, vitaminB2Mg: null, vitaminCMg: null, saturatedFatG: null }
 
@@ -14,6 +14,13 @@ const entry: MealEntry = {
 const backup: BackupData = {
   format: 'nutrition-pwa-backup', dataFormatVersion: 1, exportedAt: '2026-07-15T00:00:00.000Z', foods: [], mealEntries: [], favorites: [],
   settings: { id: 'app', goals: { energyKcal: null, proteinG: null, fatG: null, carbohydrateG: null, fiberG: null, saltG: null, calciumMg: null, ironMg: null, vitaminAMcg: null, vitaminEMg: null, vitaminB1Mg: null, vitaminB2Mg: null, vitaminCMg: null, saturatedFatG: null }, displayUnit: 'default', lastBackupAt: null, dataFormatVersion: 1, externalApiEnabled: false, externalApiEndpoint: 'https://world.openfoodfacts.org/api/v3/product' },
+}
+
+const classifiedFood: Food = {
+  id: 'commercial_1', name: '外食メニュー', maker: '', barcode: '', isCommercial: true, source: 'user', sourceVersion: 'test',
+  baseAmount: 1, baseUnit: '食', servingAmount: null, servingUnit: null,
+  nutrients: { energyKcal: 500, proteinG: null, fatG: null, carbohydrateG: null, fiberG: null, saltG: null, ...addedNutrients },
+  createdAt: '2026-07-15T00:00:00.000Z', updatedAt: '2026-07-15T00:00:00.000Z',
 }
 
 describe('export formats', () => {
@@ -38,6 +45,14 @@ describe('export formats', () => {
     expect(validateBackup(backup)).toEqual(backup)
     expect(() => validateBackup({ ...backup, dataFormatVersion: 99 })).toThrow('対応していない')
     expect(() => validateBackup({ ...backup, settings: { ...backup.settings, goals: { energyKcal: 'bad' } } })).toThrow()
+  })
+
+  it('外食・市販の明示フラグを保持し、旧形式との互換性も維持する', () => {
+    expect(validateBackup({ ...backup, foods: [classifiedFood] }).foods[0].isCommercial).toBe(true)
+    const legacyFood = { ...classifiedFood }
+    delete legacyFood.isCommercial
+    expect(validateBackup({ ...backup, foods: [legacyFood] }).foods[0].isCommercial).toBeUndefined()
+    expect(() => validateBackup({ ...backup, foods: [{ ...classifiedFood, isCommercial: 'yes' }] })).toThrow('食品または食事記録')
   })
 
   it('食品属性設定を含むバックアップを検証し、不正な型を拒否する', () => {

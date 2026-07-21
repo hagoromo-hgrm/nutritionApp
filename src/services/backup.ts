@@ -24,6 +24,7 @@ function isVariantAttributes(value: unknown): boolean {
 function isFood(value: unknown): value is Food {
   if (!isRecord(value)) return false
   return isString(value.id) && isString(value.name) && isString(value.maker) && isString(value.barcode)
+    && (value.isCommercial === undefined || typeof value.isCommercial === 'boolean')
     && ['mext', 'open_food_facts', 'user'].includes(String(value.source))
     && isString(value.sourceVersion) && typeof value.baseAmount === 'number' && value.baseAmount > 0
     && isValidUnit(String(value.baseUnit)) && isNullableNumber(value.servingAmount)

@@ -62,6 +62,7 @@ export interface Food {
   reading?: string | null
   maker: string
   barcode: string
+  isCommercial?: boolean
   source: FoodSource
   sourceVersion: string
   baseAmount: number

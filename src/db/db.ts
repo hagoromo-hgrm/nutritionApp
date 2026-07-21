@@ -23,6 +23,7 @@ import { estimateDailyGoals } from '../services/nutrition'
 import { normalizeFoodAttributePreferences } from '../services/foodAttributePreferences'
 import { getMenuFoodIds, getNestedMenuIds, wouldCreateMenuCycle } from '../services/menuIngredients'
 import { normalizeSearchText, searchFoodResults as searchFoodResultsPure, type FoodSearchPage } from '../services/foodSearch'
+import type { FoodSearchCategory } from '../services/foodClassification'
 import {
   getFoodGroup as getMextFoodGroup,
   getFoodVariantBySourceId,
@@ -319,7 +320,7 @@ export async function searchFoods(query: string): Promise<Food[]> {
   return page.page.results.map((result) => result.variants).flat()
 }
 
-export async function searchFoodResults(query: string, options: { limit?: number; cursor?: string | null } = {}): Promise<{ page: FoodSearchPage; logId: string }> {
+export async function searchFoodResults(query: string, options: { limit?: number; cursor?: string | null; category?: FoodSearchCategory } = {}): Promise<{ page: FoodSearchPage; logId: string }> {
   const startedAt = performance.now()
   const [foods, groups, aliases, relatedTerms, usageStats, favoriteIds] = await Promise.all([
     db.foods.toArray(), db.foodGroups.toArray(), db.foodAliases.toArray(), db.foodRelatedTerms.toArray(), db.foodUsageStats.toArray(), getFavoriteIds(),

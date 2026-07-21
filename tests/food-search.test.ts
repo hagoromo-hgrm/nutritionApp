@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { normalizeSearchText, searchFoodResults } from '../src/services/foodSearch'
+import { isCommercialFood } from '../src/services/foodClassification'
 import type { Food, FoodAlias, FoodGroup, FoodRelatedTerm, FoodUsageStat } from '../src/types'
 
 const nutrients = { energyKcal: 100, proteinG: 1, fatG: 1, carbohydrateG: 1, fiberG: 1, saltG: 0, calciumMg: null, ironMg: null, vitaminAMcg: null, vitaminEMg: null, vitaminB1Mg: null, vitaminB2Mg: null, vitaminCMg: null, saturatedFatG: null }
@@ -39,5 +40,33 @@ describe('local food search', () => {
     const result = searchFoodResults('食品', { foods, groups: [group('a', '食品A', 'a'), group('b', '食品B', 'b')], aliases: [], relatedTerms: [], usageStats }, { now: new Date('2026-07-15T00:00:00Z') })
     expect(result.results[0].food.id).toBe('b')
     expect(result.results[0].recentlyUsed).toBe(true)
+  })
+
+  it('明示指定またはJANを持つ食品を外食・市販として判定する', () => {
+    expect(isCommercialFood({ ...food('general', '一般食品', 'general') })).toBe(false)
+    expect(isCommercialFood({ ...food('checked', '外食', 'checked'), isCommercial: true })).toBe(true)
+    expect(isCommercialFood({ ...food('jan', '市販品', 'jan'), barcode: '4901234567890' })).toBe(true)
+    expect(isCommercialFood({ ...food('external', '外部由来', 'external'), source: 'open_food_facts' })).toBe(false)
+  })
+
+  it('分類してからページングし、混在familyでは一致するバリエーションだけを返す', () => {
+    const general = food('mixed-general', 'ミックス食品 一般', 'mixed')
+    const commercial = { ...food('mixed-commercial', 'ミックス食品 市販', 'mixed'), isCommercial: true }
+    const jan = { ...food('jan-commercial', 'JAN食品', 'jan'), barcode: '4901234567890' }
+    const data = {
+      foods: [general, commercial, jan],
+      groups: [group('mixed', 'ミックス食品', 'mixed-general'), group('jan', 'JAN食品', 'jan-commercial')],
+      aliases: [], relatedTerms: [], usageStats: [],
+    }
+
+    const generalPage = searchFoodResults('', data, { category: 'general', limit: 1 })
+    expect(generalPage.results).toHaveLength(1)
+    expect(generalPage.results[0].variants.map((item) => item.id)).toEqual(['mixed-general'])
+    expect(generalPage.nextCursor).toBeNull()
+
+    const commercialPage = searchFoodResults('', data, { category: 'commercial', limit: 1 })
+    expect(commercialPage.results).toHaveLength(1)
+    expect(commercialPage.results[0].variants).toHaveLength(1)
+    expect(commercialPage.nextCursor).toBe('1')
   })
 })

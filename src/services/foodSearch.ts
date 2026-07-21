@@ -1,4 +1,5 @@
 import type { Food, FoodAlias, FoodGroup, FoodRelatedTerm, FoodUsageStat, SearchScoreBreakdown } from '../types'
+import { foodMatchesSearchCategory, type FoodSearchCategory } from './foodClassification'
 
 export interface FoodSearchResult {
   group: FoodGroup
@@ -29,6 +30,7 @@ export interface FoodSearchOptions {
   limit?: number
   cursor?: string | null
   now?: Date
+  category?: FoodSearchCategory
 }
 
 const EXACT_DISPLAY = 100
@@ -93,11 +95,13 @@ function variantLabel(food: Food): string {
 export function searchFoodResults(query: string, data: FoodSearchData, options: FoodSearchOptions = {}): FoodSearchPage {
   const normalizedQuery = normalizeSearchText(query)
   const now = options.now ?? new Date()
+  const category = options.category ?? 'all'
   const limit = Math.max(1, Math.min(100, options.limit ?? 20))
   const offset = Math.max(0, Number.parseInt(options.cursor ?? '0', 10) || 0)
   const foodsByGroup = new Map<string, Food[]>()
   const fallbackGroups = new Map<string, FoodGroup>()
   for (const food of data.foods) {
+    if (!foodMatchesSearchCategory(food, category)) continue
     const groupId = food.foodGroupId ?? `food:${food.id}`
     const variants = foodsByGroup.get(groupId) ?? []
     variants.push(food)
