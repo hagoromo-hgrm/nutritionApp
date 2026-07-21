@@ -343,7 +343,17 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .search-empty-state .button { padding: .55rem .8rem; font-size: .74rem; }
 .search-load-more { width: calc(100% - 1.8rem); margin: .8rem .9rem; }
 .variant-picker-modal { padding-bottom: 1rem; }
+.variant-picker-title { display: flex; align-items: center; gap: .45rem; }
+.variant-attribute-info { flex: 0 0 auto; }
 .variant-picker-modal .muted { margin-top: .35rem; }
+.food-attribute-visibility-panel { margin: .8rem 0 1rem; border: 1px solid var(--line); border-radius: .85rem; padding: .8rem; background: #fbfdff; }
+.food-attribute-visibility-heading { display: flex; align-items: center; justify-content: space-between; gap: .6rem; }
+.food-attribute-visibility-heading strong { color: var(--accent-deep); font-size: .78rem; }
+.food-attribute-visibility-panel .helper-text { margin: .45rem 0 .6rem; }
+.food-attribute-visibility-list { display: grid; gap: .35rem; }
+.food-attribute-visibility-row { display: flex; align-items: center; gap: .5rem; border-top: 1px solid #edf2f8; padding: .45rem 0; color: var(--ink); font-size: .76rem; }
+.food-attribute-visibility-row input { width: 1rem; height: 1rem; accent-color: var(--accent); }
+.food-attribute-visibility-row small { margin-left: auto; color: var(--muted); font-size: .64rem; }
 .variant-choice-groups { display: grid; gap: .9rem; }
 .variant-choice-group { display: grid; gap: .45rem; }
 .variant-choice-group h3 { color: var(--muted); font-size: .7rem; }
@@ -391,14 +401,6 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .food-master-title .button { margin: 0; padding: .48rem .72rem; font-size: .7rem; }
 .food-master-actions { display: flex; flex-wrap: wrap; gap: .6rem; }
 .food-master-actions .button { margin: 0; }
-.food-attribute-settings { display: grid; gap: .7rem; margin-top: 1rem; }
-.food-attribute-setting { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; align-items: end; gap: .6rem; border-bottom: 1px solid var(--line); padding-bottom: .7rem; }
-.food-attribute-setting .small-action { margin-bottom: .35rem; white-space: nowrap; }
-.food-attribute-group-setting { border-top: 1px solid var(--line); padding-top: 1rem; margin-top: 1rem; }
-.food-attribute-group-setting h3 { margin: 0; }
-.food-attribute-group-setting .section-title { margin-bottom: .5rem; }
-.food-attribute-setting > div { display: grid; gap: .15rem; }
-.food-attribute-setting > div span { color: var(--muted); font-size: .82rem; }
 
 .settings-card { margin-top: 1.2rem; border: 1px solid var(--line); border-radius: 1.2rem; padding: 1.2rem; background: white; }
 .goal-form { display: grid; grid-template-columns: repeat(3, 1fr); gap: .9rem; margin-top: 1rem; }
@@ -491,8 +493,6 @@ legend { padding: 0 .35rem; color: var(--muted); font-size: .75rem; font-weight:
 .metadata-input-row input { min-width: 0; flex: 1; }
 .metadata-input-row select { width: 6rem; flex: 0 0 auto; }
 .variant-attribute-inputs { margin-top: .25rem; }
-.variant-attribute-preference { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem; margin-top: .55rem; }
-.variant-attribute-preference select { width: auto; min-width: 10rem; }
 .external-warning { border-left: 3px solid #d89b31; border-radius: .3rem; padding: .6rem .7rem; color: #7a5a22; background: #fff4d9; font-size: .74rem; line-height: 1.5; }
 .source-line { color: var(--muted); font-size: .68rem; line-height: 1.5; }
 .scanner-video { display: block; width: 100%; min-height: 12rem; border-radius: .9rem; background: #182f28; object-fit: cover; }
@@ -537,7 +537,7 @@ legend { padding: 0 .35rem; color: var(--muted); font-size: .75rem; font-weight:
   .action-row .button { flex: 1; padding-right: .5rem; padding-left: .5rem; }
   .meal-entry { align-items: start; flex-direction: column; }
   .meal-entry-actions { width: 100%; justify-content: flex-end; }
-  .two-fields, .trend-range, .nutrient-input-grid, .goal-form, .food-attribute-setting { grid-template-columns: 1fr; }
+  .two-fields, .trend-range, .nutrient-input-grid, .goal-form { grid-template-columns: 1fr; }
   .goal-form .button { grid-column: auto; }
   .data-stats strong { font-size: 1rem; }
   .inline-time-form { align-items: stretch; flex-direction: column; }

@@ -17,6 +17,7 @@ export function isFoodAttributePreference(value: unknown): value is FoodAttribut
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false
   const candidate = value as Record<string, unknown>
   return typeof candidate.defaultValueId === 'string' && candidate.defaultValueId.length > 0 && isFoodAttributePreferenceMode(candidate.mode)
+    && (candidate.visible === undefined || typeof candidate.visible === 'boolean')
 }
 
 /** IndexedDB・バックアップから読んだ設定を、新旧形式を保ったまま正規化する。 */
@@ -27,13 +28,13 @@ export function normalizeFoodAttributePreferences(value: unknown): FoodAttribute
   for (const [groupId, groupPreferences] of Object.entries(value)) {
     if (!groupId || !groupPreferences || typeof groupPreferences !== 'object' || Array.isArray(groupPreferences)) continue
     if (isFoodAttributePreference(groupPreferences)) {
-      legacy[groupId] = { ...groupPreferences }
+      legacy[groupId] = { ...groupPreferences, visible: groupPreferences.visible ?? groupPreferences.mode !== 'auto' }
       continue
     }
     const group: Record<string, FoodAttributePreference> = {}
     for (const [attributeId, preference] of Object.entries(groupPreferences)) {
       if (!attributeId || !isFoodAttributePreference(preference)) continue
-      group[attributeId] = { ...preference }
+      group[attributeId] = { ...preference, visible: preference.visible ?? preference.mode !== 'auto' }
     }
     if (Object.keys(group).length > 0) normalized[groupId] = group
   }
@@ -84,7 +85,7 @@ export function applyMextFoodAttributePreferences(
       continue
     }
     selection[attribute.id] = preference.defaultValueId
-    if (preference.mode === 'auto') autoHiddenAttributeIds.add(attribute.id)
+    if (preference.visible === false || (preference.visible === undefined && preference.mode === 'auto')) autoHiddenAttributeIds.add(attribute.id)
   }
   return { selection, autoHiddenAttributeIds, invalidAttributeIds }
 }

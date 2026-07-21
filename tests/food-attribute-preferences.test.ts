@@ -4,8 +4,8 @@ import { applyMextFoodAttributePreferences, FOOD_ATTRIBUTE_PREFERENCES_GLOBAL_KE
 describe('食品属性設定', () => {
   it('旧設定や不正項目を空の設定として安全に扱う', () => {
     expect(normalizeFoodAttributePreferences(undefined)).toEqual({})
-    expect(normalizeFoodAttributePreferences({ cooking_state: { defaultValueId: 'raw', mode: 'auto' }, broken: { defaultValueId: 1, mode: 'auto' }, invalidMode: { defaultValueId: 'x', mode: 'hide' } })).toEqual({ [FOOD_ATTRIBUTE_PREFERENCES_GLOBAL_KEY]: { cooking_state: { defaultValueId: 'raw', mode: 'auto' } } })
-    expect(normalizeFoodAttributePreferences({ group_a: { cooking_state: { defaultValueId: 'cooked', mode: 'prefill' } } })).toEqual({ group_a: { cooking_state: { defaultValueId: 'cooked', mode: 'prefill' } } })
+    expect(normalizeFoodAttributePreferences({ cooking_state: { defaultValueId: 'raw', mode: 'auto' }, broken: { defaultValueId: 1, mode: 'auto' }, invalidMode: { defaultValueId: 'x', mode: 'hide' } })).toEqual({ [FOOD_ATTRIBUTE_PREFERENCES_GLOBAL_KEY]: { cooking_state: { defaultValueId: 'raw', mode: 'auto', visible: false } } })
+    expect(normalizeFoodAttributePreferences({ group_a: { cooking_state: { defaultValueId: 'cooked', mode: 'prefill' } } })).toEqual({ group_a: { cooking_state: { defaultValueId: 'cooked', mode: 'prefill', visible: true } } })
   })
 
   it('属性設定を追加・解除できる', () => {
@@ -32,6 +32,13 @@ describe('食品属性設定', () => {
     expect(applied.selection).toEqual({ state: 'raw', skin: 'without' })
     expect(applied.autoHiddenAttributeIds).toEqual(new Set(['state']))
     expect(applied.invalidAttributeIds).toEqual(new Set())
+  })
+
+  it('チェックを外した属性だけを非表示属性として返す', () => {
+    const attribute = { foodGroupId: 'group', id: 'state', displayName: '状態', required: true, visibility: 'primary' as const, defaultValueId: null, sourceDimensions: [], values: [{ id: 'raw', canonicalValue: 'raw', displayName: '生', isUnspecified: false, isNotApplicable: false, isNoFilling: false, sourceValues: [] }] }
+    const applied = applyMextFoodAttributePreferences([attribute], {}, { state: { defaultValueId: 'raw', mode: 'auto', visible: false } })
+    expect(applied.selection).toEqual({ state: 'raw' })
+    expect(applied.autoHiddenAttributeIds).toEqual(new Set(['state']))
   })
 
   it('食品グループにない既定値は適用せず、曖昧な解決を補完しない', () => {

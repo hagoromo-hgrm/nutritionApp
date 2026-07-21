@@ -236,7 +236,7 @@ export function searchUserFoodGroups(query: string, options: UserFoodSearchOptio
       const parent = bestByGroup.get(userFoodGroupId)
       if (!parent) continue
       const shortcutValues = parent.group.selectionDimensions
-        .filter((dimension) => dimension.displayName === '部位')
+        .filter((dimension) => dimension.displayName === '部位' || dimension.id === 'egg_type')
         .flatMap((dimension) => dimension.values
           .filter((value) => value.searchShortcut)
           .map((value) => ({ dimension, value })))

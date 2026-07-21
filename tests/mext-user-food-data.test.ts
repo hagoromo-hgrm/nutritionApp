@@ -65,6 +65,24 @@ describe('MEXT user-facing food groups', () => {
       .filter((result) => result.group.canonicalName === '豚肉')).toHaveLength(1)
   })
 
+  it('卵の完全一致では鶏卵・うずら卵・うこっけい卵を独立候補へ展開する', () => {
+    for (const query of ['卵', 'たまご']) {
+      const results = searchUserFoodGroups(query, { expandPartShortcuts: true })
+      const eggResults = results.filter((result) => result.group.canonicalName === '卵')
+      expect(eggResults).toHaveLength(3)
+      expect(eggResults.every((result) => result.targetType === 'user_food_variant')).toBe(true)
+      expect(eggResults.map((result) => result.foodGroupId)).toEqual(expect.arrayContaining(['fg_001094', 'fg_000557', 'fg_000555']))
+      expect(eggResults.map((result) => result.presetSelection)).toEqual(expect.arrayContaining([
+        { egg_type: 'chicken_egg' },
+        { egg_type: 'quail_egg' },
+        { egg_type: 'silkie_egg' },
+      ]))
+      expect(eggResults.some((result) => result.targetType === 'user_food_group')).toBe(false)
+    }
+    expect(searchUserFoodGroups('たま', { expandPartShortcuts: true })
+      .filter((result) => result.group.canonicalName === '卵')).toHaveLength(1)
+  })
+
   it('上位選択後に既存属性を参照し、source_idまで解決する', () => {
     const rice = mextUserFoodGroups.find((group) => group.canonicalName === 'ご飯')
     if (!rice) throw new Error('ご飯グループがありません')

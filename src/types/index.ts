@@ -237,6 +237,8 @@ export type FoodAttributePreferenceMode = 'prefill' | 'auto'
 export interface FoodAttributePreference {
   defaultValueId: string
   mode: FoodAttributePreferenceMode
+  /** falseの場合は食品ピッカーで属性を省略する。旧バックアップでは未指定。 */
+  visible?: boolean
 }
 
 export type FoodAttributePreferences = Record<string, Record<string, FoodAttributePreference>>
