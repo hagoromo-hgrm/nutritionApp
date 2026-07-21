@@ -1,0 +1,387 @@
+{
+  "version": 1,
+  "group_decisions": [
+    {
+      "canonical_name": "ご飯",
+      "display_name": "ご飯",
+      "grouping_level": "strong",
+      "category": "主食",
+      "search_terms": ["ご飯", "ごはん"],
+      "generated_user_name": true,
+      "selection_dimension": {
+        "dimension_id": "rice_type",
+        "display_name": "種類"
+      },
+      "default_food_group_id": "fg_000435",
+      "grouping_reason": "炊いた米・押麦を日常的な「ご飯」から選び、違いを種類として指定できるため",
+      "confidence": 0.95,
+      "members": [
+        {"food_group_id": "fg_000435", "value_id": "white_rice", "display_name": "白ごはん"},
+        {"food_group_id": "fg_000440", "value_id": "upland_white_rice", "display_name": "陸稲白ごはん"},
+        {"food_group_id": "fg_001276", "value_id": "embryo_rice", "display_name": "胚芽米ごはん"},
+        {"food_group_id": "fg_001278", "value_id": "seven_tenths_rice", "display_name": "七分づきごはん"},
+        {"food_group_id": "fg_001280", "value_id": "half_milled_rice", "display_name": "半づきごはん"},
+        {"food_group_id": "fg_001282", "value_id": "brown_rice", "display_name": "玄米ごはん"},
+        {"food_group_id": "fg_001284", "value_id": "germinated_brown_rice", "display_name": "発芽玄米ごはん"},
+        {"food_group_id": "fg_001286", "value_id": "red_rice", "display_name": "赤米ごはん"},
+        {"food_group_id": "fg_001288", "value_id": "black_rice", "display_name": "黒米ごはん"},
+        {"food_group_id": "fg_001290", "value_id": "upland_seven_tenths_rice", "display_name": "陸稲七分づきごはん"},
+        {"food_group_id": "fg_001292", "value_id": "upland_half_milled_rice", "display_name": "陸稲半づきごはん"},
+        {"food_group_id": "fg_001294", "value_id": "upland_brown_rice", "display_name": "陸稲玄米ごはん"},
+        {"food_group_id": "fg_001121", "value_id": "barley_rice", "display_name": "麦ごはん"}
+      ]
+    },
+    {
+      "canonical_name": "おかゆ",
+      "display_name": "おかゆ",
+      "grouping_level": "moderate",
+      "category": "主食",
+      "search_terms": ["おかゆ", "かゆ"],
+      "generated_user_name": true,
+      "selection_dimension": {"dimension_id": "porridge_type", "display_name": "種類"},
+      "default_food_group_id": null,
+      "grouping_reason": "米の精米状態とかゆの濃さを、日常語の「おかゆ」から種類として選べるため",
+      "confidence": 0.91,
+      "members": [
+        {"food_group_id": "fg_000425", "value_id": "seven_tenths_five_parts", "display_name": "七分づき米・五分かゆ"},
+        {"food_group_id": "fg_000426", "value_id": "seven_tenths_full", "display_name": "七分づき米・全かゆ"},
+        {"food_group_id": "fg_000428", "value_id": "half_milled_five_parts", "display_name": "半づき米・五分かゆ"},
+        {"food_group_id": "fg_000429", "value_id": "half_milled_full", "display_name": "半づき米・全かゆ"},
+        {"food_group_id": "fg_000431", "value_id": "brown_rice_five_parts", "display_name": "玄米・五分かゆ"},
+        {"food_group_id": "fg_000432", "value_id": "brown_rice_full", "display_name": "玄米・全かゆ"},
+        {"food_group_id": "fg_000436", "value_id": "white_rice_five_parts", "display_name": "白米・五分かゆ"},
+        {"food_group_id": "fg_000437", "value_id": "white_rice_full", "display_name": "白米・全かゆ"}
+      ]
+    },
+    {
+      "canonical_name": "おもゆ",
+      "display_name": "おもゆ",
+      "grouping_level": "moderate",
+      "category": "主食",
+      "search_terms": ["おもゆ", "重湯"],
+      "generated_user_name": true,
+      "selection_dimension": {"dimension_id": "rice_type", "display_name": "米の種類"},
+      "default_food_group_id": null,
+      "grouping_reason": "精米状態だけが異なる重湯を、同じ日常語から種類として選べるため",
+      "confidence": 0.9,
+      "members": [
+        {"food_group_id": "fg_000424", "value_id": "seven_tenths_rice", "display_name": "七分づき米"},
+        {"food_group_id": "fg_000427", "value_id": "half_milled_rice", "display_name": "半づき米"},
+        {"food_group_id": "fg_000430", "value_id": "brown_rice", "display_name": "玄米"},
+        {"food_group_id": "fg_000434", "value_id": "white_rice", "display_name": "白米"}
+      ]
+    },
+    {
+      "canonical_name": "食パン",
+      "display_name": "食パン",
+      "grouping_level": "strong",
+      "category": "パン",
+      "search_terms": ["食パン"],
+      "generated_user_name": false,
+      "selection_dimension": {"dimension_id": "bread_type", "display_name": "種類"},
+      "default_food_group_id": "fg_000412",
+      "grouping_reason": "食パンとして共通に検索され、形や原料の違いを種類として選べるため",
+      "confidence": 0.95,
+      "members": [
+        {"food_group_id": "fg_000412", "value_id": "standard", "display_name": "食パン"},
+        {"food_group_id": "fg_000411", "value_id": "square", "display_name": "角形食パン"},
+        {"food_group_id": "fg_000410", "value_id": "mountain", "display_name": "山形食パン"},
+        {"food_group_id": "fg_000501", "value_id": "rice_flour", "display_name": "米粉食パン"}
+      ]
+    },
+    {
+      "canonical_name": "うどん",
+      "display_name": "うどん",
+      "grouping_level": "strong",
+      "category": "麺類",
+      "search_terms": ["うどん"],
+      "generated_user_name": false,
+      "selection_dimension": {"dimension_id": "noodle_type", "display_name": "種類"},
+      "default_food_group_id": "fg_000298",
+      "grouping_reason": "生・ゆで系と干しうどんを、うどんの種類として自然に選べるため",
+      "confidence": 0.95,
+      "members": [
+        {"food_group_id": "fg_000298", "value_id": "udon", "display_name": "うどん"},
+        {"food_group_id": "fg_000316", "value_id": "dried_udon", "display_name": "干しうどん"}
+      ]
+    },
+    {
+      "canonical_name": "そば",
+      "display_name": "そば",
+      "grouping_level": "strong",
+      "category": "麺類",
+      "search_terms": ["そば"],
+      "generated_user_name": false,
+      "selection_dimension": {"dimension_id": "noodle_type", "display_name": "種類"},
+      "default_food_group_id": "fg_000258",
+      "grouping_reason": "そばと干しそばを、同じ食品の種類として自然に選べるため",
+      "confidence": 0.95,
+      "members": [
+        {"food_group_id": "fg_000258", "value_id": "soba", "display_name": "そば"},
+        {"food_group_id": "fg_000343", "value_id": "dried_soba", "display_name": "干しそば"}
+      ]
+    },
+    {
+      "canonical_name": "パスタ",
+      "display_name": "パスタ",
+      "grouping_level": "moderate",
+      "category": "麺類",
+      "search_terms": ["パスタ"],
+      "generated_user_name": true,
+      "selection_dimension": {"dimension_id": "pasta_type", "display_name": "種類"},
+      "default_food_group_id": null,
+      "grouping_reason": "乾燥系のマカロニ・スパゲッティと生パスタを、パスタの種類として選べるため",
+      "confidence": 0.9,
+      "members": [
+        {"food_group_id": "fg_000308", "value_id": "macaroni_spaghetti", "display_name": "マカロニ・スパゲッティ"},
+        {"food_group_id": "fg_000321", "value_id": "fresh_pasta", "display_name": "生パスタ"}
+      ]
+    },
+    {
+      "canonical_name": "牛乳",
+      "display_name": "牛乳",
+      "grouping_level": "strong",
+      "category": "乳製品",
+      "search_terms": ["牛乳"],
+      "generated_user_name": true,
+      "selection_dimension": {"dimension_id": "milk_type", "display_name": "種類"},
+      "default_food_group_id": "fg_001059",
+      "grouping_reason": "飲用する液状乳を牛乳から選び、普通・加工・脱脂の違いを種類として指定できるため",
+      "confidence": 0.92,
+      "members": [
+        {"food_group_id": "fg_001059", "value_id": "regular_milk", "display_name": "普通牛乳"},
+        {"food_group_id": "fg_001045", "value_id": "processed_milk", "display_name": "加工乳"},
+        {"food_group_id": "fg_001073", "value_id": "skim_milk", "display_name": "脱脂乳"}
+      ]
+    },
+    {
+      "canonical_name": "チーズ",
+      "display_name": "チーズ",
+      "grouping_level": "moderate",
+      "category": "乳製品",
+      "search_terms": ["チーズ"],
+      "generated_user_name": true,
+      "selection_dimension": {"dimension_id": "cheese_type", "display_name": "種類"},
+      "default_food_group_id": null,
+      "grouping_reason": "独立したチーズ名を直接検索できるようにしつつ、チーズの種類として選択できるため",
+      "confidence": 0.9,
+      "members": [
+        {"food_group_id": "fg_000266", "value_id": "processed_cheese", "display_name": "プロセスチーズ"},
+        {"food_group_id": "fg_000979", "value_id": "cheese_spread", "display_name": "チーズスプレッド"},
+        {"food_group_id": "fg_001226", "value_id": "goat_cheese", "display_name": "やぎチーズ"},
+        {"food_group_id": "fg_001227", "value_id": "edam", "display_name": "エダムチーズ"},
+        {"food_group_id": "fg_001228", "value_id": "emmental", "display_name": "エメンタールチーズ"},
+        {"food_group_id": "fg_001229", "value_id": "cottage", "display_name": "カテージチーズ"},
+        {"food_group_id": "fg_001230", "value_id": "camembert", "display_name": "カマンベールチーズ"},
+        {"food_group_id": "fg_001231", "value_id": "gouda", "display_name": "ゴーダチーズ"},
+        {"food_group_id": "fg_001232", "value_id": "cheddar", "display_name": "チェダーチーズ"},
+        {"food_group_id": "fg_001233", "value_id": "parmesan", "display_name": "パルメザンチーズ"},
+        {"food_group_id": "fg_001234", "value_id": "blue", "display_name": "ブルーチーズ"},
+        {"food_group_id": "fg_001235", "value_id": "mascarpone", "display_name": "マスカルポーネチーズ"},
+        {"food_group_id": "fg_001236", "value_id": "mozzarella", "display_name": "モッツァレラチーズ"},
+        {"food_group_id": "fg_001237", "value_id": "ricotta", "display_name": "リコッタチーズ"}
+      ]
+    },
+    {
+      "canonical_name": "卵",
+      "display_name": "卵",
+      "grouping_level": "strong",
+      "category": "肉・魚・卵",
+      "search_terms": ["卵", "たまご"],
+      "generated_user_name": true,
+      "selection_dimension": {"dimension_id": "egg_type", "display_name": "種類"},
+      "default_food_group_id": "fg_001094",
+      "grouping_reason": "日常語の卵から、鶏・うずら・うこっけいの違いを種類として選べるため",
+      "confidence": 0.94,
+      "members": [
+        {"food_group_id": "fg_001094", "value_id": "chicken_egg", "display_name": "鶏卵"},
+        {"food_group_id": "fg_000557", "value_id": "quail_egg", "display_name": "うずら卵"},
+        {"food_group_id": "fg_000555", "value_id": "silkie_egg", "display_name": "うこっけい卵"}
+      ]
+    },
+    {
+      "canonical_name": "豆腐",
+      "display_name": "豆腐",
+      "grouping_level": "strong",
+      "category": "豆・大豆製品",
+      "search_terms": ["豆腐"],
+      "generated_user_name": true,
+      "selection_dimension": {"dimension_id": "tofu_type", "display_name": "種類"},
+      "default_food_group_id": null,
+      "grouping_reason": "生食・料理素材として選ぶ豆腐を、製品の種類として選択できるため",
+      "confidence": 0.91,
+      "members": [
+        {"food_group_id": "fg_000360", "value_id": "momen", "display_name": "木綿豆腐"},
+        {"food_group_id": "fg_000364", "value_id": "silken", "display_name": "絹ごし豆腐"},
+        {"food_group_id": "fg_000352", "value_id": "soft", "display_name": "ソフト豆腐"},
+        {"food_group_id": "fg_000354", "value_id": "filled", "display_name": "充てん豆腐"},
+        {"food_group_id": "fg_000361", "value_id": "okinawa", "display_name": "沖縄豆腐"},
+        {"food_group_id": "fg_000350", "value_id": "yushi", "display_name": "ゆし豆腐"},
+        {"food_group_id": "fg_000351", "value_id": "rokujo", "display_name": "ろくじょう豆腐"}
+      ]
+    },
+    {
+      "canonical_name": "納豆",
+      "display_name": "納豆",
+      "grouping_level": "strong",
+      "category": "豆・大豆製品",
+      "search_terms": ["納豆"],
+      "generated_user_name": true,
+      "selection_dimension": {"dimension_id": "natto_type", "display_name": "種類"},
+      "default_food_group_id": null,
+      "grouping_reason": "日常的な納豆として選ばれる糸引きと挽きわりを種類として指定できるため",
+      "confidence": 0.94,
+      "members": [
+        {"food_group_id": "fg_000363", "value_id": "whole", "display_name": "糸引き納豆"},
+        {"food_group_id": "fg_000359", "value_id": "hikiwari", "display_name": "挽きわり納豆"}
+      ]
+    },
+    {
+      "canonical_name": "中華まん",
+      "display_name": "中華まん",
+      "grouping_level": "moderate",
+      "category": "料理",
+      "search_terms": ["中華まん"],
+      "generated_user_name": true,
+      "selection_dimension": {"dimension_id": "bun_type", "display_name": "種類"},
+      "default_food_group_id": null,
+      "grouping_reason": "あんまんと肉まんを中華まんの種類として選べ、個別名の検索も維持できるため",
+      "confidence": 0.91,
+      "members": [
+        {"food_group_id": "fg_000051", "value_id": "anman", "display_name": "あんまん"},
+        {"food_group_id": "fg_000057", "value_id": "nikuman", "display_name": "肉まん"}
+      ]
+    },
+    {
+      "canonical_name": "まんじゅう",
+      "display_name": "まんじゅう",
+      "grouping_level": "moderate",
+      "category": "菓子",
+      "search_terms": ["まんじゅう", "饅頭"],
+      "generated_user_name": true,
+      "selection_dimension": {"dimension_id": "manju_type", "display_name": "種類"},
+      "default_food_group_id": null,
+      "grouping_reason": "和菓子のまんじゅう類を、個別の菓子名を保ったまま種類として選べるため",
+      "confidence": 0.9,
+      "members": [
+        {"food_group_id": "fg_000052", "value_id": "karukan", "display_name": "かるかんまんじゅう"},
+        {"food_group_id": "fg_000053", "value_id": "kuzu", "display_name": "くずまんじゅう"},
+        {"food_group_id": "fg_000054", "value_id": "chestnut", "display_name": "くりまんじゅう"},
+        {"food_group_id": "fg_000055", "value_id": "to", "display_name": "とうまんじゅう"},
+        {"food_group_id": "fg_000056", "value_id": "castella", "display_name": "カステラまんじゅう"},
+        {"food_group_id": "fg_000058", "value_id": "steamed", "display_name": "蒸しまんじゅう"}
+      ]
+    },
+    {
+      "canonical_name": "ドーナッツ",
+      "display_name": "ドーナッツ",
+      "grouping_level": "moderate",
+      "category": "菓子",
+      "search_terms": ["ドーナッツ", "ドーナツ"],
+      "generated_user_name": true,
+      "selection_dimension": {"dimension_id": "doughnut_type", "display_name": "種類"},
+      "default_food_group_id": null,
+      "grouping_reason": "生地タイプの違いをドーナッツの種類として選べるため",
+      "confidence": 0.94,
+      "members": [
+        {"food_group_id": "fg_000068", "value_id": "yeast", "display_name": "イーストドーナッツ"},
+        {"food_group_id": "fg_000069", "value_id": "cake", "display_name": "ケーキドーナッツ"}
+      ]
+    },
+    {
+      "canonical_name": "アイスクリーム",
+      "display_name": "アイスクリーム",
+      "grouping_level": "strong",
+      "category": "菓子",
+      "search_terms": ["アイスクリーム", "アイス"],
+      "generated_user_name": false,
+      "selection_dimension": {"dimension_id": "ice_cream_type", "display_name": "種類"},
+      "default_food_group_id": "fg_000260",
+      "grouping_reason": "冷菓の表示区分をアイスクリームの種類として選べ、個別名の検索も維持できるため",
+      "confidence": 0.92,
+      "members": [
+        {"food_group_id": "fg_000260", "value_id": "ice_cream", "display_name": "アイスクリーム"},
+        {"food_group_id": "fg_000261", "value_id": "ice_milk", "display_name": "アイスミルク"},
+        {"food_group_id": "fg_001025", "value_id": "lacto_ice", "display_name": "ラクトアイス"}
+      ]
+    },
+    {
+      "canonical_name": "鶏肉",
+      "display_name": "鶏肉",
+      "grouping_level": "moderate",
+      "category": "肉・魚・卵",
+      "search_terms": ["鶏肉", "とり肉"],
+      "generated_user_name": true,
+      "selection_dimension": {"dimension_id": "chicken_cut", "display_name": "部位"},
+      "default_food_group_id": null,
+      "grouping_reason": "料理名や内臓を混ぜず、一般的な鶏肉の部位を後から選べるため",
+      "confidence": 0.9,
+      "members": [
+        {"food_group_id": "fg_001367", "value_id": "tenderloin", "display_name": "ささみ"},
+        {"food_group_id": "fg_001370", "value_id": "breast", "display_name": "むね"},
+        {"food_group_id": "fg_001371", "value_id": "thigh", "display_name": "もも"},
+        {"food_group_id": "fg_001374", "value_id": "wing_tip", "display_name": "手羽さき"},
+        {"food_group_id": "fg_001375", "value_id": "drumette", "display_name": "手羽もと"},
+        {"food_group_id": "fg_001376", "value_id": "wing", "display_name": "手羽"}
+      ]
+    },
+    {
+      "canonical_name": "牛肉",
+      "display_name": "牛肉",
+      "grouping_level": "moderate",
+      "category": "肉・魚・卵",
+      "search_terms": ["牛肉"],
+      "generated_user_name": true,
+      "selection_dimension": {"dimension_id": "beef_cut", "display_name": "部位"},
+      "default_food_group_id": null,
+      "grouping_reason": "加工品や内臓を混ぜず、一般的な牛肉の部位を後から選べるため",
+      "confidence": 0.9,
+      "members": [
+        {"food_group_id": "fg_001245", "value_id": "shoulder_loin", "display_name": "かたロース"},
+        {"food_group_id": "fg_001246", "value_id": "shoulder", "display_name": "かた"},
+        {"food_group_id": "fg_001248", "value_id": "outside_round", "display_name": "そともも"},
+        {"food_group_id": "fg_001249", "value_id": "short_plate", "display_name": "ばら"},
+        {"food_group_id": "fg_001250", "value_id": "round", "display_name": "もも"},
+        {"food_group_id": "fg_001251", "value_id": "sirloin", "display_name": "サーロイン"},
+        {"food_group_id": "fg_001253", "value_id": "tenderloin", "display_name": "ヒレ"},
+        {"food_group_id": "fg_001255", "value_id": "rump", "display_name": "ランプ"},
+        {"food_group_id": "fg_001256", "value_id": "rib_loin", "display_name": "リブロース"},
+        {"food_group_id": "fg_001270", "value_id": "shank", "display_name": "腱"}
+      ]
+    },
+    {
+      "canonical_name": "豚肉",
+      "display_name": "豚肉",
+      "grouping_level": "moderate",
+      "category": "肉・魚・卵",
+      "search_terms": ["豚肉"],
+      "generated_user_name": true,
+      "selection_dimension": {"dimension_id": "pork_cut", "display_name": "部位"},
+      "default_food_group_id": null,
+      "grouping_reason": "内臓を混ぜず、一般的な豚肉の部位を後から選べるため",
+      "confidence": 0.92,
+      "members": [
+        {"food_group_id": "fg_001338", "value_id": "shoulder_loin", "display_name": "かたロース"},
+        {"food_group_id": "fg_001339", "value_id": "shoulder", "display_name": "かた"},
+        {"food_group_id": "fg_001341", "value_id": "outside_round", "display_name": "そともも"},
+        {"food_group_id": "fg_001342", "value_id": "belly", "display_name": "ばら"},
+        {"food_group_id": "fg_001343", "value_id": "round", "display_name": "もも"},
+        {"food_group_id": "fg_001344", "value_id": "tenderloin", "display_name": "ヒレ"},
+        {"food_group_id": "fg_001345", "value_id": "loin", "display_name": "ロース"}
+      ]
+    }
+  ],
+  "standalone_overrides": [
+    {
+      "food_group_id": "fg_000119",
+      "canonical_name": "プリン",
+      "display_name": "プリン",
+      "category": "菓子",
+      "search_terms": ["プリン", "カスタードプリン"],
+      "generated_user_name": true,
+      "separation_reason": "カスタードプリンは単独の既存食品グループであり、そのまま直接解決できるため",
+      "confidence": 0.95
+    }
+  ],
+  "review_candidates": []
+}

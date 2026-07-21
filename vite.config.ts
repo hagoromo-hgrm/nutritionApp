@@ -7,6 +7,17 @@ export default defineConfig(({ mode }) => {
 
   return {
     base,
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.endsWith('/data/mext/app/user_food_groups.json')) return 'mextUserFoodGroups'
+            if (id.endsWith('/data/mext/app/user_food_group_mappings.json')) return 'mextUserFoodMappings'
+            if (id.endsWith('/data/mext/app/user_food_search_index.json')) return 'mextUserFoodSearch'
+          },
+        },
+      },
+    },
     plugins: [
       react(),
       VitePWA({

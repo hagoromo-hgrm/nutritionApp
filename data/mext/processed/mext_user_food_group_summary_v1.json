@@ -1,0 +1,22 @@
+{
+  "input_food_group_count": 1494,
+  "mapped_food_group_count": 1494,
+  "user_food_group_count": 1413,
+  "strong_group_count": 9,
+  "moderate_group_count": 10,
+  "weak_group_count": 0,
+  "standalone_group_count": 1394,
+  "multi_member_group_count": 19,
+  "single_member_group_count": 1394,
+  "groups_with_direct_selection": 1401,
+  "groups_requiring_selection": 12,
+  "selection_dimension_count": 19,
+  "selection_value_count": 100,
+  "search_shortcut_count": 100,
+  "review_group_count": 0,
+  "mechanical_candidate_set_count": 89,
+  "duplicate_food_group_mapping_count": 0,
+  "missing_food_group_mapping_count": 0,
+  "invalid_reference_count": 0,
+  "validation_passed": true
+}
