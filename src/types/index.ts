@@ -188,11 +188,20 @@ export interface MealEntry {
   calculatedNutrients: Nutrients
 }
 
+export interface MenuIngredient {
+  kind: 'food' | 'menu'
+  itemId: string
+  amount: number
+  unit: FoodUnit
+}
+
 export interface Menu {
   id: string
   name: string
   category: MenuCategory
+  /** 旧データおよび食品検索との互換用。新規保存ではingredients内の食品IDと同期する。 */
   foodIds: string[]
+  ingredients?: MenuIngredient[]
   aliases?: string[]
   createdAt: string
   updatedAt: string

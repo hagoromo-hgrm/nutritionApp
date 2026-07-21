@@ -21,6 +21,7 @@ import {
 import { createId } from '../utils/id'
 import { estimateDailyGoals } from '../services/nutrition'
 import { normalizeFoodAttributePreferences } from '../services/foodAttributePreferences'
+import { getMenuFoodIds, getNestedMenuIds, wouldCreateMenuCycle } from '../services/menuIngredients'
 import { normalizeSearchText, searchFoodResults as searchFoodResultsPure, type FoodSearchPage } from '../services/foodSearch'
 import {
   getFoodGroup as getMextFoodGroup,
@@ -437,19 +438,29 @@ export async function searchMenus(query: string): Promise<Menu[]> {
   const normalized = normalizeSearchText(query)
   const menus = await db.menus.orderBy('name').toArray()
   if (!normalized) return menus
-  const ingredientFoods = await db.foods.bulkGet([...new Set(menus.flatMap((menu) => menu.foodIds))])
+  const ingredientFoods = await db.foods.bulkGet([...new Set(menus.flatMap(getMenuFoodIds))])
   const foodsById = new Map(ingredientFoods.filter((food): food is Food => Boolean(food)).map((food) => [food.id, food]))
+  const menusById = new Map(menus.map((menu) => [menu.id, menu]))
   const aliases = await db.foodAliases.toArray()
   const aliasesByGroup = new Map<string, string[]>()
   for (const alias of aliases) aliasesByGroup.set(alias.foodGroupId, [...(aliasesByGroup.get(alias.foodGroupId) ?? []), alias.alias])
   const foodMatches = (food: Food) => [food.displayName ?? food.name, food.officialName ?? food.name, food.maker, food.reading ?? '', ...(food.foodGroupId ? aliasesByGroup.get(food.foodGroupId) ?? [] : [])]
     .some((field) => normalizeSearchText(field).includes(normalized))
   const textMatches = (field: string) => normalizeSearchText(field).includes(normalized)
-  return menus.filter((menu) => [menu.name, menu.category, ...(menu.aliases ?? [])].some(textMatches)
-    || menu.foodIds.some((foodId) => {
-      const food = foodsById.get(foodId)
-      return food ? foodMatches(food) : false
-    }))
+  const menuMatches = (menu: Menu, visited: Set<string>): boolean => {
+    if (visited.has(menu.id)) return false
+    const nextVisited = new Set(visited).add(menu.id)
+    return [menu.name, menu.category, ...(menu.aliases ?? [])].some(textMatches)
+      || getMenuFoodIds(menu).some((foodId) => {
+        const food = foodsById.get(foodId)
+        return food ? foodMatches(food) : false
+      })
+      || getNestedMenuIds(menu).some((menuId) => {
+        const nested = menusById.get(menuId)
+        return nested ? menuMatches(nested, nextVisited) : false
+      })
+  }
+  return menus.filter((menu) => menuMatches(menu, new Set()))
 }
 
 export async function searchMenuSets(query: string): Promise<MenuSet[]> {
@@ -458,7 +469,7 @@ export async function searchMenuSets(query: string): Promise<MenuSet[]> {
   if (!normalized) return sets
   const menus = await db.menus.toArray()
   const menuById = new Map(menus.map((menu) => [menu.id, menu]))
-  const foodIds = [...new Set([...sets.flatMap((set) => set.foodIds ?? []), ...menus.flatMap((menu) => menu.foodIds)])]
+  const foodIds = [...new Set([...sets.flatMap((set) => set.foodIds ?? []), ...menus.flatMap(getMenuFoodIds)])]
   const ingredientFoods = await db.foods.bulkGet(foodIds)
   const foodsById = new Map(ingredientFoods.filter((food): food is Food => Boolean(food)).map((food) => [food.id, food]))
   const aliases = await db.foodAliases.toArray()
@@ -469,11 +480,15 @@ export async function searchMenuSets(query: string): Promise<MenuSet[]> {
     return food ? [food.displayName ?? food.name, food.officialName ?? food.name, food.maker, food.reading ?? '', ...(food.foodGroupId ? aliasesByGroup.get(food.foodGroupId) ?? [] : [])].some((field) => normalizeSearchText(field).includes(normalized)) : false
   }
   const textMatches = (field: string) => normalizeSearchText(field).includes(normalized)
-  const menuMatches = (menuId: string) => {
+  const menuMatches = (menuId: string, visited = new Set<string>()): boolean => {
     const menu = menuById.get(menuId)
-    return menu ? [menu.name, menu.category, ...(menu.aliases ?? [])].some(textMatches) || menu.foodIds.some(foodMatches) : false
+    if (!menu || visited.has(menuId)) return false
+    const nextVisited = new Set(visited).add(menuId)
+    return [menu.name, menu.category, ...(menu.aliases ?? [])].some(textMatches)
+      || getMenuFoodIds(menu).some(foodMatches)
+      || getNestedMenuIds(menu).some((nestedMenuId) => menuMatches(nestedMenuId, nextVisited))
   }
-  return sets.filter((set) => textMatches(set.name) || (set.foodIds ?? []).some(foodMatches) || set.menuIds.some(menuMatches))
+  return sets.filter((set) => textMatches(set.name) || (set.foodIds ?? []).some(foodMatches) || set.menuIds.some((menuId) => menuMatches(menuId)))
 }
 
 export async function getAllMenus(): Promise<Menu[]> {
@@ -485,11 +500,19 @@ export async function getAllMenuSets(): Promise<MenuSet[]> {
 }
 
 export async function saveMenu(menu: Menu): Promise<void> {
-  await db.menus.put(menu)
+  await db.transaction('rw', db.menus, async () => {
+    const menus = await db.menus.toArray()
+    if (getNestedMenuIds(menu).some((menuId) => wouldCreateMenuCycle(menu.id, menuId, menus))) {
+      throw new Error('料理メニューを循環して参照することはできません。')
+    }
+    await db.menus.put(menu)
+  })
 }
 
 export async function deleteMenu(id: string): Promise<void> {
   await db.transaction('rw', [db.menus, db.menuSets], async () => {
+    const referencedBy = (await db.menus.toArray()).filter((menu) => menu.id !== id && getNestedMenuIds(menu).includes(id))
+    if (referencedBy.length > 0) throw new Error(`「${referencedBy[0].name}」の食材として使用されているため削除できません。`)
     await db.menus.delete(id)
     const sets = await db.menuSets.toArray()
     await Promise.all(sets.filter((set) => set.menuIds.includes(id)).map((set) => db.menuSets.put({ ...set, menuIds: set.menuIds.filter((menuId) => menuId !== id), updatedAt: new Date().toISOString() })))

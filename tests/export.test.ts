@@ -54,16 +54,23 @@ describe('export formats', () => {
     const withMenu = {
       ...backup,
       menus: [
-        { id: 'menu_1', name: '朝ごはん', category: '主食', foodIds: ['food_1'], aliases: ['朝食'], createdAt: '2026-07-15T00:00:00.000Z', updatedAt: '2026-07-15T00:00:00.000Z' },
-        { id: 'menu_2', name: 'おやつ', category: 'お菓子・スイーツ', foodIds: ['food_1'], createdAt: '2026-07-15T00:00:00.000Z', updatedAt: '2026-07-15T00:00:00.000Z' },
+        { id: 'menu_1', name: '朝ごはん', category: '主食', foodIds: ['food_1'], ingredients: [{ kind: 'food', itemId: 'food_1', amount: 150, unit: 'g' }], aliases: ['朝食'], createdAt: '2026-07-15T00:00:00.000Z', updatedAt: '2026-07-15T00:00:00.000Z' },
+        { id: 'menu_2', name: 'おやつ', category: 'お菓子・スイーツ', foodIds: [], ingredients: [{ kind: 'menu', itemId: 'menu_1', amount: 0.5, unit: '食' }], createdAt: '2026-07-15T00:00:00.000Z', updatedAt: '2026-07-15T00:00:00.000Z' },
       ],
       menuSets: [{ id: 'set_1', name: '平日セット', menuIds: ['menu_1'], foodIds: ['food_1'], createdAt: '2026-07-15T00:00:00.000Z', updatedAt: '2026-07-15T00:00:00.000Z' }],
     }
     expect(validateBackup(withMenu).menus?.[0].name).toBe('朝ごはん')
     expect(validateBackup(withMenu).menus?.[0].aliases).toEqual(['朝食'])
+    expect(validateBackup(withMenu).menus?.[0].ingredients?.[0].amount).toBe(150)
+    expect(validateBackup(withMenu).menus?.[1].ingredients?.[0].kind).toBe('menu')
     expect(validateBackup(withMenu).menus?.[1].category).toBe('お菓子・スイーツ')
     expect(validateBackup(withMenu).menuSets?.[0].menuIds).toEqual(['menu_1'])
     expect(validateBackup(withMenu).menuSets?.[0].foodIds).toEqual(['food_1'])
+    expect(() => validateBackup({ ...withMenu, menus: [{ ...withMenu.menus[0], ingredients: [{ kind: 'food', itemId: 'food_1', amount: 0, unit: 'g' }] }] })).toThrow()
+    expect(() => validateBackup({ ...withMenu, menus: [
+      { ...withMenu.menus[0], ingredients: [{ kind: 'menu', itemId: 'menu_2', amount: 1, unit: '食' }] },
+      { ...withMenu.menus[1], ingredients: [{ kind: 'menu', itemId: 'menu_1', amount: 1, unit: '食' }] },
+    ] })).toThrow('循環')
   })
 
   it('検索ログと利用統計を含むバックアップを検証できる', () => {

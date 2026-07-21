@@ -1,5 +1,6 @@
-import { NUTRIENT_KEYS, type AppSettings, type BackupData, type Food, type FoodAlias, type FoodGroup, type FoodRelatedTerm, type FoodUsageStat, type MealEntry, type Menu, type MenuSet, type Nutrients, type SearchLog } from '../types'
+import { NUTRIENT_KEYS, type AppSettings, type BackupData, type Food, type FoodAlias, type FoodGroup, type FoodRelatedTerm, type FoodUsageStat, type MealEntry, type Menu, type MenuIngredient, type MenuSet, type Nutrients, type SearchLog } from '../types'
 import { isFoodAttributePreference } from './foodAttributePreferences'
+import { hasMenuCycles } from './menuIngredients'
 import { isNutrients, isValidUnit } from '../utils/validation'
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -97,10 +98,18 @@ function isMealEntry(value: unknown): value is MealEntry {
     && isValidUnit(String(value.amountUnit)) && isNutrients(value.calculatedNutrients)
 }
 
+function isMenuIngredient(value: unknown): value is MenuIngredient {
+  if (!isRecord(value)) return false
+  return (value.kind === 'food' || value.kind === 'menu') && isString(value.itemId) && value.itemId.length > 0
+    && typeof value.amount === 'number' && Number.isFinite(value.amount) && value.amount > 0 && value.amount <= 100000
+    && isValidUnit(String(value.unit))
+}
+
 function isMenu(value: unknown): value is Menu {
   if (!isRecord(value)) return false
   return isString(value.id) && isString(value.name) && ['主食', '主菜', '副菜', '汁物', '乳製品・果物', 'お菓子・スイーツ', 'その他'].includes(String(value.category))
     && Array.isArray(value.foodIds) && value.foodIds.every(isString)
+    && (value.ingredients === undefined || (Array.isArray(value.ingredients) && value.ingredients.every(isMenuIngredient)))
     && (value.aliases === undefined || (Array.isArray(value.aliases) && value.aliases.every(isString)))
     && isString(value.createdAt) && isString(value.updatedAt)
 }
@@ -156,6 +165,9 @@ export function validateBackup(value: unknown): BackupData {
   if ((value.menus !== undefined && (!Array.isArray(value.menus) || !value.menus.every(isMenu)))
     || (value.menuSets !== undefined && (!Array.isArray(value.menuSets) || !value.menuSets.every(isMenuSet)))) {
     throw new Error('メニューまたはメニューセットの形式が不正です。')
+  }
+  if (value.menus !== undefined && hasMenuCycles(value.menus as Menu[])) {
+    throw new Error('料理メニューが循環して参照されています。')
   }
   if (!value.favorites.every((favorite) => isRecord(favorite) && isString(favorite.foodId) && isString(favorite.createdAt))) {
     throw new Error('お気に入り情報の形式が不正です。')

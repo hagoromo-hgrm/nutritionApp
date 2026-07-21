@@ -1,6 +1,6 @@
 import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { db, deleteFood, exportBackup, getEntriesForDate, getSettings, initializeDatabase, recordFoodSelection, saveFood, saveFoodWithMetadata, saveMealEntries, saveMealEntry, saveMenu, searchFoodResults, searchMenus } from '../src/db/db'
+import { db, deleteFood, deleteMenu, exportBackup, getEntriesForDate, getSettings, initializeDatabase, recordFoodSelection, saveFood, saveFoodWithMetadata, saveMealEntries, saveMealEntry, saveMenu, searchFoodResults, searchMenus } from '../src/db/db'
 import { getFoodVariantBySourceId, hasFoodGroup as hasMextFoodGroup } from '../src/services/mextFoodData'
 import type { Food, FoodAlias, FoodGroup, FoodRelatedTerm, MealEntry, Menu } from '../src/types'
 
@@ -181,6 +181,25 @@ describe('IndexedDB data safety', () => {
     expect(await searchMenus('主食')).toEqual([menu])
     expect(await searchMenus('テスト食品')).toEqual([menu])
     expect(await searchMenus('モーニング')).toEqual([menu])
+  })
+
+  it('料理メニューを食材として検索でき、循環参照と参照中の削除を拒否する', async () => {
+    await saveFood(userFood)
+    const child: Menu = {
+      id: 'menu_child', name: '具材メニュー', category: '主菜', foodIds: [userFood.id],
+      ingredients: [{ kind: 'food', itemId: userFood.id, amount: 50, unit: 'g' }],
+      createdAt: '2026-07-15T00:00:00.000Z', updatedAt: '2026-07-15T00:00:00.000Z',
+    }
+    const parent: Menu = {
+      id: 'menu_parent', name: '親メニュー', category: '主食', foodIds: [],
+      ingredients: [{ kind: 'menu', itemId: child.id, amount: 1, unit: '食' }],
+      createdAt: '2026-07-15T00:00:00.000Z', updatedAt: '2026-07-15T00:00:00.000Z',
+    }
+    await saveMenu(child)
+    await saveMenu(parent)
+    expect((await searchMenus('テスト食品')).map((menu) => menu.id).sort()).toEqual(['menu_child', 'menu_parent'])
+    await expect(saveMenu({ ...child, ingredients: [{ kind: 'menu', itemId: parent.id, amount: 1, unit: '食' }] })).rejects.toThrow('循環')
+    await expect(deleteMenu(child.id)).rejects.toThrow('親メニュー')
   })
 
   it('初期設定に身体情報の既定値を持つ', async () => {

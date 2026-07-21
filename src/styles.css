@@ -306,6 +306,13 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .menu-food-selection { display: grid; gap: .65rem; }
 .menu-selected-heading { display: flex; align-items: center; justify-content: space-between; gap: .6rem; color: var(--muted); font-size: .7rem; font-weight: 800; }
 .menu-selected-foods { overflow: hidden; border: 1px solid var(--line); border-radius: .8rem; padding: .15rem .8rem; background: #fbfdff; }
+.menu-ingredient-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(6.6rem, .55fr) auto; align-items: center; gap: .55rem; border-bottom: 1px solid #edf2f8; padding: .65rem 0; }
+.menu-ingredient-row:last-child { border-bottom: 0; }
+.menu-ingredient-copy { display: flex; min-width: 0; align-items: center; gap: .45rem; }
+.menu-ingredient-copy strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .76rem; }
+.menu-ingredient-amount { display: flex; min-width: 0; align-items: center; gap: .35rem; margin: 0; color: var(--muted); font-size: .7rem; }
+.menu-ingredient-amount input { min-width: 0; width: 100%; padding: .48rem .55rem; font-size: .76rem; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; clip-path: inset(50%); }
 .menu-food-empty { padding: .7rem .1rem; color: var(--muted); font-size: .72rem; line-height: 1.5; }
 .menu-food-picker { overflow: hidden; border: 1px solid var(--line); border-radius: .8rem; padding: .1rem .8rem .75rem; background: #ffffff; }
 .menu-food-picker:not([open]) { padding-bottom: .1rem; }
@@ -322,6 +329,11 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .checkbox-row { display: flex; grid-template-columns: none; align-items: center; gap: .55rem; border-bottom: 1px solid #edf2f8; padding: .45rem 0; color: var(--ink); font-size: .78rem; font-weight: 500; }
 .checkbox-row:last-child { border-bottom: 0; }
 .checkbox-row input { width: 1rem; height: 1rem; accent-color: var(--accent); }
+@media (max-width: 560px) {
+  .menu-ingredient-row { grid-template-columns: minmax(0, 1fr) auto; }
+  .menu-ingredient-amount { grid-column: 1; }
+  .menu-ingredient-row > .danger-text { grid-column: 2; grid-row: 1 / span 2; }
+}
 .search-bar-list { display: grid; gap: .75rem; }
 .search-bar-row { display: flex; align-items: end; gap: .55rem; }
 .search-bar-row label { flex: 1; }
