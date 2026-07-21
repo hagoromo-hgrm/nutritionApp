@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { normalizeSearchText, searchFoodResults } from '../src/services/foodSearch'
-import { isCommercialFood } from '../src/services/foodClassification'
+import { FOOD_MASTER_SEARCH_CATEGORIES, MEAL_SEARCH_CATEGORIES, foodSearchCategoryIncludesFoods, foodSearchCategoryIncludesMenus, isCommercialFood } from '../src/services/foodClassification'
 import type { Food, FoodAlias, FoodGroup, FoodRelatedTerm, FoodUsageStat } from '../src/types'
 
 const nutrients = { energyKcal: 100, proteinG: 1, fatG: 1, carbohydrateG: 1, fiberG: 1, saltG: 0, calciumMg: null, ironMg: null, vitaminAMcg: null, vitaminEMg: null, vitaminB1Mg: null, vitaminB2Mg: null, vitaminCMg: null, saturatedFatG: null }
@@ -68,5 +68,21 @@ describe('local food search', () => {
     expect(commercialPage.results).toHaveLength(1)
     expect(commercialPage.results[0].variants).toHaveLength(1)
     expect(commercialPage.nextCursor).toBe('1')
+  })
+
+  it('料理メニューを一般食品の分類とページングから分離する', () => {
+    expect(MEAL_SEARCH_CATEGORIES).toEqual(['all', 'general', 'menu', 'commercial'])
+    expect(FOOD_MASTER_SEARCH_CATEGORIES).toEqual(['all', 'general', 'commercial'])
+    expect(foodSearchCategoryIncludesFoods('menu')).toBe(false)
+    expect(foodSearchCategoryIncludesMenus('menu')).toBe(true)
+    expect(foodSearchCategoryIncludesMenus('general')).toBe(false)
+
+    const page = searchFoodResults('', {
+      foods: [food('general', '一般食品', 'general')],
+      groups: [group('general', '一般食品', 'general')],
+      aliases: [], relatedTerms: [], usageStats: [],
+    }, { category: 'menu', limit: 1 })
+    expect(page.results).toHaveLength(0)
+    expect(page.nextCursor).toBeNull()
   })
 })

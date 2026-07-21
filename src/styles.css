@@ -339,7 +339,7 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .search-bar-row label { flex: 1; }
 .search-input-actions { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .6rem; margin-top: 1rem; }
 .search-result-groups { display: grid; gap: 1rem; }
-.search-category-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .3rem; margin: 0 0 .8rem; border-radius: .9rem; padding: .25rem; background: #e8f0f9; }
+.search-category-tabs { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: .3rem; margin: 0 0 .8rem; border-radius: .9rem; padding: .25rem; background: #e8f0f9; }
 .search-category-tabs button { min-width: 0; border: 0; border-radius: .7rem; padding: .65rem .3rem; color: var(--muted); background: transparent; font-size: .72rem; font-weight: 800; white-space: nowrap; }
 .search-category-tabs button.active { color: var(--accent-deep); background: white; box-shadow: 0 .12rem .45rem rgba(69, 111, 159, .13); }
 .search-category-tabs button:disabled { cursor: wait; opacity: .72; }
