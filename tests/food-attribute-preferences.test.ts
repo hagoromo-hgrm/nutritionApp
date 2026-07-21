@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { applyMextFoodAttributePreferences, FOOD_ATTRIBUTE_PREFERENCES_GLOBAL_KEY, getFoodAttributePreferencesForGroup, normalizeFoodAttributePreferences, setFoodAttributePreference } from '../src/services/foodAttributePreferences'
+import { applyMextFoodAttributePreferences, applyUserFoodSelectionPreferences, FOOD_ATTRIBUTE_PREFERENCES_GLOBAL_KEY, getFoodAttributePreferencesForGroup, normalizeFoodAttributePreferences, setFoodAttributePreference } from '../src/services/foodAttributePreferences'
 
 describe('食品属性設定', () => {
   it('旧設定や不正項目を空の設定として安全に扱う', () => {
@@ -39,6 +39,23 @@ describe('食品属性設定', () => {
     const applied = applyMextFoodAttributePreferences([attribute], {}, { state: { defaultValueId: 'raw', mode: 'auto', visible: false } })
     expect(applied.selection).toEqual({ state: 'raw' })
     expect(applied.autoHiddenAttributeIds).toEqual(new Set(['state']))
+  })
+
+  it('上位の食品種類にも食品単位の既定値と非表示設定を適用する', () => {
+    const dimension = { id: 'rice_type', displayName: 'ご飯の種類', required: true, defaultValueId: 'white_rice', values: [{ id: 'white_rice', displayName: '白ごはん', foodGroupId: 'white', searchShortcut: true }, { id: 'barley_rice', displayName: '麦ごはん', foodGroupId: 'barley', searchShortcut: true }] }
+    const applied = applyUserFoodSelectionPreferences([dimension], {}, { rice_type: { defaultValueId: 'barley_rice', mode: 'auto', visible: false } })
+    expect(applied.selection).toEqual({ rice_type: 'barley_rice' })
+    expect(applied.autoHiddenDimensionIds).toEqual(new Set(['rice_type']))
+    expect(applied.invalidDimensionIds).toEqual(new Set())
+  })
+
+  it('上位の食品種類では検索プリセットをユーザー既定値より優先し、不正な既定値では非表示にしない', () => {
+    const dimension = { id: 'rice_type', displayName: 'ご飯の種類', required: true, defaultValueId: 'white_rice', values: [{ id: 'white_rice', displayName: '白ごはん', foodGroupId: 'white', searchShortcut: true }, { id: 'brown_rice', displayName: '玄米ごはん', foodGroupId: 'brown', searchShortcut: true }] }
+    expect(applyUserFoodSelectionPreferences([dimension], { rice_type: 'brown_rice' }, { rice_type: { defaultValueId: 'white_rice', mode: 'auto', visible: false } }).selection).toEqual({ rice_type: 'brown_rice' })
+    const invalid = applyUserFoodSelectionPreferences([dimension], {}, { rice_type: { defaultValueId: 'missing', mode: 'auto', visible: false } })
+    expect(invalid.selection).toEqual({ rice_type: 'white_rice' })
+    expect(invalid.autoHiddenDimensionIds).toEqual(new Set())
+    expect(invalid.invalidDimensionIds).toEqual(new Set(['rice_type']))
   })
 
   it('食品グループにない既定値は適用せず、曖昧な解決を補完しない', () => {

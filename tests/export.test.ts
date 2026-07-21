@@ -41,8 +41,9 @@ describe('export formats', () => {
   })
 
   it('食品属性設定を含むバックアップを検証し、不正な型を拒否する', () => {
-    const withPreferences = { ...backup, settings: { ...backup.settings, foodAttributePreferences: { group_a: { cooking_state: { defaultValueId: 'raw', mode: 'auto' }, unknown_attribute: { defaultValueId: 'value', mode: 'prefill' } } } } }
+    const withPreferences = { ...backup, settings: { ...backup.settings, foodAttributePreferences: { group_a: { cooking_state: { defaultValueId: 'raw', mode: 'auto' }, unknown_attribute: { defaultValueId: 'value', mode: 'prefill' } }, ufg_000960: { rice_type: { defaultValueId: 'white_rice', mode: 'auto', visible: false } } } } }
     expect(validateBackup(withPreferences).settings.foodAttributePreferences?.group_a.cooking_state.mode).toBe('auto')
+    expect(validateBackup(withPreferences).settings.foodAttributePreferences?.ufg_000960.rice_type.defaultValueId).toBe('white_rice')
     const legacy = { ...backup, settings: { ...backup.settings, foodAttributePreferences: { cooking_state: { defaultValueId: 'raw', mode: 'auto' } } } }
     expect(validateBackup(legacy).settings.foodAttributePreferences?.cooking_state.mode).toBe('auto')
     expect(() => validateBackup({ ...backup, settings: { ...backup.settings, foodAttributePreferences: { group_a: { cooking_state: { defaultValueId: 1, mode: 'auto' } } } } })).toThrow()

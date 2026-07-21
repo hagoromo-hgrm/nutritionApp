@@ -10,7 +10,7 @@
       "generated_user_name": true,
       "selection_dimension": {
         "dimension_id": "rice_type",
-        "display_name": "種類"
+        "display_name": "ご飯の種類"
       },
       "default_food_group_id": "fg_000435",
       "grouping_reason": "炊いた米・押麦を日常的な「ご飯」から選び、違いを種類として指定できるため",

@@ -25414,7 +25414,7 @@
     "selection_dimensions": [
       {
         "dimension_id": "rice_type",
-        "display_name": "種類",
+        "display_name": "ご飯の種類",
         "required": true,
         "default_value_id": "white_rice",
         "values": [

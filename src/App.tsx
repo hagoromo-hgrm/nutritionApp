@@ -76,13 +76,14 @@ import {
   type Nutrients,
   type NutritionGoals,
 } from './types'
-import { applyMextFoodAttributePreferences, getFoodAttributePreferencesForGroup, setFoodAttributePreference } from './services/foodAttributePreferences'
+import { applyMextFoodAttributePreferences, applyUserFoodSelectionPreferences, getFoodAttributePreferencesForGroup, setFoodAttributePreference } from './services/foodAttributePreferences'
 import { normalizeSearchText, type FoodSearchResult } from './services/foodSearch'
 import { filterVariantsBySelection, getVariantOptionGroups, getVariantSelection, resolveVariantForSelection, variantOptionText, type VariantOptionGroup } from './services/foodVariants'
 import {
   AmbiguousFoodVariant,
   getDefaultSelectedAttributes,
   getFoodGroup as getMextFoodGroup,
+  getFoodAttributeDisplayName,
   getFoodVariantBySourceId,
   getSelectableAttributes,
   hasFoodGroup as hasMextFoodGroup,
@@ -1294,28 +1295,32 @@ function FoodVariantPickerModal(props: FoodVariantPickerModalProps) {
   return <LegacyFoodVariantPickerModal {...props} result={props.result} />
 }
 
-function FoodAttributeVisibilityPanel({ attributes, preferences, selection, onToggle, onClose }: {
-  attributes: ReturnType<typeof getSelectableAttributes>
-  preferences: Record<string, FoodAttributePreference>
-  selection: Record<string, string>
-  onToggle: (attributeId: string, visible: boolean) => void
+interface FoodAttributeVisibilityItem {
+  key: string
+  displayName: string
+  checked: boolean
+  disabled: boolean
+  selectedValueName: string | null
+  onToggle: (visible: boolean) => void
+}
+
+function FoodAttributeVisibilityPanel({ items, onClose }: {
+  items: FoodAttributeVisibilityItem[]
   onClose: () => void
 }) {
-  return <div className="food-attribute-visibility-panel"><div className="food-attribute-visibility-heading"><strong>表示する属性</strong><button className="small-action" type="button" onClick={onClose}>閉じる</button></div><p className="helper-text">チェックした属性だけを食品選択画面に表示します。非表示にする属性は既定値を選択しておく必要があります。</p><div className="food-attribute-visibility-list">{attributes.filter((attribute) => attribute.visibility !== 'hidden').map((attribute) => {
-    const preference = preferences[attribute.id]
-    const visible = preference ? (preference.visible ?? preference.mode !== 'auto') : true
-    const hasDefault = Boolean(selection[attribute.id] ?? preference?.defaultValueId)
-    return <label className="food-attribute-visibility-row" key={attribute.id}><input type="checkbox" checked={visible} disabled={!hasDefault} onChange={(event) => onToggle(attribute.id, event.target.checked)} /><span>{attribute.displayName}</span>{!hasDefault && <small>先に値を選択</small>}</label>
-  })}</div></div>
+  return <div className="food-attribute-visibility-panel"><div className="food-attribute-visibility-heading"><strong>表示する項目</strong><button className="small-action" type="button" onClick={onClose}>閉じる</button></div><p className="helper-text">チェックした項目だけを食品選択画面に表示します。チェックを外すと、現在の選択を次回以降の既定値として使用します。</p><div className="food-attribute-visibility-list">{items.map((item) => <label className="food-attribute-visibility-row" key={item.key}><input type="checkbox" checked={item.checked} disabled={item.disabled} onChange={(event) => item.onToggle(event.target.checked)} /><span>{item.displayName}</span><small>{item.selectedValueName ? `既定: ${item.selectedValueName}` : '先に値を選択'}</small></label>)}</div></div>
 }
 
 function MextFoodVariantPickerModal({ result, userFoodResult, foods = [], foodGroups = [], onSelect, onClose, mealMode = false, onSubmitMeal, foodAttributePreferences = {}, onSaveFoodAttributePreference }: FoodVariantPickerModalProps) {
-  const [userSelection, setUserSelection] = useState<Record<string, string>>(() => userFoodResult ? ({
-    ...Object.fromEntries(userFoodResult.group.selectionDimensions.flatMap((dimension) => dimension.defaultValueId === null
-      ? []
-      : [[dimension.id, dimension.defaultValueId] as const])),
-    ...userFoodResult.presetSelection,
-  }) : {})
+  const userGroupPreferences = useMemo(() => userFoodResult ? (foodAttributePreferences[userFoodResult.group.id] ?? {}) : {}, [foodAttributePreferences, userFoodResult])
+  const appliedUserPreferences = useMemo(() => userFoodResult
+    ? applyUserFoodSelectionPreferences(userFoodResult.group.selectionDimensions, userFoodResult.presetSelection, userGroupPreferences)
+    : { selection: {}, autoHiddenDimensionIds: new Set<string>(), invalidDimensionIds: new Set<string>() }, [userFoodResult, userGroupPreferences])
+  const [userSelection, setUserSelection] = useState<Record<string, string>>(() => appliedUserPreferences.selection)
+  const [temporarilyVisibleUserDimensionIds, setTemporarilyVisibleUserDimensionIds] = useState<Set<string>>(new Set())
+  const visibleUserDimensions = useMemo(() => (userFoodResult?.group.selectionDimensions ?? []).filter((dimension) => {
+    return !appliedUserPreferences.autoHiddenDimensionIds.has(dimension.id) || temporarilyVisibleUserDimensionIds.has(dimension.id)
+  }), [appliedUserPreferences.autoHiddenDimensionIds, temporarilyVisibleUserDimensionIds, userFoodResult])
   const resolvedUserFoodGroupId = useMemo(() => {
     if (!userFoodResult) return result?.group.id ?? null
     try {
@@ -1385,7 +1390,15 @@ function MextFoodVariantPickerModal({ result, userFoodResult, foods = [], foodGr
       && selectionForActiveGroup[attribute.id] === preference.defaultValueId
       && !appliedPreferences.invalidAttributeIds.has(attribute.id)
   })
+  const autoAppliedUserDimensions = (userFoodResult?.group.selectionDimensions ?? []).filter((dimension) => {
+    const preference = userGroupPreferences[dimension.id]
+    return appliedUserPreferences.autoHiddenDimensionIds.has(dimension.id)
+      && preference !== undefined
+      && userSelection[dimension.id] === preference.defaultValueId
+      && !appliedUserPreferences.invalidDimensionIds.has(dimension.id)
+  })
   const autoHiddenAttributes = autoAppliedAttributes.filter((attribute) => !temporarilyVisibleAttributeIds.has(attribute.id))
+  const autoHiddenUserDimensions = autoAppliedUserDimensions.filter((dimension) => !temporarilyVisibleUserDimensionIds.has(dimension.id))
   const selectedFoodId = selectedFood?.id
   const selectedFoodDefaultAmount = selectedFood ? String(selectedFood.servingAmount ?? selectedFood.baseAmount) : ''
   const selectedFoodName = supplementalFood ? (supplementalFood.officialName ?? supplementalFood.name) : resolution.variant?.sourceName
@@ -1404,12 +1417,47 @@ function MextFoodVariantPickerModal({ result, userFoodResult, foods = [], foodGr
   }
 
   const showAutoAttribute = (attributeId: string) => setTemporarilyVisibleAttributeIds((current) => new Set(current).add(attributeId))
+  const showAutoUserDimension = (dimensionId: string) => setTemporarilyVisibleUserDimensionIds((current) => new Set(current).add(dimensionId))
+  const toggleUserDimensionVisibility = async (dimensionId: string, visible: boolean) => {
+    const valueId = userSelection[dimensionId] ?? userGroupPreferences[dimensionId]?.defaultValueId
+    if (!userFoodResult || !valueId || !onSaveFoodAttributePreference) return
+    await onSaveFoodAttributePreference(userFoodResult.group.id, dimensionId, { defaultValueId: valueId, mode: visible ? 'prefill' : 'auto', visible })
+  }
   const toggleAttributeVisibility = async (attributeId: string, visible: boolean) => {
     const valueId = selectionForActiveGroup[attributeId] ?? groupPreferences[attributeId]?.defaultValueId
     if (!activeFoodGroupId || !valueId || !onSaveFoodAttributePreference) return
     await onSaveFoodAttributePreference(activeFoodGroupId, attributeId, { defaultValueId: valueId, mode: visible ? 'prefill' : 'auto', visible })
   }
-  return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="食品の種類と属性を選択"><section className="modal-card variant-picker-modal"><div className="modal-heading"><div><span className="eyebrow">FOOD SELECTION</span><h2 className="variant-picker-title">{activeResult?.group.displayName ?? userFoodResult?.group.displayName ?? result?.group.displayName ?? '食品'}<button className="info-button variant-attribute-info" type="button" disabled={attributes.length === 0} onClick={() => setShowAttributeSettings((current) => !current)} aria-expanded={showAttributeSettings} aria-label="表示する食品属性を設定">ⓘ</button></h2><p className="muted">種類と属性をこの画面で指定できます。</p></div><button className="icon-button" type="button" onClick={onClose} aria-label="閉じる">×</button></div>{userFoodResult && userFoodResult.group.selectionDimensions.length > 0 && <div className="variant-choice-groups food-type-selection">{userFoodResult.group.selectionDimensions.map((dimension) => <section className="variant-choice-group" key={dimension.id}><h3>{dimension.displayName}</h3><div className="variant-choice-buttons">{dimension.values.map((value) => <button className={`variant-choice-button${userSelection[dimension.id] === value.id ? ' is-selected' : ''}`} type="button" aria-pressed={userSelection[dimension.id] === value.id} key={`${dimension.id}:${value.id}`} onClick={() => setUserSelection((current) => ({ ...current, [dimension.id]: value.id }))}>{value.displayName}</button>)}</div></section>)}</div>}{showAttributeSettings && <FoodAttributeVisibilityPanel attributes={attributes} preferences={groupPreferences} selection={selectionForActiveGroup} onToggle={(attributeId, visible) => { void toggleAttributeVisibility(attributeId, visible) }} onClose={() => setShowAttributeSettings(false)} />}{supplementalFoods.length > 0 && <div className="variant-choice-groups"><section className="variant-choice-group"><h3>手動登録食品</h3><div className="variant-choice-buttons">{supplementalFoods.map((food) => <button className={`variant-choice-button${supplementalFoodId === food.id ? ' is-selected' : ''}`} type="button" aria-pressed={supplementalFoodId === food.id} key={food.id} onClick={() => setSupplementalFoodId(food.id)}>{food.officialName ?? food.name}</button>)}</div></section></div>}{autoAppliedAttributes.length > 0 && <div className="variant-picker-auto-summary"><span>自動適用: {autoAppliedAttributes.map((attribute) => `${attribute.displayName}＝${attribute.values.find((value) => value.id === selectionForActiveGroup[attribute.id])?.displayName ?? ''}`).join('、')}</span>{autoHiddenAttributes.length > 0 && <button className="small-action" type="button" onClick={() => autoHiddenAttributes.forEach((attribute) => showAutoAttribute(attribute.id))}>今回だけ変更</button>}</div>}{attributesToShow.length > 0 && <div className="variant-choice-groups">{attributesToShow.map((attribute) => <section className="variant-choice-group" key={attribute.id}><h3>{attribute.displayName}</h3><div className="variant-choice-buttons">{attribute.values.map((value) => <button className={`variant-choice-button${selectionForActiveGroup[attribute.id] === value.id ? ' is-selected' : ''}`} type="button" aria-pressed={selectionForActiveGroup[attribute.id] === value.id} key={`${attribute.id}:${value.id}`} onClick={() => chooseAttribute(attribute.id, value.id, attribute.visibility === 'hidden')}>{value.displayName}</button>)}</div></section>)}</div>}{userFoodResult && !activeResult && <p className="variant-picker-no-match">{resolution.error}</p>}{activeResult && selectedFood ? <div className="variant-picker-summary"><span>選択中</span><strong>{selectedFoodName}</strong><small>{selectedFood.baseAmount}{selectedFood.baseUnit} · {formatNutrient(selectedFood.nutrients.energyKcal)}</small></div> : activeResult ? <p className="variant-picker-no-match">{resolution.error}</p> : null}{mealMode && selectedFood && <label>分量<div className="amount-input-row"><div className="amount-input"><input type="number" min="0.01" max="100000" step="any" value={amount} onChange={(event) => setAmount(event.target.value)} required /><span className="field-suffix">{selectedFood.baseUnit}</span></div><button className="amount-increment" type="button" onClick={() => setAmount(String(incrementByBaseAmount(Number(amount), selectedFood.baseAmount)))} aria-label={`分量を基準量1つ分（${selectedFood.baseAmount}${selectedFood.baseUnit}）増やす`}>＋1</button></div></label>}{mealMode && selectedFood ? <button className="button primary variant-picker-confirm" type="button" onClick={() => { void onSubmitMeal?.(selectedFood, amount) }}>食事として登録</button> : <button className="button primary variant-picker-confirm" type="button" onClick={() => { if (selectedFood) onSelect(selectedFood) }} disabled={!selectedFood}>この食品を選択</button>}</section></div>
+  const attributeDisplayName = (attribute: ReturnType<typeof getSelectableAttributes>[number]) => activeFoodGroupId
+    ? getFoodAttributeDisplayName(activeFoodGroupId, attribute)
+    : attribute.displayName
+  const visibilityItems: FoodAttributeVisibilityItem[] = [
+    ...(userFoodResult?.group.selectionDimensions ?? []).map((dimension) => {
+      const selectedValueId = userSelection[dimension.id] ?? userGroupPreferences[dimension.id]?.defaultValueId
+      const selectedValue = dimension.values.find((value) => value.id === selectedValueId)
+      return {
+        key: `user:${dimension.id}`,
+        displayName: dimension.displayName,
+        checked: !appliedUserPreferences.autoHiddenDimensionIds.has(dimension.id),
+        disabled: selectedValue === undefined,
+        selectedValueName: selectedValue?.displayName ?? null,
+        onToggle: (visible: boolean) => { void toggleUserDimensionVisibility(dimension.id, visible) },
+      }
+    }),
+    ...attributes.filter((attribute) => attribute.visibility !== 'hidden').map((attribute) => {
+      const selectedValueId = selectionForActiveGroup[attribute.id] ?? groupPreferences[attribute.id]?.defaultValueId
+      const selectedValue = attribute.values.find((value) => value.id === selectedValueId)
+      return {
+        key: `mext:${attribute.id}`,
+        displayName: attributeDisplayName(attribute),
+        checked: !appliedPreferences.autoHiddenAttributeIds.has(attribute.id),
+        disabled: selectedValue === undefined,
+        selectedValueName: selectedValue?.displayName ?? null,
+        onToggle: (visible: boolean) => { void toggleAttributeVisibility(attribute.id, visible) },
+      }
+    }),
+  ]
+  return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="食品の種類と属性を選択"><section className="modal-card variant-picker-modal"><div className="modal-heading"><div><span className="eyebrow">FOOD SELECTION</span><h2 className="variant-picker-title">{activeResult?.group.displayName ?? userFoodResult?.group.displayName ?? result?.group.displayName ?? '食品'}<button className="info-button variant-attribute-info" type="button" disabled={visibilityItems.length === 0} onClick={() => setShowAttributeSettings((current) => !current)} aria-expanded={showAttributeSettings} aria-label="表示する食品属性を設定">ⓘ</button></h2><p className="muted">種類と属性をこの画面で指定できます。</p></div><button className="icon-button" type="button" onClick={onClose} aria-label="閉じる">×</button></div>{visibleUserDimensions.length > 0 && <div className="variant-choice-groups food-type-selection">{visibleUserDimensions.map((dimension) => <section className="variant-choice-group" key={dimension.id}><h3>{dimension.displayName}</h3><div className="variant-choice-buttons">{dimension.values.map((value) => <button className={`variant-choice-button${userSelection[dimension.id] === value.id ? ' is-selected' : ''}`} type="button" aria-pressed={userSelection[dimension.id] === value.id} key={`${dimension.id}:${value.id}`} onClick={() => setUserSelection((current) => ({ ...current, [dimension.id]: value.id }))}>{value.displayName}</button>)}</div></section>)}</div>}{showAttributeSettings && <FoodAttributeVisibilityPanel items={visibilityItems} onClose={() => setShowAttributeSettings(false)} />}{supplementalFoods.length > 0 && <div className="variant-choice-groups"><section className="variant-choice-group"><h3>手動登録食品</h3><div className="variant-choice-buttons">{supplementalFoods.map((food) => <button className={`variant-choice-button${supplementalFoodId === food.id ? ' is-selected' : ''}`} type="button" aria-pressed={supplementalFoodId === food.id} key={food.id} onClick={() => setSupplementalFoodId(food.id)}>{food.officialName ?? food.name}</button>)}</div></section></div>}{autoAppliedUserDimensions.length + autoAppliedAttributes.length > 0 && <div className="variant-picker-auto-summary"><span>自動適用: {[...autoAppliedUserDimensions.map((dimension) => `${dimension.displayName}＝${dimension.values.find((value) => value.id === userSelection[dimension.id])?.displayName ?? ''}`), ...autoAppliedAttributes.map((attribute) => `${attributeDisplayName(attribute)}＝${attribute.values.find((value) => value.id === selectionForActiveGroup[attribute.id])?.displayName ?? ''}`)].join('、')}</span>{autoHiddenUserDimensions.length + autoHiddenAttributes.length > 0 && <button className="small-action" type="button" onClick={() => { autoHiddenUserDimensions.forEach((dimension) => showAutoUserDimension(dimension.id)); autoHiddenAttributes.forEach((attribute) => showAutoAttribute(attribute.id)) }}>今回だけ変更</button>}</div>}{attributesToShow.length > 0 && <div className="variant-choice-groups">{attributesToShow.map((attribute) => <section className="variant-choice-group" key={attribute.id}><h3>{attributeDisplayName(attribute)}</h3><div className="variant-choice-buttons">{attribute.values.map((value) => <button className={`variant-choice-button${selectionForActiveGroup[attribute.id] === value.id ? ' is-selected' : ''}`} type="button" aria-pressed={selectionForActiveGroup[attribute.id] === value.id} key={`${attribute.id}:${value.id}`} onClick={() => chooseAttribute(attribute.id, value.id, attribute.visibility === 'hidden')}>{value.displayName}</button>)}</div></section>)}</div>}{userFoodResult && !activeResult && <p className="variant-picker-no-match">{resolution.error}</p>}{activeResult && selectedFood ? <div className="variant-picker-summary"><span>選択中</span><strong>{selectedFoodName}</strong><small>{selectedFood.baseAmount}{selectedFood.baseUnit} · {formatNutrient(selectedFood.nutrients.energyKcal)}</small></div> : activeResult ? <p className="variant-picker-no-match">{resolution.error}</p> : null}{mealMode && selectedFood && <label>分量<div className="amount-input-row"><div className="amount-input"><input type="number" min="0.01" max="100000" step="any" value={amount} onChange={(event) => setAmount(event.target.value)} required /><span className="field-suffix">{selectedFood.baseUnit}</span></div><button className="amount-increment" type="button" onClick={() => setAmount(String(incrementByBaseAmount(Number(amount), selectedFood.baseAmount)))} aria-label={`分量を基準量1つ分（${selectedFood.baseAmount}${selectedFood.baseUnit}）増やす`}>＋1</button></div></label>}{mealMode && selectedFood ? <button className="button primary variant-picker-confirm" type="button" onClick={() => { void onSubmitMeal?.(selectedFood, amount) }}>食事として登録</button> : <button className="button primary variant-picker-confirm" type="button" onClick={() => { if (selectedFood) onSelect(selectedFood) }} disabled={!selectedFood}>この食品を選択</button>}</section></div>
 }
 
 function LegacyFoodVariantPickerModal({ result, onSelect, onClose, mealMode = false, onSubmitMeal }: Omit<FoodVariantPickerModalProps, 'result'> & { result: FoodSearchResult }) {

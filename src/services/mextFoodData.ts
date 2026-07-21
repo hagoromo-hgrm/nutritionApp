@@ -177,6 +177,12 @@ export function getSelectableAttributes(foodGroupId: string): MextFoodGroupAttri
   return [...(attributesByGroup.get(foodGroupId) ?? [])]
 }
 
+export function getFoodAttributeDisplayName(foodGroupId: string, attribute: MextFoodGroupAttribute): string {
+  const group = getFoodGroup(foodGroupId)
+  if (attribute.id === 'variety' && group.parentConcept === '米') return '米の種類'
+  return attribute.displayName
+}
+
 export function getFixedAttributes(foodGroupId: string): MextFixedAttribute[] {
   getFoodGroup(foodGroupId)
   return [...(fixedAttributesByGroup.get(foodGroupId) ?? [])]

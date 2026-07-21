@@ -27,6 +27,7 @@ describe('MEXT user-facing food groups', () => {
     const rice = results.filter((result) => result.group.canonicalName === 'ご飯')
     expect(rice).toHaveLength(1)
     expect(rice[0].presetSelection).toEqual({})
+    expect(rice[0].group.selectionDimensions[0]?.displayName).toBe('ご飯の種類')
     expect(new Set(results.map((result) => result.group.id)).size).toBe(results.length)
   })
 

@@ -1,5 +1,6 @@
 import type { FoodAttributePreference, FoodAttributePreferenceMode, FoodAttributePreferences } from '../types'
 import type { MextFoodGroupAttribute } from './mextFoodData'
+import type { UserFoodSelectionDimension } from './mextUserFoodData'
 
 export const FOOD_ATTRIBUTE_PREFERENCES_GLOBAL_KEY = '__global__'
 
@@ -7,6 +8,12 @@ export interface AppliedMextFoodAttributePreferences {
   selection: Record<string, string>
   autoHiddenAttributeIds: Set<string>
   invalidAttributeIds: Set<string>
+}
+
+export interface AppliedUserFoodSelectionPreferences {
+  selection: Record<string, string>
+  autoHiddenDimensionIds: Set<string>
+  invalidDimensionIds: Set<string>
 }
 
 export function isFoodAttributePreferenceMode(value: unknown): value is FoodAttributePreferenceMode {
@@ -88,4 +95,35 @@ export function applyMextFoodAttributePreferences(
     if (preference.visible === false || (preference.visible === undefined && preference.mode === 'auto')) autoHiddenAttributeIds.add(attribute.id)
   }
   return { selection, autoHiddenAttributeIds, invalidAttributeIds }
+}
+
+/** 上位の食品種類もMEXT属性と同じ既定値・表示設定で扱う。 */
+export function applyUserFoodSelectionPreferences(
+  dimensions: readonly UserFoodSelectionDimension[],
+  presetSelection: Readonly<Record<string, string>>,
+  preferences: Readonly<Record<string, FoodAttributePreference>>,
+): AppliedUserFoodSelectionPreferences {
+  const selection: Record<string, string> = {}
+  const autoHiddenDimensionIds = new Set<string>()
+  const invalidDimensionIds = new Set<string>()
+  for (const dimension of dimensions) {
+    if (dimension.defaultValueId !== null && dimension.values.some((value) => value.id === dimension.defaultValueId)) {
+      selection[dimension.id] = dimension.defaultValueId
+    }
+    const preference = preferences[dimension.id]
+    if (!preference) continue
+    if (!dimension.values.some((value) => value.id === preference.defaultValueId)) {
+      invalidDimensionIds.add(dimension.id)
+      continue
+    }
+    selection[dimension.id] = preference.defaultValueId
+    if (preference.visible === false || (preference.visible === undefined && preference.mode === 'auto')) {
+      autoHiddenDimensionIds.add(dimension.id)
+    }
+  }
+  for (const [dimensionId, valueId] of Object.entries(presetSelection)) {
+    const dimension = dimensions.find((candidate) => candidate.id === dimensionId)
+    if (dimension?.values.some((value) => value.id === valueId)) selection[dimensionId] = valueId
+  }
+  return { selection, autoHiddenDimensionIds, invalidDimensionIds }
 }

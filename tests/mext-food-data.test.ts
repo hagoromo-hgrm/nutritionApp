@@ -6,6 +6,7 @@ import {
   InvalidAttributeValue,
   MissingRequiredAttribute,
   getDefaultSelectedAttributes,
+  getFoodAttributeDisplayName,
   getFixedAttributes,
   getFoodVariantBySourceId,
   getFoodVariants,
@@ -92,6 +93,12 @@ describe('confirmed MEXT app data access', () => {
     const attribute = representativeAttribute((item) => item.defaultValueId === null)
     const defaults = getDefaultSelectedAttributes(attribute.foodGroupId)
     expect(defaults[attribute.id]).toBeUndefined()
+  })
+
+  it('ご飯のvariety属性を上位のご飯種類と区別できる名称で返す', () => {
+    const variety = getSelectableAttributes('fg_000435').find((attribute) => attribute.id === 'variety')
+    if (!variety) throw new Error('白ごはんの種類属性がありません')
+    expect(getFoodAttributeDisplayName('fg_000435', variety)).toBe('米の種類')
   })
 
   it('hidden属性を表示せずに一意なvariantを内部解決する', () => {
