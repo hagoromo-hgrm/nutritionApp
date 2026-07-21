@@ -178,13 +178,13 @@ interface FoodDraft {
 interface VariantPickerState {
   query: string
   item: SearchResultItem
-  result: FoodSearchResult
+  result: FoodSearchResult | null
+  userFoodResult?: UserFoodSearchResult
 }
 
-interface UserFoodPickerState {
-  query: string
-  item: SearchResultItem
-  result: UserFoodSearchResult
+interface FoodVariantPickerState {
+  result: FoodSearchResult | null
+  userFoodResult?: UserFoodSearchResult
 }
 
 const ASSET_BASE_URL = import.meta.env.BASE_URL
@@ -382,7 +382,6 @@ function App() {
   const [searchResults, setSearchResults] = useState<SearchResultGroup[]>([])
   const [pendingSearchQuery, setPendingSearchQuery] = useState<string | null>(null)
   const [searchPurpose, setSearchPurpose] = useState<SearchPurpose>('meal')
-  const [userFoodPicker, setUserFoodPicker] = useState<UserFoodPickerState | null>(null)
   const [variantPicker, setVariantPicker] = useState<VariantPickerState | null>(null)
   const [foodFormReturnView, setFoodFormReturnView] = useState<FoodFormReturnView>('settings')
   const [foodScreenReturnView, setFoodScreenReturnView] = useState<FoodScreenReturnView>('today')
@@ -685,7 +684,7 @@ function App() {
 
   const saveMealRecord = async (food: Food, amountText: string, entryToEdit: MealEntry | null = editingEntry) => {
     const amount = Number(amountText)
-    if (!isPositiveFinite(amount) || amount > 100000) { showError('分量は0より大きく、現実的な範囲の数値で入力してください。'); return }
+    if (!isPositiveFinite(amount) || amount > 100000) { showError('分量は0より大きく、現実的な範囲の数値で入力してください。'); return false }
     const calculated = calculateNutrients(food, amount, food.baseUnit)
     const currentMealTime = entries.find((current) => current.mealType === mealType)?.eatenAt
     const eatenAt = entryToEdit
@@ -715,8 +714,10 @@ function App() {
       setView(returnToSearchResults ? 'search-results' : continueFoodSelection ? 'food-screen' : 'today')
       await load()
       notify(entryToEdit ? '食事記録を更新しました。' : '食事を記録しました。')
+      return true
     } catch {
       showError('食事を保存できませんでした。保存先の空き容量を確認して再試行してください。')
+      return false
     }
   }
 
@@ -866,6 +867,10 @@ function App() {
     if (amount !== undefined) setMealAmount(amount)
   }
 
+  const openUserFoodPicker = (groupQuery: string, item: SearchResultItem, userFoodResult: UserFoodSearchResult) => {
+    setVariantPicker({ query: groupQuery, item, result: null, userFoodResult })
+  }
+
   const openResolvedUserFoodGroup = (groupQuery: string, item: SearchResultItem, foodGroupId: string) => {
     const result = buildMextFoodSearchResult(foodGroupId, foods, foodGroups, item.score ?? 0)
     if (!result) {
@@ -883,7 +888,7 @@ function App() {
     if (item.kind === 'user-food' && item.userFoodResult) {
       if (item.userFoodResult.group.selectionDimensions.length > 0
         && Object.keys(item.userFoodResult.presetSelection).length === 0) {
-        setUserFoodPicker({ query: groupQuery, item, result: item.userFoodResult })
+        openUserFoodPicker(groupQuery, item, item.userFoodResult)
         return
       }
       try {
@@ -892,7 +897,7 @@ function App() {
         openResolvedUserFoodGroup(groupQuery, item, foodGroupId)
       } catch (error) {
         if (error instanceof MissingRequiredUserSelection) {
-          setUserFoodPicker({ query: groupQuery, item, result: item.userFoodResult })
+          openUserFoodPicker(groupQuery, item, item.userFoodResult)
           return
         }
         showError(error instanceof Error ? error.message : '食品の種類を決定できません。')
@@ -1082,8 +1087,7 @@ function App() {
       {view === 'today' && <button className="floating-add" type="button" onClick={openMealTypePicker} aria-label="食事を追加">＋</button>}
 
       {mealTypePicker && <MealTypePickerModal food={mealTypePicker.food} recordedMealTypes={recordedMealTypes} onSelect={chooseMealType} />}
-      {userFoodPicker && <UserFoodGroupPickerModal result={userFoodPicker.result} onResolve={(foodGroupId) => { const picker = userFoodPicker; setUserFoodPicker(null); openResolvedUserFoodGroup(picker.query, picker.item, foodGroupId) }} onClose={() => setUserFoodPicker(null)} />}
-      {variantPicker && <FoodVariantPickerModal result={variantPicker.result} foodAttributePreferences={settings.foodAttributePreferences} onSaveFoodAttributePreference={saveFoodAttributePreference} mealMode={searchPurpose === 'meal'} onSubmitMeal={async (food, amount) => { await saveMealRecord(food, amount); setVariantPicker(null) }} onSelect={(food) => { setVariantPicker(null); selectSearchFood(variantPicker.query, variantPicker.item, food) }} onClose={() => setVariantPicker(null)} />}
+      {variantPicker && <FoodVariantPickerModal result={variantPicker.result} userFoodResult={variantPicker.userFoodResult} foods={foods} foodGroups={foodGroups} foodAttributePreferences={settings.foodAttributePreferences} onSaveFoodAttributePreference={saveFoodAttributePreference} mealMode={searchPurpose === 'meal'} onSubmitMeal={async (food, amount) => { if (await saveMealRecord(food, amount)) setVariantPicker(null) }} onSelect={(food) => { setVariantPicker(null); selectSearchFood(variantPicker.query, variantPicker.item, food) }} onClose={() => setVariantPicker(null)} />}
       {mealFood && <MealModal food={mealFood} amount={mealAmount} setAmount={setMealAmount} editing={Boolean(editingEntry)} onSubmit={saveMeal} onClose={() => { setMealFood(null); setEditingEntry(null); setRecordingMealType(null) }} />}
       {mealDetails && <MealDetailsModal details={mealDetails} goals={scaleNutritionGoals(settings.goals, 1 / 3)} onUpdateTimes={updateMealTimes} onClose={() => setMealDetails(null)} />}
       {showTodayDetails && <TodayDetailsModal total={total} goals={settings.goals} subtotals={subtotals} onClose={() => setShowTodayDetails(false)} />}
@@ -1268,26 +1272,11 @@ function SearchResultsView({ groups, purpose, onSelect, onAddFood, onLoadMore, o
   return <><section className="page-heading"><div><span className="eyebrow">SEARCH RESULTS</span><h1>検索結果</h1><p className="muted">{helperText}</p></div><button className="button ghost" type="button" onClick={onBack}>← 検索画面へ</button></section><div className="search-result-groups">{groups.map((group, groupIndex) => <section className="search-result-group" key={`${group.query}:${groupIndex}`}><div className="search-result-heading"><strong>検索結果：</strong><span>{group.query}</span></div><div className="food-results">{group.items.map((item) => <button className="search-result-row" type="button" key={`${item.kind}:${item.id}`} onClick={() => onSelect(group.query, item)}><span className="source-badge">{item.kind === 'food' || item.kind === 'user-food' ? '食品' : item.kind === 'menu' ? 'メニュー' : 'セット'}</span><span className="search-result-copy"><strong>{item.title}</strong><small>{item.subtitle}</small>{(item.kind === 'food' || item.kind === 'user-food') && <span className="search-result-meta">{item.recentlyUsed && <em>最近使った</em>}{item.kind === 'user-food' && item.userFoodResult?.targetType === 'user_food_group' && item.userFoodResult.group.memberCount !== 1 && <span>{item.userFoodResult.group.memberCount}種類から選択</span>}{item.kind === 'user-food' && item.userFoodResult?.targetType === 'user_food_variant' && item.variants.length > 1 && <span>{item.variants.length}バリエーションから選択</span>}{item.kind === 'food' && item.variants.length > 1 && <span>{item.variants.length}種類から選択</span>}</span>}</span><b>›</b></button>)}{group.items.length === 0 && <div className="search-empty-state"><p>一致する食品・メニューがありません。</p><button className="button secondary" type="button" onClick={() => onAddFood(group.query === '最近・お気に入り' ? '' : group.query)}>食品を追加</button></div>}{group.nextCursor && <button className="button secondary search-load-more" type="button" onClick={() => onLoadMore(groupIndex)}>さらに表示</button>}</div></section>)}{groups.length === 0 && <div className="empty-state">検索結果はありません。検索画面へ戻って再検索してください。</div>}</div></>
 }
 
-function UserFoodGroupPickerModal({ result, onResolve, onClose }: { result: UserFoodSearchResult; onResolve: (foodGroupId: string) => void; onClose: () => void }) {
-  const [selection, setSelection] = useState<Record<string, string>>(() => ({
-    ...Object.fromEntries(result.group.selectionDimensions.flatMap((dimension) => dimension.defaultValueId === null
-      ? []
-      : [[dimension.id, dimension.defaultValueId] as const])),
-    ...result.presetSelection,
-  }))
-  const resolution = useMemo(() => {
-    try {
-      return { foodGroupId: resolveFoodGroupId(result.group.id, selection), error: null }
-    } catch (error) {
-      if (error instanceof MissingRequiredUserSelection) return { foodGroupId: null, error: '必要な種類を選択してください。' }
-      return { foodGroupId: null, error: error instanceof Error ? error.message : '食品を決定できません。' }
-    }
-  }, [result.group.id, selection])
-  return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="食品の種類を選択"><section className="modal-card variant-picker-modal"><div className="modal-heading"><div><span className="eyebrow">FOOD TYPE</span><h2>{result.group.displayName}</h2><p className="muted">種類を選ぶと、次に状態や部位などを指定できます。</p></div><button className="icon-button" type="button" onClick={onClose} aria-label="閉じる">×</button></div><div className="variant-choice-groups">{result.group.selectionDimensions.map((dimension) => <section className="variant-choice-group" key={dimension.id}><h3>{dimension.displayName}</h3><div className="variant-choice-buttons">{dimension.values.map((value) => <button className={`variant-choice-button${selection[dimension.id] === value.id ? ' is-selected' : ''}`} type="button" aria-pressed={selection[dimension.id] === value.id} key={`${dimension.id}:${value.id}`} onClick={() => setSelection((current) => ({ ...current, [dimension.id]: value.id }))}>{value.displayName}</button>)}</div></section>)}</div>{resolution.foodGroupId ? <div className="variant-picker-summary"><span>選択中</span><strong>{result.group.selectionDimensions.flatMap((dimension) => dimension.values).find((value) => value.foodGroupId === resolution.foodGroupId)?.displayName ?? result.group.displayName}</strong></div> : <p className="variant-picker-no-match">{resolution.error}</p>}<button className="button primary variant-picker-confirm" type="button" onClick={() => { if (resolution.foodGroupId) onResolve(resolution.foodGroupId) }} disabled={!resolution.foodGroupId}>次へ</button></section></div>
-}
-
 interface FoodVariantPickerModalProps {
-  result: FoodSearchResult
+  result: FoodSearchResult | null
+  userFoodResult?: UserFoodSearchResult
+  foods?: Food[]
+  foodGroups?: FoodGroup[]
   onSelect: (food: Food) => void
   onClose: () => void
   mealMode?: boolean
@@ -1297,9 +1286,12 @@ interface FoodVariantPickerModalProps {
 }
 
 function FoodVariantPickerModal(props: FoodVariantPickerModalProps) {
-  return hasMextFoodGroup(props.result.group.id)
-    ? <MextFoodVariantPickerModal {...props} />
-    : <LegacyFoodVariantPickerModal {...props} />
+  if (!props.result && !props.userFoodResult) return null
+  if (props.userFoodResult || (props.result && hasMextFoodGroup(props.result.group.id))) {
+    return <MextFoodVariantPickerModal {...props} />
+  }
+  if (!props.result) return null
+  return <LegacyFoodVariantPickerModal {...props} result={props.result} />
 }
 
 function FoodAttributeVisibilityPanel({ attributes, preferences, selection, onToggle, onClose }: {
@@ -1317,36 +1309,72 @@ function FoodAttributeVisibilityPanel({ attributes, preferences, selection, onTo
   })}</div></div>
 }
 
-function MextFoodVariantPickerModal({ result, onSelect, onClose, mealMode = false, onSubmitMeal, foodAttributePreferences = {}, onSaveFoodAttributePreference }: FoodVariantPickerModalProps) {
-  const attributes = useMemo(() => getSelectableAttributes(result.group.id), [result.group.id])
+function MextFoodVariantPickerModal({ result, userFoodResult, foods = [], foodGroups = [], onSelect, onClose, mealMode = false, onSubmitMeal, foodAttributePreferences = {}, onSaveFoodAttributePreference }: FoodVariantPickerModalProps) {
+  const [userSelection, setUserSelection] = useState<Record<string, string>>(() => userFoodResult ? ({
+    ...Object.fromEntries(userFoodResult.group.selectionDimensions.flatMap((dimension) => dimension.defaultValueId === null
+      ? []
+      : [[dimension.id, dimension.defaultValueId] as const])),
+    ...userFoodResult.presetSelection,
+  }) : {})
+  const resolvedUserFoodGroupId = useMemo(() => {
+    if (!userFoodResult) return result?.group.id ?? null
+    try {
+      return resolveFoodGroupId(userFoodResult.group.id, userSelection)
+    } catch {
+      return null
+    }
+  }, [result?.group.id, userFoodResult, userSelection])
+  const activeResult = useMemo(() => {
+    if (!userFoodResult) return result
+    if (!resolvedUserFoodGroupId) return null
+    return buildMextFoodSearchResult(resolvedUserFoodGroupId, foods, foodGroups, result?.score ?? 0)
+  }, [foodGroups, foods, resolvedUserFoodGroupId, result, userFoodResult])
+  const activeFoodGroupId = activeResult?.group.id ?? null
+  const attributes = useMemo(() => activeFoodGroupId ? getSelectableAttributes(activeFoodGroupId) : [], [activeFoodGroupId])
   const [temporarilyVisibleAttributeIds, setTemporarilyVisibleAttributeIds] = useState<Set<string>>(new Set())
   const [showAttributeSettings, setShowAttributeSettings] = useState(false)
-  const groupPreferences = useMemo(() => getFoodAttributePreferencesForGroup(foodAttributePreferences, result.group.id), [foodAttributePreferences, result.group.id])
-  const appliedPreferences = useMemo(() => applyMextFoodAttributePreferences(attributes, getDefaultSelectedAttributes(result.group.id), groupPreferences), [attributes, result.group.id, groupPreferences])
+  const groupPreferences = useMemo(() => activeFoodGroupId ? getFoodAttributePreferencesForGroup(foodAttributePreferences, activeFoodGroupId) : {}, [activeFoodGroupId, foodAttributePreferences])
+  const appliedPreferences = useMemo(() => activeFoodGroupId
+    ? applyMextFoodAttributePreferences(attributes, getDefaultSelectedAttributes(activeFoodGroupId), groupPreferences)
+    : { selection: {}, autoHiddenAttributeIds: new Set<string>(), invalidAttributeIds: new Set<string>() }, [activeFoodGroupId, attributes, groupPreferences])
   const hasAutoHiddenPreference = appliedPreferences.autoHiddenAttributeIds.size > 0
   const visibleAttributeIds = useMemo(() => new Set(attributes.filter((attribute) => {
     return attribute.visibility !== 'hidden' && (!appliedPreferences.autoHiddenAttributeIds.has(attribute.id) || temporarilyVisibleAttributeIds.has(attribute.id))
   }).map((attribute) => attribute.id)), [attributes, appliedPreferences.autoHiddenAttributeIds, temporarilyVisibleAttributeIds])
   const visibleAttributes = useMemo(() => attributes.filter((attribute) => visibleAttributeIds.has(attribute.id)), [attributes, visibleAttributeIds])
   const hiddenAttributes = useMemo(() => attributes.filter((attribute) => attribute.visibility === 'hidden'), [attributes])
-  const supplementalFoods = useMemo(() => result.variants.filter((food) => !getFoodVariantBySourceId(food.id)), [result.variants])
+  const supplementalFoods = useMemo(() => (activeResult?.variants ?? []).filter((food) => !getFoodVariantBySourceId(food.id)), [activeResult?.variants])
   const [selection, setSelection] = useState<Record<string, string>>(() => {
     return appliedPreferences.selection
   })
+  const [selectionFoodGroupId, setSelectionFoodGroupId] = useState<string | null>(activeFoodGroupId)
   const [supplementalFoodId, setSupplementalFoodId] = useState<string | null>(null)
+  const selectionForActiveGroup = selectionFoodGroupId === activeFoodGroupId ? selection : appliedPreferences.selection
+  useEffect(() => {
+    setSelection(appliedPreferences.selection)
+    setSelectionFoodGroupId(activeFoodGroupId)
+    setSupplementalFoodId(null)
+    setTemporarilyVisibleAttributeIds(new Set())
+  }, [activeFoodGroupId, appliedPreferences.selection])
   const resolution = useMemo(() => {
+    if (!resolvedUserFoodGroupId) {
+      return { variant: null, error: '種類を選択すると、属性を指定できます。', requiresHiddenSelection: false }
+    }
+    if (!activeResult || !activeFoodGroupId) {
+      return { variant: null, error: '対象食品データを読み込めませんでした。食品データを再読み込みしてください。', requiresHiddenSelection: false }
+    }
     try {
-      return { variant: resolveFoodVariantForUi(result.group.id, selection), error: null, requiresHiddenSelection: false }
+      return { variant: resolveFoodVariantForUi(activeFoodGroupId, selectionForActiveGroup), error: null, requiresHiddenSelection: false }
     } catch (error) {
       if (error instanceof MissingRequiredAttribute) return { variant: null, error: '必要な属性を選択してください。', requiresHiddenSelection: false }
       if (error instanceof AmbiguousFoodVariant) return { variant: null, error: '食品を一意に決めるため、追加の属性を選択してください。', requiresHiddenSelection: true }
       if (error instanceof FoodVariantNotFound && hasAutoHiddenPreference) return { variant: null, error: '自動適用した属性の組み合わせに該当する食品がありません。属性を確認してください。', requiresHiddenSelection: true }
       return { variant: null, error: error instanceof Error ? error.message : '食品を決定できません。', requiresHiddenSelection: false }
     }
-  }, [hasAutoHiddenPreference, result.group.id, selection])
+  }, [activeFoodGroupId, activeResult, hasAutoHiddenPreference, resolvedUserFoodGroupId, selectionForActiveGroup])
   const supplementalFood = supplementalFoods.find((food) => food.id === supplementalFoodId) ?? null
-  const resolvedMextFood = resolution.variant
-    ? result.variants.find((food) => food.id === resolution.variant?.sourceId) ?? null
+  const resolvedMextFood = resolution.variant && activeResult
+    ? activeResult.variants.find((food) => food.id === resolution.variant?.sourceId) ?? null
     : null
   const selectedFood = supplementalFood ?? resolvedMextFood
   const attributesToShow = resolution.requiresHiddenSelection ? attributes : visibleAttributes
@@ -1354,7 +1382,7 @@ function MextFoodVariantPickerModal({ result, onSelect, onClose, mealMode = fals
     const preference = groupPreferences[attribute.id]
     return appliedPreferences.autoHiddenAttributeIds.has(attribute.id)
       && preference !== undefined
-      && selection[attribute.id] === preference.defaultValueId
+      && selectionForActiveGroup[attribute.id] === preference.defaultValueId
       && !appliedPreferences.invalidAttributeIds.has(attribute.id)
   })
   const autoHiddenAttributes = autoAppliedAttributes.filter((attribute) => !temporarilyVisibleAttributeIds.has(attribute.id))
@@ -1377,14 +1405,14 @@ function MextFoodVariantPickerModal({ result, onSelect, onClose, mealMode = fals
 
   const showAutoAttribute = (attributeId: string) => setTemporarilyVisibleAttributeIds((current) => new Set(current).add(attributeId))
   const toggleAttributeVisibility = async (attributeId: string, visible: boolean) => {
-    const valueId = selection[attributeId] ?? groupPreferences[attributeId]?.defaultValueId
-    if (!valueId || !onSaveFoodAttributePreference) return
-    await onSaveFoodAttributePreference(result.group.id, attributeId, { defaultValueId: valueId, mode: visible ? 'prefill' : 'auto', visible })
+    const valueId = selectionForActiveGroup[attributeId] ?? groupPreferences[attributeId]?.defaultValueId
+    if (!activeFoodGroupId || !valueId || !onSaveFoodAttributePreference) return
+    await onSaveFoodAttributePreference(activeFoodGroupId, attributeId, { defaultValueId: valueId, mode: visible ? 'prefill' : 'auto', visible })
   }
-  return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="食品のバリエーションを選択"><section className="modal-card variant-picker-modal"><div className="modal-heading"><div><span className="eyebrow">VARIATIONS</span><h2 className="variant-picker-title">{result.group.displayName}<button className="info-button variant-attribute-info" type="button" onClick={() => setShowAttributeSettings((current) => !current)} aria-expanded={showAttributeSettings} aria-label="表示する食品属性を設定">ⓘ</button></h2><p className="muted">条件ごとに選択してください</p></div><button className="icon-button" type="button" onClick={onClose} aria-label="閉じる">×</button></div>{showAttributeSettings && <FoodAttributeVisibilityPanel attributes={attributes} preferences={groupPreferences} selection={selection} onToggle={(attributeId, visible) => { void toggleAttributeVisibility(attributeId, visible) }} onClose={() => setShowAttributeSettings(false)} />}{supplementalFoods.length > 0 && <div className="variant-choice-groups"><section className="variant-choice-group"><h3>手動登録食品</h3><div className="variant-choice-buttons">{supplementalFoods.map((food) => <button className={`variant-choice-button${supplementalFoodId === food.id ? ' is-selected' : ''}`} type="button" aria-pressed={supplementalFoodId === food.id} key={food.id} onClick={() => setSupplementalFoodId(food.id)}>{food.officialName ?? food.name}</button>)}</div></section></div>}{autoAppliedAttributes.length > 0 && <div className="variant-picker-auto-summary"><span>自動適用: {autoAppliedAttributes.map((attribute) => `${attribute.displayName}＝${attribute.values.find((value) => value.id === selection[attribute.id])?.displayName ?? ''}`).join('、')}</span>{autoHiddenAttributes.length > 0 && <button className="small-action" type="button" onClick={() => autoHiddenAttributes.forEach((attribute) => showAutoAttribute(attribute.id))}>今回だけ変更</button>}</div>}{attributesToShow.length > 0 && <div className="variant-choice-groups">{attributesToShow.map((attribute) => <section className="variant-choice-group" key={attribute.id}><h3>{attribute.displayName}</h3><div className="variant-choice-buttons">{attribute.values.map((value) => <button className={`variant-choice-button${selection[attribute.id] === value.id ? ' is-selected' : ''}`} type="button" aria-pressed={selection[attribute.id] === value.id} key={`${attribute.id}:${value.id}`} onClick={() => chooseAttribute(attribute.id, value.id, attribute.visibility === 'hidden')}>{value.displayName}</button>)}</div></section>)}</div>}{selectedFood ? <div className="variant-picker-summary"><span>選択中</span><strong>{selectedFoodName}</strong><small>{selectedFood.baseAmount}{selectedFood.baseUnit} · {formatNutrient(selectedFood.nutrients.energyKcal)}</small></div> : <p className="variant-picker-no-match">{resolution.error}</p>}{mealMode && selectedFood && <label>分量<div className="amount-input-row"><div className="amount-input"><input type="number" min="0.01" max="100000" step="any" value={amount} onChange={(event) => setAmount(event.target.value)} required /><span className="field-suffix">{selectedFood.baseUnit}</span></div><button className="amount-increment" type="button" onClick={() => setAmount(String(incrementByBaseAmount(Number(amount), selectedFood.baseAmount)))} aria-label={`分量を基準量1つ分（${selectedFood.baseAmount}${selectedFood.baseUnit}）増やす`}>＋1</button></div></label>}{mealMode && selectedFood ? <button className="button primary variant-picker-confirm" type="button" onClick={() => { void onSubmitMeal?.(selectedFood, amount) }}>食事として登録</button> : <button className="button primary variant-picker-confirm" type="button" onClick={() => { if (selectedFood) onSelect(selectedFood) }} disabled={!selectedFood}>この食品を選択</button>}</section></div>
+  return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="食品の種類と属性を選択"><section className="modal-card variant-picker-modal"><div className="modal-heading"><div><span className="eyebrow">FOOD SELECTION</span><h2 className="variant-picker-title">{activeResult?.group.displayName ?? userFoodResult?.group.displayName ?? result?.group.displayName ?? '食品'}<button className="info-button variant-attribute-info" type="button" disabled={attributes.length === 0} onClick={() => setShowAttributeSettings((current) => !current)} aria-expanded={showAttributeSettings} aria-label="表示する食品属性を設定">ⓘ</button></h2><p className="muted">種類と属性をこの画面で指定できます。</p></div><button className="icon-button" type="button" onClick={onClose} aria-label="閉じる">×</button></div>{userFoodResult && userFoodResult.group.selectionDimensions.length > 0 && <div className="variant-choice-groups food-type-selection">{userFoodResult.group.selectionDimensions.map((dimension) => <section className="variant-choice-group" key={dimension.id}><h3>{dimension.displayName}</h3><div className="variant-choice-buttons">{dimension.values.map((value) => <button className={`variant-choice-button${userSelection[dimension.id] === value.id ? ' is-selected' : ''}`} type="button" aria-pressed={userSelection[dimension.id] === value.id} key={`${dimension.id}:${value.id}`} onClick={() => setUserSelection((current) => ({ ...current, [dimension.id]: value.id }))}>{value.displayName}</button>)}</div></section>)}</div>}{showAttributeSettings && <FoodAttributeVisibilityPanel attributes={attributes} preferences={groupPreferences} selection={selectionForActiveGroup} onToggle={(attributeId, visible) => { void toggleAttributeVisibility(attributeId, visible) }} onClose={() => setShowAttributeSettings(false)} />}{supplementalFoods.length > 0 && <div className="variant-choice-groups"><section className="variant-choice-group"><h3>手動登録食品</h3><div className="variant-choice-buttons">{supplementalFoods.map((food) => <button className={`variant-choice-button${supplementalFoodId === food.id ? ' is-selected' : ''}`} type="button" aria-pressed={supplementalFoodId === food.id} key={food.id} onClick={() => setSupplementalFoodId(food.id)}>{food.officialName ?? food.name}</button>)}</div></section></div>}{autoAppliedAttributes.length > 0 && <div className="variant-picker-auto-summary"><span>自動適用: {autoAppliedAttributes.map((attribute) => `${attribute.displayName}＝${attribute.values.find((value) => value.id === selectionForActiveGroup[attribute.id])?.displayName ?? ''}`).join('、')}</span>{autoHiddenAttributes.length > 0 && <button className="small-action" type="button" onClick={() => autoHiddenAttributes.forEach((attribute) => showAutoAttribute(attribute.id))}>今回だけ変更</button>}</div>}{attributesToShow.length > 0 && <div className="variant-choice-groups">{attributesToShow.map((attribute) => <section className="variant-choice-group" key={attribute.id}><h3>{attribute.displayName}</h3><div className="variant-choice-buttons">{attribute.values.map((value) => <button className={`variant-choice-button${selectionForActiveGroup[attribute.id] === value.id ? ' is-selected' : ''}`} type="button" aria-pressed={selectionForActiveGroup[attribute.id] === value.id} key={`${attribute.id}:${value.id}`} onClick={() => chooseAttribute(attribute.id, value.id, attribute.visibility === 'hidden')}>{value.displayName}</button>)}</div></section>)}</div>}{userFoodResult && !activeResult && <p className="variant-picker-no-match">{resolution.error}</p>}{activeResult && selectedFood ? <div className="variant-picker-summary"><span>選択中</span><strong>{selectedFoodName}</strong><small>{selectedFood.baseAmount}{selectedFood.baseUnit} · {formatNutrient(selectedFood.nutrients.energyKcal)}</small></div> : activeResult ? <p className="variant-picker-no-match">{resolution.error}</p> : null}{mealMode && selectedFood && <label>分量<div className="amount-input-row"><div className="amount-input"><input type="number" min="0.01" max="100000" step="any" value={amount} onChange={(event) => setAmount(event.target.value)} required /><span className="field-suffix">{selectedFood.baseUnit}</span></div><button className="amount-increment" type="button" onClick={() => setAmount(String(incrementByBaseAmount(Number(amount), selectedFood.baseAmount)))} aria-label={`分量を基準量1つ分（${selectedFood.baseAmount}${selectedFood.baseUnit}）増やす`}>＋1</button></div></label>}{mealMode && selectedFood ? <button className="button primary variant-picker-confirm" type="button" onClick={() => { void onSubmitMeal?.(selectedFood, amount) }}>食事として登録</button> : <button className="button primary variant-picker-confirm" type="button" onClick={() => { if (selectedFood) onSelect(selectedFood) }} disabled={!selectedFood}>この食品を選択</button>}</section></div>
 }
 
-function LegacyFoodVariantPickerModal({ result, onSelect, onClose, mealMode = false, onSubmitMeal }: FoodVariantPickerModalProps) {
+function LegacyFoodVariantPickerModal({ result, onSelect, onClose, mealMode = false, onSubmitMeal }: Omit<FoodVariantPickerModalProps, 'result'> & { result: FoodSearchResult }) {
   const optionGroups = useMemo(() => getVariantOptionGroups(result.variants), [result.variants])
   const defaultVariant = result.variants.find((food) => food.id === result.group.defaultVariantId) ?? result.food
   const [selection, setSelection] = useState(() => getVariantSelection(defaultVariant, optionGroups))
@@ -1442,8 +1470,7 @@ function MenuFoodSelection({ selectedIds, foods, foodGroups, recentFoods, favori
   const [userSearchResults, setUserSearchResults] = useState<UserFoodSearchResult[]>([])
   const [searchResults, setSearchResults] = useState<FoodSearchResult[]>([])
   const [searching, setSearching] = useState(false)
-  const [userPickerResult, setUserPickerResult] = useState<UserFoodSearchResult | null>(null)
-  const [variantResult, setVariantResult] = useState<FoodSearchResult | null>(null)
+  const [variantResult, setVariantResult] = useState<FoodVariantPickerState | null>(null)
   const normalizedQuery = normalizeSearchText(foodQuery)
   const selectedFoods = selectedIds.map((id) => foods.find((food) => food.id === id)).filter((food): food is Food => Boolean(food))
   const quickFoods = [...recentFoods, ...favoriteFoods].filter((food, index, all) => all.findIndex((item) => item.id === food.id) === index).slice(0, 8)
@@ -1470,7 +1497,7 @@ function MenuFoodSelection({ selectedIds, foods, foodGroups, recentFoods, favori
 
   const showSearchResults = normalizedQuery.length > 0 && searchedQuery === normalizedQuery
   const chooseSearchResult = (result: FoodSearchResult) => {
-    if (result.variants.length > 1) setVariantResult(result)
+    if (result.variants.length > 1) setVariantResult({ result })
     else onAdd(result.food)
   }
 
@@ -1482,14 +1509,16 @@ function MenuFoodSelection({ selectedIds, foods, foodGroups, recentFoods, favori
 
   const chooseUserSearchResult = (result: UserFoodSearchResult) => {
     if (result.group.selectionDimensions.length > 0 && Object.keys(result.presetSelection).length === 0) {
-      setUserPickerResult(result)
+      setVariantResult({ result: null, userFoodResult: result })
       return
     }
     try {
       const foodGroupId = result.foodGroupId ?? resolveFoodGroupId(result.group.id, result.presetSelection)
       chooseResolvedFoodGroup(foodGroupId)
     } catch (error) {
-      if (error instanceof MissingRequiredUserSelection) setUserPickerResult(result)
+      if (error instanceof MissingRequiredUserSelection) {
+        setVariantResult({ result: null, userFoodResult: result })
+      }
     }
   }
 
@@ -1532,8 +1561,7 @@ function MenuFoodSelection({ selectedIds, foods, foodGroups, recentFoods, favori
           )}
         </div>
       </details>
-      {userPickerResult && <UserFoodGroupPickerModal result={userPickerResult} onResolve={(foodGroupId) => { setUserPickerResult(null); chooseResolvedFoodGroup(foodGroupId) }} onClose={() => setUserPickerResult(null)} />}
-      {variantResult && <FoodVariantPickerModal result={variantResult} foodAttributePreferences={foodAttributePreferences} onSaveFoodAttributePreference={onSaveFoodAttributePreference} onSelect={(food) => { onAdd(food); setVariantResult(null) }} onClose={() => setVariantResult(null)} />}
+      {variantResult && <FoodVariantPickerModal result={variantResult.result} userFoodResult={variantResult.userFoodResult} foods={foods} foodGroups={foodGroups} foodAttributePreferences={foodAttributePreferences} onSaveFoodAttributePreference={onSaveFoodAttributePreference} onSelect={(food) => { onAdd(food); setVariantResult(null) }} onClose={() => setVariantResult(null)} />}
     </div>
   )
 }
