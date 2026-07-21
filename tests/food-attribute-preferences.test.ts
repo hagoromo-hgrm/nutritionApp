@@ -1,16 +1,26 @@
 import { describe, expect, it } from 'vitest'
-import { applyMextFoodAttributePreferences, normalizeFoodAttributePreferences, setFoodAttributePreference } from '../src/services/foodAttributePreferences'
+import { applyMextFoodAttributePreferences, FOOD_ATTRIBUTE_PREFERENCES_GLOBAL_KEY, getFoodAttributePreferencesForGroup, normalizeFoodAttributePreferences, setFoodAttributePreference } from '../src/services/foodAttributePreferences'
 
 describe('食品属性設定', () => {
   it('旧設定や不正項目を空の設定として安全に扱う', () => {
     expect(normalizeFoodAttributePreferences(undefined)).toEqual({})
-    expect(normalizeFoodAttributePreferences({ cooking_state: { defaultValueId: 'raw', mode: 'auto' }, broken: { defaultValueId: 1, mode: 'auto' }, invalidMode: { defaultValueId: 'x', mode: 'hide' } })).toEqual({ cooking_state: { defaultValueId: 'raw', mode: 'auto' } })
+    expect(normalizeFoodAttributePreferences({ cooking_state: { defaultValueId: 'raw', mode: 'auto' }, broken: { defaultValueId: 1, mode: 'auto' }, invalidMode: { defaultValueId: 'x', mode: 'hide' } })).toEqual({ [FOOD_ATTRIBUTE_PREFERENCES_GLOBAL_KEY]: { cooking_state: { defaultValueId: 'raw', mode: 'auto' } } })
+    expect(normalizeFoodAttributePreferences({ group_a: { cooking_state: { defaultValueId: 'cooked', mode: 'prefill' } } })).toEqual({ group_a: { cooking_state: { defaultValueId: 'cooked', mode: 'prefill' } } })
   })
 
   it('属性設定を追加・解除できる', () => {
-    const preferences = setFoodAttributePreference({}, 'cooking_state', { defaultValueId: 'raw', mode: 'prefill' })
-    expect(preferences).toEqual({ cooking_state: { defaultValueId: 'raw', mode: 'prefill' } })
-    expect(setFoodAttributePreference(preferences, 'cooking_state', null)).toEqual({})
+    const preferences = setFoodAttributePreference({}, 'group_a', 'cooking_state', { defaultValueId: 'raw', mode: 'prefill' })
+    expect(preferences).toEqual({ group_a: { cooking_state: { defaultValueId: 'raw', mode: 'prefill' } } })
+    expect(setFoodAttributePreference(preferences, 'group_a', 'cooking_state', null)).toEqual({})
+  })
+
+  it('食品単位設定が共通設定を上書きし、別グループへ漏れない', () => {
+    const preferences = {
+      [FOOD_ATTRIBUTE_PREFERENCES_GLOBAL_KEY]: { state: { defaultValueId: 'cooked', mode: 'prefill' as const } },
+      group_a: { state: { defaultValueId: 'raw', mode: 'auto' as const } },
+    }
+    expect(getFoodAttributePreferencesForGroup(preferences, 'group_a').state).toEqual({ defaultValueId: 'raw', mode: 'auto' })
+    expect(getFoodAttributePreferencesForGroup(preferences, 'group_b').state).toEqual({ defaultValueId: 'cooked', mode: 'prefill' })
   })
 
   it('ユーザー既定値をMEXT既定値より優先し、autoとprefillの表示差を返す', () => {

@@ -1,4 +1,5 @@
 import { NUTRIENT_KEYS, type AppSettings, type BackupData, type Food, type FoodAlias, type FoodGroup, type FoodRelatedTerm, type FoodUsageStat, type MealEntry, type Menu, type MenuSet, type Nutrients, type SearchLog } from '../types'
+import { isFoodAttributePreference } from './foodAttributePreferences'
 import { isNutrients, isValidUnit } from '../utils/validation'
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -121,10 +122,10 @@ function isBodyProfile(value: unknown): boolean {
 function isFoodAttributePreferences(value: unknown): boolean {
   if (value === undefined) return true
   if (!isRecord(value)) return false
-  return Object.entries(value).every(([attributeId, preference]) => {
-    if (!attributeId || !isRecord(preference)) return false
-    return isString(preference.defaultValueId) && preference.defaultValueId.length > 0
-      && (preference.mode === 'prefill' || preference.mode === 'auto')
+  return Object.entries(value).every(([key, entry]) => {
+    if (!key) return false
+    if (isFoodAttributePreference(entry)) return true
+    return isRecord(entry) && Object.entries(entry).every(([attributeId, preference]) => Boolean(attributeId) && isFoodAttributePreference(preference))
   })
 }
 

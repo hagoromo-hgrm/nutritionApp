@@ -239,6 +239,8 @@ export interface FoodAttributePreference {
   mode: FoodAttributePreferenceMode
 }
 
+export type FoodAttributePreferences = Record<string, Record<string, FoodAttributePreference>>
+
 export interface AppSettings {
   id: 'app'
   goals: NutritionGoals
@@ -249,7 +251,7 @@ export interface AppSettings {
   externalApiEndpoint: string
   mealTimeMode?: MealTimeMode
   bodyProfile?: BodyProfile
-  foodAttributePreferences?: Record<string, FoodAttributePreference>
+  foodAttributePreferences?: FoodAttributePreferences
 }
 
 export interface FavoriteRecord {

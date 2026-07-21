@@ -1,7 +1,7 @@
-import type { FoodAttributePreference, FoodAttributePreferenceMode } from '../types'
+import type { FoodAttributePreference, FoodAttributePreferenceMode, FoodAttributePreferences } from '../types'
 import type { MextFoodGroupAttribute } from './mextFoodData'
 
-export type FoodAttributePreferences = Record<string, FoodAttributePreference>
+export const FOOD_ATTRIBUTE_PREFERENCES_GLOBAL_KEY = '__global__'
 
 export interface AppliedMextFoodAttributePreferences {
   selection: Record<string, string>
@@ -13,34 +13,60 @@ export function isFoodAttributePreferenceMode(value: unknown): value is FoodAttr
   return value === 'prefill' || value === 'auto'
 }
 
-/** IndexedDB・バックアップから読んだ設定を、壊れた項目だけ除外して正規化する。 */
+export function isFoodAttributePreference(value: unknown): value is FoodAttributePreference {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false
+  const candidate = value as Record<string, unknown>
+  return typeof candidate.defaultValueId === 'string' && candidate.defaultValueId.length > 0 && isFoodAttributePreferenceMode(candidate.mode)
+}
+
+/** IndexedDB・バックアップから読んだ設定を、新旧形式を保ったまま正規化する。 */
 export function normalizeFoodAttributePreferences(value: unknown): FoodAttributePreferences {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
   const normalized: FoodAttributePreferences = {}
-  for (const [attributeId, preference] of Object.entries(value)) {
-    if (!attributeId || !preference || typeof preference !== 'object' || Array.isArray(preference)) continue
-    const candidate = preference as Record<string, unknown>
-    if (typeof candidate.defaultValueId !== 'string' || candidate.defaultValueId.length === 0 || !isFoodAttributePreferenceMode(candidate.mode)) continue
-    normalized[attributeId] = { defaultValueId: candidate.defaultValueId, mode: candidate.mode }
+  const legacy: Record<string, FoodAttributePreference> = {}
+  for (const [groupId, groupPreferences] of Object.entries(value)) {
+    if (!groupId || !groupPreferences || typeof groupPreferences !== 'object' || Array.isArray(groupPreferences)) continue
+    if (isFoodAttributePreference(groupPreferences)) {
+      legacy[groupId] = { ...groupPreferences }
+      continue
+    }
+    const group: Record<string, FoodAttributePreference> = {}
+    for (const [attributeId, preference] of Object.entries(groupPreferences)) {
+      if (!attributeId || !isFoodAttributePreference(preference)) continue
+      group[attributeId] = { ...preference }
+    }
+    if (Object.keys(group).length > 0) normalized[groupId] = group
   }
+  if (Object.keys(legacy).length > 0) normalized[FOOD_ATTRIBUTE_PREFERENCES_GLOBAL_KEY] = legacy
   return normalized
 }
 
 export function setFoodAttributePreference(
   preferences: FoodAttributePreferences,
+  foodGroupId: string,
   attributeId: string,
   preference: FoodAttributePreference | null,
 ): FoodAttributePreferences {
   const next = { ...preferences }
-  if (preference === null) delete next[attributeId]
-  else next[attributeId] = { ...preference }
+  const group = { ...(next[foodGroupId] ?? {}) }
+  if (preference === null) delete group[attributeId]
+  else group[attributeId] = { ...preference }
+  if (Object.keys(group).length === 0) delete next[foodGroupId]
+  else next[foodGroupId] = group
   return next
+}
+
+export function getFoodAttributePreferencesForGroup(
+  preferences: FoodAttributePreferences,
+  foodGroupId: string,
+): Record<string, FoodAttributePreference> {
+  return { ...(preferences[FOOD_ATTRIBUTE_PREFERENCES_GLOBAL_KEY] ?? {}), ...(preferences[foodGroupId] ?? {}) }
 }
 
 export function applyMextFoodAttributePreferences(
   attributes: readonly MextFoodGroupAttribute[],
   masterDefaults: Readonly<Record<string, string>>,
-  preferences: FoodAttributePreferences,
+  preferences: Readonly<Record<string, FoodAttributePreference>>,
 ): AppliedMextFoodAttributePreferences {
   const selectableAttributes = new Map(attributes.map((attribute) => [attribute.id, attribute]))
   const selection = Object.fromEntries(Object.entries(masterDefaults).filter(([attributeId]) => {
