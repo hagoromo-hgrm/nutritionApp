@@ -118,6 +118,16 @@ function isBodyProfile(value: unknown): boolean {
     && ['low', 'moderate', 'high'].includes(String(value.activityLevel))
 }
 
+function isFoodAttributePreferences(value: unknown): boolean {
+  if (value === undefined) return true
+  if (!isRecord(value)) return false
+  return Object.entries(value).every(([attributeId, preference]) => {
+    if (!attributeId || !isRecord(preference)) return false
+    return isString(preference.defaultValueId) && preference.defaultValueId.length > 0
+      && (preference.mode === 'prefill' || preference.mode === 'auto')
+  })
+}
+
 function isSettings(value: unknown): value is AppSettings {
   if (!isRecord(value) || value.id !== 'app' || !isRecord(value.goals)) return false
   const goals = value.goals
@@ -127,6 +137,7 @@ function isSettings(value: unknown): value is AppSettings {
     && isString(value.externalApiEndpoint)
     && (value.mealTimeMode === undefined || value.mealTimeMode === 'auto' || value.mealTimeMode === 'manual')
     && (value.bodyProfile === undefined || isBodyProfile(value.bodyProfile))
+    && isFoodAttributePreferences(value.foodAttributePreferences)
 }
 
 export function validateBackup(value: unknown): BackupData {

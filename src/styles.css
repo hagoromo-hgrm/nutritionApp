@@ -354,6 +354,8 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .variant-picker-summary { display: grid; gap: .2rem; margin-top: 1rem; border-radius: .8rem; padding: .7rem .8rem; background: #f4f9ff; }
 .variant-picker-summary span, .variant-picker-summary small { color: var(--muted); font-size: .65rem; }
 .variant-picker-summary strong { color: var(--accent-deep); font-size: .82rem; }
+.variant-picker-auto-summary { display: flex; align-items: center; justify-content: space-between; gap: .65rem; border-radius: .8rem; padding: .65rem .75rem; color: var(--accent-deep); background: #eef6fc; font-size: .72rem; line-height: 1.45; }
+.variant-picker-auto-summary span { min-width: 0; }
 .variant-picker-no-match { margin-top: 1rem; color: #b14958; font-size: .74rem; }
 .variant-picker-confirm { width: 100%; margin-top: 1rem; }
 .variant-picker-confirm:disabled { cursor: not-allowed; opacity: .5; }
@@ -389,6 +391,9 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .food-master-title .button { margin: 0; padding: .48rem .72rem; font-size: .7rem; }
 .food-master-actions { display: flex; flex-wrap: wrap; gap: .6rem; }
 .food-master-actions .button { margin: 0; }
+.food-attribute-settings { display: grid; gap: .7rem; margin-top: 1rem; }
+.food-attribute-setting { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; align-items: end; gap: .6rem; border-bottom: 1px solid var(--line); padding-bottom: .7rem; }
+.food-attribute-setting .small-action { margin-bottom: .35rem; white-space: nowrap; }
 
 .settings-card { margin-top: 1.2rem; border: 1px solid var(--line); border-radius: 1.2rem; padding: 1.2rem; background: white; }
 .goal-form { display: grid; grid-template-columns: repeat(3, 1fr); gap: .9rem; margin-top: 1rem; }
@@ -525,7 +530,7 @@ legend { padding: 0 .35rem; color: var(--muted); font-size: .75rem; font-weight:
   .action-row .button { flex: 1; padding-right: .5rem; padding-left: .5rem; }
   .meal-entry { align-items: start; flex-direction: column; }
   .meal-entry-actions { width: 100%; justify-content: flex-end; }
-  .two-fields, .trend-range, .nutrient-input-grid, .goal-form { grid-template-columns: 1fr; }
+  .two-fields, .trend-range, .nutrient-input-grid, .goal-form, .food-attribute-setting { grid-template-columns: 1fr; }
   .goal-form .button { grid-column: auto; }
   .data-stats strong { font-size: 1rem; }
   .inline-time-form { align-items: stretch; flex-direction: column; }

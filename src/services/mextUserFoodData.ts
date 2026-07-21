@@ -76,6 +76,10 @@ export interface UserFoodSearchResult {
   score: number
 }
 
+export interface UserFoodSearchOptions {
+  expandPartShortcuts?: boolean
+}
+
 export class UserFoodGroupNotFound extends Error {
   constructor(userFoodGroupId: string) {
     super(`ユーザー向け食品グループがありません: user_food_group_id=${userFoodGroupId}`)
@@ -192,15 +196,23 @@ function matchScore(entry: UserFoodSearchIndexEntry, target: UserFoodSearchTarge
   return 300
 }
 
-export function searchUserFoodGroups(query: string): UserFoodSearchResult[] {
+export function searchUserFoodGroups(query: string, options: UserFoodSearchOptions = {}): UserFoodSearchResult[] {
   const normalizedQuery = normalizeUserFoodSearchText(query)
   const compactQuery = compactUserFoodSearchText(query)
   if (!normalizedQuery) return []
   const bestByGroup = new Map<string, UserFoodSearchResult>()
+  const exactParentGroupIds = new Set<string>()
   for (const entry of userFoodSearchIndex) {
     for (const target of entry.targets) {
       const score = matchScore(entry, target, normalizedQuery, compactQuery)
       if (score < 0) continue
+      const exact = entry.normalizedTerm === normalizedQuery || entry.compactTerm === compactQuery
+      if (options.expandPartShortcuts
+        && exact
+        && target.targetType === 'user_food_group'
+        && Object.keys(target.presetSelection).length === 0) {
+        exactParentGroupIds.add(target.userFoodGroupId)
+      }
       const candidate: UserFoodSearchResult = {
         group: getUserFoodGroup(target.userFoodGroupId),
         presetSelection: { ...target.presetSelection },
@@ -217,7 +229,32 @@ export function searchUserFoodGroups(query: string): UserFoodSearchResult[] {
       }
     }
   }
-  return [...bestByGroup.values()].sort((left, right) => right.score - left.score
+  const expandedGroupIds = new Set<string>()
+  const expandedResults: UserFoodSearchResult[] = []
+  if (options.expandPartShortcuts) {
+    for (const userFoodGroupId of exactParentGroupIds) {
+      const parent = bestByGroup.get(userFoodGroupId)
+      if (!parent) continue
+      const shortcutValues = parent.group.selectionDimensions
+        .filter((dimension) => dimension.displayName === '部位')
+        .flatMap((dimension) => dimension.values
+          .filter((value) => value.searchShortcut)
+          .map((value) => ({ dimension, value })))
+      if (shortcutValues.length === 0) continue
+      expandedGroupIds.add(userFoodGroupId)
+      for (const { dimension, value } of shortcutValues) {
+        expandedResults.push({
+          group: parent.group,
+          presetSelection: { [dimension.id]: value.id },
+          foodGroupId: value.foodGroupId,
+          targetType: 'user_food_variant',
+          matchedTerm: parent.matchedTerm,
+          score: parent.score,
+        })
+      }
+    }
+  }
+  return [...bestByGroup.values()].filter((result) => !expandedGroupIds.has(result.group.id)).concat(expandedResults).sort((left, right) => right.score - left.score
     || left.group.displayName.localeCompare(right.group.displayName, 'ja')
     || left.group.id.localeCompare(right.group.id))
 }

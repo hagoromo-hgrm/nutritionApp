@@ -40,6 +40,13 @@ describe('export formats', () => {
     expect(() => validateBackup({ ...backup, settings: { ...backup.settings, goals: { energyKcal: 'bad' } } })).toThrow()
   })
 
+  it('食品属性設定を含むバックアップを検証し、不正な型を拒否する', () => {
+    const withPreferences = { ...backup, settings: { ...backup.settings, foodAttributePreferences: { cooking_state: { defaultValueId: 'raw', mode: 'auto' }, unknown_attribute: { defaultValueId: 'value', mode: 'prefill' } } } }
+    expect(validateBackup(withPreferences).settings.foodAttributePreferences?.cooking_state.mode).toBe('auto')
+    expect(() => validateBackup({ ...backup, settings: { ...backup.settings, foodAttributePreferences: { cooking_state: { defaultValueId: 1, mode: 'auto' } } } })).toThrow()
+    expect(() => validateBackup({ ...backup, settings: { ...backup.settings, foodAttributePreferences: { cooking_state: { defaultValueId: 'raw', mode: 'hidden' } } } })).toThrow()
+  })
+
   it('メニューを含むバックアップを検証できる', () => {
     const withMenu = {
       ...backup,

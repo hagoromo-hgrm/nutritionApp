@@ -232,6 +232,13 @@ export interface BodyProfile {
   activityLevel: ActivityLevel
 }
 
+export type FoodAttributePreferenceMode = 'prefill' | 'auto'
+
+export interface FoodAttributePreference {
+  defaultValueId: string
+  mode: FoodAttributePreferenceMode
+}
+
 export interface AppSettings {
   id: 'app'
   goals: NutritionGoals
@@ -242,6 +249,7 @@ export interface AppSettings {
   externalApiEndpoint: string
   mealTimeMode?: MealTimeMode
   bodyProfile?: BodyProfile
+  foodAttributePreferences?: Record<string, FoodAttributePreference>
 }
 
 export interface FavoriteRecord {

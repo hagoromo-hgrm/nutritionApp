@@ -20,6 +20,7 @@ import {
 } from '../types'
 import { createId } from '../utils/id'
 import { estimateDailyGoals } from '../services/nutrition'
+import { normalizeFoodAttributePreferences } from '../services/foodAttributePreferences'
 import { normalizeSearchText, searchFoodResults as searchFoodResultsPure, type FoodSearchPage } from '../services/foodSearch'
 import {
   getFoodGroup as getMextFoodGroup,
@@ -293,8 +294,9 @@ export async function getSettings(): Promise<AppSettings> {
     ? {
       ...DEFAULT_SETTINGS, ...stored, goals: { ...DEFAULT_SETTINGS.goals, ...stored.goals },
       mealTimeMode: stored.mealTimeMode ?? 'auto', bodyProfile: { ...DEFAULT_BODY_PROFILE, ...stored.bodyProfile },
+      foodAttributePreferences: normalizeFoodAttributePreferences(stored.foodAttributePreferences),
     }
-    : { ...DEFAULT_SETTINGS, goals: { ...DEFAULT_SETTINGS.goals }, bodyProfile: { ...DEFAULT_BODY_PROFILE } }
+    : { ...DEFAULT_SETTINGS, goals: { ...DEFAULT_SETTINGS.goals }, bodyProfile: { ...DEFAULT_BODY_PROFILE }, foodAttributePreferences: {} }
   const estimated = estimateDailyGoals(normalized.bodyProfile)
   const goals = { ...normalized.goals }
   if (estimated) {

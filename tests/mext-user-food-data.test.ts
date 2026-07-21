@@ -40,6 +40,31 @@ describe('MEXT user-facing food groups', () => {
     expect(resolveFoodGroupId(result!.group.id, result!.presetSelection)).toBe('fg_001282')
   })
 
+  it('肉の完全一致では部位ショートカットを独立候補へ展開する', () => {
+    const expected = { 豚肉: 7, 牛肉: 10, 鶏肉: 6 }
+    for (const [query, count] of Object.entries(expected)) {
+      const results = searchUserFoodGroups(query, { expandPartShortcuts: true })
+      const variants = results.filter((result) => result.group.canonicalName === query)
+      expect(variants).toHaveLength(count)
+      expect(variants.every((result) => result.targetType === 'user_food_variant')).toBe(true)
+      expect(variants.every((result) => Object.keys(result.presetSelection).length === 1)).toBe(true)
+      expect(variants.every((result) => result.foodGroupId !== null)).toBe(true)
+      expect(variants.every((result) => result.group.selectionDimensions
+        .find((dimension) => dimension.displayName === '部位')
+        ?.values.some((value) => value.id === Object.values(result.presetSelection)[0]))).toBe(true)
+    }
+  })
+
+  it('部位以外の検索と部分一致では展開しない', () => {
+    expect(searchUserFoodGroups('豚', { expandPartShortcuts: true })
+      .filter((result) => result.group.canonicalName === '豚肉')).toHaveLength(1)
+    const broadResults = searchUserFoodGroups('肉', { expandPartShortcuts: true })
+    expect(broadResults.filter((result) => ['豚肉', '牛肉', '鶏肉'].includes(result.group.canonicalName)
+      && result.targetType === 'user_food_variant')).toHaveLength(0)
+    expect(searchUserFoodGroups('豚肉')
+      .filter((result) => result.group.canonicalName === '豚肉')).toHaveLength(1)
+  })
+
   it('上位選択後に既存属性を参照し、source_idまで解決する', () => {
     const rice = mextUserFoodGroups.find((group) => group.canonicalName === 'ご飯')
     if (!rice) throw new Error('ご飯グループがありません')
