@@ -31,7 +31,7 @@ import {
   type MextFoodGroup,
 } from '../services/mextFoodData'
 
-const INITIAL_FOODS_VERSION = 8
+const INITIAL_FOODS_VERSION = 9
 const SEARCH_METADATA_VERSION = 8
 const LEGACY_INITIAL_FOOD_IDS = [
   'mext_rice_white',
