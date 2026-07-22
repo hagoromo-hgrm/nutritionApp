@@ -1,6 +1,7 @@
 import { formatDateKey } from '../utils/date'
 import { isValidUnit } from '../utils/validation'
 import type { MealEntry, NutrientKey, Nutrients } from '../types'
+import { isMealMenuSnapshot } from './mealMenuSnapshots'
 
 const NUTRIENT_COLUMNS: ReadonlyArray<readonly [NutrientKey, string]> = [
   ['energyKcal', 'energy_kcal'],
@@ -30,6 +31,7 @@ export const CSV_HEADERS = [
   ...BASE_HEADERS,
   ...NUTRIENT_COLUMNS.map(([, header]) => header),
   ...SNAPSHOT_NUTRIENT_COLUMNS.map(([, header]) => header),
+  'menu_snapshot_json',
 ] as const
 
 function escapeCsv(value: string | number | null): string {
@@ -44,6 +46,7 @@ export function mealsToCsv(entries: MealEntry[]): string {
     entry.foodSnapshot.baseAmount, entry.foodSnapshot.baseUnit,
     ...NUTRIENT_COLUMNS.map(([key]) => entry.calculatedNutrients[key]),
     ...SNAPSHOT_NUTRIENT_COLUMNS.map(([key]) => entry.foodSnapshot.nutrients[key]),
+    entry.menuSnapshot ? JSON.stringify(entry.menuSnapshot) : '',
   ])
   return `\uFEFF${[CSV_HEADERS, ...rows].map((row) => row.map(escapeCsv).join(',')).join('\r\n')}\r\n`
 }
@@ -140,6 +143,17 @@ export function parseMealsCsv(text: string): MealEntry[] {
 
     const calculatedNutrients = parseNutrients(row, headerIndex, NUTRIENT_COLUMNS, rowNumber)
     const snapshotNutrients = parseNutrients(row, headerIndex, SNAPSHOT_NUTRIENT_COLUMNS, rowNumber)
+    const menuSnapshotText = value('menu_snapshot_json')
+    let menuSnapshot: MealEntry['menuSnapshot']
+    if (menuSnapshotText) {
+      try {
+        const candidate: unknown = JSON.parse(menuSnapshotText)
+        if (!isMealMenuSnapshot(candidate)) throw new Error('invalid')
+        menuSnapshot = candidate
+      } catch {
+        throw new Error(`${rowNumber}行目の料理メニュー構成が不正です。`)
+      }
+    }
     return {
       id,
       eatenAt,
@@ -156,6 +170,7 @@ export function parseMealsCsv(text: string): MealEntry[] {
       amount: parsePositiveNumber(value('amount'), '分量', rowNumber),
       amountUnit,
       calculatedNutrients,
+      ...(menuSnapshot ? { menuSnapshot } : {}),
     }
   })
 }

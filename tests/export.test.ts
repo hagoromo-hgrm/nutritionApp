@@ -23,6 +23,22 @@ const classifiedFood: Food = {
   createdAt: '2026-07-15T00:00:00.000Z', updatedAt: '2026-07-15T00:00:00.000Z',
 }
 
+const menuEntry: MealEntry = {
+  ...entry,
+  foodId: 'menu:menu_1',
+  amount: 1,
+  amountUnit: '食',
+  foodSnapshot: { ...entry.foodSnapshot, name: '朝ごはん', baseAmount: 1, baseUnit: '食' },
+  menuSnapshot: {
+    sourceMenuId: 'menu_1',
+    sourceMenuName: '朝ごはん',
+    ingredients: [{
+      kind: 'food', itemId: entry.foodId, amount: entry.amount, unit: entry.amountUnit,
+      foodSnapshot: { ...entry.foodSnapshot, nutrients: { ...entry.foodSnapshot.nutrients } },
+    }],
+  },
+}
+
 describe('export formats', () => {
   it('CSVはBOM付きで要件どおりの列順とエスケープになる', () => {
     const csv = mealsToCsv([entry])
@@ -35,6 +51,18 @@ describe('export formats', () => {
   it('このPWAで出力したCSVから食事スナップショットを復元できる', () => {
     const restored = parseMealsCsv(mealsToCsv([entry]))
     expect(restored).toEqual([entry])
+  })
+
+  it('料理メニューの食事別構成をJSONとCSVで保持する', () => {
+    const validated = validateBackup({ ...backup, mealEntries: [menuEntry] })
+    expect(validated.mealEntries[0].menuSnapshot?.ingredients[0].amount).toBe(50)
+    expect(parseMealsCsv(mealsToCsv([menuEntry]))).toEqual([menuEntry])
+
+    const invalidEntry = {
+      ...menuEntry,
+      menuSnapshot: { ...menuEntry.menuSnapshot, ingredients: [{ ...menuEntry.menuSnapshot!.ingredients[0], amount: 0 }] },
+    }
+    expect(() => validateBackup({ ...backup, mealEntries: [invalidEntry] })).toThrow('食品または食事記録')
   })
 
   it('列が欠けたCSVは取り込まない', () => {

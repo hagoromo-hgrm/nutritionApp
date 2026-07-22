@@ -45,6 +45,14 @@ import { backupToJson, downloadBlob, parseBackupText } from './services/backup'
 import { mealsToCsv, parseMealsCsv } from './services/csv'
 import { calculateBmi, calculateNutrients, estimateDailyGoals, formatNutrient, goalRate, incrementByBaseAmount, nutrientRangeForGoals, scaleNutritionGoals, sumByMealType, sumEntries, sumNutrients } from './services/nutrition'
 import { getMenuIngredients, menuToFood, wouldCreateMenuCycle } from './services/menuIngredients'
+import {
+  calculateMealMenuEntryNutrients,
+  calculateMealMenuSnapshotNutrients,
+  cloneMealMenuSnapshot,
+  createMealFoodIngredientSnapshot,
+  createMealMenuIngredientSnapshot,
+  createMealMenuSnapshot,
+} from './services/mealMenuSnapshots'
 import { buildDailyNutrientTrend } from './services/trend'
 import {
   EMPTY_NUTRIENTS,
@@ -68,6 +76,8 @@ import {
   type ActivityLevel,
   type BodyProfile,
   type MealEntry,
+  type MealIngredientSnapshot,
+  type MealMenuSnapshot,
   type MealTimeMode,
   type MealType,
   type Menu,
@@ -407,6 +417,7 @@ function App() {
   const [externalNote, setExternalNote] = useState<string | null>(null)
   const [mealFood, setMealFood] = useState<Food | null>(null)
   const [mealAmount, setMealAmount] = useState('')
+  const [mealMenuSnapshot, setMealMenuSnapshot] = useState<MealMenuSnapshot | null>(null)
   const [mealType, setMealType] = useState<MealType>('朝食')
   const [recordingMealType, setRecordingMealType] = useState<MealType | null>(null)
   const [mealTypePicker, setMealTypePicker] = useState<{ food: Food | null } | null>(null)
@@ -516,9 +527,14 @@ function App() {
     setMealFood(food)
     setEditingEntry(entry ?? null)
     setMealAmount(String(entry?.amount ?? food.servingAmount ?? food.baseAmount))
+    const sourceMenuId = !entry && food.id.startsWith('menu:') ? food.id.slice('menu:'.length) : null
+    const sourceMenu = sourceMenuId ? menus.find((menu) => menu.id === sourceMenuId) : undefined
+    setMealMenuSnapshot(entry?.menuSnapshot
+      ? cloneMealMenuSnapshot(entry.menuSnapshot)
+      : sourceMenu ? createMealMenuSnapshot(sourceMenu, menus, foods) : null)
     setMealType(forcedMealType ?? entry?.mealType ?? '朝食')
     setError(null)
-  }, [])
+  }, [foods, menus])
 
   const openMealTypePicker = () => setMealTypePicker({ food: null })
 
@@ -698,10 +714,16 @@ function App() {
     }
   }
 
-  const saveMealRecord = async (food: Food, amountText: string, entryToEdit: MealEntry | null = editingEntry) => {
+  const saveMealRecord = async (food: Food, amountText: string, entryToEdit: MealEntry | null = editingEntry, menuSnapshot: MealMenuSnapshot | null = null) => {
     const amount = Number(amountText)
     if (!isPositiveFinite(amount) || amount > 100000) { showError('分量は0より大きく、現実的な範囲の数値で入力してください。'); return false }
-    const calculated = calculateNutrients(food, amount, food.baseUnit)
+    const snapshotIngredients = menuSnapshot?.ingredients ?? []
+    const invalidIngredientAmount = (ingredients: MealIngredientSnapshot[]): boolean => ingredients.some((ingredient) => !isPositiveFinite(ingredient.amount) || ingredient.amount > 100000 || (ingredient.kind === 'menu' && invalidIngredientAmount(ingredient.ingredients)))
+    if (menuSnapshot && invalidIngredientAmount(snapshotIngredients)) { showError('構成食材の分量は0より大きく100000以下で入力してください。'); return false }
+    const snapshotNutrients = menuSnapshot ? calculateMealMenuSnapshotNutrients(menuSnapshot) : food.nutrients
+    const calculated = menuSnapshot
+      ? calculateMealMenuEntryNutrients(menuSnapshot, amount, food.baseUnit)
+      : calculateNutrients(food, amount, food.baseUnit)
     const currentMealTime = entries.find((current) => current.mealType === mealType)?.eatenAt
     const eatenAt = entryToEdit
       ? (mealType === '間食' ? entryToEdit.eatenAt : (currentMealTime ?? entryToEdit.eatenAt))
@@ -710,8 +732,9 @@ function App() {
       id: entryToEdit?.id ?? createNewMealId(), eatenAt, mealType,
       foodId: food.id, foodSnapshot: {
         name: food.displayName ?? food.name, officialName: food.officialName, displayName: food.displayName, maker: food.maker, barcode: food.barcode, baseAmount: food.baseAmount,
-        baseUnit: food.baseUnit, nutrients: { ...food.nutrients },
+        baseUnit: food.baseUnit, nutrients: { ...snapshotNutrients },
       }, amount, amountUnit: food.baseUnit, calculatedNutrients: calculated,
+      ...(menuSnapshot ? { menuSnapshot: cloneMealMenuSnapshot(menuSnapshot) } : {}),
     }
     try {
       const entriesToSave = mealType === '間食'
@@ -726,6 +749,7 @@ function App() {
       const continueFoodSelection = recordingMealType !== null && !entryToEdit
       setMealFood(null)
       setEditingEntry(null)
+      setMealMenuSnapshot(null)
       setRecordingMealType(returnToSearchResults ? recordingMealType : continueFoodSelection ? recordingMealType : null)
       setView(returnToSearchResults ? 'search-results' : continueFoodSelection ? 'food-screen' : 'today')
       await load()
@@ -739,7 +763,7 @@ function App() {
 
   const saveMeal = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    if (mealFood) await saveMealRecord(mealFood, mealAmount)
+    if (mealFood) await saveMealRecord(mealFood, mealAmount, editingEntry, mealMenuSnapshot)
   }
 
   const removeMeal = async (entry: MealEntry) => {
@@ -1137,7 +1161,7 @@ function App() {
 
       {mealTypePicker && <MealTypePickerModal food={mealTypePicker.food} recordedMealTypes={recordedMealTypes} onSelect={chooseMealType} />}
       {variantPicker && <FoodVariantPickerModal result={variantPicker.result} userFoodResult={variantPicker.userFoodResult} foods={foods} foodGroups={foodGroups} foodAttributePreferences={settings.foodAttributePreferences} onSaveFoodAttributePreference={saveFoodAttributePreference} mealMode={searchPurpose === 'meal'} onSubmitMeal={async (food, amount) => { if (await saveMealRecord(food, amount)) setVariantPicker(null) }} onSelect={(food) => { setVariantPicker(null); selectSearchFood(variantPicker.query, variantPicker.item, food) }} onClose={() => setVariantPicker(null)} />}
-      {mealFood && <MealModal food={mealFood} amount={mealAmount} setAmount={setMealAmount} editing={Boolean(editingEntry)} onSubmit={saveMeal} onClose={() => { setMealFood(null); setEditingEntry(null); setRecordingMealType(null) }} />}
+      {mealFood && <MealModal food={mealFood} amount={mealAmount} setAmount={setMealAmount} menuSnapshot={mealMenuSnapshot} setMenuSnapshot={setMealMenuSnapshot} menus={menus} foods={foods} foodGroups={foodGroups} recentFoods={recentFoods} favoriteFoods={favoriteFoods} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} foodAttributePreferences={settings.foodAttributePreferences} onSaveFoodAttributePreference={saveFoodAttributePreference} editing={Boolean(editingEntry)} onSubmit={saveMeal} onClose={() => { setMealFood(null); setEditingEntry(null); setMealMenuSnapshot(null); setRecordingMealType(null) }} />}
       {mealDetails && <MealDetailsModal details={mealDetails} goals={scaleNutritionGoals(settings.goals, 1 / 3)} onUpdateTimes={updateMealTimes} onClose={() => setMealDetails(null)} />}
       {showTodayDetails && <TodayDetailsModal total={total} goals={settings.goals} subtotals={subtotals} onClose={() => setShowTodayDetails(false)} />}
       {menuDraft && <MenuEditorModal draft={menuDraft} setDraft={setMenuDraft} menus={menus} foods={foods} foodGroups={foodGroups} recentFoods={recentFoods} favoriteFoods={favoriteFoods} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} foodAttributePreferences={settings.foodAttributePreferences} onSaveFoodAttributePreference={saveFoodAttributePreference} onSubmit={saveMenuDraft} onClose={() => setMenuDraft(null)} />}
@@ -1624,6 +1648,7 @@ interface MenuFoodSelectionProps {
   onAddMenu?: (menu: Menu) => void
   onRemoveIngredient?: (ingredient: MenuIngredientDraft) => void
   onChangeIngredientAmount?: (ingredient: MenuIngredientDraft, amount: string) => void
+  showSelectedList?: boolean
   foodAttributePreferences?: FoodAttributePreferences
   onSaveFoodAttributePreference?: (foodGroupId: string, attributeId: string, preference: FoodAttributePreference | null) => Promise<boolean>
 }
@@ -1643,7 +1668,7 @@ function MenuIngredientRow({ ingredient, foods, menus, onChangeAmount, onRemove 
   return <div className="menu-ingredient-row"><div className="menu-ingredient-copy"><span className="source-badge">{ingredient.kind === 'food' ? '食品' : '料理'}</span><strong>{name}</strong></div><label className="menu-ingredient-amount"><span className="sr-only">{name}の分量</span><input type="number" min="0.01" max="100000" step="any" value={ingredient.amount} onChange={(event) => onChangeAmount(event.target.value)} required /><span>{ingredient.unit}</span></label><button type="button" className="small-action danger-text" onClick={onRemove}>削除</button></div>
 }
 
-function MenuFoodSelection({ selectedIds, selectedIngredients, menus = [], editingMenuId = null, foods, foodGroups, recentFoods, favoriteFoods, favoriteIds, onToggleFavorite, onAdd, onRemove, onAddMenu, onRemoveIngredient, onChangeIngredientAmount, foodAttributePreferences, onSaveFoodAttributePreference }: MenuFoodSelectionProps) {
+function MenuFoodSelection({ selectedIds, selectedIngredients, menus = [], editingMenuId = null, foods, foodGroups, recentFoods, favoriteFoods, favoriteIds, onToggleFavorite, onAdd, onRemove, onAddMenu, onRemoveIngredient, onChangeIngredientAmount, showSelectedList = true, foodAttributePreferences, onSaveFoodAttributePreference }: MenuFoodSelectionProps) {
   const [foodQuery, setFoodQuery] = useState('')
   const [searchedQuery, setSearchedQuery] = useState('')
   const [userSearchResults, setUserSearchResults] = useState<UserFoodSearchResult[]>([])
@@ -1707,12 +1732,12 @@ function MenuFoodSelection({ selectedIds, selectedIngredients, menus = [], editi
 
   return (
     <div className="menu-food-selection">
-      <div className="menu-selected-heading"><span>選択中の食材</span><span>{selectedCount}件</span></div>
-      {selectedCount > 0
-        ? <div className="menu-selected-foods">{selectedIngredients
-          ? selectedIngredients.map((ingredient) => <MenuIngredientRow key={`${ingredient.kind}:${ingredient.itemId}`} ingredient={ingredient} foods={foods} menus={menus} onChangeAmount={(amount) => onChangeIngredientAmount?.(ingredient, amount)} onRemove={() => onRemoveIngredient?.(ingredient)} />)
-          : selectedFoods.map((food) => <FoodRow key={food.id} food={food} favorite={favoriteIds.has(food.id)} onToggleFavorite={onToggleFavorite} onRemove={onRemove} />)}</div>
-        : <p className="menu-food-empty">まだ食材がありません。下の「食材を追加」から選択してください。</p>}
+      {showSelectedList && <><div className="menu-selected-heading"><span>選択中の食材</span><span>{selectedCount}件</span></div>
+        {selectedCount > 0
+          ? <div className="menu-selected-foods">{selectedIngredients
+            ? selectedIngredients.map((ingredient) => <MenuIngredientRow key={`${ingredient.kind}:${ingredient.itemId}`} ingredient={ingredient} foods={foods} menus={menus} onChangeAmount={(amount) => onChangeIngredientAmount?.(ingredient, amount)} onRemove={() => onRemoveIngredient?.(ingredient)} />)
+            : selectedFoods.map((food) => <FoodRow key={food.id} food={food} favorite={favoriteIds.has(food.id)} onToggleFavorite={onToggleFavorite} onRemove={onRemove} />)}</div>
+          : <p className="menu-food-empty">まだ食材がありません。下の「食材を追加」から選択してください。</p>}</>}
       <details className="food-collapsible menu-food-picker">
         <summary className="section-title collapsible-summary"><div><span className="eyebrow">FOODS</span><h3>食材を追加</h3></div></summary>
         <div className="menu-food-picker-body">
@@ -1840,12 +1865,39 @@ function MealTypePickerModal({ food, recordedMealTypes, onSelect }: { food: Food
   return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="食事を追加"><section className="modal-card meal-type-picker">{food && <p className="helper-text">「{food.name}」を記録する区分を選択してください。</p>}<div className="meal-type-options">{MEAL_TYPES.map((type) => { const recorded = recordedMealTypes.includes(type); return <button key={type} className={`meal-type-option${recorded ? ' is-recorded' : ''}`} type="button" onClick={() => onSelect(type)} aria-label={`${type}${recorded ? '（記録済み）' : ''}`}><img src={MEAL_ICON_ASSETS[type]} alt="" aria-hidden="true" />{recorded && <span className="meal-type-check" aria-hidden="true">✓</span>}</button> })}</div></section></div>
 }
 
-function MealModal({ food, amount, setAmount, editing, onSubmit, onClose }: { food: Food; amount: string; setAmount: (value: string) => void; editing: boolean; onSubmit: (event: React.FormEvent<HTMLFormElement>) => void; onClose: () => void }) {
-  const preview = calculateNutrients(food, Number(amount), food.baseUnit)
+function MealSnapshotIngredientRow({ ingredient, onChange, onRemove }: { ingredient: MealIngredientSnapshot; onChange: (ingredient: MealIngredientSnapshot) => void; onRemove: () => void }) {
+  const name = ingredient.kind === 'food' ? ingredient.foodSnapshot.name : ingredient.name
+  const changeChild = (index: number, child: MealIngredientSnapshot) => {
+    if (ingredient.kind !== 'menu') return
+    onChange({ ...ingredient, ingredients: ingredient.ingredients.map((current, currentIndex) => currentIndex === index ? child : current) })
+  }
+  const removeChild = (index: number) => {
+    if (ingredient.kind !== 'menu') return
+    onChange({ ...ingredient, ingredients: ingredient.ingredients.filter((_, currentIndex) => currentIndex !== index) })
+  }
+  return <div className={`meal-snapshot-ingredient${ingredient.kind === 'menu' ? ' is-menu' : ''}`}><div className="menu-ingredient-row"><div className="menu-ingredient-copy"><span className="source-badge">{ingredient.kind === 'food' ? '食品' : '料理'}</span><strong>{name}</strong></div><label className="menu-ingredient-amount"><span className="sr-only">{name}の分量</span><input type="number" min="0.01" max="100000" step="any" value={ingredient.amount > 0 ? ingredient.amount : ''} onChange={(event) => onChange({ ...ingredient, amount: Number(event.target.value) })} required /><span>{ingredient.unit}</span></label><button type="button" className="small-action danger-text" onClick={onRemove}>削除</button></div>{ingredient.kind === 'menu' && <details className="meal-snapshot-nested"><summary>{ingredient.name}の構成食材（{ingredient.ingredients.length}件）</summary><div>{ingredient.missing && <p className="menu-food-empty">原本は削除されています。保存済みの構成だけを使用します。</p>}{ingredient.ingredients.map((child, index) => <MealSnapshotIngredientRow key={`${child.kind}:${child.itemId}:${index}`} ingredient={child} onChange={(next) => changeChild(index, next)} onRemove={() => removeChild(index)} />)}</div></details>}</div>
+}
+
+function MealModal({ food, amount, setAmount, menuSnapshot, setMenuSnapshot, menus, foods, foodGroups, recentFoods, favoriteFoods, favoriteIds, onToggleFavorite, foodAttributePreferences, onSaveFoodAttributePreference, editing, onSubmit, onClose }: { food: Food; amount: string; setAmount: (value: string) => void; menuSnapshot: MealMenuSnapshot | null; setMenuSnapshot: (snapshot: MealMenuSnapshot | null) => void; menus: Menu[]; foods: Food[]; foodGroups: FoodGroup[]; recentFoods: Food[]; favoriteFoods: Food[]; favoriteIds: Set<string>; onToggleFavorite: (food: Food) => void; foodAttributePreferences?: FoodAttributePreferences; onSaveFoodAttributePreference?: (foodGroupId: string, attributeId: string, preference: FoodAttributePreference | null) => Promise<boolean>; editing: boolean; onSubmit: (event: React.FormEvent<HTMLFormElement>) => void; onClose: () => void }) {
+  const preview = menuSnapshot
+    ? calculateMealMenuEntryNutrients(menuSnapshot, Number(amount), food.baseUnit)
+    : calculateNutrients(food, Number(amount), food.baseUnit)
   const numericAmount = Number(amount)
   const canIncrement = !Number.isFinite(numericAmount) || numericAmount < 100000
   const incrementAmount = () => setAmount(String(incrementByBaseAmount(numericAmount, food.baseAmount)))
-  return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="食事を記録"><section className="modal-card"><div className="modal-heading"><div><span className="eyebrow">ADD MEAL</span><h2>{editing ? '食事を編集' : '食事を記録'}</h2></div><button className="icon-button" type="button" onClick={onClose} aria-label="閉じる">×</button></div><div className="selected-food"><strong>{food.displayName ?? food.name}</strong><span>{food.maker || '一般食品'} · 基準量 {food.baseAmount}{food.baseUnit}</span></div><form onSubmit={onSubmit}><label>分量<div className="amount-input-row"><div className="amount-input"><input type="number" min="0.01" max="100000" step="any" value={amount} onChange={(event) => setAmount(event.target.value)} required /><span className="field-suffix">{food.baseUnit}</span></div><button className="amount-increment" type="button" onClick={incrementAmount} disabled={!canIncrement} aria-label={`分量を基準量1つ分（${food.baseAmount}${food.baseUnit}）増やす`}>＋1</button></div></label><div className="preview-box calorie-preview"><div className="section-kicker">今回のカロリー</div><strong>{formatNutrient(preview.energyKcal)}<small> kcal</small></strong></div><button className="button primary full-width" type="submit">{editing ? '変更を保存' : '食事として登録'}</button><button className="button ghost full-width" type="button" onClick={onClose}>キャンセル</button></form></section></div>
+  const changeIngredient = (index: number, ingredient: MealIngredientSnapshot) => setMenuSnapshot(menuSnapshot ? { ...menuSnapshot, ingredients: menuSnapshot.ingredients.map((current, currentIndex) => currentIndex === index ? ingredient : current) } : null)
+  const removeIngredient = (index: number) => setMenuSnapshot(menuSnapshot ? { ...menuSnapshot, ingredients: menuSnapshot.ingredients.filter((_, currentIndex) => currentIndex !== index) } : null)
+  const addFood = (ingredientFood: Food) => {
+    if (!menuSnapshot || menuSnapshot.ingredients.some((ingredient) => ingredient.kind === 'food' && ingredient.itemId === ingredientFood.id)) return
+    setMenuSnapshot({ ...menuSnapshot, ingredients: [...menuSnapshot.ingredients, createMealFoodIngredientSnapshot(ingredientFood)] })
+  }
+  const addMenu = (menu: Menu) => {
+    if (!menuSnapshot || menuSnapshot.ingredients.some((ingredient) => ingredient.kind === 'menu' && ingredient.itemId === menu.id)) return
+    setMenuSnapshot({ ...menuSnapshot, ingredients: [...menuSnapshot.ingredients, createMealMenuIngredientSnapshot(menu, menus, foods)] })
+  }
+  const selectedIngredients: MenuIngredientDraft[] = menuSnapshot?.ingredients.map((ingredient) => ({ kind: ingredient.kind, itemId: ingredient.itemId, amount: String(ingredient.amount), unit: ingredient.unit })) ?? []
+  const selectedFoodIds = selectedIngredients.filter((ingredient) => ingredient.kind === 'food').map((ingredient) => ingredient.itemId)
+  return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="食事を記録"><section className={`modal-card${menuSnapshot ? ' meal-menu-modal' : ''}`}><div className="modal-heading"><div><span className="eyebrow">ADD MEAL</span><h2>{editing ? '食事を編集' : '食事を記録'}</h2></div><button className="icon-button" type="button" onClick={onClose} aria-label="閉じる">×</button></div><div className="selected-food"><strong>{food.displayName ?? food.name}</strong><span>{menuSnapshot ? '料理メニュー' : (food.maker || '一般食品')} · 基準量 {food.baseAmount}{food.baseUnit}</span></div><form onSubmit={onSubmit}><label>分量<div className="amount-input-row"><div className="amount-input"><input type="number" min="0.01" max="100000" step="any" value={amount} onChange={(event) => setAmount(event.target.value)} required /><span className="field-suffix">{food.baseUnit}</span></div><button className="amount-increment" type="button" onClick={incrementAmount} disabled={!canIncrement} aria-label={`分量を基準量1つ分（${food.baseAmount}${food.baseUnit}）増やす`}>＋1</button></div></label>{menuSnapshot && <fieldset className="meal-menu-snapshot-editor"><legend>この食事の構成食材</legend><p className="helper-text">表示中の分量は1食分です。ここでの変更はこの食事だけに保存され、料理メニュー原本には反映されません。食材を置き換える場合は、元の食材を削除してから追加してください。</p><div className="meal-snapshot-ingredients">{menuSnapshot.ingredients.length > 0 ? menuSnapshot.ingredients.map((ingredient, index) => <MealSnapshotIngredientRow key={`${ingredient.kind}:${ingredient.itemId}:${index}`} ingredient={ingredient} onChange={(next) => changeIngredient(index, next)} onRemove={() => removeIngredient(index)} />) : <p className="menu-food-empty">構成食材がありません。下から追加できます。</p>}</div><MenuFoodSelection selectedIds={selectedFoodIds} selectedIngredients={selectedIngredients} menus={menus} editingMenuId={menuSnapshot.sourceMenuId} foods={foods} foodGroups={foodGroups} recentFoods={recentFoods} favoriteFoods={favoriteFoods} favoriteIds={favoriteIds} onToggleFavorite={onToggleFavorite} foodAttributePreferences={foodAttributePreferences} onSaveFoodAttributePreference={onSaveFoodAttributePreference} onAdd={addFood} onRemove={() => undefined} onAddMenu={addMenu} showSelectedList={false} /></fieldset>}<div className="preview-box calorie-preview"><div className="section-kicker">今回のカロリー</div><strong>{formatNutrient(preview.energyKcal)}<small> kcal</small></strong></div><button className="button primary full-width" type="submit">{editing ? '変更を保存' : '食事として登録'}</button><button className="button ghost full-width" type="button" onClick={onClose}>キャンセル</button></form></section></div>
 }
 
 function MealDetailsModal({ details, goals, onUpdateTimes, onClose }: { details: { type: MealType; entries: MealEntry[]; subtotal: Nutrients }; goals: NutritionGoals; onUpdateTimes: (entryIds: string[], time: string) => void; onClose: () => void }) {

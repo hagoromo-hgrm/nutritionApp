@@ -1,6 +1,7 @@
 import { NUTRIENT_KEYS, type AppSettings, type BackupData, type Food, type FoodAlias, type FoodGroup, type FoodRelatedTerm, type FoodUsageStat, type MealEntry, type Menu, type MenuIngredient, type MenuSet, type Nutrients, type SearchLog } from '../types'
 import { isFoodAttributePreference } from './foodAttributePreferences'
 import { hasMenuCycles } from './menuIngredients'
+import { isMealMenuSnapshot } from './mealMenuSnapshots'
 import { isNutrients, isValidUnit } from '../utils/validation'
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -97,6 +98,7 @@ function isMealEntry(value: unknown): value is MealEntry {
   return isString(value.id) && isString(value.eatenAt) && ['朝食', '昼食', '夕食', '間食'].includes(String(value.mealType))
     && isString(value.foodId) && isSnapshot(value.foodSnapshot) && typeof value.amount === 'number' && value.amount > 0
     && isValidUnit(String(value.amountUnit)) && isNutrients(value.calculatedNutrients)
+    && (value.menuSnapshot === undefined || isMealMenuSnapshot(value.menuSnapshot))
 }
 
 function isMenuIngredient(value: unknown): value is MenuIngredient {

@@ -312,6 +312,16 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .menu-ingredient-copy strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .76rem; }
 .menu-ingredient-amount { display: flex; min-width: 0; align-items: center; gap: .35rem; margin: 0; color: var(--muted); font-size: .7rem; }
 .menu-ingredient-amount input { min-width: 0; width: 100%; padding: .48rem .55rem; font-size: .76rem; }
+.meal-menu-modal { width: min(100%, 700px); }
+.meal-menu-snapshot-editor { display: grid; gap: .7rem; }
+.meal-menu-snapshot-editor > .helper-text { margin: 0; line-height: 1.55; }
+.meal-snapshot-ingredients { overflow: hidden; border: 1px solid var(--line); border-radius: .8rem; padding: .15rem .8rem; background: #fbfdff; }
+.meal-snapshot-ingredient + .meal-snapshot-ingredient { border-top: 1px solid #edf2f8; }
+.meal-snapshot-ingredient .menu-ingredient-row { border-bottom: 0; }
+.meal-snapshot-nested { margin: 0 0 .65rem 1.1rem; border-left: 2px solid #dce9f6; padding-left: .75rem; }
+.meal-snapshot-nested > summary { cursor: pointer; padding: .35rem 0; color: var(--accent-deep); font-size: .7rem; font-weight: 800; }
+.meal-snapshot-nested > div { padding-bottom: .15rem; }
+.meal-snapshot-nested .meal-snapshot-ingredient + .meal-snapshot-ingredient { border-top: 1px solid #edf2f8; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; clip-path: inset(50%); }
 .menu-food-empty { padding: .7rem .1rem; color: var(--muted); font-size: .72rem; line-height: 1.5; }
 .menu-food-picker { overflow: hidden; border: 1px solid var(--line); border-radius: .8rem; padding: .1rem .8rem .75rem; background: #ffffff; }

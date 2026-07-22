@@ -178,6 +178,32 @@ export interface FoodSnapshot {
   nutrients: Nutrients
 }
 
+export interface MealFoodIngredientSnapshot {
+  kind: 'food'
+  itemId: string
+  amount: number
+  unit: FoodUnit
+  foodSnapshot: FoodSnapshot
+}
+
+export interface MealMenuIngredientSnapshot {
+  kind: 'menu'
+  itemId: string
+  name: string
+  amount: number
+  unit: FoodUnit
+  ingredients: MealIngredientSnapshot[]
+  missing: boolean
+}
+
+export type MealIngredientSnapshot = MealFoodIngredientSnapshot | MealMenuIngredientSnapshot
+
+export interface MealMenuSnapshot {
+  sourceMenuId: string
+  sourceMenuName: string
+  ingredients: MealIngredientSnapshot[]
+}
+
 export interface MealEntry {
   id: string
   eatenAt: string
@@ -187,6 +213,8 @@ export interface MealEntry {
   amount: number
   amountUnit: FoodUnit
   calculatedNutrients: Nutrients
+  /** 料理メニューを登録した時点の構成。食事ごとのアレンジはこの複製だけを変更する。 */
+  menuSnapshot?: MealMenuSnapshot
 }
 
 export interface MenuIngredient {

@@ -223,4 +223,18 @@ describe('IndexedDB data safety', () => {
     const entries = await getEntriesForDate('2026-07-15')
     expect(entries.map((entry) => entry.id).sort()).toEqual(['meal_first', 'meal_second'])
   })
+
+  it('料理メニューの食事別構成スナップショットを保存する', async () => {
+    const menuEntry: MealEntry = {
+      id: 'meal_menu_snapshot', eatenAt: '2026-07-15T03:00:00.000Z', mealType: '朝食', foodId: 'menu:breakfast',
+      foodSnapshot: { name: '朝ごはん', maker: '', barcode: '', baseAmount: 1, baseUnit: '食', nutrients: { energyKcal: 100, proteinG: 1, fatG: 1, carbohydrateG: 1, fiberG: 1, saltG: 0, ...addedNutrients } },
+      amount: 1, amountUnit: '食', calculatedNutrients: { energyKcal: 100, proteinG: 1, fatG: 1, carbohydrateG: 1, fiberG: 1, saltG: 0, ...addedNutrients },
+      menuSnapshot: {
+        sourceMenuId: 'breakfast', sourceMenuName: '朝ごはん',
+        ingredients: [{ kind: 'food', itemId: userFood.id, amount: 50, unit: 'g', foodSnapshot: { name: userFood.name, maker: userFood.maker, barcode: userFood.barcode, baseAmount: userFood.baseAmount, baseUnit: userFood.baseUnit, nutrients: { ...userFood.nutrients } } }],
+      },
+    }
+    await saveMealEntry(menuEntry)
+    expect((await getEntriesForDate('2026-07-15')).find((entry) => entry.id === menuEntry.id)?.menuSnapshot).toEqual(menuEntry.menuSnapshot)
+  })
 })
