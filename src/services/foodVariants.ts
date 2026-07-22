@@ -1,4 +1,5 @@
 import type { Food, FoodVariantAttributes } from '../types'
+import { getAvailableConstraintValues, reconcileConstraintSelection, type VariantConstraintCandidate } from './variantConstraints'
 
 export type VariantAttributeKey = keyof FoodVariantAttributes
 
@@ -95,6 +96,37 @@ export function getVariantOptionGroups(variants: Food[]): VariantOptionGroup[] {
 export function getVariantSelection(variant: Food, groups: VariantOptionGroup[]): Partial<Record<VariantAttributeKey, string | null>> {
   const attributes = getVariantAttributes(variant)
   return Object.fromEntries(groups.filter((group): group is VariantOptionGroup & { key: VariantAttributeKey } => group.key !== 'variant').map((group) => [group.key, attributes[group.key] ?? null])) as Partial<Record<VariantAttributeKey, string | null>>
+}
+
+function legacyVariantConstraintCandidates(variants: readonly Food[], groups: readonly VariantOptionGroup[]): VariantConstraintCandidate[] {
+  const keys = groups.filter((group): group is VariantOptionGroup & { key: VariantAttributeKey } => group.key !== 'variant').map((group) => group.key)
+  return variants.map((variant) => {
+    const attributes = getVariantAttributes(variant)
+    return { id: variant.id, values: Object.fromEntries(keys.map((key) => [key, attributes[key] ?? null])) }
+  })
+}
+
+export function getAvailableVariantOptionValues(
+  variants: readonly Food[],
+  groups: readonly VariantOptionGroup[],
+  selection: Partial<Record<VariantAttributeKey, string | null>>,
+  targetKey: VariantAttributeKey,
+): Set<string | null> {
+  const orderedKeys = groups.filter((group): group is VariantOptionGroup & { key: VariantAttributeKey } => group.key !== 'variant').map((group) => group.key)
+  return getAvailableConstraintValues(legacyVariantConstraintCandidates(variants, groups), orderedKeys, selection, targetKey)
+}
+
+export function reconcileVariantSelection(
+  variants: readonly Food[],
+  groups: readonly VariantOptionGroup[],
+  selection: Partial<Record<VariantAttributeKey, string | null>>,
+): { selection: Partial<Record<VariantAttributeKey, string | null>>; clearedKeys: Set<VariantAttributeKey> } {
+  const orderedKeys = groups.filter((group): group is VariantOptionGroup & { key: VariantAttributeKey } => group.key !== 'variant').map((group) => group.key)
+  const reconciled = reconcileConstraintSelection(legacyVariantConstraintCandidates(variants, groups), orderedKeys, selection)
+  return {
+    selection: reconciled.selection as Partial<Record<VariantAttributeKey, string | null>>,
+    clearedKeys: new Set([...reconciled.clearedKeys] as VariantAttributeKey[]),
+  }
 }
 
 export function filterVariantsBySelection(variants: Food[], selection: Partial<Record<VariantAttributeKey, string | null>>): Food[] {

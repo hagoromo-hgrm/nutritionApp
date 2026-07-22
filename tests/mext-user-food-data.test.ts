@@ -4,12 +4,14 @@ import {
   InvalidUserSelectionValue,
   MissingRequiredUserSelection,
   UserFoodGroupNotFound,
+  getAvailableUserSelectionValueIds,
   getFoodGroupAttributes,
   getUserFoodGroupForFoodGroup,
   getUserSelectionDimensions,
   listUserFoodGroups,
   mextUserFoodGroupMappings,
   mextUserFoodGroups,
+  reconcileUserFoodSelection,
   resolveFoodGroupId,
   searchUserFoodGroups,
 } from '../src/services/mextUserFoodData'
@@ -109,6 +111,14 @@ describe('MEXT user-facing food groups', () => {
     expect(resolveFoodGroupId(rice.id, {})).toBe(rice.defaultFoodGroupId)
     expect(cheese.defaultFoodGroupId).toBeNull()
     expect(() => resolveFoodGroupId(cheese.id, {})).toThrow(MissingRequiredUserSelection)
+  })
+
+  it('上位分類の値を実在する食品グループから判定する', () => {
+    const eggs = mextUserFoodGroups.find((group) => group.canonicalName === '卵')
+    if (!eggs) throw new Error('卵グループがありません')
+    const available = getAvailableUserSelectionValueIds(eggs.id, {}, 'egg_type')
+    expect(available).toEqual(new Set(['chicken_egg', 'quail_egg', 'silkie_egg']))
+    expect(reconcileUserFoodSelection(eggs.id, { egg_type: 'chicken_egg' }).selection).toEqual({ egg_type: 'chicken_egg' })
   })
 
   it('不正な上位属性値・次元・グループを拒否する', () => {

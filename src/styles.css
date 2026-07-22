@@ -374,15 +374,18 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .variant-choice-group { display: grid; gap: .45rem; }
 .variant-choice-group h3 { color: var(--muted); font-size: .7rem; }
 .variant-choice-buttons { display: flex; flex-wrap: wrap; gap: .45rem; }
-.variant-choice-button { border: 1px solid var(--line); border-radius: 999px; padding: .55rem .75rem; color: var(--ink); background: white; font-size: .74rem; font-weight: 700; }
-.variant-choice-button:hover, .variant-choice-button.is-selected { border-color: var(--accent); color: var(--accent-deep); background: #e8f3ff; }
+.variant-choice-button { display: inline-flex; align-items: center; justify-content: center; gap: .28rem; min-height: 2.75rem; border: 1px solid var(--line); border-radius: 999px; padding: .55rem .75rem; color: var(--ink); background: white; font-size: .74rem; font-weight: 700; }
+.variant-choice-button:not(:disabled):hover, .variant-choice-button.is-selected { border-color: var(--accent); color: var(--accent-deep); background: #e8f3ff; }
 .variant-choice-button.is-selected { box-shadow: 0 0 0 2px rgba(67, 145, 217, .12); }
+.variant-choice-button:disabled { cursor: not-allowed; border-style: dashed; color: #718096; background: #f1f4f7; opacity: .72; }
+.variant-choice-button small { font-size: .58rem; font-weight: 700; white-space: nowrap; }
 .variant-picker-summary { display: grid; gap: .2rem; margin-top: 1rem; border-radius: .8rem; padding: .7rem .8rem; background: #f4f9ff; }
 .variant-picker-summary span, .variant-picker-summary small { color: var(--muted); font-size: .65rem; }
 .variant-picker-summary strong { color: var(--accent-deep); font-size: .82rem; }
 .variant-picker-auto-summary { display: flex; align-items: center; justify-content: space-between; gap: .65rem; border-radius: .8rem; padding: .65rem .75rem; color: var(--accent-deep); background: #eef6fc; font-size: .72rem; line-height: 1.45; }
 .variant-picker-auto-summary span { min-width: 0; }
 .variant-picker-no-match { margin-top: 1rem; color: #b14958; font-size: .74rem; }
+.variant-constraint-message { margin: .8rem 0 0; border-radius: .65rem; padding: .65rem .75rem; color: #6d5514; background: #fff7d6; font-size: .72rem; line-height: 1.5; }
 .variant-picker-confirm { width: 100%; margin-top: 1rem; }
 .variant-picker-confirm:disabled { cursor: not-allowed; opacity: .5; }
 .menu-list { display: grid; gap: .65rem; }

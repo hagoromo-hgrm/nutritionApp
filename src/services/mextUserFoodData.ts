@@ -6,6 +6,7 @@ import {
   getSourceId,
   type MextFoodGroupAttribute,
 } from './mextFoodData'
+import { getAvailableConstraintValues, reconcileConstraintSelection, type VariantConstraintCandidate, type VariantConstraintValue } from './variantConstraints'
 
 export interface UserFoodSelectionValue {
   id: string
@@ -144,6 +145,53 @@ export function getUserFoodGroupForFoodGroup(foodGroupId: string): UserFoodGroup
 
 export function getUserSelectionDimensions(userFoodGroupId: string): UserFoodSelectionDimension[] {
   return [...getUserFoodGroup(userFoodGroupId).selectionDimensions]
+}
+
+function userFoodConstraintCandidates(group: UserFoodGroup): VariantConstraintCandidate[] {
+  return group.memberFoodGroupIds.flatMap((foodGroupId) => {
+    let selections: Array<Record<string, VariantConstraintValue>> = [{}]
+    for (const dimension of group.selectionDimensions) {
+      const values = dimension.values.filter((value) => value.foodGroupId === foodGroupId).map((value) => value.id)
+      if (values.length === 0 && dimension.required) return []
+      const candidateValues: VariantConstraintValue[] = values.length > 0 ? values : [null]
+      selections = selections.flatMap((selection) => candidateValues.map((value) => ({ ...selection, [dimension.id]: value })))
+    }
+    return selections.map((values, index) => ({ id: `${foodGroupId}:${index}`, values }))
+  })
+}
+
+export function getAvailableUserSelectionValueIds(
+  userFoodGroupId: string,
+  selectedValues: Readonly<Record<string, string>>,
+  targetDimensionId: string,
+  orderedDimensionIds?: readonly string[],
+): Set<string> {
+  const group = getUserFoodGroup(userFoodGroupId)
+  const order = orderedDimensionIds ?? group.selectionDimensions.map((dimension) => dimension.id)
+  const available = getAvailableConstraintValues(
+    userFoodConstraintCandidates(group),
+    order,
+    selectedValues,
+    targetDimensionId,
+  )
+  return new Set([...available].filter((value): value is string => value !== null))
+}
+
+export function reconcileUserFoodSelection(
+  userFoodGroupId: string,
+  selectedValues: Readonly<Record<string, string>>,
+  orderedDimensionIds?: readonly string[],
+): { selection: Record<string, string>; clearedDimensionIds: Set<string> } {
+  const group = getUserFoodGroup(userFoodGroupId)
+  const reconciled = reconcileConstraintSelection(
+    userFoodConstraintCandidates(group),
+    orderedDimensionIds ?? group.selectionDimensions.map((dimension) => dimension.id),
+    selectedValues,
+  )
+  return {
+    selection: Object.fromEntries(Object.entries(reconciled.selection).filter((entry): entry is [string, string] => entry[1] !== null)),
+    clearedDimensionIds: reconciled.clearedKeys,
+  }
 }
 
 export function resolveFoodGroupId(

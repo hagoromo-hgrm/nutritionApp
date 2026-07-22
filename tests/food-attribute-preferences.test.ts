@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { applyMextFoodAttributePreferences, applyUserFoodSelectionPreferences, FOOD_ATTRIBUTE_PREFERENCES_GLOBAL_KEY, getFoodAttributePreferencesForGroup, normalizeFoodAttributePreferences, setFoodAttributePreference } from '../src/services/foodAttributePreferences'
+import { applyConstrainedMextFoodAttributePreferences, applyMextFoodAttributePreferences, applyUserFoodSelectionPreferences, FOOD_ATTRIBUTE_PREFERENCES_GLOBAL_KEY, getFoodAttributePreferencesForGroup, normalizeFoodAttributePreferences, setFoodAttributePreference } from '../src/services/foodAttributePreferences'
+import { getSelectableAttributes } from '../src/services/mextFoodData'
 
 describe('食品属性設定', () => {
   it('旧設定や不正項目を空の設定として安全に扱う', () => {
@@ -64,5 +65,23 @@ describe('食品属性設定', () => {
     expect(applied.selection).toEqual({})
     expect(applied.autoHiddenAttributeIds).toEqual(new Set())
     expect(applied.invalidAttributeIds).toEqual(new Set(['state']))
+  })
+
+  it('明示選択と競合する非表示の既定値を組み合わせ検証で解除する', () => {
+    const foodGroupId = 'fg_001370'
+    const attributes = getSelectableAttributes(foodGroupId)
+    const variety = attributes.find((attribute) => attribute.id === 'variety')
+    const cooking = attributes.find((attribute) => attribute.id === 'cooking_state')
+    const parent = variety?.values.find((value) => value.displayName === '親鶏')
+    const grilled = cooking?.values.find((value) => value.displayName === '焼き')
+    if (!parent || !grilled) throw new Error('鶏むね肉の属性値がありません')
+
+    const applied = applyConstrainedMextFoodAttributePreferences(foodGroupId, attributes, {}, {
+      variety: { defaultValueId: parent.id, mode: 'auto', visible: false },
+      cooking_state: { defaultValueId: grilled.id, mode: 'prefill', visible: true },
+    })
+    expect(applied.selection).toEqual({ cooking_state: grilled.id })
+    expect(applied.incompatibleAttributeIds).toEqual(new Set(['variety']))
+    expect(applied.invalidAttributeIds).toContain('variety')
   })
 })

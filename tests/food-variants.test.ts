@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { filterVariantsBySelection, getVariantAttributes, getVariantOptionGroups, getVariantSelection, resolveVariantForSelection } from '../src/services/foodVariants'
+import { filterVariantsBySelection, getAvailableVariantOptionValues, getVariantAttributes, getVariantOptionGroups, getVariantSelection, reconcileVariantSelection, resolveVariantForSelection } from '../src/services/foodVariants'
 import type { Food } from '../src/types'
 
 const nutrients = { energyKcal: 100, proteinG: 10, fatG: 5, carbohydrateG: 1, fiberG: 0, saltG: 0, calciumMg: null, ironMg: null, vitaminAMcg: null, vitaminEMg: null, vitaminB1Mg: null, vitaminB2Mg: null, vitaminCMg: null, saturatedFatG: null }
@@ -21,6 +21,16 @@ describe('food variation option selection', () => {
     const selection = { ...defaultSelection, skin: '皮なし', preparation: 'ゆで' as const }
     expect(filterVariantsBySelection(variants, selection).map((item) => item.id)).toEqual(['boiled-no-skin'])
     expect(resolveVariantForSelection(variants, selection, variants[0].id)?.id).toBe('boiled-no-skin')
+  })
+
+  it('上位の皮状態から存在しない調理方法を無効化し、不整合な下位選択を解除する', () => {
+    const groups = getVariantOptionGroups(variants)
+    const available = getAvailableVariantOptionValues(variants, groups, { skin: '皮なし' }, 'preparation')
+    expect(available).toEqual(new Set(['生', 'ゆで']))
+
+    const reconciled = reconcileVariantSelection(variants, groups, { skin: '皮なし', preparation: '焼き' })
+    expect(reconciled.selection).toEqual({ skin: '皮なし' })
+    expect(reconciled.clearedKeys).toEqual(new Set(['preparation']))
   })
 
   it('単独の「皮」を皮つき属性として扱い、部位に残さない', () => {

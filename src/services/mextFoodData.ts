@@ -4,6 +4,7 @@ import rawGroups from '../../data/mext/app/food_groups.json'
 import rawSearchIndex from '../../data/mext/app/food_search_index.json'
 import rawVariants from '../../data/mext/app/food_variants.json'
 import rawBuildSummary from '../../data/mext/app/build_summary.json'
+import { getAvailableConstraintValues, reconcileConstraintSelection, type VariantConstraintCandidate } from './variantConstraints'
 
 export interface MextFoodGroup {
   id: string
@@ -195,6 +196,45 @@ export function getFoodVariantBySourceId(sourceId: string): MextFoodVariant | un
 export function getFoodVariants(foodGroupId: string): MextFoodVariant[] {
   getFoodGroup(foodGroupId)
   return [...(variantsByGroup.get(foodGroupId) ?? [])]
+}
+
+function mextVariantConstraintCandidates(foodGroupId: string, orderedAttributeIds: readonly string[]): VariantConstraintCandidate[] {
+  return getFoodVariants(foodGroupId).map((variant) => ({
+    id: variant.sourceId,
+    values: Object.fromEntries(orderedAttributeIds.map((attributeId) => [attributeId, variant.attributes[attributeId] ?? null])),
+  }))
+}
+
+export function getAvailableFoodAttributeValueIds(
+  foodGroupId: string,
+  selectedAttributes: Readonly<Record<string, string>>,
+  orderedAttributeIds: readonly string[],
+  targetAttributeId: string,
+): Set<string> {
+  const available = getAvailableConstraintValues(
+    mextVariantConstraintCandidates(foodGroupId, orderedAttributeIds),
+    orderedAttributeIds,
+    selectedAttributes,
+    targetAttributeId,
+  )
+  return new Set([...available].filter((value): value is string => value !== null))
+}
+
+export function reconcileFoodAttributeSelection(
+  foodGroupId: string,
+  selectedAttributes: Readonly<Record<string, string>>,
+  orderedAttributeIds: readonly string[],
+): { selection: Record<string, string>; clearedAttributeIds: Set<string>; matchingSourceIds: string[] } {
+  const reconciled = reconcileConstraintSelection(
+    mextVariantConstraintCandidates(foodGroupId, orderedAttributeIds),
+    orderedAttributeIds,
+    selectedAttributes,
+  )
+  return {
+    selection: Object.fromEntries(Object.entries(reconciled.selection).filter((entry): entry is [string, string] => entry[1] !== null)),
+    clearedAttributeIds: reconciled.clearedKeys,
+    matchingSourceIds: reconciled.matchingCandidateIds,
+  }
 }
 
 export function getDefaultSelectedAttributes(foodGroupId: string): Record<string, string> {

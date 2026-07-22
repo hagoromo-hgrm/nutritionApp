@@ -5,6 +5,7 @@ import {
   FoodVariantNotFound,
   InvalidAttributeValue,
   MissingRequiredAttribute,
+  getAvailableFoodAttributeValueIds,
   getDefaultSelectedAttributes,
   getFoodAttributeDisplayName,
   getFixedAttributes,
@@ -16,6 +17,7 @@ import {
   mextFoodGroupAttributes,
   mextFoodGroups,
   mextFoodVariants,
+  reconcileFoodAttributeSelection,
   resolveFoodVariant,
   resolveFoodVariantForUi,
   searchFoodGroups,
@@ -131,6 +133,32 @@ describe('confirmed MEXT app data access', () => {
 
     expect(() => resolveFoodVariantForUi(group.id, JSON.parse(visibleSignature) as Record<string, string>)).toThrow(AmbiguousFoodVariant)
     expect(resolveFoodVariantForUi(group.id, matches[0].attributes).sourceId).toBe(matches[0].sourceId)
+  })
+
+  it('上位属性から到達できない値を候補から外し、無効な下位選択だけを解除する', () => {
+    const foodGroupId = 'fg_001370'
+    const attributes = getSelectableAttributes(foodGroupId)
+    const orderedIds = attributes.map((attribute) => attribute.id)
+    const variety = attributes.find((attribute) => attribute.id === 'variety')
+    const cooking = attributes.find((attribute) => attribute.id === 'cooking_state')
+    if (!variety || !cooking) throw new Error('鶏むね肉の属性がありません')
+    const parent = variety.values.find((value) => value.displayName === '親鶏')
+    const raw = cooking.values.find((value) => value.displayName === '生')
+    const grilled = cooking.values.find((value) => value.displayName === '焼き')
+    if (!parent || !raw || !grilled) throw new Error('鶏むね肉の属性値がありません')
+
+    const availableCooking = getAvailableFoodAttributeValueIds(foodGroupId, { variety: parent.id }, orderedIds, cooking.id)
+    expect(availableCooking.has(raw.id)).toBe(true)
+    expect(availableCooking.has(grilled.id)).toBe(false)
+
+    const reconciled = reconcileFoodAttributeSelection(foodGroupId, { variety: parent.id, cooking_state: grilled.id }, orderedIds)
+    expect(reconciled.selection).toEqual({ variety: parent.id })
+    expect(reconciled.clearedAttributeIds).toEqual(new Set(['cooking_state']))
+    expect(reconciled.matchingSourceIds.length).toBeGreaterThan(0)
+
+    const explicitSelectionFirst = reconcileFoodAttributeSelection(foodGroupId, { variety: parent.id, cooking_state: grilled.id }, [cooking.id, variety.id, ...orderedIds.filter((id) => id !== cooking.id && id !== variety.id)])
+    expect(explicitSelectionFirst.selection).toEqual({ cooking_state: grilled.id })
+    expect(explicitSelectionFirst.clearedAttributeIds).toEqual(new Set(['variety']))
   })
 
   it('不正値・required不足・未知グループ・存在しない組合せを区別する', () => {

@@ -1,6 +1,6 @@
 import type { FoodAttributePreference, FoodAttributePreferenceMode, FoodAttributePreferences } from '../types'
-import type { MextFoodGroupAttribute } from './mextFoodData'
-import type { UserFoodSelectionDimension } from './mextUserFoodData'
+import { reconcileFoodAttributeSelection, type MextFoodGroupAttribute } from './mextFoodData'
+import { reconcileUserFoodSelection, type UserFoodSelectionDimension } from './mextUserFoodData'
 
 export const FOOD_ATTRIBUTE_PREFERENCES_GLOBAL_KEY = '__global__'
 
@@ -14,6 +14,14 @@ export interface AppliedUserFoodSelectionPreferences {
   selection: Record<string, string>
   autoHiddenDimensionIds: Set<string>
   invalidDimensionIds: Set<string>
+}
+
+export interface ConstrainedMextFoodAttributePreferences extends AppliedMextFoodAttributePreferences {
+  incompatibleAttributeIds: Set<string>
+}
+
+export interface ConstrainedUserFoodSelectionPreferences extends AppliedUserFoodSelectionPreferences {
+  incompatibleDimensionIds: Set<string>
 }
 
 export function isFoodAttributePreferenceMode(value: unknown): value is FoodAttributePreferenceMode {
@@ -97,6 +105,27 @@ export function applyMextFoodAttributePreferences(
   return { selection, autoHiddenAttributeIds, invalidAttributeIds }
 }
 
+export function applyConstrainedMextFoodAttributePreferences(
+  foodGroupId: string,
+  attributes: readonly MextFoodGroupAttribute[],
+  masterDefaults: Readonly<Record<string, string>>,
+  preferences: Readonly<Record<string, FoodAttributePreference>>,
+): ConstrainedMextFoodAttributePreferences {
+  const applied = applyMextFoodAttributePreferences(attributes, masterDefaults, preferences)
+  const orderedAttributeIds = [
+    ...attributes.filter((attribute) => attribute.visibility !== 'hidden' && !applied.autoHiddenAttributeIds.has(attribute.id)),
+    ...attributes.filter((attribute) => applied.autoHiddenAttributeIds.has(attribute.id)),
+    ...attributes.filter((attribute) => attribute.visibility === 'hidden'),
+  ].map((attribute) => attribute.id)
+  const reconciled = reconcileFoodAttributeSelection(foodGroupId, applied.selection, orderedAttributeIds)
+  return {
+    ...applied,
+    selection: reconciled.selection,
+    invalidAttributeIds: new Set([...applied.invalidAttributeIds, ...reconciled.clearedAttributeIds]),
+    incompatibleAttributeIds: reconciled.clearedAttributeIds,
+  }
+}
+
 /** 上位の食品種類もMEXT属性と同じ既定値・表示設定で扱う。 */
 export function applyUserFoodSelectionPreferences(
   dimensions: readonly UserFoodSelectionDimension[],
@@ -126,4 +155,24 @@ export function applyUserFoodSelectionPreferences(
     if (dimension?.values.some((value) => value.id === valueId)) selection[dimensionId] = valueId
   }
   return { selection, autoHiddenDimensionIds, invalidDimensionIds }
+}
+
+export function applyConstrainedUserFoodSelectionPreferences(
+  userFoodGroupId: string,
+  dimensions: readonly UserFoodSelectionDimension[],
+  presetSelection: Readonly<Record<string, string>>,
+  preferences: Readonly<Record<string, FoodAttributePreference>>,
+): ConstrainedUserFoodSelectionPreferences {
+  const applied = applyUserFoodSelectionPreferences(dimensions, presetSelection, preferences)
+  const orderedDimensionIds = [
+    ...dimensions.filter((dimension) => !applied.autoHiddenDimensionIds.has(dimension.id)),
+    ...dimensions.filter((dimension) => applied.autoHiddenDimensionIds.has(dimension.id)),
+  ].map((dimension) => dimension.id)
+  const reconciled = reconcileUserFoodSelection(userFoodGroupId, applied.selection, orderedDimensionIds)
+  return {
+    ...applied,
+    selection: reconciled.selection,
+    invalidDimensionIds: new Set([...applied.invalidDimensionIds, ...reconciled.clearedDimensionIds]),
+    incompatibleDimensionIds: reconciled.clearedDimensionIds,
+  }
 }
