@@ -20,8 +20,8 @@ describe('MEXT user-facing food groups', () => {
   it('全1,494 food_group_idを重複なく一つの上位グループへ割り当てる', () => {
     expect(mextUserFoodGroupMappings).toHaveLength(1494)
     expect(new Set(mextUserFoodGroupMappings.map((mapping) => mapping.foodGroupId)).size).toBe(1494)
-    expect(listUserFoodGroups()).toHaveLength(1413)
-    expect(mextUserFoodGroups.filter((group) => group.memberCount > 1)).toHaveLength(19)
+    expect(listUserFoodGroups()).toHaveLength(1399)
+    expect(mextUserFoodGroups.filter((group) => group.memberCount > 1)).toHaveLength(20)
   })
 
   it('ご飯を上位グループとして検索し、重複表示しない', () => {
@@ -41,6 +41,33 @@ describe('MEXT user-facing food groups', () => {
       targetType: 'user_food_variant',
     })
     expect(resolveFoodGroupId(result!.group.id, result!.presetSelection)).toBe('fg_001282')
+  })
+
+  it('砂糖類を一つの大分類として検索し、種類を選択できる', () => {
+    const results = searchUserFoodGroups('砂糖')
+    const sugarResults = results.filter((result) => result.group.canonicalName === '砂糖')
+    expect(sugarResults).toHaveLength(1)
+    expect(sugarResults[0].presetSelection).toEqual({})
+
+    const sugar = sugarResults[0].group
+    expect(sugar.defaultFoodGroupId).toBe('fg_001357')
+    expect(sugar.memberCount).toBe(15)
+    expect(sugar.selectionDimensions[0]?.displayName).toBe('砂糖の種類')
+    expect(sugar.selectionDimensions[0]?.values.map((value) => value.displayName)).toEqual([
+      '上白糖', '三温糖', 'グラニュー糖', '黒砂糖', 'てんさい含蜜糖', '和三盆糖', '白ざら糖',
+      '中ざら糖', '角砂糖', '氷砂糖', 'コーヒーシュガー', '粉糖', 'しょ糖型液糖', '転化型液糖', '氷糖みつ',
+    ])
+    expect(sugar.needsReview).toBe(false)
+  })
+
+  it('上白糖検索を「砂糖 > 上白糖」のプリセットへ解決する', () => {
+    const result = searchUserFoodGroups('上白糖').find((item) => item.group.canonicalName === '砂糖')
+    expect(result).toMatchObject({
+      presetSelection: { sugar_type: 'white_sugar' },
+      foodGroupId: 'fg_001357',
+      targetType: 'user_food_variant',
+    })
+    expect(resolveFoodGroupId(result!.group.id, result!.presetSelection)).toBe('fg_001357')
   })
 
   it('肉の完全一致では部位ショートカットを独立候補へ展開する', () => {
@@ -130,7 +157,7 @@ describe('MEXT user-facing food groups', () => {
   })
 
   it('曖昧な広域検索でも同じuser_food_groupを重複させない', () => {
-    for (const query of ['パン', '肉', 'チーズ', 'まんじゅう']) {
+    for (const query of ['パン', '肉', '砂糖', '上白糖', 'チーズ', 'まんじゅう']) {
       const results = searchUserFoodGroups(query)
       expect(new Set(results.map((result) => result.group.id)).size).toBe(results.length)
     }

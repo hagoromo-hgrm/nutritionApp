@@ -306,6 +306,36 @@
       ]
     },
     {
+      "canonical_name": "砂糖",
+      "display_name": "砂糖",
+      "grouping_level": "strong",
+      "category": "調味料",
+      "search_terms": ["砂糖", "さとう", "シュガー"],
+      "generated_user_name": true,
+      "selection_dimension": {"dimension_id": "sugar_type", "display_name": "砂糖の種類"},
+      "large_selection_reviewed": true,
+      "default_food_group_id": "fg_001357",
+      "grouping_reason": "文科省の砂糖類を日常的な「砂糖」から検索し、上白糖・グラニュー糖・黒砂糖などを種類として選べるため",
+      "confidence": 0.96,
+      "members": [
+        {"food_group_id": "fg_001357", "value_id": "white_sugar", "display_name": "上白糖"},
+        {"food_group_id": "fg_001356", "value_id": "sanonto_sugar", "display_name": "三温糖"},
+        {"food_group_id": "fg_001166", "value_id": "granulated_sugar", "display_name": "グラニュー糖"},
+        {"food_group_id": "fg_001099", "value_id": "black_sugar", "display_name": "黒砂糖"},
+        {"food_group_id": "fg_000742", "value_id": "beet_sugar", "display_name": "てんさい含蜜糖"},
+        {"food_group_id": "fg_001047", "value_id": "wasanbon_sugar", "display_name": "和三盆糖"},
+        {"food_group_id": "fg_001168", "value_id": "white_coarse_sugar", "display_name": "白ざら糖"},
+        {"food_group_id": "fg_001167", "value_id": "medium_coarse_sugar", "display_name": "中ざら糖"},
+        {"food_group_id": "fg_001241", "value_id": "cube_sugar", "display_name": "角砂糖"},
+        {"food_group_id": "fg_001240", "value_id": "rock_sugar", "display_name": "氷砂糖"},
+        {"food_group_id": "fg_001239", "value_id": "coffee_sugar", "display_name": "コーヒーシュガー"},
+        {"food_group_id": "fg_000503", "value_id": "powdered_sugar", "display_name": "粉糖"},
+        {"food_group_id": "fg_001242", "value_id": "sucrose_syrup", "display_name": "しょ糖型液糖"},
+        {"food_group_id": "fg_001243", "value_id": "invert_sugar_syrup", "display_name": "転化型液糖"},
+        {"food_group_id": "fg_001065", "value_id": "rock_sugar_syrup", "display_name": "氷糖みつ"}
+      ]
+    },
+    {
       "canonical_name": "鶏肉",
       "display_name": "鶏肉",
       "grouping_level": "moderate",

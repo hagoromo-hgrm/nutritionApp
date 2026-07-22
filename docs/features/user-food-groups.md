@@ -52,4 +52,5 @@ npm test -- --run tests/mext-user-food-data.test.ts
 - 確定済みの`food_group_id`、`canonical_name`、`source_id`は変更しません。
 - 一つの`food_group_id`を複数のユーザー向けグループへ割り当てません。
 - デフォルトは根拠を判断データへ明示できる場合だけ設定します。
+- 一つの選択次元が15値以上になる場合は要確認とし、人が選択肢全体を確認した判断だけ`large_selection_reviewed: true`で確定します。
 - 「パン」「魚」「麺」のような広い分類は、直接記録する上位食品として追加しません。

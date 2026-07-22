@@ -82,6 +82,35 @@ class MextUserFoodGroupsTest(unittest.TestCase):
         self.assertEqual(result["presetSelection"], {"rice_type": "brown_rice"})
         self.assertEqual(result["foodGroupId"], "fg_001282")
 
+    def test_sugar_search_returns_the_major_group_once(self) -> None:
+        results = search_user_food_groups("砂糖", self.user_groups, self.search_index)
+        sugar_results = [result for result in results if result["group"]["canonicalName"] == "砂糖"]
+        self.assertEqual(len(sugar_results), 1)
+        self.assertEqual(sugar_results[0]["presetSelection"], {})
+
+        sugar = sugar_results[0]["group"]
+        self.assertEqual(sugar["defaultFoodGroupId"], "fg_001357")
+        self.assertEqual(sugar["memberCount"], 15)
+        self.assertEqual(
+            set(sugar["memberFoodGroupIds"]),
+            {
+                "fg_000503", "fg_000742", "fg_001047", "fg_001065", "fg_001099",
+                "fg_001166", "fg_001167", "fg_001168", "fg_001239", "fg_001240",
+                "fg_001241", "fg_001242", "fg_001243", "fg_001356", "fg_001357",
+            },
+        )
+        self.assertEqual(sugar["selectionDimensions"][0]["displayName"], "砂糖の種類")
+        self.assertFalse(sugar["needsReview"])
+
+    def test_white_sugar_search_returns_a_preset_shortcut(self) -> None:
+        result = next(
+            item
+            for item in search_user_food_groups("上白糖", self.user_groups, self.search_index)
+            if item["group"]["canonicalName"] == "砂糖"
+        )
+        self.assertEqual(result["presetSelection"], {"sugar_type": "white_sugar"})
+        self.assertEqual(result["foodGroupId"], "fg_001357")
+
     def test_user_selection_resolves_existing_food_group_and_source(self) -> None:
         rice = next(group for group in self.user_groups if group["canonicalName"] == "ご飯")
         food_group_id = resolve_food_group_id(rice["id"], {"rice_type": "white_rice"}, self.user_groups)
@@ -116,7 +145,7 @@ class MextUserFoodGroupsTest(unittest.TestCase):
             resolve_food_group_id(cheese["id"], {}, self.user_groups)
 
     def test_search_results_do_not_duplicate_user_groups(self) -> None:
-        for query in ("ご飯", "玄米", "チーズ", "肉", "パン"):
+        for query in ("ご飯", "玄米", "砂糖", "上白糖", "チーズ", "肉", "パン"):
             results = search_user_food_groups(query, self.user_groups, self.search_index)
             ids = [result["group"]["id"] for result in results]
             self.assertEqual(len(ids), len(set(ids)), query)

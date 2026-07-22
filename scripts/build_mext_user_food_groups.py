@@ -206,6 +206,8 @@ def validate_decisions(decisions: Mapping[str, Any], groups_by_id: Mapping[str, 
             raise UserFoodGroupBuildError(f"selection_dimensionがありません: name={name}")
         require_string(dimension, "dimension_id", context=f"{context}.selection_dimension")
         require_string(dimension, "display_name", context=f"{context}.selection_dimension")
+        if not isinstance(decision.get("large_selection_reviewed", False), bool):
+            raise UserFoodGroupBuildError(f"large_selection_reviewedが真偽値ではありません: name={name}")
         value_ids: set[str] = set()
         for member in members:
             group_id = require_string(member, "food_group_id", context=f"{context}.members")
@@ -271,7 +273,7 @@ def build_contextual_groups(
         review_reasons: list[str] = []
         if len(member_ids) >= 20:
             review_reasons.append("member_countが20件以上です")
-        if len(values) >= 15:
+        if len(values) >= 15 and not decision.get("large_selection_reviewed", False):
             review_reasons.append("一つの選択次元に15値以上あります")
         if len(food_forms) >= 3:
             review_reasons.append("異なるfood_formが3種類以上混在します")
