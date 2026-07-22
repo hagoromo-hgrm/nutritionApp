@@ -234,6 +234,7 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .menu-picker-row:last-child { border-bottom: 0; }
 .menu-picker-row:hover { background: #f5f9fe; }
 .menu-picker-row > b { margin-left: auto; color: var(--accent); font-size: 1.2rem; font-weight: 500; }
+.menu-picker-row > b.batch-action, .search-result-row > b.batch-action { flex: 0 0 auto; white-space: nowrap; font-size: .68rem; font-weight: 800; }
 .menu-picker-copy { display: grid; min-width: 0; gap: .18rem; }
 .menu-picker-copy strong, .menu-picker-copy small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .menu-picker-copy strong { font-size: .78rem; }
