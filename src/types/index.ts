@@ -255,9 +255,18 @@ export interface MenuSet {
   id: string
   name: string
   menuIds: string[]
+  /** 新形式。食品の確定variantと入力分量を保持する。 */
+  foodItems?: MenuSetFoodItem[]
+  /** 旧形式。foodItemsがない場合は食品の既定量へ読み替える。 */
   foodIds?: string[]
   createdAt: string
   updatedAt: string
+}
+
+export interface MenuSetFoodItem {
+  foodId: string
+  amount: number
+  unit: QuantityUnit
 }
 
 export interface NutritionGoals {

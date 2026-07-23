@@ -165,7 +165,16 @@ function isMenuSet(value: unknown): value is MenuSet {
   if (!isRecord(value)) return false
   return isNonEmptyString(value.id) && isNonEmptyString(value.name) && Array.isArray(value.menuIds) && value.menuIds.every(isNonEmptyString)
     && (value.foodIds === undefined || (Array.isArray(value.foodIds) && value.foodIds.every(isNonEmptyString)))
+    && (value.foodItems === undefined || (Array.isArray(value.foodItems) && value.foodItems.every((item) => isRecord(item) && isNonEmptyString(item.foodId) && typeof item.amount === 'number' && Number.isFinite(item.amount) && item.amount > 0 && item.amount <= 100000 && isValidQuantityUnit(String(item.unit)))))
     && isIsoDateTime(value.createdAt) && isIsoDateTime(value.updatedAt)
+}
+
+function menuSetsWithUnsupportedFoodUnits(menuSets: MenuSet[], foods: Food[]): MenuSet[] {
+  const foodsById = new Map(foods.map((food) => [food.id, food]))
+  return menuSets.filter((menuSet) => (menuSet.foodItems ?? []).some((item) => {
+    const food = foodsById.get(item.foodId)
+    return food !== undefined && !hasQuantityUnitConversion(food.baseUnit, food.inputUnitConversions, item.unit)
+  }))
 }
 
 function isBodyProfile(value: unknown): boolean {
@@ -225,6 +234,9 @@ export function validateBackup(value: unknown): BackupData {
   }
   if (value.menus !== undefined && menusWithUnsupportedIngredientUnits(value.menus as Menu[], value.foods as Food[]).length > 0) {
     throw new Error('料理メニューに、食品の換算設定と一致しない入力単位があります。')
+  }
+  if (value.menuSets !== undefined && menuSetsWithUnsupportedFoodUnits(value.menuSets as MenuSet[], value.foods as Food[]).length > 0) {
+    throw new Error('メニューセットに、食品の換算設定と一致しない入力単位があります。')
   }
   if (!value.favorites.every((favorite) => isRecord(favorite) && isNonEmptyString(favorite.foodId) && isIsoDateTime(favorite.createdAt))
     || !hasUniqueValues(value.favorites as Array<{ foodId: string }>, (favorite) => favorite.foodId)) {

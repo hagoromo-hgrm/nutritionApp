@@ -1,4 +1,4 @@
-import type { Food, FoodSnapshot, MealEntry, MealType, Menu, MenuSet } from '../types'
+import type { Food, FoodSnapshot, MealEntry, MealType, Menu, MenuSet, MenuSetFoodItem } from '../types'
 import { calculateNutrients, getFoodDefaultServing } from './nutrition'
 import { menuToFood } from './menuIngredients'
 import {
@@ -36,6 +36,17 @@ function createFoodSnapshot(food: Food): FoodSnapshot {
   }
 }
 
+/** 新形式を優先し、旧foodIdsは食品の既定量へ読み替える。 */
+export function getMenuSetFoodItems(menuSet: MenuSet, foods: Food[]): MenuSetFoodItem[] {
+  if (menuSet.foodItems !== undefined) return menuSet.foodItems.map((item) => ({ ...item }))
+  const foodsById = new Map(foods.map((food) => [food.id, food]))
+  return (menuSet.foodIds ?? []).map((foodId) => {
+    const food = foodsById.get(foodId)
+    const serving = food ? getFoodDefaultServing(food) : { amount: 1, unit: 'その他' as const }
+    return { foodId, amount: serving.amount, unit: serving.unit }
+  })
+}
+
 /** メニューセットを、セット名ではなく構成項目ごとの独立した食事記録へ展開する。 */
 export function createMenuSetMealBatch(options: CreateMenuSetMealBatchOptions): MenuSetMealBatch {
   const { menuSet, menus, foods, mealType, eatenAt, createId } = options
@@ -70,23 +81,21 @@ export function createMenuSetMealBatch(options: CreateMenuSetMealBatchOptions): 
     })
   }
 
-  for (const foodId of menuSet.foodIds ?? []) {
-    const food = foodsById.get(foodId)
+  for (const item of getMenuSetFoodItems(menuSet, foods)) {
+    const food = foodsById.get(item.foodId)
     if (!food) {
-      missingFoodIds.push(foodId)
+      missingFoodIds.push(item.foodId)
       continue
     }
-    const serving = getFoodDefaultServing(food)
-    const amount = serving.amount
     entries.push({
       id: createId(),
       eatenAt,
       mealType,
       foodId: food.id,
       foodSnapshot: createFoodSnapshot(food),
-      amount,
-      amountUnit: serving.unit,
-      calculatedNutrients: calculateNutrients(food, amount, serving.unit),
+      amount: item.amount,
+      amountUnit: item.unit,
+      calculatedNutrients: calculateNutrients(food, item.amount, item.unit),
     })
   }
 

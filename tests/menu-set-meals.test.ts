@@ -70,4 +70,23 @@ describe('menu set meal batches', () => {
     expect(batch.entries[0]).toMatchObject({ amount: 2, amountUnit: 'パック' })
     expect(batch.entries[0].calculatedNutrients.energyKcal).toBe(192)
   })
+
+  it('新形式のfoodItemsから確定variantの分量と単位を展開する', () => {
+    const customRice: Food = {
+      ...rice,
+      id: 'rice-white',
+      displayName: 'ご飯',
+      officialName: '水稲めし 精白米 うるち米',
+      foodGroupId: 'rice-group',
+      inputUnitConversions: [{ unit: '杯', baseAmount: 150 }],
+    }
+    const batch = createMenuSetMealBatch({
+      menuSet: { ...breakfast, menuIds: [], foodIds: ['rice'], foodItems: [{ foodId: customRice.id, amount: 1.5, unit: '杯' }] },
+      menus: [], foods: [customRice], mealType: '朝食', eatenAt: '2026-07-23T00:00:00.000Z', createId: () => 'meal_variant',
+    })
+    expect(batch.entries[0]).toMatchObject({ foodId: 'rice-white', amount: 1.5, amountUnit: '杯' })
+    expect(batch.entries[0].foodSnapshot.name).toBe('ご飯')
+    expect(batch.entries[0].foodSnapshot.officialName).toBe('水稲めし 精白米 うるち米')
+    expect(batch.entries[0].calculatedNutrients.energyKcal).toBe(360)
+  })
 })

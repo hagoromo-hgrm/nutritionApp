@@ -127,10 +127,10 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .meal-legend-icon { display: block; width: .82rem; height: .82rem; object-fit: contain; }
 
 .nutrient-graph { margin-top: 1rem; border: 1px solid var(--line); border-radius: 1rem; padding: .75rem .8rem .65rem; background: #ffffff; }
-.nutrient-graph-heading, .nutrient-graph-row { display: grid; grid-template-columns: minmax(4.8rem, 24%) minmax(0, 1fr) minmax(3.8rem, 22%); gap: .5rem; align-items: center; }
+.nutrient-graph-heading, .nutrient-graph-row { display: grid; grid-template-columns: minmax(4.5rem, 20%) minmax(0, 1fr) minmax(4rem, 18%); gap: .35rem; align-items: center; }
 .nutrient-graph-heading { padding: 0 .1rem .45rem; color: var(--muted); font-size: .62rem; font-weight: 800; }
 .nutrient-graph-heading span:nth-child(2) { text-align: center; }
-.nutrient-graph-heading span:last-child { text-align: left; }
+.nutrient-graph-heading span:last-child { text-align: right; }
 .nutrient-graph-rows { display: grid; gap: .3rem; }
 .nutrient-graph-row { min-height: 1.9rem; }
 .nutrient-graph-label { overflow: hidden; color: var(--ink); text-overflow: ellipsis; white-space: nowrap; font-size: .7rem; font-weight: 800; }
@@ -139,7 +139,7 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .nutrient-graph-intake { position: absolute; z-index: 2; top: 0; bottom: 0; left: 0; min-width: 0; border-radius: 0; background: #78b3ef; }
 .nutrient-graph-intake-segmented { display: flex; overflow: hidden; }
 .nutrient-graph-target { position: absolute; z-index: 3; top: -.12rem; bottom: -.12rem; width: 2px; transform: translateX(-1px); border-radius: 99px; background: var(--accent-deep); box-shadow: 0 0 0 1px rgba(255,255,255,.75); }
-.nutrient-graph-value { overflow: hidden; color: var(--accent-deep); font-size: .68rem; font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; font-weight: 800; text-align: left; text-overflow: ellipsis; white-space: nowrap; }
+.nutrient-graph-value { overflow: hidden; color: var(--accent-deep); font-size: .68rem; font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; font-weight: 800; text-align: right; text-overflow: ellipsis; white-space: nowrap; }
 .nutrient-graph-value small { margin-left: .12rem; color: var(--muted); font-size: .55rem; font-weight: 500; }
 .nutrient-graph-status-under { color: var(--muted); }
 .nutrient-graph-status-over { color: var(--muted); }
@@ -163,7 +163,7 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .trend-legend-line { display: inline-block; width: 1rem; border-top: 1px dashed var(--accent-deep); }
 .trend-chart-scroll { overflow-x: auto; margin-top: .45rem; padding-bottom: .3rem; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; }
 .trend-chart { min-width: 100%; padding: .15rem 0 0; }
-.trend-chart-plot { position: relative; height: 19rem; }
+.trend-chart-plot { position: relative; height: 22rem; }
 .trend-chart-bars { position: relative; z-index: 2; display: grid; height: 100%; align-items: stretch; }
 .trend-chart-goal-line { position: absolute; z-index: 1; right: 0; left: 0; border-top: 1px dashed var(--accent-deep); opacity: .72; pointer-events: none; }
 .trend-bar-column { display: grid; grid-template-rows: auto 1fr auto; min-width: 0; height: 100%; gap: .3rem; align-items: end; }
@@ -355,11 +355,24 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .menu-set-selected-row > div { display: flex; align-items: center; min-width: 0; gap: .5rem; }
 .menu-set-selected-row strong { min-width: 0; overflow-wrap: anywhere; color: var(--ink); font-size: .78rem; line-height: 1.45; }
 .menu-set-selected-row > button { flex: 0 0 auto; }
+.menu-set-selected-food-row { align-items: start; }
+.menu-set-selected-food-copy { display: grid; min-width: 0; flex: 1; gap: .55rem; }
+.menu-set-selected-food-copy > div { display: flex; min-width: 0; align-items: center; gap: .5rem; }
+.menu-set-selected-food-copy label { display: grid; grid-template-columns: minmax(5.5rem, 1fr) minmax(5.5rem, .8fr); gap: .4rem; margin: 0; }
+.menu-set-selected-food-copy input, .menu-set-selected-food-copy select { width: 100%; min-height: 2.45rem; padding: .5rem .6rem; }
 .menu-editor-add-section .menu-food-picker { border: 0; border-radius: .9rem; padding: .1rem .85rem .8rem; background: #edf4fc; }
 .menu-editor-add-section .menu-food-picker:not([open]) { padding-bottom: .1rem; }
 .menu-editor-add-section .menu-food-picker[open] > summary { border-bottom-color: #ccdeef; }
 .menu-editor-add-section .menu-food-picker-body { border-radius: .75rem; padding: .05rem .75rem .75rem; background: #ffffff; }
 .menu-editor-actions { display: grid; gap: .55rem; border-top: 1px solid var(--line); padding-top: 1rem; }
+.meal-menu-snapshot-editor { border-top: 1px solid var(--line); padding-top: 1rem; }
+.meal-menu-snapshot-editor .menu-editor-selected-list { overflow: visible; border: 0; padding: 0; background: transparent; }
+.meal-menu-snapshot-editor .menu-editor-selected-list .menu-ingredient-row { grid-template-columns: minmax(0, 1fr) minmax(12rem, .75fr) auto; border: 1px solid var(--line); border-radius: .85rem; padding: .7rem .75rem; background: #ffffff; }
+.meal-menu-snapshot-editor .menu-editor-selected-list .menu-ingredient-copy strong { white-space: normal; overflow-wrap: anywhere; line-height: 1.4; }
+.meal-menu-snapshot-editor .menu-editor-selected-list .menu-ingredient-amount { display: grid; grid-template-columns: minmax(5.5rem, 1fr) minmax(5.5rem, .8fr); gap: .4rem; }
+.meal-menu-snapshot-editor .menu-editor-selected-list .menu-ingredient-amount input,
+.meal-menu-snapshot-editor .menu-editor-selected-list .menu-ingredient-amount select { width: 100%; min-height: 2.55rem; padding: .52rem .6rem; background: #fbfdff; }
+.meal-menu-snapshot-editor .menu-editor-add-section { margin-top: 1rem; }
 .checkbox-list { display: grid; gap: .5rem; max-height: 16rem; overflow-y: auto; }
 .menu-food-search { margin: .7rem 0 .85rem; }
 .menu-food-search input { background: #ffffff; }
@@ -421,6 +434,11 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
   .menu-editor-selected-list .menu-ingredient-copy { grid-column: 1 / -1; }
   .menu-editor-selected-list .menu-ingredient-amount { grid-column: 1; grid-row: 2; grid-template-columns: minmax(0, 1fr) minmax(4.75rem, .8fr); }
   .menu-editor-selected-list .menu-ingredient-row > .danger-text { align-self: center; grid-column: 2; grid-row: 2; }
+  .meal-menu-snapshot-editor .menu-editor-selected-list .menu-ingredient-row { grid-template-columns: minmax(0, 1fr) auto; gap: .6rem; padding: .75rem; }
+  .meal-menu-snapshot-editor .menu-editor-selected-list .menu-ingredient-copy { grid-column: 1 / -1; }
+  .meal-menu-snapshot-editor .menu-editor-selected-list .menu-ingredient-amount { grid-column: 1; grid-row: 2; grid-template-columns: minmax(0, 1fr) minmax(4.75rem, .8fr); }
+  .meal-menu-snapshot-editor .menu-editor-selected-list .menu-ingredient-row > .danger-text { align-self: center; grid-column: 2; grid-row: 2; }
+  .menu-set-selected-food-copy label { grid-template-columns: minmax(0, 1fr) minmax(4.75rem, .8fr); }
   .menu-editor-add-section .menu-food-picker-body { padding-right: .55rem; padding-left: .55rem; }
   .menu-editor-add-section .menu-food-search-row { align-items: stretch; flex-direction: column; }
   .menu-editor-add-section .menu-food-search-button { width: 100%; }
@@ -532,7 +550,7 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .settings-info { align-self: center; margin-top: 0; }
 .food-master-title .button { margin: 0; padding: .48rem .72rem; font-size: .7rem; }
 .food-master-actions { display: flex; flex-wrap: wrap; gap: .6rem; }
-.food-master-actions .button { margin: 0; }
+.food-master-actions .button { flex: 1 1 0; min-width: 0; margin: 0; text-align: center; }
 
 .settings-card { margin-top: 1.2rem; border: 1px solid var(--line); border-radius: 1.2rem; padding: 1.2rem; background: white; }
 .settings-goals-collapsible > summary .count-label { margin-left: auto; }
@@ -548,7 +566,7 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .data-stats span { color: var(--muted); font-size: .68rem; }
 .backup-actions { margin: 1rem 0 .7rem; }
 .csv-action-row { margin-top: .2rem; }
-.csv-import-button { display: inline-block; margin-top: .1rem; }
+.csv-import-button { display: inline-flex; align-items: center; justify-content: center; margin-top: .1rem; text-align: center; }
 .file-button { position: relative; overflow: hidden; }
 .file-button input { position: absolute; inset: 0; cursor: pointer; opacity: 0; }
 .date-range { display: flex; align-items: end; gap: .55rem; margin: 1rem 0; }
@@ -693,6 +711,8 @@ legend { padding: 0 .35rem; color: var(--muted); font-size: .75rem; font-weight:
   .meal-confirmation-entry { grid-template-columns: auto minmax(0, 1fr); }
   .meal-confirmation-entry-actions { grid-column: 2; justify-content: space-between; }
   .settings-action-buttons .button { flex: 1 1 auto; padding-right: .65rem; padding-left: .65rem; }
+  .food-master-actions { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: .45rem; }
+  .food-master-actions .button { min-width: 0; padding: .72rem .4rem; font-size: .62rem; line-height: 1.35; white-space: normal; }
   .two-fields, .nutrient-input-grid, .goal-form { grid-template-columns: 1fr; }
   .goal-form .button { grid-column: auto; }
   .data-stats strong { font-size: 1rem; }
@@ -702,7 +722,7 @@ legend { padding: 0 .35rem; color: var(--muted); font-size: .75rem; font-weight:
   .meal-type-options { gap: .4rem; }
   .meal-type-option { width: 4.35rem; height: 4.35rem; padding: .45rem; }
   .nutrient-graph { padding-right: .55rem; padding-left: .55rem; }
-  .nutrient-graph-heading, .nutrient-graph-row { grid-template-columns: minmax(4.45rem, 28%) minmax(0, 1fr) minmax(3.35rem, 23%); gap: .35rem; }
+  .nutrient-graph-heading, .nutrient-graph-row { grid-template-columns: minmax(4.45rem, 24%) minmax(0, 1fr) minmax(3.65rem, 20%); gap: .25rem; }
   .nutrient-graph-label { font-size: .64rem; }
   .nutrient-graph-value { font-size: .62rem; }
   .nutrient-graph-value small { font-size: .5rem; }
