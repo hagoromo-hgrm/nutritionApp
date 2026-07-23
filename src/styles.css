@@ -100,7 +100,7 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .goal-progress-dark .goal-progress-heading > span, .goal-progress-dark .goal-progress-heading strong { color: var(--ink); }
 .goal-progress-dark .goal-progress-heading small, .goal-progress-dark .goal-progress-heading em, .goal-progress-dark .goal-progress-footer { color: var(--muted); }
 .goal-progress-dark .goal-progress-visual { background: #ffffff; }
-.goal-progress-dark .goal-range-band { background: rgba(243, 198, 91, .2); }
+.goal-progress-dark .goal-range-band { background: rgba(109, 158, 214, .24); }
 .goal-progress-dark .goal-target-line { background: #6d9ed6; box-shadow: 0 0 0 1px rgba(69, 111, 159, .32); }
 .goal-progress-dark .goal-line-legend i { background: #6d9ed6; }
 .hero-summary .goal-progress-dark { margin-top: 1.15rem; padding: 0; background: transparent; }
@@ -120,7 +120,7 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .meal-segment-breakfast, .meal-dot-breakfast { background: #f9e45d; }
 .meal-segment-lunch, .meal-dot-lunch { background: #ff9178; }
 .meal-segment-dinner, .meal-dot-dinner { background: #be78ff; }
-.meal-segment-snack, .meal-dot-snack { background: #acff78; }
+.meal-segment-snack, .meal-dot-snack { background: #C9FFA6; }
 .meal-color-legend { display: flex; flex-wrap: wrap; justify-content: end; gap: .35rem .55rem; }
 .meal-color-legend span { display: inline-flex; align-items: center; gap: .2rem; white-space: nowrap; }
 .meal-dot { display: inline-block; width: .42rem; height: .42rem; border-radius: 50%; }
@@ -289,7 +289,7 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .meal-confirmation-summary > strong { color: var(--accent-deep); font-size: .82rem; }
 .meal-confirmation-list { display: grid; margin-top: .8rem; }
 .meal-confirmation-entry { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: .55rem; border-bottom: 1px solid var(--line); padding: .7rem .15rem; transition: opacity .15s ease, transform .15s ease, background .15s ease; }
-.meal-confirmation-entry.is-dragging { position: relative; z-index: 1; border-radius: .75rem; opacity: .72; transform: scale(1.015); background: #edf6ff; box-shadow: 0 .4rem 1rem rgba(67, 112, 158, .12); }
+.meal-confirmation-entry.is-drag-placeholder { border-radius: .75rem; opacity: .18; background: #dfeefa; }
 .meal-confirmation-entry-copy { display: grid; min-width: 0; gap: .2rem; }
 .meal-confirmation-entry-actions { display: flex; flex: 0 0 auto; align-items: center; gap: .4rem; }
 .meal-confirmation-entry strong { overflow: hidden; color: var(--ink); text-overflow: ellipsis; white-space: nowrap; font-size: .8rem; }
@@ -301,6 +301,11 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .meal-order-buttons { display: flex; gap: .18rem; }
 .meal-order-buttons button { display: grid; width: 1.8rem; height: 1.8rem; place-items: center; border: 1px solid var(--line); border-radius: .5rem; color: var(--accent-deep); background: #f7fbff; font-size: .8rem; font-weight: 900; }
 .meal-order-buttons button:disabled { color: #b7c5d4; background: #f4f7fa; }
+.meal-drag-overlay { position: fixed; z-index: 30; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: .55rem; box-sizing: border-box; border: 1px solid #b9d5ef; border-radius: .8rem; padding: .7rem .15rem; pointer-events: none; color: var(--ink); background: #f7fbff; box-shadow: 0 .7rem 1.7rem rgba(67, 112, 158, .24); transform: scale(1.015); }
+.meal-drag-overlay .meal-order-handle { cursor: grabbing; }
+.meal-drag-overlay strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .8rem; }
+.meal-drag-overlay .meal-confirmation-entry-copy span { color: var(--muted); font-size: .68rem; }
+.meal-drag-overlay > b { color: var(--accent); font-size: .72rem; white-space: nowrap; }
 .meal-confirmation-actions { display: flex; flex-wrap: wrap; gap: .65rem; margin-top: 1rem; }
 .inline-time-form { display: flex; align-items: end; gap: .6rem; }
 .inline-time-form label { flex: 1; }

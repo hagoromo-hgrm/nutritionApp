@@ -54,7 +54,7 @@ import {
   createMealMenuSnapshot,
 } from './services/mealMenuSnapshots'
 import { createMenuSetMealBatch } from './services/menuSetMeals'
-import { normalizeMealEntryOrder, sortMealEntryGroup } from './services/mealEntryOrder'
+import { normalizeMealEntryOrder, sortMealEntries, sortMealEntryGroup } from './services/mealEntryOrder'
 import { buildDailyNutrientTrend } from './services/trend'
 import { groupFoodsByKana, type FoodIndexGroupKey } from './services/foodIndex'
 import {
@@ -871,8 +871,8 @@ function App() {
         return true
       }
       if (entryToEdit) {
-        setConfirmingMealType(null)
-        setView('today')
+        setConfirmingMealType(mealType)
+        setView('meal-confirmation')
       } else {
         setConfirmingMealType(mealType)
         setView('meal-confirmation')
@@ -1000,14 +1000,27 @@ function App() {
   }
 
   const reorderMealRecords = async (type: MealType, orderedEntryIds: string[]) => {
-    if (!requireLoadedDate()) return
+    if (!requireLoadedDate()) throw new Error('選択日の食事データを読み込み中です。')
     const targetDate = selectedDate
+    const previousEntries = entries
+    const currentGroup = entries.filter((entry) => entry.mealType === type)
+    const currentById = new Map(currentGroup.map((entry) => [entry.id, entry]))
+    if (currentGroup.length !== orderedEntryIds.length || orderedEntryIds.some((id) => !currentById.has(id))) {
+      throw new Error('食事記録が変更されたため、並び替えを再試行してください。')
+    }
+    const reorderedGroup = orderedEntryIds.map((id, sortOrder) => ({ ...currentById.get(id)!, sortOrder }))
+    setEntries(sortMealEntries([
+      ...entries.filter((entry) => entry.mealType !== type),
+      ...reorderedGroup,
+    ]))
     try {
       await reorderMealEntries(targetDate, type, orderedEntryIds)
-      await reloadAfterMutation('食事の並び順を更新しました。')
+      notify('食事の並び順を更新しました。')
     } catch (caught) {
+      setEntries(previousEntries)
       await load()
       showError(caught instanceof Error ? caught.message : '食事の並び順を更新できませんでした。')
+      throw caught
     }
   }
 
@@ -1364,14 +1377,16 @@ function App() {
       <main className="content">
         {view === 'today' && <TodayView
           selectedDate={selectedDate} setSelectedDate={selectDate} total={total} goals={settings.goals} entries={entries} subtotals={subtotals}
-          existingFoodIds={existingFoodIds} onStartCategoryRecord={startCategoryRecord}
-          onEditEntry={(entry) => openMealForm(snapshotToFood(entry), entry)} onDeleteEntry={removeMeal} onShowMealDetails={openMealDetails} onShowTodayDetails={() => setShowTodayDetails(true)}
+          existingFoodIds={existingFoodIds}
+          onOpenMealConfirmation={(type) => { if (!requireLoadedDate()) return; setConfirmingMealType(type); setRecordingMealType(null); setView('meal-confirmation') }}
+          onShowMealDetails={openMealDetails} onShowTodayDetails={() => setShowTodayDetails(true)}
         />}
         {view === 'meal-confirmation' && confirmingMealType && <MealConfirmationView
           type={confirmingMealType}
           entries={entries.filter((entry) => entry.mealType === confirmingMealType)}
           subtotal={subtotals[confirmingMealType] ?? EMPTY_NUTRIENTS}
           onAdd={() => startCategoryRecord(confirmingMealType, 'meal-confirmation')}
+          onEdit={(entry) => openMealForm(snapshotToFood(entry), entry)}
           onDelete={removeMeal}
           onReorder={(orderedEntryIds) => reorderMealRecords(confirmingMealType, orderedEntryIds)}
           onDone={() => { setConfirmingMealType(null); setView('today') }}
@@ -1443,14 +1458,15 @@ function mealTone(type: MealType): string {
   return ({ 朝食: 'breakfast', 昼食: 'lunch', 夕食: 'dinner', 間食: 'snack' })[type]
 }
 
-function GoalProgressBar({ label, value, availableValue = value, goal, unit, range, colorClass = 'goal-progress-accent', segments, dark = false }: { label: string; value: number | null; availableValue?: number | null; goal: number | null; unit: string; range: { min: number | null; max: number | null }; colorClass?: string; segments?: GoalSegment[]; dark?: boolean }) {
+function GoalProgressBar({ label, value, availableValue = value, goal, unit, range, colorClass = 'goal-progress-accent', segments, dark = false, targetPositionPercent = 50 }: { label: string; value: number | null; availableValue?: number | null; goal: number | null; unit: string; range: { min: number | null; max: number | null }; colorClass?: string; segments?: GoalSegment[]; dark?: boolean; targetPositionPercent?: number }) {
   const rate = goalRate(value, goal)
   const hasGoal = goal !== null && goal > 0
-  const graphMax = hasGoal ? Math.max(goal * 2, availableValue ?? 0, 1) : Math.max(availableValue ?? 0, 1)
+  const normalizedTargetPosition = Math.min(95, Math.max(5, targetPositionPercent))
+  const graphMax = hasGoal ? Math.max(goal / (normalizedTargetPosition / 100), 1) : Math.max(availableValue ?? 0, 1)
   const progressWidth = availableValue === null ? 0 : Math.min(100, Math.max(0, (availableValue / graphMax) * 100))
   const rangeLeft = hasGoal ? Math.min(100, Math.max(0, ((range.min ?? 0) / graphMax) * 100)) : 0
   const rangeRight = hasGoal ? Math.min(100, Math.max(rangeLeft, ((range.max ?? graphMax) / graphMax) * 100)) : 0
-  const targetPosition = hasGoal ? 50 : null
+  const targetPosition = hasGoal ? normalizedTargetPosition : null
   const segmentTotal = segments?.reduce((sum, segment) => sum + segment.value, 0) ?? 0
   const status = value === null || rate === null ? 'unknown' : range.max !== null && value > range.max ? 'outside' : range.min !== null && value < range.min ? 'outside' : 'ok'
   return <div className={`goal-progress-card${dark ? ' goal-progress-dark' : ''} goal-progress-status-${status}`}><div className="goal-progress-heading"><span>{label}</span><strong>{formatGraphNutrient(availableValue)}<small>{unit}</small><em>{goal === null ? '目標未設定' : ` / ${formatGraphNutrient(goal)}${unit}`}</em></strong></div><div className="goal-progress-visual"><span className="goal-range-band" style={{ left: `${rangeLeft}%`, width: `${Math.max(0, rangeRight - rangeLeft)}%` }} />{availableValue !== null && <div className={`goal-intake-bar${segments && segmentTotal > 0 ? ' goal-intake-segmented' : ` ${colorClass}`}`} style={{ width: `${progressWidth}%` }}>{segments && segmentTotal > 0 && segments.map((segment) => <span key={segment.type} className={`meal-segment meal-segment-${mealTone(segment.type)}`} style={{ width: `${(segment.value / segmentTotal) * 100}%` }} />)}</div>}{targetPosition !== null && <span className="goal-target-line" style={{ left: `${targetPosition}%` }} />}</div><div className="goal-progress-footer"><span>{rate === null ? '比較する目標がありません' : `目標の${rate.toFixed(0)}%`}</span><div className="goal-progress-legends">{targetPosition !== null && <span className="goal-line-legend"><i />目標</span>}{segments && segmentTotal > 0 && <MealColorLegend />}</div></div></div>
@@ -1513,35 +1529,43 @@ function GraphsView({ entries, range, goals, onRangeChange }: GraphsViewProps) {
 
 interface TodayViewProps {
   selectedDate: string; setSelectedDate: (value: string) => void; total: Nutrients; goals: NutritionGoals; entries: MealEntry[]; subtotals: Record<string, Nutrients>
-  existingFoodIds: Set<string>; onStartCategoryRecord: (type: MealType) => void
-  onEditEntry: (entry: MealEntry) => void; onDeleteEntry: (entry: MealEntry) => void; onShowMealDetails: (type: MealType, entries: MealEntry[], subtotal: Nutrients) => void; onShowTodayDetails: () => void
+  existingFoodIds: Set<string>; onOpenMealConfirmation: (type: MealType) => void
+  onShowMealDetails: (type: MealType, entries: MealEntry[], subtotal: Nutrients) => void; onShowTodayDetails: () => void
 }
 
 function TodayView(props: TodayViewProps) {
-  const { selectedDate, setSelectedDate, total, goals, entries, subtotals, existingFoodIds, onStartCategoryRecord, onEditEntry, onDeleteEntry, onShowMealDetails, onShowTodayDetails } = props
+  const { selectedDate, setSelectedDate, total, goals, entries, subtotals, existingFoodIds, onOpenMealConfirmation, onShowMealDetails, onShowTodayDetails } = props
   const availableNutrients = sumAvailableNutrients(entries)
   const availableSubtotals = Object.fromEntries(MEAL_TYPES.map((type) => [type, sumAvailableNutrients(entries.filter((entry) => entry.mealType === type))])) as Record<string, Nutrients>
   return <>
     <section className="page-heading"><div><span className="eyebrow">DAILY LOG</span><h1>今日の記録</h1><p className="muted">食べたものを、あとから振り返れる形で。</p></div><div className="date-picker"><button type="button" onClick={() => setSelectedDate(addDays(selectedDate, -1))}>‹</button><input type="date" value={selectedDate} onChange={(event) => { if (event.target.value) setSelectedDate(event.target.value) }} /><button type="button" onClick={() => setSelectedDate(addDays(selectedDate, 1))}>›</button></div></section>
-    <section className="hero-summary"><div className="hero-summary-heading"><div className="today-hero-copy"><span className="section-kicker">{selectedDate === currentDateKey() ? 'TODAY' : selectedDate}</span><strong>今日の進捗</strong></div><button className="hero-detail-button" type="button" onClick={onShowTodayDetails}>詳細を見る</button></div><GoalProgressBar label="カロリー" value={total.energyKcal} availableValue={availableNutrients.energyKcal} goal={goals.energyKcal} unit="kcal" range={nutrientRangeForGoals(goals, 'energyKcal')} segments={MEAL_TYPES.map((type) => ({ type, value: availableSubtotals[type]?.energyKcal ?? 0 })).filter((segment) => segment.value > 0)} dark /></section>
-    <section className="section-block meals-section"><div className="section-title"><div><span className="eyebrow">MEALS</span><h2>食事の内訳</h2></div><span className="count-label">{entries.length}件</span></div>{MEAL_TYPES.map((type) => <MealGroup key={type} type={type} entries={entries.filter((entry) => entry.mealType === type)} subtotal={subtotals[type]} existingFoodIds={existingFoodIds} onEdit={onEditEntry} onDelete={onDeleteEntry} onShowDetails={onShowMealDetails} onRecord={onStartCategoryRecord} />)}</section>
+    <section className="hero-summary"><div className="hero-summary-heading"><div className="today-hero-copy"><span className="section-kicker">{selectedDate === currentDateKey() ? 'TODAY' : selectedDate}</span><strong>今日の進捗</strong></div><button className="hero-detail-button" type="button" onClick={onShowTodayDetails}>詳細を見る</button></div><GoalProgressBar label="カロリー" value={total.energyKcal} availableValue={availableNutrients.energyKcal} goal={goals.energyKcal} unit="kcal" range={nutrientRangeForGoals(goals, 'energyKcal')} segments={MEAL_TYPES.map((type) => ({ type, value: availableSubtotals[type]?.energyKcal ?? 0 })).filter((segment) => segment.value > 0)} dark targetPositionPercent={75} /></section>
+    <section className="section-block meals-section"><div className="section-title"><div><span className="eyebrow">MEALS</span><h2>食事の内訳</h2></div><span className="count-label">{entries.length}件</span></div>{MEAL_TYPES.map((type) => <MealGroup key={type} type={type} entries={entries.filter((entry) => entry.mealType === type)} subtotal={subtotals[type]} existingFoodIds={existingFoodIds} onOpenConfirmation={onOpenMealConfirmation} onShowDetails={onShowMealDetails} />)}</section>
   </>
 }
 
-function MealConfirmationView({ type, entries, subtotal, onAdd, onDelete, onReorder, onDone }: {
+function MealConfirmationView({ type, entries, subtotal, onAdd, onEdit, onDelete, onReorder, onDone }: {
   type: MealType
   entries: MealEntry[]
   subtotal: Nutrients
   onAdd: () => void
+  onEdit: (entry: MealEntry) => void
   onDelete: (entry: MealEntry) => void
   onReorder: (orderedEntryIds: string[]) => Promise<void>
   onDone: () => void
 }) {
   const [orderedEntries, setOrderedEntries] = useState(entries)
   const orderedEntriesRef = useRef(entries)
+  const entriesRef = useRef(entries)
+  const listRef = useRef<HTMLDivElement>(null)
   const [draggedEntryId, setDraggedEntryId] = useState<string | null>(null)
   const draggedEntryIdRef = useRef<string | null>(null)
+  const dragStartOrderRef = useRef<MealEntry[]>(entries)
+  const dragOffsetYRef = useRef(0)
+  const dragPointerIdRef = useRef<number | null>(null)
+  const [dragPreview, setDragPreview] = useState<{ top: number; left: number; width: number; height: number } | null>(null)
   const [savingOrder, setSavingOrder] = useState(false)
+  const savingOrderRef = useRef(false)
 
   const updateLocalOrder = (next: MealEntry[]) => {
     orderedEntriesRef.current = next
@@ -1549,33 +1573,32 @@ function MealConfirmationView({ type, entries, subtotal, onAdd, onDelete, onReor
   }
 
   useEffect(() => {
-    orderedEntriesRef.current = entries
-    setOrderedEntries(entries)
+    entriesRef.current = entries
+    if (!draggedEntryIdRef.current && !savingOrderRef.current) {
+      orderedEntriesRef.current = entries
+      setOrderedEntries(entries)
+    }
   }, [entries])
-
-  const moveRelativeToTarget = (sourceId: string, targetId: string, insertAfter: boolean) => {
-    if (sourceId === targetId) return
-    const next = [...orderedEntriesRef.current]
-    const sourceIndex = next.findIndex((entry) => entry.id === sourceId)
-    if (sourceIndex < 0 || !next.some((entry) => entry.id === targetId)) return
-    const [source] = next.splice(sourceIndex, 1)
-    const targetIndex = next.findIndex((entry) => entry.id === targetId)
-    next.splice(targetIndex + (insertAfter ? 1 : 0), 0, source)
-    updateLocalOrder(next)
-  }
 
   const commitOrder = async (next: MealEntry[]) => {
     const nextIds = next.map((entry) => entry.id)
-    if (nextIds.every((id, index) => id === entries[index]?.id)) return
+    const persistedEntries = entriesRef.current
+    if (nextIds.every((id, index) => id === persistedEntries[index]?.id)) return
+    if (savingOrderRef.current) return
+    savingOrderRef.current = true
     setSavingOrder(true)
     try {
       await onReorder(nextIds)
+    } catch {
+      updateLocalOrder(persistedEntries)
     } finally {
+      savingOrderRef.current = false
       setSavingOrder(false)
     }
   }
 
   const moveByButton = async (entryId: string, offset: -1 | 1) => {
+    if (savingOrderRef.current) return
     const next = [...orderedEntriesRef.current]
     const index = next.findIndex((entry) => entry.id === entryId)
     const destination = index + offset
@@ -1586,49 +1609,76 @@ function MealConfirmationView({ type, entries, subtotal, onAdd, onDelete, onReor
   }
 
   const startDrag = (event: React.PointerEvent<HTMLButtonElement>, entryId: string) => {
-    if (savingOrder || orderedEntriesRef.current.length < 2) return
+    if (savingOrderRef.current || orderedEntriesRef.current.length < 2) return
     event.preventDefault()
+    const row = event.currentTarget.closest<HTMLElement>('[data-meal-entry-id]')
+    if (!row) return
+    const rect = row.getBoundingClientRect()
     event.currentTarget.setPointerCapture(event.pointerId)
+    dragStartOrderRef.current = orderedEntriesRef.current
+    dragOffsetYRef.current = event.clientY - rect.top
+    dragPointerIdRef.current = event.pointerId
     draggedEntryIdRef.current = entryId
     setDraggedEntryId(entryId)
+    setDragPreview({ top: rect.top, left: rect.left, width: rect.width, height: rect.height })
   }
 
   const moveDrag = (event: React.PointerEvent<HTMLButtonElement>) => {
     const sourceId = draggedEntryIdRef.current
-    if (!sourceId) return
+    if (!sourceId || dragPointerIdRef.current !== event.pointerId) return
     event.preventDefault()
-    const target = document.elementFromPoint(event.clientX, event.clientY)?.closest<HTMLElement>('[data-meal-entry-id]')
-    const targetId = target?.dataset.mealEntryId
-    if (targetId) {
-      const rect = target.getBoundingClientRect()
-      moveRelativeToTarget(sourceId, targetId, event.clientY > rect.top + rect.height / 2)
+    setDragPreview((current) => current ? { ...current, top: event.clientY - dragOffsetYRef.current } : current)
+    const source = orderedEntriesRef.current.find((entry) => entry.id === sourceId)
+    if (!source || !listRef.current) return
+    const remaining = orderedEntriesRef.current.filter((entry) => entry.id !== sourceId)
+    const rowById = new Map(
+      Array.from(listRef.current.querySelectorAll<HTMLElement>('[data-meal-entry-id]'))
+        .map((row) => [row.dataset.mealEntryId, row] as const),
+    )
+    let destination = remaining.length
+    for (let index = 0; index < remaining.length; index += 1) {
+      const rect = rowById.get(remaining[index].id)?.getBoundingClientRect()
+      if (rect && event.clientY < rect.top + rect.height / 2) {
+        destination = index
+        break
+      }
     }
+    const next = [...remaining]
+    next.splice(destination, 0, source)
+    if (!next.every((entry, index) => entry.id === orderedEntriesRef.current[index]?.id)) updateLocalOrder(next)
   }
 
   const finishDrag = async (event: React.PointerEvent<HTMLButtonElement>) => {
-    if (!draggedEntryIdRef.current) return
+    if (!draggedEntryIdRef.current || dragPointerIdRef.current !== event.pointerId) return
     event.preventDefault()
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId)
     draggedEntryIdRef.current = null
+    dragPointerIdRef.current = null
     setDraggedEntryId(null)
+    setDragPreview(null)
     await commitOrder(orderedEntriesRef.current)
   }
 
   const cancelDrag = (event: React.PointerEvent<HTMLButtonElement>) => {
-    if (!draggedEntryIdRef.current) return
+    if (!draggedEntryIdRef.current || dragPointerIdRef.current !== event.pointerId) return
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId)
     draggedEntryIdRef.current = null
+    dragPointerIdRef.current = null
     setDraggedEntryId(null)
-    updateLocalOrder(entries)
+    setDragPreview(null)
+    updateLocalOrder(dragStartOrderRef.current)
   }
+
+  const draggedEntry = draggedEntryId ? orderedEntries.find((entry) => entry.id === draggedEntryId) : null
 
   return <>
     <section className="page-heading meal-confirmation-heading"><div><span className="eyebrow">MEAL CONFIRMATION</span><h1>{type}の確認</h1><p className="muted">登録内容を確認できます。≡をドラッグして表示順を変更できます。</p></div><button className="button ghost" type="button" onClick={onDone}>今日の記録へ</button></section>
     <section className="settings-card meal-confirmation-card">
       <div className="meal-confirmation-summary"><div><img className="meal-icon" src={MEAL_ICON_ASSETS[type]} alt="" aria-hidden="true" /><span>{type}</span></div><strong>{entries.length}件 · {formatNutrient(subtotal.energyKcal)} kcal</strong></div>
-      {orderedEntries.length > 0 ? <div className={`meal-confirmation-list${draggedEntryId ? ' is-reordering' : ''}`}>{orderedEntries.map((entry, index) => <div className={`meal-confirmation-entry${draggedEntryId === entry.id ? ' is-dragging' : ''}`} key={entry.id} data-meal-entry-id={entry.id}><button className="meal-order-handle" type="button" aria-label={`${entry.foodSnapshot.name}をドラッグして並び替え`} disabled={savingOrder || orderedEntries.length < 2} onPointerDown={(event) => startDrag(event, entry.id)} onPointerMove={moveDrag} onPointerUp={(event) => void finishDrag(event)} onPointerCancel={cancelDrag}>≡</button><div className="meal-confirmation-entry-copy"><strong>{entry.foodSnapshot.name}{entry.foodSnapshot.maker ? `（${entry.foodSnapshot.maker}）` : ''}</strong><span>{entry.amount}{entry.amountUnit}{type === '間食' ? ` · ${formatTime(entry.eatenAt)}` : ''}</span></div><div className="meal-confirmation-entry-actions"><b>{formatNutrient(entry.calculatedNutrients.energyKcal)} kcal</b><div className="meal-order-buttons"><button type="button" aria-label={`${entry.foodSnapshot.name}を上へ移動`} disabled={savingOrder || index === 0} onClick={() => void moveByButton(entry.id, -1)}>↑</button><button type="button" aria-label={`${entry.foodSnapshot.name}を下へ移動`} disabled={savingOrder || index === orderedEntries.length - 1} onClick={() => void moveByButton(entry.id, 1)}>↓</button></div><button className="small-action danger-text" type="button" disabled={savingOrder} onClick={() => onDelete(entry)}>削除</button></div></div>)}</div> : <div className="empty-state">この区分の食事記録はありません。</div>}
+      {orderedEntries.length > 0 ? <div ref={listRef} className={`meal-confirmation-list${draggedEntryId ? ' is-reordering' : ''}`}>{orderedEntries.map((entry, index) => <div className={`meal-confirmation-entry${draggedEntryId === entry.id ? ' is-drag-placeholder' : ''}`} key={entry.id} data-meal-entry-id={entry.id}><button className="meal-order-handle" type="button" aria-label={`${entry.foodSnapshot.name}をドラッグして並び替え`} disabled={savingOrder || orderedEntries.length < 2} onPointerDown={(event) => startDrag(event, entry.id)} onPointerMove={moveDrag} onPointerUp={(event) => void finishDrag(event)} onPointerCancel={cancelDrag}>≡</button><div className="meal-confirmation-entry-copy"><strong>{entry.foodSnapshot.name}{entry.foodSnapshot.maker ? `（${entry.foodSnapshot.maker}）` : ''}</strong><span>{entry.amount}{entry.amountUnit}{type === '間食' ? ` · ${formatTime(entry.eatenAt)}` : ''}</span></div><div className="meal-confirmation-entry-actions"><b>{formatNutrient(entry.calculatedNutrients.energyKcal)} kcal</b><div className="meal-order-buttons"><button type="button" aria-label={`${entry.foodSnapshot.name}を上へ移動`} disabled={savingOrder || index === 0} onClick={() => void moveByButton(entry.id, -1)}>↑</button><button type="button" aria-label={`${entry.foodSnapshot.name}を下へ移動`} disabled={savingOrder || index === orderedEntries.length - 1} onClick={() => void moveByButton(entry.id, 1)}>↓</button></div><button className="small-action" type="button" disabled={savingOrder} onClick={() => onEdit(entry)}>編集</button><button className="small-action danger-text" type="button" disabled={savingOrder} onClick={() => onDelete(entry)}>削除</button></div></div>)}</div> : <div className="empty-state">この区分の食事記録はありません。</div>}
       <div className="meal-confirmation-actions"><button className="button primary" type="button" onClick={onAdd}>＋ {type}を追加</button><button className="button secondary" type="button" onClick={onDone}>登録を完了</button></div>
     </section>
+    {draggedEntry && dragPreview && <div className="meal-drag-overlay" style={dragPreview} aria-hidden="true"><span className="meal-order-handle">≡</span><div className="meal-confirmation-entry-copy"><strong>{draggedEntry.foodSnapshot.name}{draggedEntry.foodSnapshot.maker ? `（${draggedEntry.foodSnapshot.maker}）` : ''}</strong><span>{draggedEntry.amount}{draggedEntry.amountUnit}{type === '間食' ? ` · ${formatTime(draggedEntry.eatenAt)}` : ''}</span></div><b>{formatNutrient(draggedEntry.calculatedNutrients.energyKcal)} kcal</b></div>}
   </>
 }
 
@@ -1653,9 +1703,9 @@ function MenuFoodPicker({ menus, menuSets, foods, onSelect, onSelectMenuSet }: {
   return <section className="section-block menu-picker-section food-section-card"><div className="section-title"><div><span className="eyebrow">MENUS</span><h2>メニューから探す</h2></div></div><div className="menu-picker-groups"><details className="menu-picker-group"><summary><span className="menu-picker-summary-label"><i aria-hidden="true" />セット</span><small>{menuSets.length > 0 ? `${menuSets.length}件` : '登録なし'}</small></summary><div className="menu-picker-list">{menuSets.length > 0 ? menuSets.map((menuSet) => { const food = menuSetPreviewFood(menuSet, menus, foods); const itemCount = menuSet.menuIds.length + (menuSet.foodIds?.length ?? 0); return <button className="menu-picker-row" type="button" key={menuSet.id} onClick={() => onSelectMenuSet(menuSet)}><span className="source-badge">セット</span><span className="menu-picker-copy"><strong>{menuSet.name}</strong><small>内容{itemCount}件を一括登録 · {formatNutrient(food.nutrients.energyKcal)}kcal</small></span><b className="batch-action">一括登録</b></button> }) : <p className="menu-picker-empty">セットはまだ登録されていません。</p>}</div></details>{categoryGroups.map(({ category, menus: categoryMenus }) => <details className="menu-picker-group" key={category}><summary><span className="menu-picker-summary-label"><i aria-hidden="true" />{category}</span><small>{categoryMenus.length > 0 ? `${categoryMenus.length}件` : '登録なし'}</small></summary><div className="menu-picker-list">{categoryMenus.length > 0 ? categoryMenus.map((menu) => { const food = menuToFood(menu, menus, foods); return <button className="menu-picker-row" type="button" key={menu.id} onClick={() => onSelect(food)}><span className="source-badge">料理</span><span className="menu-picker-copy"><strong>{menu.name}</strong><small>{getMenuIngredients(menu, foods).length}食材 · {formatNutrient(food.nutrients.energyKcal)}kcal</small></span><b>›</b></button> }) : <p className="menu-picker-empty">この区分に登録されたメニューはありません。</p>}</div></details>)}</div></section>
 }
 
-function MealGroup({ type, entries, subtotal, existingFoodIds, onEdit, onDelete, onShowDetails, onRecord }: { type: MealType; entries: MealEntry[]; subtotal?: Nutrients; existingFoodIds: Set<string>; onEdit: (entry: MealEntry) => void; onDelete: (entry: MealEntry) => void; onShowDetails: (type: MealType, entries: MealEntry[], subtotal: Nutrients) => void; onRecord: (type: MealType) => void }) {
+function MealGroup({ type, entries, subtotal, existingFoodIds, onShowDetails, onOpenConfirmation }: { type: MealType; entries: MealEntry[]; subtotal?: Nutrients; existingFoodIds: Set<string>; onShowDetails: (type: MealType, entries: MealEntry[], subtotal: Nutrients) => void; onOpenConfirmation: (type: MealType) => void }) {
   const sharedTime = entries[0]?.eatenAt
-  return <div className="meal-group"><div className="meal-heading"><h3><img className="meal-icon" src={MEAL_ICON_ASSETS[type]} alt="" aria-hidden="true" />{type}</h3><div className="meal-heading-actions"><span>{entries.length ? `${formatNutrient(subtotal?.energyKcal ?? null)} kcal` : '記録なし'}</span>{entries.length > 0 && <button type="button" className="small-action" onClick={() => onShowDetails(type, entries, subtotal ?? EMPTY_NUTRIENTS)}>詳細</button>}<button type="button" className="meal-record-button" onClick={() => onRecord(type)}>＋ 記録</button></div></div>{entries.length > 0 && type !== '間食' && <div className="meal-shared-time">食事時刻：{sharedTime ? formatTime(sharedTime) : '未設定'}</div>}{entries.map((entry) => <div className="meal-entry" key={entry.id}><div className="meal-entry-copy"><strong>{entry.foodSnapshot.name}{entry.foodSnapshot.maker ? `（${entry.foodSnapshot.maker}）` : ''}</strong><span>{entry.amount}{entry.amountUnit}{type === '間食' ? ` · ${formatTime(entry.eatenAt)}` : ''}{existingFoodIds.has(entry.foodId) ? '' : ' · 削除済み食品'}</span></div><div className="meal-entry-actions"><b>{formatNutrient(entry.calculatedNutrients.energyKcal)} kcal</b><button type="button" onClick={() => onEdit(entry)}>編集</button><button type="button" className="danger-text" onClick={() => onDelete(entry)}>削除</button></div></div>)}</div>
+  return <div className="meal-group"><div className="meal-heading"><h3><img className="meal-icon" src={MEAL_ICON_ASSETS[type]} alt="" aria-hidden="true" />{type}</h3><div className="meal-heading-actions"><span>{entries.length ? `${formatNutrient(subtotal?.energyKcal ?? null)} kcal` : '記録なし'}</span>{entries.length > 0 && <button type="button" className="small-action" onClick={() => onShowDetails(type, entries, subtotal ?? EMPTY_NUTRIENTS)}>詳細</button>}<button type="button" className="meal-record-button" onClick={() => onOpenConfirmation(type)}>編集</button></div></div>{entries.length > 0 && type !== '間食' && <div className="meal-shared-time">食事時刻：{sharedTime ? formatTime(sharedTime) : '未設定'}</div>}{entries.map((entry) => <div className="meal-entry" key={entry.id}><div className="meal-entry-copy"><strong>{entry.foodSnapshot.name}{entry.foodSnapshot.maker ? `（${entry.foodSnapshot.maker}）` : ''}</strong><span>{entry.amount}{entry.amountUnit}{type === '間食' ? ` · ${formatTime(entry.eatenAt)}` : ''}{existingFoodIds.has(entry.foodId) ? '' : ' · 削除済み食品'}</span></div><div className="meal-entry-actions"><b>{formatNutrient(entry.calculatedNutrients.energyKcal)} kcal</b></div></div>)}</div>
 }
 
 interface FoodsViewProps { recordingMealType: MealType | null; foods: Food[]; foodGroups: FoodGroup[]; menus: Menu[]; menuSets: MenuSet[]; recentFoods: Food[]; favoriteFoods: Food[]; favoriteIds: Set<string>; onSelectFood: (food: Food) => void; onSelectMenuSet: (menuSet: MenuSet) => void; onToggleFavorite: (food: Food) => void; onEditFood: (food: Food) => void; onDeleteFood: (food: Food) => void; onOpenSearch?: () => void; onOpenScanner: () => void; onBack: () => void; backLabel: string; copyMealType: 'すべて' | MealType; setCopyMealType: (value: 'すべて' | MealType) => void; onCopyPrevious: () => void }
