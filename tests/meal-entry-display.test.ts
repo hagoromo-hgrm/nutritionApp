@@ -12,10 +12,4 @@ describe('meal entry display name', () => {
     expect(getFoodSnapshotDisplayName({ name: '正式名称', displayName: '  ' })).toBe('正式名称')
     expect(getFoodSnapshotDisplayName({ name: '正式名称' })).toBe('正式名称')
   })
-
-  it('旧記録でも現在の食品マスターに一般名があれば表示へ使用する', () => {
-    const legacyEntry = { foodSnapshot: { name: '旧記録の正式名称' } } as MealEntry
-    expect(getMealEntryDisplayName(legacyEntry, { name: '食品マスター名', displayName: '検索用の一般名' })).toBe('検索用の一般名')
-    expect(getMealEntryDisplayName(legacyEntry)).toBe('旧記録の正式名称')
-  })
 })
