@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { calculateBmi, calculateNutrients, estimateDailyEnergyTarget, estimateDailyGoals, formatNutrient, goalRate, incrementByBaseAmount, nutrientRangeForGoals, scaleNutritionGoals, sumByMealType, sumNutrients } from '../src/services/nutrition'
+import { calculateBmi, calculateNutrients, estimateDailyEnergyTarget, estimateDailyGoals, formatNutrient, getFoodDefaultServing, goalRate, incrementByBaseAmount, nutrientRangeForGoals, scaleNutritionGoals, sumByMealType, sumNutrients } from '../src/services/nutrition'
+import { isValidQuantityUnit } from '../src/utils/validation'
 import type { BodyProfile, Food, MealEntry, Nutrients } from '../src/types'
 
 const addedNutrients = { calciumMg: null, ironMg: null, vitaminAMcg: null, vitaminEMg: null, vitaminB1Mg: null, vitaminB2Mg: null, vitaminCMg: null, saturatedFatG: null }
@@ -9,6 +10,14 @@ const food: Food = {
   baseAmount: 100, baseUnit: 'g', servingAmount: null, servingUnit: null,
   nutrients: { energyKcal: 200, proteinG: 10, fatG: null, carbohydrateG: 20, fiberG: 2, saltG: 1, ...addedNutrients },
   createdAt: '', updatedAt: '',
+}
+
+const foodWithInputUnit: Food = {
+  ...food,
+  id: 'food_with_input_unit',
+  servingAmount: 2,
+  servingUnit: '個',
+  inputUnitConversions: [{ unit: '個', baseAmount: 60 }],
 }
 
 describe('nutrition calculation', () => {
@@ -28,6 +37,21 @@ describe('nutrition calculation', () => {
 
   it('単位が異なる場合は推測変換しない', () => {
     expect(calculateNutrients(food, 1, '個').energyKcal).toBeNull()
+  })
+
+  it('登録済みの入力用単位だけを基準量へ換算する', () => {
+    expect(calculateNutrients(foodWithInputUnit, 2, '個').energyKcal).toBe(240)
+    expect(calculateNutrients(foodWithInputUnit, 60, 'g').energyKcal).toBe(120)
+    expect(calculateNutrients(foodWithInputUnit, 1, 'パック').energyKcal).toBeNull()
+    expect(getFoodDefaultServing(foodWithInputUnit)).toEqual({ amount: 2, unit: '個' })
+  })
+
+  it('入力用単位ラベルは空白・制御文字・極端な長さを拒否する', () => {
+    expect(isValidQuantityUnit('杯')).toBe(true)
+    expect(isValidQuantityUnit('パック')).toBe(true)
+    expect(isValidQuantityUnit('   ')).toBe(false)
+    expect(isValidQuantityUnit('切\nれ')).toBe(false)
+    expect(isValidQuantityUnit('a'.repeat(31))).toBe(false)
   })
 
   it('どれかの記録に欠損があれば合計も未集計にする', () => {

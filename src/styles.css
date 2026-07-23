@@ -536,6 +536,7 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .amount-input-row .amount-input { min-width: 0; flex: 1; }
 .amount-input input { width: 100%; padding-right: 2.8rem; }
 .field-suffix { position: absolute; top: 50%; right: .75rem; transform: translateY(-50%); color: var(--muted); font-size: .75rem; pointer-events: none; }
+select.field-suffix { pointer-events: auto; border: 0; background: transparent; padding: 0 1rem 0 0; width: auto; min-width: 3rem; color: var(--muted); font-size: .75rem; }
 .amount-increment { flex: 0 0 auto; min-height: 2.65rem; border: 1px solid #bdd4ec; border-radius: .7rem; padding: .55rem .7rem; color: var(--accent-deep); background: #edf5fd; font-size: .78rem; font-weight: 800; white-space: nowrap; }
 .amount-increment:disabled { cursor: not-allowed; opacity: .45; }
 .quick-empty-inline { padding: .5rem 0 .1rem; color: var(--muted); font-size: .72rem; line-height: 1.5; }

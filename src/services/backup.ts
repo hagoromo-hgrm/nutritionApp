@@ -1,8 +1,8 @@
 import { NUTRIENT_KEYS, type AppSettings, type BackupData, type Food, type FoodAlias, type FoodGroup, type FoodRelatedTerm, type FoodSnapshot, type FoodUsageStat, type MealEntry, type Menu, type MenuIngredient, type MenuSet, type Nutrients, type SearchLog } from '../types'
 import { isFoodAttributePreference } from './foodAttributePreferences'
-import { hasMenuCycles } from './menuIngredients'
+import { hasMenuCycles, menusWithUnsupportedIngredientUnits } from './menuIngredients'
 import { isMealMenuSnapshot } from './mealMenuSnapshots'
-import { isNutrients, isValidBarcode, isValidUnit } from '../utils/validation'
+import { isFoodUnitConversion, isNutrients, isValidBarcode, isValidQuantityUnit, isValidUnit } from '../utils/validation'
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
@@ -35,6 +35,17 @@ function hasUniqueValues<T>(items: T[], getValue: (item: T) => string): boolean 
   return new Set(values).size === values.length
 }
 
+function isInputUnitConversions(value: unknown, baseUnit: string): boolean {
+  if (value === undefined) return true
+  if (!Array.isArray(value) || !value.every(isFoodUnitConversion)) return false
+  const units = value.map((conversion) => conversion.unit)
+  return new Set(units).size === units.length && units.every((unit) => unit !== baseUnit)
+}
+
+function hasQuantityUnitConversion(baseUnit: string, inputUnitConversions: unknown, unit: string): boolean {
+  return unit === baseUnit || (Array.isArray(inputUnitConversions) && inputUnitConversions.some((conversion) => isFoodUnitConversion(conversion) && conversion.unit === unit))
+}
+
 function isVariantAttributes(value: unknown): boolean {
   if (value === undefined) return true
   if (!isRecord(value)) return false
@@ -49,7 +60,9 @@ function isFood(value: unknown): value is Food {
     && ['mext', 'open_food_facts', 'user'].includes(String(value.source))
     && isNonEmptyString(value.sourceVersion) && typeof value.baseAmount === 'number' && Number.isFinite(value.baseAmount) && value.baseAmount > 0 && value.baseAmount <= 100000
     && isValidUnit(String(value.baseUnit)) && isNullablePositiveNumber(value.servingAmount)
-    && ((value.servingAmount === null && value.servingUnit === null) || (value.servingAmount !== null && value.servingUnit === value.baseUnit))
+    && isInputUnitConversions(value.inputUnitConversions, String(value.baseUnit))
+    && ((value.servingAmount === null && value.servingUnit === null) || (value.servingAmount !== null && isValidQuantityUnit(String(value.servingUnit))
+      && hasQuantityUnitConversion(String(value.baseUnit), value.inputUnitConversions, String(value.servingUnit))))
     && isNutrients(value.nutrients) && isIsoDateTime(value.createdAt) && isIsoDateTime(value.updatedAt)
     && (value.menuIds === undefined || (Array.isArray(value.menuIds) && value.menuIds.every(isNonEmptyString)))
     && (value.officialName === undefined || isString(value.officialName))
@@ -63,7 +76,9 @@ function isSnapshot(value: unknown): value is FoodSnapshot {
   if (!isRecord(value)) return false
   return isNonEmptyString(value.name) && isString(value.maker) && isString(value.barcode) && (!value.barcode || isValidBarcode(value.barcode))
     && typeof value.baseAmount === 'number' && Number.isFinite(value.baseAmount) && value.baseAmount > 0 && value.baseAmount <= 100000 && isValidUnit(String(value.baseUnit))
+    && isInputUnitConversions(value.inputUnitConversions, String(value.baseUnit))
     && isNutrients(value.nutrients)
+    && (value.missing === undefined || typeof value.missing === 'boolean')
     && (value.officialName === undefined || isString(value.officialName))
     && (value.displayName === undefined || isString(value.displayName))
 }
@@ -117,7 +132,7 @@ function isMealEntry(value: unknown): value is MealEntry {
   if (!isRecord(value)) return false
   return isNonEmptyString(value.id) && isIsoDateTime(value.eatenAt) && ['朝食', '昼食', '夕食', '間食'].includes(String(value.mealType))
     && isNonEmptyString(value.foodId) && isSnapshot(value.foodSnapshot) && typeof value.amount === 'number' && Number.isFinite(value.amount) && value.amount > 0 && value.amount <= 100000
-    && isValidUnit(String(value.amountUnit)) && value.amountUnit === value.foodSnapshot.baseUnit && isNutrients(value.calculatedNutrients)
+    && isValidQuantityUnit(String(value.amountUnit)) && (value.foodSnapshot.missing === true || hasQuantityUnitConversion(value.foodSnapshot.baseUnit, value.foodSnapshot.inputUnitConversions, String(value.amountUnit))) && isNutrients(value.calculatedNutrients)
     && (value.menuSnapshot === undefined || isMealMenuSnapshot(value.menuSnapshot))
 }
 
@@ -125,7 +140,7 @@ function isMenuIngredient(value: unknown): value is MenuIngredient {
   if (!isRecord(value)) return false
   return (value.kind === 'food' || value.kind === 'menu') && isString(value.itemId) && value.itemId.length > 0
     && typeof value.amount === 'number' && Number.isFinite(value.amount) && value.amount > 0 && value.amount <= 100000
-    && isValidUnit(String(value.unit))
+    && isValidQuantityUnit(String(value.unit))
 }
 
 function isMenu(value: unknown): value is Menu {
@@ -198,6 +213,9 @@ export function validateBackup(value: unknown): BackupData {
   }
   if (value.menus !== undefined && hasMenuCycles(value.menus as Menu[])) {
     throw new Error('料理メニューが循環して参照されています。')
+  }
+  if (value.menus !== undefined && menusWithUnsupportedIngredientUnits(value.menus as Menu[], value.foods as Food[]).length > 0) {
+    throw new Error('料理メニューに、食品の換算設定と一致しない入力単位があります。')
   }
   if (!value.favorites.every((favorite) => isRecord(favorite) && isNonEmptyString(favorite.foodId) && isIsoDateTime(favorite.createdAt))
     || !hasUniqueValues(value.favorites as Array<{ foodId: string }>, (favorite) => favorite.foodId)) {

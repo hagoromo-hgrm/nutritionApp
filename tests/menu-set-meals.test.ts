@@ -55,4 +55,19 @@ describe('menu set meal batches', () => {
     expect(batch.missingMenuIds).toEqual(['missing-menu'])
     expect(batch.missingFoodIds).toEqual(['missing-food'])
   })
+
+  it('食品の既定量と既定入力単位をセット展開へ引き継ぐ', () => {
+    const customRice: Food = {
+      ...rice,
+      servingAmount: 2,
+      servingUnit: 'パック',
+      inputUnitConversions: [{ unit: 'パック', baseAmount: 60 }],
+    }
+    const batch = createMenuSetMealBatch({
+      menuSet: { ...breakfast, menuIds: [], foodIds: ['rice'] }, menus: [], foods: [customRice], mealType: '朝食',
+      eatenAt: '2026-07-23T00:00:00.000Z', createId: () => 'meal_custom',
+    })
+    expect(batch.entries[0]).toMatchObject({ amount: 2, amountUnit: 'パック' })
+    expect(batch.entries[0].calculatedNutrients.energyKcal).toBe(192)
+  })
 })

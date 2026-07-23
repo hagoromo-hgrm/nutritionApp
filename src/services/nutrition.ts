@@ -1,19 +1,51 @@
-import { EMPTY_NUTRIENTS, NUTRIENT_KEYS, type BodyProfile, type Food, type MealEntry, type NutrientKey, type Nutrients, type NutritionGoals } from '../types'
+import { EMPTY_NUTRIENTS, NUTRIENT_KEYS, type BodyProfile, type Food, type MealEntry, type NutrientKey, type Nutrients, type NutritionGoals, type QuantityUnit } from '../types'
+import { isValidQuantityUnit } from '../utils/validation'
 
-export function calculateNutrients(food: Food, amount: number, amountUnit: Food['baseUnit']): Nutrients {
-  if (food.baseAmount <= 0 || food.baseUnit !== amountUnit || !Number.isFinite(amount) || amount <= 0) {
+export function quantityUnitConversionFor(food: Food, unit: QuantityUnit) {
+  return food.inputUnitConversions?.find((conversion) => conversion.unit === unit)
+}
+
+/** 明示された換算だけを使い、未登録の単位は基準量へ変換しない。 */
+export function resolveAmountInBaseUnits(food: Food, amount: number, amountUnit: QuantityUnit): number | null {
+  if (food.baseAmount <= 0 || !Number.isFinite(amount) || amount <= 0 || !isValidQuantityUnit(amountUnit)) return null
+  if (food.baseUnit === amountUnit) return amount
+  const conversion = quantityUnitConversionFor(food, amountUnit)
+  if (!conversion || !Number.isFinite(conversion.baseAmount) || conversion.baseAmount <= 0) return null
+  return amount * conversion.baseAmount
+}
+
+export function calculateNutrients(food: Food, amount: number, amountUnit: QuantityUnit): Nutrients {
+  const baseAmount = resolveAmountInBaseUnits(food, amount, amountUnit)
+  if (baseAmount === null) {
     return { ...EMPTY_NUTRIENTS }
   }
   return Object.fromEntries(NUTRIENT_KEYS.map((key) => {
     const value = food.nutrients[key]
-    return [key, value === null ? null : (value * amount) / food.baseAmount]
+    return [key, value === null ? null : (value * baseAmount) / food.baseAmount]
   })) as Nutrients
+}
+
+export function getFoodQuantityUnits(food: Food): QuantityUnit[] {
+  const units = [food.baseUnit, ...(food.inputUnitConversions ?? []).map((conversion) => conversion.unit)]
+  return [...new Set(units.filter((unit) => isValidQuantityUnit(unit)))]
+}
+
+export function getFoodDefaultServing(food: Food): { amount: number; unit: QuantityUnit } {
+  const unit = food.servingUnit ?? food.baseUnit
+  if (food.servingAmount !== null && Number.isFinite(food.servingAmount) && food.servingAmount > 0 && getFoodQuantityUnits(food).includes(unit)) {
+    return { amount: food.servingAmount, unit }
+  }
+  return { amount: food.baseAmount, unit: food.baseUnit }
 }
 
 /** 基準量を1単位として分量を増やす。gだけでなく個・丁・小さじ等にも使う。 */
 export function incrementByBaseAmount(amount: number, baseAmount: number, maximum = 100000): number {
   const current = Number.isFinite(amount) && amount > 0 ? amount : 0
   return Math.min(maximum, current + baseAmount)
+}
+
+export function incrementByQuantityUnit(amount: number, food: Food, unit: QuantityUnit, maximum = 100000): number {
+  return incrementByBaseAmount(amount, unit === food.baseUnit ? food.baseAmount : 1, maximum)
 }
 
 export function sumNutrients(values: Nutrients[]): Nutrients {

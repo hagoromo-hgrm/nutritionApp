@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { validateBackup } from '../src/services/backup'
-import { CSV_HEADERS, mealsToCsv, parseMealsCsv } from '../src/services/csv'
+import { CSV_HEADERS, LEGACY_CSV_HEADERS, mealsToCsv, parseMealsCsv } from '../src/services/csv'
 import type { BackupData, Food, MealEntry } from '../src/types'
 
 const addedNutrients = { calciumMg: null, ironMg: null, vitaminAMcg: null, vitaminEMg: null, vitaminB1Mg: null, vitaminB2Mg: null, vitaminCMg: null, saturatedFatG: null }
@@ -65,6 +65,30 @@ describe('export formats', () => {
     expect(() => validateBackup({ ...backup, mealEntries: [invalidEntry] })).toThrow('食品または食事記録')
   })
 
+  it('カスタム入力単位の換算情報をJSONと新CSVへ保持する', () => {
+    const customEntry: MealEntry = {
+      ...entry,
+      amount: 2,
+      amountUnit: '個',
+      foodSnapshot: { ...entry.foodSnapshot, inputUnitConversions: [{ unit: '個', baseAmount: 60 }] },
+    }
+    const validated = validateBackup({ ...backup, mealEntries: [customEntry] })
+    expect(validated.mealEntries[0].foodSnapshot.inputUnitConversions).toEqual([{ unit: '個', baseAmount: 60 }])
+    const csv = mealsToCsv([customEntry])
+    expect(csv).toContain('food_snapshot_input_unit_conversions_json')
+    expect(parseMealsCsv(csv)).toEqual([customEntry])
+  })
+
+  it('換算列のない旧CSVヘッダーも取り込める', () => {
+    const legacyEntry: MealEntry = { ...entry, foodSnapshot: { ...entry.foodSnapshot, name: '米' } }
+    const modernRows = mealsToCsv([legacyEntry]).replace(/^\uFEFF/, '').trimEnd().split('\r\n')
+    const modernHeaders = modernRows[0].split(',')
+    const modernValues = modernRows[1].split(',')
+    const legacyIndexes = LEGACY_CSV_HEADERS.map((header) => modernHeaders.indexOf(header))
+    const legacyCsv = `\uFEFF${LEGACY_CSV_HEADERS.join(',')}\r\n${legacyIndexes.map((index) => modernValues[index]).join(',')}\r\n`
+    expect(parseMealsCsv(legacyCsv)).toEqual([legacyEntry])
+  })
+
   it('列が欠けたCSVは取り込まない', () => {
     expect(() => parseMealsCsv('\uFEFFid,date\r\nmeal_1,2026-07-15\r\n')).toThrow('列名と順序')
   })
@@ -125,6 +149,28 @@ describe('export formats', () => {
       { ...withMenu.menus[0], ingredients: [{ kind: 'menu', itemId: 'menu_2', amount: 1, unit: '食' }] },
       { ...withMenu.menus[1], ingredients: [{ kind: 'menu', itemId: 'menu_1', amount: 1, unit: '食' }] },
     ] })).toThrow('循環')
+  })
+
+  it('バックアップ内の料理メニューで未登録の入力単位を拒否する', () => {
+    const customFood: Food = {
+      ...classifiedFood,
+      id: 'bread',
+      name: '食パン',
+      baseAmount: 100,
+      baseUnit: 'g',
+      inputUnitConversions: [{ unit: '切れ', baseAmount: 40 }],
+    }
+    const menu = {
+      id: 'menu_1', name: '朝食', category: '主食' as const, foodIds: ['bread'],
+      ingredients: [{ kind: 'food' as const, itemId: 'bread', amount: 2, unit: '切れ' }],
+      createdAt: '2026-07-15T00:00:00.000Z', updatedAt: '2026-07-15T00:00:00.000Z',
+    }
+    expect(validateBackup({ ...backup, foods: [customFood], menus: [menu] }).menus?.[0].ingredients?.[0].unit).toBe('切れ')
+    expect(() => validateBackup({
+      ...backup,
+      foods: [customFood],
+      menus: [{ ...menu, ingredients: [{ ...menu.ingredients[0], unit: 'パック' }] }],
+    })).toThrow('換算設定と一致しない')
   })
 
   it('検索ログと利用統計を含むバックアップを検証できる', () => {

@@ -1,7 +1,7 @@
 import { formatDateKey } from '../utils/date'
-import { isValidUnit } from '../utils/validation'
 import type { MealEntry, NutrientKey, Nutrients } from '../types'
 import { isMealMenuSnapshot } from './mealMenuSnapshots'
+import { isFoodUnitConversion, isValidQuantityUnit, isValidUnit } from '../utils/validation'
 
 const NUTRIENT_COLUMNS: ReadonlyArray<readonly [NutrientKey, string]> = [
   ['energyKcal', 'energy_kcal'],
@@ -27,10 +27,19 @@ const BASE_HEADERS = [
 
 const SNAPSHOT_NUTRIENT_COLUMNS: ReadonlyArray<readonly [NutrientKey, string]> = NUTRIENT_COLUMNS.map(([key, header]) => [key, `food_snapshot_${header}`] as const)
 
+export const LEGACY_CSV_HEADERS = [
+  ...BASE_HEADERS,
+  ...NUTRIENT_COLUMNS.map(([, header]) => header),
+  ...SNAPSHOT_NUTRIENT_COLUMNS.map(([, header]) => header),
+  'menu_snapshot_json',
+] as const
+
 export const CSV_HEADERS = [
   ...BASE_HEADERS,
   ...NUTRIENT_COLUMNS.map(([, header]) => header),
   ...SNAPSHOT_NUTRIENT_COLUMNS.map(([, header]) => header),
+  'input_unit_base_amount',
+  'food_snapshot_input_unit_conversions_json',
   'menu_snapshot_json',
 ] as const
 
@@ -46,6 +55,8 @@ export function mealsToCsv(entries: MealEntry[]): string {
     entry.foodSnapshot.baseAmount, entry.foodSnapshot.baseUnit,
     ...NUTRIENT_COLUMNS.map(([key]) => entry.calculatedNutrients[key]),
     ...SNAPSHOT_NUTRIENT_COLUMNS.map(([key]) => entry.foodSnapshot.nutrients[key]),
+    entry.foodSnapshot.inputUnitConversions?.find((conversion) => conversion.unit === entry.amountUnit)?.baseAmount ?? '',
+    entry.foodSnapshot.inputUnitConversions?.length ? JSON.stringify(entry.foodSnapshot.inputUnitConversions) : '',
     entry.menuSnapshot ? JSON.stringify(entry.menuSnapshot) : '',
   ])
   return `\uFEFF${[CSV_HEADERS, ...rows].map((row) => row.map(escapeCsv).join(',')).join('\r\n')}\r\n`
@@ -118,16 +129,32 @@ function parseNutrients(row: string[], headerIndex: Map<string, number>, columns
   return Object.fromEntries(columns.map(([key, header]) => [key, parseNullableNumber(row[headerIndex.get(header) ?? -1] ?? '', header, rowNumber)])) as Nutrients
 }
 
+function parseInputUnitConversions(value: string, rowNumber: number): MealEntry['foodSnapshot']['inputUnitConversions'] {
+  if (!value) return undefined
+  try {
+    const parsed: unknown = JSON.parse(value)
+    if (!Array.isArray(parsed) || !parsed.every(isFoodUnitConversion)) throw new Error('invalid')
+    const units = parsed.map((conversion) => conversion.unit)
+    if (new Set(units).size !== units.length) throw new Error('duplicate')
+    return parsed.map((conversion) => ({ ...conversion, unit: conversion.unit.trim() }))
+  } catch {
+    throw new Error(`${rowNumber}行目の換算情報が不正です。`)
+  }
+}
+
 export function parseMealsCsv(text: string): MealEntry[] {
   const rows = parseCsvRows(text)
-  if (rows.length === 0 || rows[0].length !== CSV_HEADERS.length || rows[0].some((header, index) => header !== CSV_HEADERS[index])) {
+  const headers = rows[0] ?? []
+  const isCurrentHeader = headers.length === CSV_HEADERS.length && headers.every((header, index) => header === CSV_HEADERS[index])
+  const isLegacyHeader = headers.length === LEGACY_CSV_HEADERS.length && headers.every((header, index) => header === LEGACY_CSV_HEADERS[index])
+  if (rows.length === 0 || (!isCurrentHeader && !isLegacyHeader)) {
     throw new Error('このPWAで出力した食事履歴CSVではありません。列名と順序を確認してください。')
   }
-  const headerIndex = new Map<string, number>(CSV_HEADERS.map((header, index) => [header, index]))
+  const headerIndex = new Map<string, number>(headers.map((header, index) => [header, index]))
   const seenIds = new Set<string>()
   return rows.slice(1).map((row, rowIndex) => {
     const rowNumber = rowIndex + 2
-    if (row.length !== CSV_HEADERS.length) throw new Error(`${rowNumber}行目の列数が不正です。`)
+    if (row.length !== headers.length) throw new Error(`${rowNumber}行目の列数が不正です。`)
     const value = (header: string) => row[headerIndex.get(header) ?? -1] ?? ''
     const id = value('id')
     const eatenAt = value('eaten_at')
@@ -143,10 +170,18 @@ export function parseMealsCsv(text: string): MealEntry[] {
     if (seenIds.has(id)) throw new Error(`${rowNumber}行目のIDが重複しています。`)
     seenIds.add(id)
     if (!['朝食', '昼食', '夕食', '間食'].includes(mealType)) throw new Error(`${rowNumber}行目の食事区分が不正です。`)
-    if (!foodId || !foodName || !isValidUnit(amountUnit) || !isValidUnit(baseUnit) || amountUnit !== baseUnit) throw new Error(`${rowNumber}行目の食品または単位が不正です。`)
+    if (!foodId || !foodName || !isValidQuantityUnit(amountUnit) || !isValidUnit(baseUnit)) throw new Error(`${rowNumber}行目の食品または単位が不正です。`)
 
     const calculatedNutrients = parseNutrients(row, headerIndex, NUTRIENT_COLUMNS, rowNumber)
     const snapshotNutrients = parseNutrients(row, headerIndex, SNAPSHOT_NUTRIENT_COLUMNS, rowNumber)
+    let inputUnitConversions = parseInputUnitConversions(value('food_snapshot_input_unit_conversions_json'), rowNumber)
+    const conversionBaseAmountText = value('input_unit_base_amount')
+    if (amountUnit !== baseUnit && !(inputUnitConversions ?? []).some((conversion) => conversion.unit === amountUnit)) {
+      const conversionBaseAmount = conversionBaseAmountText ? Number(conversionBaseAmountText) : Number.NaN
+      if (!Number.isFinite(conversionBaseAmount) || conversionBaseAmount <= 0) throw new Error(`${rowNumber}行目の換算情報が不足しています。`)
+      inputUnitConversions = [...(inputUnitConversions ?? []), { unit: amountUnit, baseAmount: conversionBaseAmount }]
+    }
+    if (inputUnitConversions?.some((conversion) => conversion.unit === baseUnit)) throw new Error(`${rowNumber}行目の換算単位が基準単位と重複しています。`)
     const menuSnapshotText = value('menu_snapshot_json')
     let menuSnapshot: MealEntry['menuSnapshot']
     if (menuSnapshotText) {
@@ -169,6 +204,7 @@ export function parseMealsCsv(text: string): MealEntry[] {
         barcode: value('barcode'),
         baseAmount: parsePositiveNumber(value('base_amount'), '基準量', rowNumber),
         baseUnit,
+        ...(inputUnitConversions ? { inputUnitConversions } : {}),
         nutrients: snapshotNutrients,
       },
       amount: parsePositiveNumber(value('amount'), '分量', rowNumber),

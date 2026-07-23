@@ -1,5 +1,5 @@
 import { EMPTY_NUTRIENTS, type Food, type Menu, type MenuIngredient } from '../types'
-import { calculateNutrients, sumNutrients } from './nutrition'
+import { calculateNutrients, getFoodQuantityUnits, sumNutrients } from './nutrition'
 
 /** 旧形式のfoodIdsを、食品の基準量を使う明細へ読み替える。 */
 export function getMenuIngredients(menu: Menu, foods: Food[]): MenuIngredient[] {
@@ -41,6 +41,16 @@ export function wouldCreateMenuCycle(currentMenuId: string | null, candidateMenu
 
 export function hasMenuCycles(menus: Menu[]): boolean {
   return menus.some((menu) => getNestedMenuIds(menu).some((candidateId) => wouldCreateMenuCycle(menu.id, candidateId, menus)))
+}
+
+/** 料理メニュー食材の単位と、存在する食品の明示換算に一致しないメニューを返す。削除済み食品参照は履歴保持のため対象外とする。 */
+export function menusWithUnsupportedIngredientUnits(menus: Menu[], foods: Food[]): Menu[] {
+  const foodsById = new Map(foods.map((food) => [food.id, food]))
+  return menus.filter((menu) => (menu.ingredients ?? []).some((ingredient) => {
+    if (ingredient.kind === 'menu') return ingredient.unit !== '食'
+    const food = foodsById.get(ingredient.itemId)
+    return food ? !getFoodQuantityUnits(food).includes(ingredient.unit) : false
+  }))
 }
 
 function createMenuFood(menu: Menu, menusById: Map<string, Menu>, foodsById: Map<string, Food>, ancestors: Set<string>): Food {

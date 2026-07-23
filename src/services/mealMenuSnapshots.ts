@@ -3,7 +3,7 @@ import {
   NUTRIENT_KEYS,
   type Food,
   type FoodSnapshot,
-  type FoodUnit,
+  type QuantityUnit,
   type MealFoodIngredientSnapshot,
   type MealIngredientSnapshot,
   type MealMenuIngredientSnapshot,
@@ -11,8 +11,8 @@ import {
   type Menu,
   type Nutrients,
 } from '../types'
-import { isNutrients, isValidUnit } from '../utils/validation'
-import { calculateNutrients, sumNutrients } from './nutrition'
+import { isFoodUnitConversion, isNutrients, isValidQuantityUnit, isValidUnit } from '../utils/validation'
+import { calculateNutrients, getFoodDefaultServing, sumNutrients } from './nutrition'
 import { getMenuIngredients } from './menuIngredients'
 
 function foodSnapshot(food: Food): FoodSnapshot {
@@ -24,33 +24,36 @@ function foodSnapshot(food: Food): FoodSnapshot {
     barcode: food.barcode,
     baseAmount: food.baseAmount,
     baseUnit: food.baseUnit,
+    inputUnitConversions: food.inputUnitConversions?.map((conversion) => ({ ...conversion })),
     nutrients: { ...food.nutrients },
   }
 }
 
-function missingFoodSnapshot(itemId: string, unit: FoodUnit): FoodSnapshot {
+function missingFoodSnapshot(itemId: string): FoodSnapshot {
   return {
     name: `削除済み食品（${itemId}）`,
     maker: '',
     barcode: '',
     baseAmount: 1,
-    baseUnit: unit,
+    baseUnit: 'その他',
+    missing: true,
     nutrients: { ...EMPTY_NUTRIENTS },
   }
 }
 
 export function createMealFoodIngredientSnapshot(
   food: Food,
-  amount = food.baseAmount,
-  unit = food.baseUnit,
+  amount?: number,
+  unit?: QuantityUnit,
 ): MealFoodIngredientSnapshot {
-  return { kind: 'food', itemId: food.id, amount, unit, foodSnapshot: foodSnapshot(food) }
+  const serving = getFoodDefaultServing(food)
+  return { kind: 'food', itemId: food.id, amount: amount ?? serving.amount, unit: unit ?? serving.unit, foodSnapshot: foodSnapshot(food) }
 }
 
 function createMenuIngredientSnapshot(
   menuId: string,
   amount: number,
-  unit: FoodUnit,
+  unit: QuantityUnit,
   menusById: Map<string, Menu>,
   foodsById: Map<string, Food>,
   allFoods: Food[],
@@ -69,7 +72,7 @@ function createMenuIngredientSnapshot(
       const food = foodsById.get(ingredient.itemId)
       return food
         ? createMealFoodIngredientSnapshot(food, ingredient.amount, ingredient.unit)
-        : { kind: 'food', itemId: ingredient.itemId, amount: ingredient.amount, unit: ingredient.unit, foodSnapshot: missingFoodSnapshot(ingredient.itemId, ingredient.unit) }
+        : { kind: 'food', itemId: ingredient.itemId, amount: ingredient.amount, unit: ingredient.unit, foodSnapshot: missingFoodSnapshot(ingredient.itemId) }
     }
     return createMenuIngredientSnapshot(
       ingredient.itemId, ingredient.amount, ingredient.unit, menusById, foodsById, allFoods, nextAncestors,
@@ -83,7 +86,7 @@ export function createMealMenuIngredientSnapshot(
   menus: Menu[],
   foods: Food[],
   amount = 1,
-  unit: FoodUnit = '食',
+  unit: QuantityUnit = '食',
 ): MealMenuIngredientSnapshot {
   return createMenuIngredientSnapshot(
     menu.id, amount, unit, new Map(menus.map((item) => [item.id, item])),
@@ -110,13 +113,14 @@ function snapshotFoodAsFood(snapshot: FoodSnapshot, id: string): Food {
     baseUnit: snapshot.baseUnit,
     servingAmount: null,
     servingUnit: null,
+    inputUnitConversions: snapshot.inputUnitConversions?.map((conversion) => ({ ...conversion })),
     nutrients: snapshot.nutrients,
     createdAt: '',
     updatedAt: '',
   }
 }
 
-function scaleNutrients(nutrients: Nutrients, amount: number, unit: FoodUnit): Nutrients {
+function scaleNutrients(nutrients: Nutrients, amount: number, unit: QuantityUnit): Nutrients {
   if (unit !== '食' || !Number.isFinite(amount) || amount <= 0) return { ...EMPTY_NUTRIENTS }
   return Object.fromEntries(NUTRIENT_KEYS.map((key) => {
     const value = nutrients[key]
@@ -137,7 +141,7 @@ export function calculateMealMenuSnapshotNutrients(snapshot: MealMenuSnapshot): 
   return sumNutrients(snapshot.ingredients.map(calculateMealIngredientSnapshotNutrients))
 }
 
-export function calculateMealMenuEntryNutrients(snapshot: MealMenuSnapshot, amount: number, unit: FoodUnit): Nutrients {
+export function calculateMealMenuEntryNutrients(snapshot: MealMenuSnapshot, amount: number, unit: QuantityUnit): Nutrients {
   return scaleNutrients(calculateMealMenuSnapshotNutrients(snapshot), amount, unit)
 }
 
@@ -145,7 +149,11 @@ function cloneIngredient(ingredient: MealIngredientSnapshot): MealIngredientSnap
   if (ingredient.kind === 'food') {
     return {
       ...ingredient,
-      foodSnapshot: { ...ingredient.foodSnapshot, nutrients: { ...ingredient.foodSnapshot.nutrients } },
+      foodSnapshot: {
+        ...ingredient.foodSnapshot,
+        inputUnitConversions: ingredient.foodSnapshot.inputUnitConversions?.map((conversion) => ({ ...conversion })),
+        nutrients: { ...ingredient.foodSnapshot.nutrients },
+      },
     }
   }
   return { ...ingredient, ingredients: ingredient.ingredients.map(cloneIngredient) }
@@ -163,7 +171,12 @@ function isFoodSnapshot(value: unknown): value is FoodSnapshot {
   if (!isRecord(value)) return false
   return typeof value.name === 'string' && typeof value.maker === 'string' && typeof value.barcode === 'string'
     && typeof value.baseAmount === 'number' && Number.isFinite(value.baseAmount) && value.baseAmount > 0
-    && isValidUnit(String(value.baseUnit)) && isNutrients(value.nutrients)
+    && isValidUnit(String(value.baseUnit))
+    && (value.inputUnitConversions === undefined || (Array.isArray(value.inputUnitConversions) && value.inputUnitConversions.every(isFoodUnitConversion)
+      && new Set(value.inputUnitConversions.map((conversion) => conversion.unit)).size === value.inputUnitConversions.length
+      && value.inputUnitConversions.every((conversion) => conversion.unit !== value.baseUnit)))
+    && (value.missing === undefined || typeof value.missing === 'boolean')
+    && isNutrients(value.nutrients)
     && (value.officialName === undefined || typeof value.officialName === 'string')
     && (value.displayName === undefined || typeof value.displayName === 'string')
 }
@@ -171,8 +184,13 @@ function isFoodSnapshot(value: unknown): value is FoodSnapshot {
 function isMealIngredientSnapshot(value: unknown): value is MealIngredientSnapshot {
   if (!isRecord(value) || (value.kind !== 'food' && value.kind !== 'menu') || typeof value.itemId !== 'string' || !value.itemId
     || typeof value.amount !== 'number' || !Number.isFinite(value.amount) || value.amount <= 0 || value.amount > 100000
-    || !isValidUnit(String(value.unit))) return false
-  if (value.kind === 'food') return isFoodSnapshot(value.foodSnapshot)
+    || !isValidQuantityUnit(String(value.unit))) return false
+  if (value.kind === 'food') {
+    if (!isFoodSnapshot(value.foodSnapshot)) return false
+    return value.foodSnapshot.missing === true
+      || value.unit === value.foodSnapshot.baseUnit
+      || (value.foodSnapshot.inputUnitConversions ?? []).some((conversion) => conversion.unit === value.unit)
+  }
   return typeof value.name === 'string' && typeof value.missing === 'boolean'
     && Array.isArray(value.ingredients) && value.ingredients.every(isMealIngredientSnapshot)
 }

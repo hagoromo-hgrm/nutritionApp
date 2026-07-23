@@ -3,6 +3,7 @@ import {
   calculateMealMenuEntryNutrients,
   calculateMealMenuSnapshotNutrients,
   cloneMealMenuSnapshot,
+  createMealFoodIngredientSnapshot,
   createMealMenuSnapshot,
   isMealMenuSnapshot,
 } from '../src/services/mealMenuSnapshots'
@@ -35,6 +36,33 @@ const parent: Menu = {
 }
 
 describe('meal menu snapshots', () => {
+  it('食品の既定入力単位と換算情報を構成スナップショットへ複製する', () => {
+    const customFood = food('custom', 'パン', 200, 100)
+    customFood.servingAmount = 2
+    customFood.servingUnit = '切れ'
+    customFood.inputUnitConversions = [{ unit: '切れ', baseAmount: 40 }]
+    const ingredient = createMealFoodIngredientSnapshot(customFood)
+    expect(ingredient).toMatchObject({ amount: 2, unit: '切れ' })
+    expect(ingredient.foodSnapshot.inputUnitConversions).toEqual([{ unit: '切れ', baseAmount: 40 }])
+    const cloned = cloneMealMenuSnapshot({ sourceMenuId: 'm', sourceMenuName: 'm', ingredients: [ingredient] })
+    if (cloned.ingredients[0].kind !== 'food' || ingredient.kind !== 'food') throw new Error('食品食材がありません')
+    cloned.ingredients[0].foodSnapshot.inputUnitConversions![0].baseAmount = 50
+    expect(ingredient.foodSnapshot.inputUnitConversions?.[0].baseAmount).toBe(40)
+  })
+
+  it('カスタム単位の構成を明示換算し、未登録単位は拒否する', () => {
+    const customFood = food('custom', 'パン', 200, 100)
+    customFood.inputUnitConversions = [{ unit: '切れ', baseAmount: 40 }]
+    const customMenu: Menu = {
+      id: 'custom-menu', name: 'パン盛り', category: '主食', foodIds: ['custom'],
+      ingredients: [{ kind: 'food', itemId: 'custom', amount: 2, unit: '切れ' }], createdAt: '', updatedAt: '',
+    }
+    const snapshot = createMealMenuSnapshot(customMenu, [customMenu], [customFood])
+    expect(calculateMealMenuSnapshotNutrients(snapshot).energyKcal).toBe(160)
+    expect(isMealMenuSnapshot(snapshot)).toBe(true)
+    expect(isMealMenuSnapshot({ ...snapshot, ingredients: [{ ...snapshot.ingredients[0], unit: 'パック' }] })).toBe(false)
+  })
+
   it('料理メニューと子メニューを食事側へ複製して栄養計算する', () => {
     const snapshot = createMealMenuSnapshot(parent, [parent, child], [rice, egg])
     expect(snapshot.sourceMenuName).toBe('アレンジご飯')

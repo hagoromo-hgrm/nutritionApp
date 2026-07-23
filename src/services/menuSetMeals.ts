@@ -1,5 +1,5 @@
 import type { Food, FoodSnapshot, MealEntry, MealType, Menu, MenuSet } from '../types'
-import { calculateNutrients } from './nutrition'
+import { calculateNutrients, getFoodDefaultServing } from './nutrition'
 import { menuToFood } from './menuIngredients'
 import {
   calculateMealMenuEntryNutrients,
@@ -31,6 +31,7 @@ function createFoodSnapshot(food: Food): FoodSnapshot {
     barcode: food.barcode,
     baseAmount: food.baseAmount,
     baseUnit: food.baseUnit,
+    inputUnitConversions: food.inputUnitConversions?.map((conversion) => ({ ...conversion })),
     nutrients: { ...food.nutrients },
   }
 }
@@ -75,7 +76,8 @@ export function createMenuSetMealBatch(options: CreateMenuSetMealBatchOptions): 
       missingFoodIds.push(foodId)
       continue
     }
-    const amount = food.servingAmount ?? food.baseAmount
+    const serving = getFoodDefaultServing(food)
+    const amount = serving.amount
     entries.push({
       id: createId(),
       eatenAt,
@@ -83,8 +85,8 @@ export function createMenuSetMealBatch(options: CreateMenuSetMealBatchOptions): 
       foodId: food.id,
       foodSnapshot: createFoodSnapshot(food),
       amount,
-      amountUnit: food.baseUnit,
-      calculatedNutrients: calculateNutrients(food, amount, food.baseUnit),
+      amountUnit: serving.unit,
+      calculatedNutrients: calculateNutrients(food, amount, serving.unit),
     })
   }
 

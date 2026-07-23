@@ -42,14 +42,17 @@ export const NUTRIENT_UNITS: Record<NutrientKey, string> = {
 
 export type FoodSource = 'mext' | 'open_food_facts' | 'user'
 export type SearchMetadataSource = 'llm' | 'rule' | 'manual' | 'imported'
-export type FoodUnit = 'g' | 'ml' | '個' | '合' | '袋' | '本' | '枚' | '食' | '丁' | '小さじ' | 'その他'
+/** 栄養価の基準量に使う、アプリが管理する単位。 */
+export type FoodUnit = 'g' | 'ml' | '個' | '合' | '袋' | '本' | '枚' | '食' | '丁' | '小さじ' | '杯' | 'その他'
+/** 食品ごとに明示登録された入力用単位。ユーザー定義ラベルを含む。 */
+export type QuantityUnit = string
 export type MealType = '朝食' | '昼食' | '夕食' | '間食'
 export type MealTimeMode = 'auto' | 'manual'
 export type BiologicalSex = 'male' | 'female' | 'unspecified'
 export type ActivityLevel = 'low' | 'moderate' | 'high'
 export type MenuCategory = '主食' | '主菜' | '副菜' | '汁物' | '乳製品・果物' | 'お菓子・スイーツ' | 'その他'
 
-export const FOOD_UNITS: FoodUnit[] = ['g', 'ml', '個', '合', '袋', '本', '枚', '食', '丁', '小さじ', 'その他']
+export const FOOD_UNITS: FoodUnit[] = ['g', 'ml', '個', '合', '袋', '本', '枚', '食', '丁', '小さじ', '杯', 'その他']
 
 export const MEAL_TYPES: MealType[] = ['朝食', '昼食', '夕食', '間食']
 export const MENU_CATEGORIES: MenuCategory[] = ['主食', '主菜', '副菜', '汁物', '乳製品・果物', 'お菓子・スイーツ', 'その他']
@@ -68,13 +71,20 @@ export interface Food {
   baseAmount: number
   baseUnit: FoodUnit
   servingAmount: number | null
-  servingUnit: FoodUnit | null
+  servingUnit: QuantityUnit | null
+  /** 1入力用単位が何基準量に相当するか。将来の複数単位に備えて配列で保持する。 */
+  inputUnitConversions?: FoodUnitConversion[]
   menuIds?: string[]
   foodGroupId?: string
   variantAttributes?: FoodVariantAttributes
   nutrients: Nutrients
   createdAt: string
   updatedAt: string
+}
+
+export interface FoodUnitConversion {
+  unit: QuantityUnit
+  baseAmount: number
 }
 
 export interface FoodVariantAttributes {
@@ -175,6 +185,9 @@ export interface FoodSnapshot {
   barcode: string
   baseAmount: number
   baseUnit: FoodUnit
+  inputUnitConversions?: FoodUnitConversion[]
+  /** 食品マスターが削除済みの場合に、未集計の履歴として保持する印。 */
+  missing?: boolean
   nutrients: Nutrients
 }
 
@@ -182,7 +195,7 @@ export interface MealFoodIngredientSnapshot {
   kind: 'food'
   itemId: string
   amount: number
-  unit: FoodUnit
+  unit: QuantityUnit
   foodSnapshot: FoodSnapshot
 }
 
@@ -191,7 +204,7 @@ export interface MealMenuIngredientSnapshot {
   itemId: string
   name: string
   amount: number
-  unit: FoodUnit
+  unit: QuantityUnit
   ingredients: MealIngredientSnapshot[]
   missing: boolean
 }
@@ -211,7 +224,7 @@ export interface MealEntry {
   foodId: string
   foodSnapshot: FoodSnapshot
   amount: number
-  amountUnit: FoodUnit
+  amountUnit: QuantityUnit
   calculatedNutrients: Nutrients
   /** 料理メニューを登録した時点の構成。食事ごとのアレンジはこの複製だけを変更する。 */
   menuSnapshot?: MealMenuSnapshot
@@ -221,7 +234,7 @@ export interface MenuIngredient {
   kind: 'food' | 'menu'
   itemId: string
   amount: number
-  unit: FoodUnit
+  unit: QuantityUnit
 }
 
 export interface Menu {
