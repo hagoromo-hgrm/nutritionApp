@@ -34,13 +34,18 @@ export const LEGACY_CSV_HEADERS = [
   'menu_snapshot_json',
 ] as const
 
-export const CSV_HEADERS = [
+export const PREVIOUS_CSV_HEADERS = [
   ...BASE_HEADERS,
   ...NUTRIENT_COLUMNS.map(([, header]) => header),
   ...SNAPSHOT_NUTRIENT_COLUMNS.map(([, header]) => header),
   'input_unit_base_amount',
   'food_snapshot_input_unit_conversions_json',
   'menu_snapshot_json',
+] as const
+
+export const CSV_HEADERS = [
+  ...PREVIOUS_CSV_HEADERS,
+  'sort_order',
 ] as const
 
 function escapeCsv(value: string | number | null): string {
@@ -58,6 +63,7 @@ export function mealsToCsv(entries: MealEntry[]): string {
     entry.foodSnapshot.inputUnitConversions?.find((conversion) => conversion.unit === entry.amountUnit)?.baseAmount ?? '',
     entry.foodSnapshot.inputUnitConversions?.length ? JSON.stringify(entry.foodSnapshot.inputUnitConversions) : '',
     entry.menuSnapshot ? JSON.stringify(entry.menuSnapshot) : '',
+    entry.sortOrder ?? '',
   ])
   return `\uFEFF${[CSV_HEADERS, ...rows].map((row) => row.map(escapeCsv).join(',')).join('\r\n')}\r\n`
 }
@@ -146,8 +152,9 @@ export function parseMealsCsv(text: string): MealEntry[] {
   const rows = parseCsvRows(text)
   const headers = rows[0] ?? []
   const isCurrentHeader = headers.length === CSV_HEADERS.length && headers.every((header, index) => header === CSV_HEADERS[index])
+  const isPreviousHeader = headers.length === PREVIOUS_CSV_HEADERS.length && headers.every((header, index) => header === PREVIOUS_CSV_HEADERS[index])
   const isLegacyHeader = headers.length === LEGACY_CSV_HEADERS.length && headers.every((header, index) => header === LEGACY_CSV_HEADERS[index])
-  if (rows.length === 0 || (!isCurrentHeader && !isLegacyHeader)) {
+  if (rows.length === 0 || (!isCurrentHeader && !isPreviousHeader && !isLegacyHeader)) {
     throw new Error('このPWAで出力した食事履歴CSVではありません。列名と順序を確認してください。')
   }
   const headerIndex = new Map<string, number>(headers.map((header, index) => [header, index]))
@@ -164,6 +171,8 @@ export function parseMealsCsv(text: string): MealEntry[] {
     const foodName = value('food_name')
     const amountUnit = value('amount_unit')
     const baseUnit = value('base_unit')
+    const sortOrderText = value('sort_order')
+    const sortOrder = sortOrderText === '' ? undefined : Number(sortOrderText)
 
     const parsedDate = new Date(eatenAt)
     if (!id || !eatenAt || Number.isNaN(parsedDate.getTime()) || parsedDate.toISOString() !== eatenAt || date !== formatDateKey(eatenAt)) throw new Error(`${rowNumber}行目の日時またはIDが不正です。`)
@@ -171,6 +180,7 @@ export function parseMealsCsv(text: string): MealEntry[] {
     seenIds.add(id)
     if (!['朝食', '昼食', '夕食', '間食'].includes(mealType)) throw new Error(`${rowNumber}行目の食事区分が不正です。`)
     if (!foodId || !foodName || !isValidQuantityUnit(amountUnit) || !isValidUnit(baseUnit)) throw new Error(`${rowNumber}行目の食品または単位が不正です。`)
+    if (sortOrder !== undefined && (!Number.isSafeInteger(sortOrder) || sortOrder < 0)) throw new Error(`${rowNumber}行目の表示順が不正です。`)
 
     const calculatedNutrients = parseNutrients(row, headerIndex, NUTRIENT_COLUMNS, rowNumber)
     const snapshotNutrients = parseNutrients(row, headerIndex, SNAPSHOT_NUTRIENT_COLUMNS, rowNumber)
@@ -210,6 +220,7 @@ export function parseMealsCsv(text: string): MealEntry[] {
       amount: parsePositiveNumber(value('amount'), '分量', rowNumber),
       amountUnit,
       calculatedNutrients,
+      ...(sortOrder === undefined ? {} : { sortOrder }),
       ...(menuSnapshot ? { menuSnapshot } : {}),
     }
   })

@@ -12,6 +12,7 @@ import {
   type FoodRelatedTerm,
   type FoodUsageStat,
   type MealEntry,
+  type MealType,
   type MetadataRecord,
   type Menu,
   type MenuSet,
@@ -23,7 +24,9 @@ import { estimateDailyGoals } from '../services/nutrition'
 import { normalizeFoodAttributePreferences } from '../services/foodAttributePreferences'
 import { getMenuFoodIds, getNestedMenuIds, wouldCreateMenuCycle } from '../services/menuIngredients'
 import { normalizeSearchText, searchFoodResults as searchFoodResultsPure, type FoodSearchPage } from '../services/foodSearch'
+import { normalizeMealEntryGroups, normalizeMealEntryOrder, sortMealEntries, sortMealEntryGroup } from '../services/mealEntryOrder'
 import type { FoodSearchCategory } from '../services/foodClassification'
+import { formatDateKey } from '../utils/date'
 import {
   getFoodGroup as getMextFoodGroup,
   getFoodVariantBySourceId,
@@ -537,28 +540,66 @@ export async function getEntriesForDate(dateKey: string): Promise<MealEntry[]> {
   const nextDate = new Date(`${dateKey}T00:00:00+09:00`)
   nextDate.setUTCDate(nextDate.getUTCDate() + 1)
   const end = nextDate.toISOString()
-  return db.mealEntries.where('eatenAt').between(start, end, true, false).toArray()
+  return sortMealEntries(await db.mealEntries.where('eatenAt').between(start, end, true, false).toArray())
 }
 
 export async function getEntriesBetween(from: string, to: string): Promise<MealEntry[]> {
   const start = new Date(`${from}T00:00:00+09:00`).toISOString()
   const endDate = new Date(`${to}T00:00:00+09:00`)
   endDate.setUTCDate(endDate.getUTCDate() + 1)
-  return db.mealEntries.where('eatenAt').between(start, endDate.toISOString(), true, false).toArray()
+  return sortMealEntries(await db.mealEntries.where('eatenAt').between(start, endDate.toISOString(), true, false).toArray())
 }
 
 export async function saveMealEntry(entry: MealEntry): Promise<void> {
-  await db.mealEntries.put(entry)
+  await saveMealEntries([entry])
 }
 
 export async function saveMealEntries(entries: MealEntry[]): Promise<void> {
+  if (entries.length === 0) return
   await db.transaction('rw', db.mealEntries, async () => {
-    if (entries.length > 0) await db.mealEntries.bulkPut(entries)
+    const previousEntries = (await db.mealEntries.bulkGet(entries.map((entry) => entry.id)))
+      .filter((entry): entry is MealEntry => Boolean(entry))
+    await db.mealEntries.bulkPut(entries)
+
+    const affectedGroups = new Map<string, { dateKey: string; mealType: MealType }>()
+    for (const entry of [...previousEntries, ...entries]) {
+      const dateKey = formatDateKey(entry.eatenAt)
+      affectedGroups.set(`${dateKey}\u0000${entry.mealType}`, { dateKey, mealType: entry.mealType })
+    }
+    for (const { dateKey, mealType } of affectedGroups.values()) {
+      const dateEntries = await getEntriesForDate(dateKey)
+      const group = sortMealEntryGroup(dateEntries.filter((entry) => entry.mealType === mealType))
+      if (group.length > 0) await db.mealEntries.bulkPut(normalizeMealEntryOrder(group))
+    }
   })
 }
 
 export async function deleteMealEntry(id: string): Promise<void> {
-  await db.mealEntries.delete(id)
+  await db.transaction('rw', db.mealEntries, async () => {
+    const entry = await db.mealEntries.get(id)
+    if (!entry) return
+    await db.mealEntries.delete(id)
+    const remaining = (await getEntriesForDate(formatDateKey(entry.eatenAt))).filter((candidate) => candidate.mealType === entry.mealType)
+    if (remaining.length > 0) await db.mealEntries.bulkPut(normalizeMealEntryOrder(sortMealEntryGroup(remaining)))
+  })
+}
+
+export async function reorderMealEntries(dateKey: string, mealType: MealType, orderedEntryIds: string[]): Promise<void> {
+  if (new Set(orderedEntryIds).size !== orderedEntryIds.length) throw new Error('並び順に重複した食事記録があります。')
+  await db.transaction('rw', db.mealEntries, async () => {
+    const group = (await getEntriesForDate(dateKey)).filter((entry) => entry.mealType === mealType)
+    const currentIds = new Set(group.map((entry) => entry.id))
+    if (group.length !== orderedEntryIds.length || orderedEntryIds.some((id) => !currentIds.has(id))) {
+      throw new Error('食事記録が変更されたため、並び替えを再試行してください。')
+    }
+    const entriesById = new Map(group.map((entry) => [entry.id, entry]))
+    const reordered = orderedEntryIds.map((id, sortOrder) => {
+      const entry = entriesById.get(id)
+      if (!entry) throw new Error('並び替える食事記録が見つかりません。')
+      return { ...entry, sortOrder }
+    })
+    if (reordered.length > 0) await db.mealEntries.bulkPut(reordered)
+  })
 }
 
 export async function getFavoriteIds(): Promise<Set<string>> {
@@ -649,7 +690,7 @@ export async function replaceAllData(backup: BackupData): Promise<ReplaceAllData
     await db.foodUsageStats.clear()
     await db.searchLogs.clear()
     if (backup.foods.length) await db.foods.bulkAdd(backup.foods)
-    if (backup.mealEntries.length) await db.mealEntries.bulkAdd(backup.mealEntries)
+    if (backup.mealEntries.length) await db.mealEntries.bulkAdd(normalizeMealEntryGroups(backup.mealEntries))
     if (backup.favorites.length) await db.favorites.bulkAdd(backup.favorites)
     if (backup.menus?.length) await db.menus.bulkAdd(backup.menus)
     if (backup.menuSets?.length) await db.menuSets.bulkAdd(backup.menuSets)

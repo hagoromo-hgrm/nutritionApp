@@ -1,6 +1,6 @@
 import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { db, deleteFood, deleteMenu, exportBackup, getEntriesForDate, getFoodByBarcode, getRecentFoods, getSettings, initializeDatabase, recordFoodSelection, replaceAllData, saveFood, saveFoodWithMetadata, saveMealEntries, saveMealEntry, saveMenu, searchFoodResults, searchMenus } from '../src/db/db'
+import { db, deleteFood, deleteMenu, exportBackup, getEntriesForDate, getFoodByBarcode, getRecentFoods, getSettings, initializeDatabase, recordFoodSelection, reorderMealEntries, replaceAllData, saveFood, saveFoodWithMetadata, saveMealEntries, saveMealEntry, saveMenu, searchFoodResults, searchMenus } from '../src/db/db'
 import { getFoodVariantBySourceId, hasFoodGroup as hasMextFoodGroup } from '../src/services/mextFoodData'
 import type { BackupData, Food, FoodAlias, FoodGroup, FoodRelatedTerm, MealEntry, Menu } from '../src/types'
 
@@ -263,6 +263,35 @@ describe('IndexedDB data safety', () => {
     await saveMealEntries([first, second])
     const entries = await getEntriesForDate('2026-07-15')
     expect(entries.map((entry) => entry.id).sort()).toEqual(['meal_first', 'meal_second'])
+  })
+
+  it('同じ日・食事区分の表示順を時刻と独立して一括更新する', async () => {
+    const first: MealEntry = {
+      id: 'meal_order_first', eatenAt: '2026-07-15T03:00:00.000Z', mealType: '朝食', foodId: userFood.id,
+      foodSnapshot: { name: '先', maker: '', barcode: '', baseAmount: 100, baseUnit: 'g', nutrients: { ...userFood.nutrients } },
+      amount: 50, amountUnit: 'g', calculatedNutrients: { ...userFood.nutrients },
+    }
+    const second = { ...first, id: 'meal_order_second', foodSnapshot: { ...first.foodSnapshot, name: '後' } }
+    await saveMealEntries([first, second])
+
+    await reorderMealEntries('2026-07-15', '朝食', [second.id, first.id])
+    const reordered = await getEntriesForDate('2026-07-15')
+    expect(reordered.map((entry) => entry.id)).toEqual([second.id, first.id])
+    expect(reordered.map((entry) => entry.sortOrder)).toEqual([0, 1])
+    expect(reordered.every((entry) => entry.eatenAt === first.eatenAt)).toBe(true)
+  })
+
+  it('確認中に記録集合が変わった並び替えは一件も更新しない', async () => {
+    const first: MealEntry = {
+      id: 'meal_stale_first', eatenAt: '2026-07-15T03:00:00.000Z', mealType: '朝食', foodId: userFood.id,
+      foodSnapshot: { name: '先', maker: '', barcode: '', baseAmount: 100, baseUnit: 'g', nutrients: { ...userFood.nutrients } },
+      amount: 50, amountUnit: 'g', calculatedNutrients: { ...userFood.nutrients },
+    }
+    const second = { ...first, id: 'meal_stale_second' }
+    await saveMealEntries([first, second])
+
+    await expect(reorderMealEntries('2026-07-15', '朝食', [second.id])).rejects.toThrow('変更された')
+    expect((await getEntriesForDate('2026-07-15')).map((entry) => entry.id)).toEqual([first.id, second.id])
   })
 
   it('料理メニューの食事別構成スナップショットを保存する', async () => {

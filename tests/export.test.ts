@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { validateBackup } from '../src/services/backup'
-import { CSV_HEADERS, LEGACY_CSV_HEADERS, mealsToCsv, parseMealsCsv } from '../src/services/csv'
+import { CSV_HEADERS, LEGACY_CSV_HEADERS, PREVIOUS_CSV_HEADERS, mealsToCsv, parseMealsCsv } from '../src/services/csv'
 import type { BackupData, Food, MealEntry } from '../src/types'
 
 const addedNutrients = { calciumMg: null, ironMg: null, vitaminAMcg: null, vitaminEMg: null, vitaminB1Mg: null, vitaminB2Mg: null, vitaminCMg: null, saturatedFatG: null }
@@ -49,8 +49,9 @@ describe('export formats', () => {
   })
 
   it('このPWAで出力したCSVから食事スナップショットを復元できる', () => {
-    const restored = parseMealsCsv(mealsToCsv([entry]))
-    expect(restored).toEqual([entry])
+    const orderedEntry = { ...entry, sortOrder: 3 }
+    const restored = parseMealsCsv(mealsToCsv([orderedEntry]))
+    expect(restored).toEqual([orderedEntry])
   })
 
   it('料理メニューの食事別構成をJSONとCSVで保持する', () => {
@@ -87,6 +88,22 @@ describe('export formats', () => {
     const legacyIndexes = LEGACY_CSV_HEADERS.map((header) => modernHeaders.indexOf(header))
     const legacyCsv = `\uFEFF${LEGACY_CSV_HEADERS.join(',')}\r\n${legacyIndexes.map((index) => modernValues[index]).join(',')}\r\n`
     expect(parseMealsCsv(legacyCsv)).toEqual([legacyEntry])
+  })
+
+  it('表示順列を追加する前のCSVも取り込める', () => {
+    const previousEntry: MealEntry = { ...entry, foodSnapshot: { ...entry.foodSnapshot, name: '米', maker: '' } }
+    const modernRows = mealsToCsv([previousEntry]).replace(/^\uFEFF/, '').trimEnd().split('\r\n')
+    const modernHeaders = modernRows[0].split(',')
+    const modernValues = modernRows[1].split(',')
+    const previousIndexes = PREVIOUS_CSV_HEADERS.map((header) => modernHeaders.indexOf(header))
+    const previousCsv = `\uFEFF${PREVIOUS_CSV_HEADERS.join(',')}\r\n${previousIndexes.map((index) => modernValues[index]).join(',')}\r\n`
+    expect(parseMealsCsv(previousCsv)).toEqual([previousEntry])
+  })
+
+  it('CSVの表示順は非負整数だけを受け入れる', () => {
+    const csv = mealsToCsv([{ ...entry, sortOrder: 0 }])
+    const invalid = csv.replace(/,0\r\n$/, ',-1\r\n')
+    expect(() => parseMealsCsv(invalid)).toThrow('表示順')
   })
 
   it('列が欠けたCSVは取り込まない', () => {

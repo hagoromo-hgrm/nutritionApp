@@ -221,6 +221,8 @@ export interface MealEntry {
   id: string
   eatenAt: string
   mealType: MealType
+  /** 同じ日・食事区分内の表示順。時刻とは独立して扱う。 */
+  sortOrder?: number
   foodId: string
   foodSnapshot: FoodSnapshot
   amount: number

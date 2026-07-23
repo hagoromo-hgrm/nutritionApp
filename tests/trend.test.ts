@@ -50,4 +50,10 @@ describe('daily nutrient trend', () => {
     expect(points[0].nutrients.energyKcal).toBeNull()
     expect(points[0].availableNutrients.energyKcal).toBeNull()
   })
+
+  it('1年表示では365日分を生成し、31日上限に切り詰めない', () => {
+    const points = buildDailyNutrientTrend([], '2025-07-24', '2026-07-23', 365)
+    expect(points).toHaveLength(365)
+    expect(points.at(-1)?.date).toBe('2026-07-23')
+  })
 })
