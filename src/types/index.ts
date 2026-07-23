@@ -181,6 +181,8 @@ export interface FoodSnapshot {
   name: string
   officialName?: string
   displayName?: string
+  /** 検索結果など、ユーザーが食品を選んだ入口で表示されていた一般名。 */
+  userFacingName?: string
   maker: string
   barcode: string
   baseAmount: number

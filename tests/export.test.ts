@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { validateBackup } from '../src/services/backup'
-import { CSV_HEADERS, LEGACY_CSV_HEADERS, PREVIOUS_CSV_HEADERS, mealsToCsv, parseMealsCsv } from '../src/services/csv'
+import { CSV_HEADERS, LEGACY_CSV_HEADERS, PREVIOUS_CSV_HEADERS, SORTED_CSV_HEADERS, mealsToCsv, parseMealsCsv } from '../src/services/csv'
 import type { BackupData, Food, MealEntry } from '../src/types'
 
 const addedNutrients = { calciumMg: null, ironMg: null, vitaminAMcg: null, vitaminEMg: null, vitaminB1Mg: null, vitaminB2Mg: null, vitaminCMg: null, saturatedFatG: null }
@@ -49,7 +49,11 @@ describe('export formats', () => {
   })
 
   it('このPWAで出力したCSVから食事スナップショットを復元できる', () => {
-    const orderedEntry = { ...entry, sortOrder: 3 }
+    const orderedEntry = {
+      ...entry,
+      sortOrder: 3,
+      foodSnapshot: { ...entry.foodSnapshot, userFacingName: 'ご飯' },
+    }
     const restored = parseMealsCsv(mealsToCsv([orderedEntry]))
     expect(restored).toEqual([orderedEntry])
   })
@@ -100,9 +104,19 @@ describe('export formats', () => {
     expect(parseMealsCsv(previousCsv)).toEqual([previousEntry])
   })
 
+  it('一般名列を追加する前のCSVも取り込める', () => {
+    const sortedEntry: MealEntry = { ...entry, sortOrder: 2, foodSnapshot: { ...entry.foodSnapshot, name: '米', maker: '' } }
+    const modernRows = mealsToCsv([sortedEntry]).replace(/^\uFEFF/, '').trimEnd().split('\r\n')
+    const modernHeaders = modernRows[0].split(',')
+    const modernValues = modernRows[1].split(',')
+    const sortedIndexes = SORTED_CSV_HEADERS.map((header) => modernHeaders.indexOf(header))
+    const sortedCsv = `\uFEFF${SORTED_CSV_HEADERS.join(',')}\r\n${sortedIndexes.map((index) => modernValues[index]).join(',')}\r\n`
+    expect(parseMealsCsv(sortedCsv)).toEqual([sortedEntry])
+  })
+
   it('CSVの表示順は非負整数だけを受け入れる', () => {
     const csv = mealsToCsv([{ ...entry, sortOrder: 0 }])
-    const invalid = csv.replace(/,0\r\n$/, ',-1\r\n')
+    const invalid = csv.replace(/,0,\r\n$/, ',-1,\r\n')
     expect(() => parseMealsCsv(invalid)).toThrow('表示順')
   })
 

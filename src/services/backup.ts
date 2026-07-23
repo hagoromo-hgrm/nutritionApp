@@ -89,6 +89,7 @@ function isSnapshot(value: unknown): value is FoodSnapshot {
     && (value.missing === undefined || typeof value.missing === 'boolean')
     && (value.officialName === undefined || isString(value.officialName))
     && (value.displayName === undefined || isString(value.displayName))
+    && (value.userFacingName === undefined || isString(value.userFacingName))
 }
 
 function isFoodGroup(value: unknown): value is FoodGroup {

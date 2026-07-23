@@ -129,7 +129,7 @@ import {
   searchUserFoodGroups,
   type UserFoodSearchResult,
 } from './services/mextUserFoodData'
-import { getFoodSnapshotDisplayName, getMealEntryDisplayName } from './services/mealEntryDisplay'
+import { getFoodSnapshotDisplayName, getMealEntryDisplayName, getMextUserFacingFoodName } from './services/mealEntryDisplay'
 import { addDays, currentDateKey, currentMonthRange, formatDateTime, formatFileTimestamp, isoFromTokyoTimeInput, toTokyoTimeInput, formatTime } from './utils/date'
 import { isPositiveFinite, isValidBarcode, isValidQuantityUnit, isValidUnit } from './utils/validation'
 import './styles.css'
@@ -355,6 +355,11 @@ function displaySearchFoodName(group: FoodGroup, food: Food): string {
   return food.maker ? `${group.displayName}（${food.maker}）` : group.displayName
 }
 
+function getSearchResultUserFacingName(item: SearchResultItem): string {
+  if (item.kind === 'food' && item.group) return item.group.displayName
+  return item.title
+}
+
 function buildMextFoodSearchResult(
   foodGroupId: string,
   foods: Food[],
@@ -465,6 +470,7 @@ function App() {
   const [menuSetDraft, setMenuSetDraft] = useState<MenuSetDraft | null>(null)
   const [externalNote, setExternalNote] = useState<string | null>(null)
   const [mealFood, setMealFood] = useState<Food | null>(null)
+  const [mealUserFacingName, setMealUserFacingName] = useState<string | null>(null)
   const [mealAmount, setMealAmount] = useState('')
   const [mealAmountUnit, setMealAmountUnit] = useState<QuantityUnit>('g')
   const [mealMenuSnapshot, setMealMenuSnapshot] = useState<MealMenuSnapshot | null>(null)
@@ -610,9 +616,10 @@ function App() {
     setSelectedDate(date)
   }
 
-  const openMealForm = useCallback((food: Food, entry?: MealEntry, forcedMealType?: MealType) => {
+  const openMealForm = useCallback((food: Food, entry?: MealEntry, forcedMealType?: MealType, userFacingName?: string) => {
     setMealFood(food)
     setEditingEntry(entry ?? null)
+    setMealUserFacingName(userFacingName?.trim() || (entry ? getMealEntryDisplayName(entry) : null))
     const serving = entry ? { amount: entry.amount, unit: entry.amountUnit } : getFoodDefaultServing(food)
     setMealAmount(String(serving.amount))
     setMealAmountUnit(serving.unit)
@@ -853,7 +860,14 @@ function App() {
     }
   }
 
-  const saveMealRecord = async (food: Food, amountText: string, amountUnit: QuantityUnit, entryToEdit: MealEntry | null = editingEntry, menuSnapshot: MealMenuSnapshot | null = null) => {
+  const saveMealRecord = async (
+    food: Food,
+    amountText: string,
+    amountUnit: QuantityUnit,
+    entryToEdit: MealEntry | null = editingEntry,
+    menuSnapshot: MealMenuSnapshot | null = null,
+    userFacingName?: string,
+  ) => {
     if (!requireLoadedDate()) return false
     if (mealSaveInFlightRef.current) return false
     const targetDate = selectedDate
@@ -878,10 +892,16 @@ function App() {
     const eatenAt = entryToEdit
       ? (mealType === '間食' ? entryToEdit.eatenAt : (currentMealTime ?? entryToEdit.eatenAt))
       : isoForDate(targetDate)
+    const resolvedUserFacingName = userFacingName?.trim()
+      || entryToEdit?.foodSnapshot.userFacingName?.trim()
+      || getMextUserFacingFoodName(food.id)
+      || food.displayName?.trim()
+      || food.name
     const entry: MealEntry = {
       id: entryToEdit?.id ?? createNewMealId(), eatenAt, mealType,
       foodId: food.id, foodSnapshot: {
-        name: food.displayName ?? food.name, officialName: food.officialName, displayName: food.displayName, maker: food.maker, barcode: food.barcode, baseAmount: food.baseAmount,
+        name: food.displayName ?? food.name, officialName: food.officialName, displayName: food.displayName, userFacingName: resolvedUserFacingName,
+        maker: food.maker, barcode: food.barcode, baseAmount: food.baseAmount,
         baseUnit: food.baseUnit, inputUnitConversions: food.inputUnitConversions?.map((conversion) => ({ ...conversion })), nutrients: { ...snapshotNutrients },
       }, amount, amountUnit, calculatedNutrients: calculated,
       ...(menuSnapshot ? { menuSnapshot: cloneMealMenuSnapshot(menuSnapshot) } : {}),
@@ -903,6 +923,7 @@ function App() {
         setPendingSearchQuery(null)
       }
       setMealFood(null)
+      setMealUserFacingName(null)
       setEditingEntry(null)
       setMealMenuSnapshot(null)
       setRecordingMealType(null)
@@ -936,7 +957,7 @@ function App() {
 
   const saveMeal = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    if (mealFood) await saveMealRecord(mealFood, mealAmount, mealAmountUnit, editingEntry, mealMenuSnapshot)
+    if (mealFood) await saveMealRecord(mealFood, mealAmount, mealAmountUnit, editingEntry, mealMenuSnapshot, mealUserFacingName ?? undefined)
   }
 
   const registerMenuSet = async (menuSet: MenuSet, returnSearchQuery: string | null = null) => {
@@ -1195,7 +1216,7 @@ function App() {
       return
     }
     setPendingSearchQuery(groupQuery)
-    openMealForm(food, undefined, recordingMealType ?? mealType)
+    openMealForm(food, undefined, recordingMealType ?? mealType, getSearchResultUserFacingName(item))
     if (amount !== undefined) setMealAmount(amount)
   }
 
@@ -1466,7 +1487,7 @@ function App() {
       {view === 'today' && <button className="floating-add" type="button" onClick={openMealTypePicker} aria-label="食事を追加">＋</button>}
 
       {mealTypePicker && <MealTypePickerModal food={mealTypePicker.food} recordedMealTypes={recordedMealTypes} onSelect={chooseMealType} />}
-      {variantPicker && <FoodVariantPickerModal result={variantPicker.result} userFoodResult={variantPicker.userFoodResult} foods={foods} foodGroups={foodGroups} foodAttributePreferences={settings.foodAttributePreferences} onSaveFoodAttributePreference={saveFoodAttributePreference} mealMode={searchPurpose === 'meal'} onSubmitMeal={async (food, amount, amountUnit) => { if (await saveMealRecord(food, amount, amountUnit)) setVariantPicker(null) }} onSelect={(food) => { setVariantPicker(null); selectSearchFood(variantPicker.query, variantPicker.item, food) }} onClose={() => setVariantPicker(null)} />}
+      {variantPicker && <FoodVariantPickerModal result={variantPicker.result} userFoodResult={variantPicker.userFoodResult} foods={foods} foodGroups={foodGroups} foodAttributePreferences={settings.foodAttributePreferences} onSaveFoodAttributePreference={saveFoodAttributePreference} mealMode={searchPurpose === 'meal'} onSubmitMeal={async (food, amount, amountUnit) => { if (await saveMealRecord(food, amount, amountUnit, null, null, getSearchResultUserFacingName(variantPicker.item))) setVariantPicker(null) }} onSelect={(food) => { setVariantPicker(null); selectSearchFood(variantPicker.query, variantPicker.item, food) }} onClose={() => setVariantPicker(null)} />}
       {mealVariantEdit && <FoodVariantPickerModal
         result={mealVariantEdit.result}
         userFoodResult={mealVariantEdit.userFoodResult}
@@ -1479,11 +1500,11 @@ function App() {
         initialAmount={String(mealVariantEdit.entry.amount)}
         initialAmountUnit={mealVariantEdit.entry.amountUnit}
         submitLabel="変更を保存"
-        onSubmitMeal={async (food, amount, amountUnit) => { if (await saveMealRecord(food, amount, amountUnit, mealVariantEdit.entry)) setMealVariantEdit(null) }}
+        onSubmitMeal={async (food, amount, amountUnit) => { if (await saveMealRecord(food, amount, amountUnit, mealVariantEdit.entry, null, getMealEntryDisplayName(mealVariantEdit.entry))) setMealVariantEdit(null) }}
         onSelect={() => undefined}
         onClose={() => setMealVariantEdit(null)}
       />}
-      {mealFood && <MealModal food={mealFood} amount={mealAmount} setAmount={setMealAmount} amountUnit={mealAmountUnit} setAmountUnit={setMealAmountUnit} menuSnapshot={mealMenuSnapshot} setMenuSnapshot={setMealMenuSnapshot} menus={menus} foods={foods} foodGroups={foodGroups} recentFoods={recentFoods} favoriteFoods={favoriteFoods} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} foodAttributePreferences={settings.foodAttributePreferences} onSaveFoodAttributePreference={saveFoodAttributePreference} editing={Boolean(editingEntry)} onSubmit={saveMeal} onClose={() => { setMealFood(null); setEditingEntry(null); setMealMenuSnapshot(null) }} />}
+      {mealFood && <MealModal food={mealFood} amount={mealAmount} setAmount={setMealAmount} amountUnit={mealAmountUnit} setAmountUnit={setMealAmountUnit} menuSnapshot={mealMenuSnapshot} setMenuSnapshot={setMealMenuSnapshot} menus={menus} foods={foods} foodGroups={foodGroups} recentFoods={recentFoods} favoriteFoods={favoriteFoods} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} foodAttributePreferences={settings.foodAttributePreferences} onSaveFoodAttributePreference={saveFoodAttributePreference} editing={Boolean(editingEntry)} onSubmit={saveMeal} onClose={() => { setMealFood(null); setMealUserFacingName(null); setEditingEntry(null); setMealMenuSnapshot(null) }} />}
       {mealDetails && <MealDetailsModal details={mealDetails} goals={scaleNutritionGoals(settings.goals, 1 / 3)} onUpdateTimes={updateMealTimes} onClose={() => setMealDetails(null)} />}
       {showTodayDetails && <TodayDetailsModal total={total} goals={settings.goals} entries={entries} onClose={() => setShowTodayDetails(false)} />}
       {menuDraft && <MenuEditorModal draft={menuDraft} setDraft={setMenuDraft} menus={menus} foods={foods} foodGroups={foodGroups} recentFoods={recentFoods} favoriteFoods={favoriteFoods} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} foodAttributePreferences={settings.foodAttributePreferences} onSaveFoodAttributePreference={saveFoodAttributePreference} onSubmit={saveMenuDraft} onClose={() => setMenuDraft(null)} />}

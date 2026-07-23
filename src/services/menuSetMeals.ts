@@ -6,6 +6,7 @@ import {
   calculateMealMenuSnapshotNutrients,
   createMealMenuSnapshot,
 } from './mealMenuSnapshots'
+import { getMextUserFacingFoodName } from './mealEntryDisplay'
 
 interface CreateMenuSetMealBatchOptions {
   menuSet: MenuSet
@@ -27,6 +28,7 @@ function createFoodSnapshot(food: Food): FoodSnapshot {
     name: food.displayName ?? food.name,
     officialName: food.officialName,
     displayName: food.displayName,
+    userFacingName: getMextUserFacingFoodName(food.id) ?? food.displayName ?? food.name,
     maker: food.maker,
     barcode: food.barcode,
     baseAmount: food.baseAmount,

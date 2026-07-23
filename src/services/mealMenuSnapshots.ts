@@ -14,12 +14,14 @@ import {
 import { isFoodUnitConversion, isNutrients, isValidQuantityUnit, isValidUnit } from '../utils/validation'
 import { calculateNutrients, getFoodDefaultServing, sumNutrients } from './nutrition'
 import { getMenuIngredients } from './menuIngredients'
+import { getMextUserFacingFoodName } from './mealEntryDisplay'
 
 function foodSnapshot(food: Food): FoodSnapshot {
   return {
     name: food.displayName ?? food.name,
     officialName: food.officialName,
     displayName: food.displayName,
+    userFacingName: getMextUserFacingFoodName(food.id) ?? food.displayName ?? food.name,
     maker: food.maker,
     barcode: food.barcode,
     baseAmount: food.baseAmount,
@@ -179,6 +181,7 @@ function isFoodSnapshot(value: unknown): value is FoodSnapshot {
     && isNutrients(value.nutrients)
     && (value.officialName === undefined || typeof value.officialName === 'string')
     && (value.displayName === undefined || typeof value.displayName === 'string')
+    && (value.userFacingName === undefined || typeof value.userFacingName === 'string')
 }
 
 function isMealIngredientSnapshot(value: unknown): value is MealIngredientSnapshot {
