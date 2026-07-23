@@ -59,6 +59,25 @@ export function sumEntries(entries: MealEntry[]): Nutrients {
   return sumNutrients(entries.map((entry) => entry.calculatedNutrients))
 }
 
+/**
+ * グラフ描画用に、記録済みの値だけを栄養素ごとに小計する。
+ * 欠損値は推定もゼロ補完もせず、その栄養素が全件欠損の場合は未集計のままにする。
+ */
+export function sumAvailableNutrients(entries: MealEntry[]): Nutrients {
+  if (entries.length === 0) {
+    return sumEntries(entries)
+  }
+
+  return Object.fromEntries(NUTRIENT_KEYS.map((key) => {
+    const availableValues = entries
+      .map((entry) => entry.calculatedNutrients[key])
+      .filter((value): value is number => typeof value === 'number')
+    return [key, availableValues.length === 0
+      ? null
+      : availableValues.reduce((sum, value) => sum + value, 0)]
+  })) as Nutrients
+}
+
 export function sumByMealType(entries: MealEntry[]): Record<string, Nutrients> {
   return entries.reduce<Record<string, Nutrients>>((result, entry) => {
     result[entry.mealType] = result[entry.mealType]
@@ -72,6 +91,10 @@ export function formatNutrient(value: number | null, digits = 1): string {
   if (value === null) return '未集計'
   const rounded = Number(value.toFixed(digits))
   return Math.abs(rounded) >= 1000 ? String(Math.round(rounded)) : rounded.toFixed(digits)
+}
+
+export function formatGraphNutrient(value: number | null, digits = 1): string {
+  return value === null ? '--.-' : formatNutrient(value, digits)
 }
 
 export function goalRate(value: number | null, goal: number | null): number | null {

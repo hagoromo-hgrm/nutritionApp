@@ -1,10 +1,11 @@
-import { sumEntries } from './nutrition'
+import { sumAvailableNutrients, sumEntries } from './nutrition'
 import type { MealEntry, Nutrients } from '../types'
 import { addDays, formatDateKey } from '../utils/date'
 
 export interface DailyNutrientTrendPoint {
   date: string
   nutrients: Nutrients
+  availableNutrients: Nutrients
 }
 
 export function buildDailyNutrientTrend(entries: MealEntry[], from: string, to: string, maxDays = 31): DailyNutrientTrendPoint[] {
@@ -21,7 +22,12 @@ export function buildDailyNutrientTrend(entries: MealEntry[], from: string, to: 
   const points: DailyNutrientTrendPoint[] = []
   let date = from
   while (date <= to && points.length < maxDays) {
-    points.push({ date, nutrients: sumEntries(entriesByDate.get(date) ?? []) })
+    const dateEntries = entriesByDate.get(date) ?? []
+    points.push({
+      date,
+      nutrients: sumEntries(dateEntries),
+      availableNutrients: sumAvailableNutrients(dateEntries),
+    })
     date = addDays(date, 1)
   }
   return points

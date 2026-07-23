@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { calculateBmi, calculateNutrients, estimateDailyEnergyTarget, estimateDailyGoals, formatNutrient, getFoodDefaultServing, goalRate, incrementByBaseAmount, nutrientRangeForGoals, scaleNutritionGoals, sumByMealType, sumNutrients } from '../src/services/nutrition'
+import { calculateBmi, calculateNutrients, estimateDailyEnergyTarget, estimateDailyGoals, formatGraphNutrient, formatNutrient, getFoodDefaultServing, goalRate, incrementByBaseAmount, nutrientRangeForGoals, scaleNutritionGoals, sumAvailableNutrients, sumByMealType, sumEntries, sumNutrients } from '../src/services/nutrition'
 import { isValidQuantityUnit } from '../src/utils/validation'
 import type { BodyProfile, Food, MealEntry, Nutrients } from '../src/types'
 
@@ -62,6 +62,24 @@ describe('nutrition calculation', () => {
     expect(result.fatG).toBeNull()
   })
 
+  it('通常集計は欠損を伝播し、グラフ用集計は既知値だけを小計する', () => {
+    const first = {
+      calculatedNutrients: { energyKcal: 100, proteinG: null, fatG: 5, carbohydrateG: 4, fiberG: 1, saltG: 0, ...addedNutrients },
+    } as MealEntry
+    const second = {
+      calculatedNutrients: { energyKcal: null, proteinG: null, fatG: 3, carbohydrateG: 2, fiberG: 1, saltG: 0, ...addedNutrients },
+    } as MealEntry
+
+    expect(sumEntries([first, second]).energyKcal).toBeNull()
+    expect(sumAvailableNutrients([first, second]).energyKcal).toBe(100)
+    expect(sumAvailableNutrients([first, second]).proteinG).toBeNull()
+  })
+
+  it('グラフ用集計は記録がない場合に0を返す', () => {
+    expect(sumAvailableNutrients([]).energyKcal).toBe(0)
+    expect(sumAvailableNutrients([]).proteinG).toBe(0)
+  })
+
   it('目標値に対する達成率を計算する', () => {
     expect(goalRate(25, 100)).toBe(25)
     expect(goalRate(null, 100)).toBeNull()
@@ -118,5 +136,11 @@ describe('nutrition calculation', () => {
   it('4桁以上の表示値は小数点以下を丸める', () => {
     expect(formatNutrient(999.94)).toBe('999.9')
     expect(formatNutrient(1234.56)).toBe('1235')
+  })
+
+  it('グラフの未集計値はプレースホルダーで表示する', () => {
+    expect(formatGraphNutrient(null)).toBe('--.-')
+    expect(formatGraphNutrient(999.94)).toBe(formatNutrient(999.94))
+    expect(formatGraphNutrient(12.345, 2)).toBe(formatNutrient(12.345, 2))
   })
 })

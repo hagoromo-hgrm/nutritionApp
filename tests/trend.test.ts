@@ -14,6 +14,40 @@ describe('daily nutrient trend', () => {
     expect(points).toHaveLength(2)
     expect(points[0].date).toBe('2026-07-15')
     expect(points[0].nutrients.energyKcal).toBe(0)
+    expect(points[0].availableNutrients.energyKcal).toBe(0)
     expect(points[1].nutrients.energyKcal).toBe(300)
+    expect(points[1].availableNutrients.energyKcal).toBe(300)
+  })
+
+  it('正本では欠損を維持し、グラフの高さには既知分だけを集計する', () => {
+    const incompleteEntry: MealEntry = {
+      ...entry,
+      id: 'meal_2',
+      calculatedNutrients: {
+        ...entry.calculatedNutrients,
+        energyKcal: null,
+        proteinG: null,
+      },
+    }
+
+    const points = buildDailyNutrientTrend([entry, incompleteEntry], '2026-07-16', '2026-07-16')
+    expect(points[0].nutrients.energyKcal).toBeNull()
+    expect(points[0].availableNutrients.energyKcal).toBe(300)
+    expect(points[0].nutrients.proteinG).toBeNull()
+    expect(points[0].availableNutrients.proteinG).toBe(10)
+  })
+
+  it('その栄養素が全件欠損ならグラフ用集計も未集計にする', () => {
+    const allMissingEntry: MealEntry = {
+      ...entry,
+      calculatedNutrients: {
+        ...entry.calculatedNutrients,
+        energyKcal: null,
+      },
+    }
+
+    const points = buildDailyNutrientTrend([allMissingEntry], '2026-07-16', '2026-07-16')
+    expect(points[0].nutrients.energyKcal).toBeNull()
+    expect(points[0].availableNutrients.energyKcal).toBeNull()
   })
 })
