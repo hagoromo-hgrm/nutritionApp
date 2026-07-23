@@ -151,28 +151,31 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .nutrient-graph-footer .meal-color-legend { justify-content: end; gap: .28rem .45rem; }
 .nutrient-graph-footer .meal-color-legend span { font-size: .6rem; }
 
-.trend-toolbar-card { display: grid; gap: .85rem; }
+.trend-toolbar-card { display: grid; grid-template-columns: minmax(0, 1fr) minmax(7rem, 10rem); align-items: center; gap: .55rem; }
 .trend-range-tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: .35rem; }
 .trend-range-tabs button { min-height: 2.5rem; border: 1px solid var(--line); border-radius: .7rem; color: var(--muted); background: #f8fbff; font-size: .74rem; font-weight: 800; }
 .trend-range-tabs button.active { border-color: #9ec5ed; color: var(--accent-deep); background: #eaf4ff; }
-.trend-chart-card { margin-top: 1.2rem; border: 1px solid var(--line); border-radius: 1.2rem; padding: 1rem; background: #ffffff; }
-.trend-chart-heading { display: flex; align-items: end; justify-content: space-between; gap: .7rem; }
-.trend-chart-heading > span { color: var(--muted); font-size: .68rem; white-space: nowrap; }
-.trend-chart-legend { display: flex; align-items: center; flex-wrap: wrap; gap: .45rem .7rem; margin-top: .8rem; color: var(--muted); font-size: .68rem; }
-.trend-legend-bar { display: inline-block; width: .6rem; height: .6rem; border-radius: .15rem; background: #78b3ef; }
+.trend-metric-select { width: 100%; min-height: 2.5rem; }
+.trend-chart-card { margin-top: .7rem; border: 1px solid var(--line); border-radius: 1.2rem; padding: .7rem .7rem .8rem; background: #ffffff; }
+.trend-chart-legend { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .45rem .7rem; min-height: 1.2rem; color: var(--muted); font-size: .68rem; }
+.trend-chart-legend .meal-color-legend { justify-content: start; }
+.trend-goal-legend { display: inline-flex; align-items: center; gap: .3rem; white-space: nowrap; }
 .trend-legend-line { display: inline-block; width: 1rem; border-top: 1px dashed var(--accent-deep); }
-.trend-chart-scroll { overflow-x: auto; margin-top: .85rem; padding-bottom: .35rem; }
-.trend-chart { min-width: 31rem; padding: .25rem .25rem 0; }
-.trend-chart-plot { position: relative; height: 15rem; }
-.trend-chart-bars { position: relative; z-index: 2; display: grid; height: 100%; align-items: stretch; gap: .35rem; }
+.trend-chart-scroll { overflow-x: auto; margin-top: .45rem; padding-bottom: .3rem; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; }
+.trend-chart { min-width: 100%; padding: .15rem 0 0; }
+.trend-chart-plot { position: relative; height: 19rem; }
+.trend-chart-bars { position: relative; z-index: 2; display: grid; height: 100%; align-items: stretch; }
 .trend-chart-goal-line { position: absolute; z-index: 1; right: 0; left: 0; border-top: 1px dashed var(--accent-deep); opacity: .72; pointer-events: none; }
-.trend-bar-column { display: grid; grid-template-rows: auto 1fr auto; min-width: 2.7rem; height: 100%; gap: .3rem; align-items: end; }
-.trend-bar-value { min-height: 1rem; color: var(--accent-deep); font-size: .56rem; line-height: 1.2; text-align: center; white-space: nowrap; }
+.trend-bar-column { display: grid; grid-template-rows: auto 1fr auto; min-width: 0; height: 100%; gap: .3rem; align-items: end; }
+.trend-bar-value { overflow: hidden; min-height: 1rem; color: var(--accent-deep); font-size: .56rem; line-height: 1.2; text-align: center; white-space: nowrap; }
 .trend-bar-value.is-missing { color: var(--muted); }
+.trend-bar-value.is-hidden, .trend-bar-date.is-hidden { visibility: hidden; }
 .trend-bar-value small { margin-left: .1rem; color: var(--muted); font-size: .5rem; }
 .trend-bar-track { display: flex; align-items: end; justify-content: center; min-height: 0; height: 100%; border-bottom: 1px solid #dce8f4; background: linear-gradient(to top, #f7fbff, rgba(247, 251, 255, .25)); }
-.trend-bar-fill { display: block; width: min(1.35rem, 62%); min-height: 0; border-radius: .45rem .45rem .15rem .15rem; background: #78b3ef; box-shadow: 0 .25rem .55rem rgba(120, 179, 239, .2); }
-.trend-bar-date { color: var(--muted); font-size: .58rem; text-align: center; white-space: nowrap; }
+.trend-bar-fill { display: flex; flex-direction: column-reverse; overflow: hidden; width: min(1.35rem, 76%); min-height: 0; border-radius: .45rem .45rem .15rem .15rem; box-shadow: 0 .25rem .55rem rgba(120, 179, 239, .2); }
+.trend-bar-fill .meal-segment { width: 100%; min-height: 0; }
+.trend-bar-date { overflow: hidden; color: var(--muted); font-size: .58rem; text-align: center; white-space: nowrap; }
+.trend-load-status { margin: .45rem 0 0; color: var(--muted); font-size: .65rem; text-align: center; }
 .trend-empty { margin-top: 1.2rem; border: 1px solid var(--line); border-radius: 1rem; padding: 1rem; color: var(--muted); background: #ffffff; font-size: .78rem; text-align: center; }
 
 .action-row { display: flex; flex-wrap: wrap; gap: .65rem; margin: 1rem 0 1.5rem; }

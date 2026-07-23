@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { registerSW } from 'virtual:pwa-register'
 import {
   createNewFoodId,
@@ -125,7 +125,7 @@ import {
   searchUserFoodGroups,
   type UserFoodSearchResult,
 } from './services/mextUserFoodData'
-import { addDays, currentDateKey, currentMonthRange, formatDateKey, formatDateTime, formatFileTimestamp, isoFromTokyoTimeInput, toTokyoTimeInput, formatTime } from './utils/date'
+import { addDays, currentDateKey, currentMonthRange, formatDateTime, formatFileTimestamp, isoFromTokyoTimeInput, toTokyoTimeInput, formatTime } from './utils/date'
 import { isPositiveFinite, isValidBarcode, isValidQuantityUnit, isValidUnit } from './utils/validation'
 import './styles.css'
 
@@ -412,7 +412,6 @@ function App() {
   const [loadedDate, setLoadedDate] = useState<string | null>(null)
   const [graphRange, setGraphRange] = useState<TrendRangeId>('week')
   const [entries, setEntries] = useState<MealEntry[]>([])
-  const [trendEntries, setTrendEntries] = useState<MealEntry[]>([])
   const [foods, setFoods] = useState<Food[]>([])
   const [foodGroups, setFoodGroups] = useState<FoodGroup[]>([])
   const [foodAliases, setFoodAliases] = useState<FoodAlias[]>([])
@@ -468,9 +467,6 @@ function App() {
   const mealSaveInFlightRef = useRef(false)
   const menuSetRegistrationRef = useRef(false)
 
-  const graphTo = currentDateKey()
-  const graphFrom = addDays(graphTo, -(TREND_RANGE_DAYS[graphRange] - 1))
-
   const notify = useCallback((message: string) => {
     setNotice(message)
     window.setTimeout(() => setNotice((current) => current === message ? null : current), 3500)
@@ -481,14 +477,12 @@ function App() {
     const requestedDate = selectedDateRef.current
     setLoadedDate(null)
     try {
-      const trendEntriesPromise = graphFrom && graphTo && graphFrom <= graphTo ? getEntriesBetween(graphFrom, graphTo) : Promise.resolve([] as MealEntry[])
-      const [dateEntries, rangeEntries, resultFoods, resultGroups, resultAliases, resultRelatedTerms, recent, favorites, ids, currentSettings, foodCount, mealCount, menuCount, menuSetCount, foodKeys, resultMenus, resultMenuSets] = await Promise.all([
-        getEntriesForDate(requestedDate), trendEntriesPromise, getAllFoods(), getAllFoodGroups(), getAllFoodAliases(), getAllFoodRelatedTerms(), getRecentFoods(), getFavoriteFoods(), getFavoriteIds(),
+      const [dateEntries, resultFoods, resultGroups, resultAliases, resultRelatedTerms, recent, favorites, ids, currentSettings, foodCount, mealCount, menuCount, menuSetCount, foodKeys, resultMenus, resultMenuSets] = await Promise.all([
+        getEntriesForDate(requestedDate), getAllFoods(), getAllFoodGroups(), getAllFoodAliases(), getAllFoodRelatedTerms(), getRecentFoods(), getFavoriteFoods(), getFavoriteIds(),
         getSettings(), db.foods.count(), db.mealEntries.count(), db.menus.count(), db.menuSets.count(), db.foods.toCollection().primaryKeys(), getAllMenus(), getAllMenuSets(),
       ])
       if (requestId !== loadRequestIdRef.current || requestedDate !== selectedDateRef.current) return false
       setEntries(dateEntries)
-      setTrendEntries(rangeEntries)
       setFoods(resultFoods)
       setFoodGroups(resultGroups)
       setFoodAliases(resultAliases)
@@ -512,7 +506,7 @@ function App() {
       setError('データを読み込めませんでした。ページを再読み込みして再試行してください。')
       return false
     }
-  }, [graphFrom, graphTo])
+  }, [])
 
   useEffect(() => {
     void initializeDatabase()
@@ -1391,7 +1385,7 @@ function App() {
           onReorder={(orderedEntryIds) => reorderMealRecords(confirmingMealType, orderedEntryIds)}
           onDone={() => { setConfirmingMealType(null); setView('today') }}
         />}
-        {view === 'graphs' && <GraphsView entries={trendEntries} range={graphRange} onRangeChange={setGraphRange} goals={settings.goals} />}
+        {view === 'graphs' && <GraphsView range={graphRange} onRangeChange={setGraphRange} goals={settings.goals} />}
         {view === 'food-screen' && <FoodsView recordingMealType={recordingMealType} foods={foods} foodGroups={foodGroups} menus={menus} menuSets={menuSets} recentFoods={recentFoods} favoriteFoods={favoriteFoods} favoriteIds={favoriteIds} onSelectFood={handleFoodSelection} onSelectMenuSet={(menuSet) => void registerMenuSet(menuSet)} onToggleFavorite={toggleFavorite} onEditFood={(food) => openFoodForm(food, '', 'food-screen', null, null, '', foodScreenReturnView === 'settings' ? 'settings' : 'meal')} onDeleteFood={removeFood} onOpenSearch={() => openSearchInput(recordingMealType ? 'meal' : 'food-master')} onOpenScanner={() => setShowScanner(true)} onBack={() => { setRecordingMealType(null); setView(foodScreenReturnView) }} backLabel={foodScreenReturnView === 'settings' ? '← 設定' : '← 記録'} copyMealType={copyMealType} setCopyMealType={setCopyMealType} onCopyPrevious={copyPreviousMeals} />}
         {view === 'food-form' && foodDraft && <FoodFormView draft={foodDraft} returnView={foodFormReturnView} allowCommercialClassification={foodFormOrigin === 'settings'} setDraft={setFoodDraft} foodGroups={foodGroups} foodAliases={foodAliases} foodRelatedTerms={foodRelatedTerms} externalNote={externalNote} onSubmit={saveFoodDraft} onClose={() => { setFoodDraft(null); setFoodFormMealType(null); setFoodFormSearchQuery(null); setView(foodFormReturnView) }} />}
         {view === 'settings' && <><SettingsView settings={settings} goalInputs={goalInputs} setGoalInputs={setGoalInputs} onSaveGoals={saveGoals} onToggleExternalApi={toggleExternalApi} onChangeDefaultMealTimeMode={changeDefaultMealTimeMode} onExportJson={exportJson} onRestoreJson={restoreJson} onExportCsv={exportCsv} onImportCsv={importCsv} csvFrom={csvFrom} csvTo={csvTo} setCsvFrom={setCsvFrom} setCsvTo={setCsvTo} counts={counts} /><SettingsExtras bodyProfileInputs={bodyProfileInputs} setBodyProfileInputs={setBodyProfileInputs} onSaveBodyProfile={saveBodyProfile} onOpenNewFood={() => openFoodForm(undefined, '', 'settings', null, null, '', 'settings')} onOpenFoodMaster={() => { setRecordingMealType(null); setFoodScreenReturnView('settings'); setView('food-screen') }} estimatedGoals={estimateDailyGoals(settings.bodyProfile ?? DEFAULT_BODY_PROFILE)} bmi={calculateBmi(settings.bodyProfile ?? DEFAULT_BODY_PROFILE)} /></>}
@@ -1476,25 +1470,27 @@ function MealColorLegend() {
   return <div className="meal-color-legend">{MEAL_TYPES.map((type) => <span key={type}><i className={`meal-dot meal-dot-${mealTone(type)}`} /><img className="meal-legend-icon" src={MEAL_ICON_ASSETS[type]} alt="" aria-hidden="true" />{type}</span>)}</div>
 }
 
-function NutrientGraphRow({ label, value, availableValue = value, goal, unit, range, segments }: { label: string; value: number | null; availableValue?: number | null; goal: number | null; unit: string; range: { min: number | null; max: number | null }; segments?: GoalSegment[] }) {
-  const hasGoal = goal !== null && goal > 0
+function NutrientGraphRow({ label, value, availableValue = value, goal, unit, range, segments, showReference = true }: { label: string; value: number | null; availableValue?: number | null; goal: number | null; unit: string; range: { min: number | null; max: number | null }; segments?: GoalSegment[]; showReference?: boolean }) {
+  const hasGoal = showReference && goal !== null && goal > 0
   const graphMax = hasGoal ? Math.max(goal * 2, availableValue ?? 0, 1) : Math.max(availableValue ?? 0, 1)
   const valuePercent = availableValue === null ? 0 : Math.min(100, Math.max(0, (availableValue / graphMax) * 100))
   const rangeLeft = hasGoal ? Math.min(100, Math.max(0, ((range.min ?? 0) / graphMax) * 100)) : 0
   const rangeRight = hasGoal ? Math.min(100, Math.max(rangeLeft, ((range.max ?? graphMax) / graphMax) * 100)) : 0
   const segmentTotal = segments?.reduce((sum, segment) => sum + segment.value, 0) ?? 0
   const rate = goalRate(value, goal)
-  const status = value === null || rate === null ? '未設定' : range.max !== null && value > range.max ? '超過' : range.min !== null && value < range.min ? '不足' : '適正'
+  const status = !showReference || value === null || rate === null ? '未設定' : range.max !== null && value > range.max ? '超過' : range.min !== null && value < range.min ? '不足' : '適正'
   return <div className="nutrient-graph-row"><span className="nutrient-graph-label">{label}</span><div className="nutrient-graph-track"><span className="nutrient-graph-range" style={{ left: `${rangeLeft}%`, width: `${Math.max(0, rangeRight - rangeLeft)}%` }} />{availableValue !== null && <span className={`nutrient-graph-intake${segments && segmentTotal > 0 ? ' nutrient-graph-intake-segmented' : ''}`} style={{ width: `${valuePercent}%` }}>{segments && segmentTotal > 0 && segments.map((segment) => <i key={segment.type} className={`meal-segment meal-segment-${mealTone(segment.type)}`} style={{ width: `${(segment.value / segmentTotal) * 100}%` }} />)}</span>}{hasGoal && <span className="nutrient-graph-target" style={{ left: '50%' }} />}</div><span className={`nutrient-graph-value nutrient-graph-status-${status === '超過' ? 'over' : status === '不足' ? 'under' : status === '適正' ? 'ok' : 'unknown'}`}>{formatGraphNutrient(availableValue)}<small>{unit}</small></span></div>
 }
 
-function NutrientGoalGraphs({ nutrients, availableNutrients, goals, subtotals, availableSubtotals, colorByMeal = false, excludeEnergy = false }: { nutrients: Nutrients; availableNutrients?: Nutrients; goals: NutritionGoals; subtotals?: Record<string, Nutrients>; availableSubtotals?: Record<string, Nutrients>; colorByMeal?: boolean; excludeEnergy?: boolean }) {
+function NutrientGoalGraphs({ nutrients, availableNutrients, goals, subtotals, availableSubtotals, colorByMeal = false, excludeEnergy = false, showReference = true }: { nutrients: Nutrients; availableNutrients?: Nutrients; goals: NutritionGoals; subtotals?: Record<string, Nutrients>; availableSubtotals?: Record<string, Nutrients>; colorByMeal?: boolean; excludeEnergy?: boolean; showReference?: boolean }) {
   const keys = excludeEnergy ? NUTRIENT_KEYS.filter((key) => key !== 'energyKcal') : NUTRIENT_KEYS
   const segmentSubtotals = availableSubtotals ?? subtotals
-  return <section className="nutrient-graph"><div className="nutrient-graph-heading"><span>栄養素</span><span>基準ライン</span><span>摂取量</span></div><div className="nutrient-graph-rows">{keys.map((key) => <NutrientGraphRow key={key} label={NUTRIENT_LABELS[key]} value={nutrients[key]} availableValue={availableNutrients ? availableNutrients[key] : nutrients[key]} goal={goals[key]} unit={NUTRIENT_UNITS[key]} range={nutrientRangeForGoals(goals, key)} segments={colorByMeal && segmentSubtotals ? MEAL_TYPES.map((type) => ({ type, value: segmentSubtotals[type]?.[key] ?? 0 })).filter((segment) => segment.value > 0) : undefined} />)}</div>{colorByMeal && segmentSubtotals && <div className="nutrient-graph-footer"><MealColorLegend /></div>}</section>
+  return <section className={`nutrient-graph${showReference ? '' : ' nutrient-graph-without-reference'}`}><div className="nutrient-graph-heading"><span>栄養素</span><span>{showReference ? '基準ライン' : ''}</span><span>摂取量</span></div><div className="nutrient-graph-rows">{keys.map((key) => <NutrientGraphRow key={key} label={NUTRIENT_LABELS[key]} value={nutrients[key]} availableValue={availableNutrients ? availableNutrients[key] : nutrients[key]} goal={goals[key]} unit={NUTRIENT_UNITS[key]} range={nutrientRangeForGoals(goals, key)} segments={colorByMeal && segmentSubtotals ? MEAL_TYPES.map((type) => ({ type, value: segmentSubtotals[type]?.[key] ?? 0 })).filter((segment) => segment.value > 0) : undefined} showReference={showReference} />)}</div>{colorByMeal && segmentSubtotals && <div className="nutrient-graph-footer"><MealColorLegend /></div>}</section>
 }
 
 const TREND_NUTRIENT_KEYS: NutrientKey[] = ['energyKcal', 'proteinG', 'fatG', 'carbohydrateG']
+const TREND_MIN_HISTORY_DAYS = 28
+const TREND_HISTORY_CHUNK_DAYS = 365
 
 function formatTrendDate(dateKey: string): string {
   const [, month, day] = dateKey.split('-')
@@ -1502,28 +1498,143 @@ function formatTrendDate(dateKey: string): string {
 }
 
 interface GraphsViewProps {
-  entries: MealEntry[]
   range: TrendRangeId
   goals: NutritionGoals
   onRangeChange: (value: TrendRangeId) => void
 }
 
-function GraphsView({ entries, range, goals, onRangeChange }: GraphsViewProps) {
+function GraphsView({ range, goals, onRangeChange }: GraphsViewProps) {
   const [metric, setMetric] = useState<NutrientKey>('energyKcal')
   const rangeDays = TREND_RANGE_DAYS[range]
-  const to = currentDateKey()
-  const from = addDays(to, -(rangeDays - 1))
-  const points = useMemo(() => buildDailyNutrientTrend(entries, from, to, rangeDays), [entries, from, to, rangeDays])
+  const [historyDays, setHistoryDays] = useState(() => Math.max(TREND_MIN_HISTORY_DAYS, rangeDays * 2))
+  const [historyEntries, setHistoryEntries] = useState<MealEntry[]>([])
+  const [historyReady, setHistoryReady] = useState(false)
+  const [loadingOlder, setLoadingOlder] = useState(false)
+  const [historyError, setHistoryError] = useState<string | null>(null)
+  const [chartViewportWidth, setChartViewportWidth] = useState(0)
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const historyDaysRef = useRef(historyDays)
+  const loadingOlderRef = useRef(false)
+  const initialScrollPositionedRef = useRef(false)
+  const pendingPrependWidthRef = useRef<number | null>(null)
+  const pendingRightDayRef = useRef<number | null>(null)
+  const todayRef = useRef(currentDateKey())
+  const today = todayRef.current
+  const historyFrom = addDays(today, -(historyDays - 1))
+  const points = useMemo(
+    () => buildDailyNutrientTrend(historyEntries, historyFrom, today, historyDays),
+    [historyDays, historyEntries, historyFrom, today],
+  )
   const goal = goals[metric]
   const values = points.map((point) => point.availableNutrients[metric] ?? 0)
   const chartMax = Math.max(goal ?? 0, ...values, 1) * 1.15
   const goalPosition = goal !== null && goal > 0 ? Math.min(100, (goal / chartMax) * 100) : null
-  const recordedDays = new Set(entries.map((entry) => formatDateKey(entry.eatenAt))).size
+  const dayStep = Math.max(1, (chartViewportWidth || 320) / rangeDays)
+  const dayGap = dayStep / 5
+  const chartWidth = Math.max(chartViewportWidth, points.length * dayStep)
+  const labelInterval = rangeDays <= 7 ? 1 : rangeDays <= 30 ? 5 : rangeDays <= 90 ? 15 : 60
+
+  useEffect(() => {
+    let active = true
+    void getEntriesBetween(historyFrom, today)
+      .then((loaded) => {
+        if (!active) return
+        setHistoryEntries(loaded)
+        setHistoryReady(true)
+        setHistoryError(null)
+      })
+      .catch(() => {
+        if (!active) return
+        setHistoryReady(true)
+        setHistoryError('グラフ用の食事履歴を読み込めませんでした。')
+      })
+    return () => { active = false }
+    // The initial range is intentionally fixed; older ranges are prepended on demand.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useLayoutEffect(() => {
+    const scroll = scrollRef.current
+    if (!scroll) return
+    const updateWidth = () => setChartViewportWidth(scroll.clientWidth)
+    updateWidth()
+    const observer = new ResizeObserver(updateWidth)
+    observer.observe(scroll)
+    return () => observer.disconnect()
+  }, [])
+
+  useLayoutEffect(() => {
+    const scroll = scrollRef.current
+    if (!scroll || !historyReady) return
+    if (pendingPrependWidthRef.current !== null) {
+      const previousWidth = pendingPrependWidthRef.current
+      pendingPrependWidthRef.current = null
+      scroll.scrollLeft += Math.max(0, scroll.scrollWidth - previousWidth)
+      return
+    }
+    if (pendingRightDayRef.current !== null) {
+      const rightDay = pendingRightDayRef.current
+      pendingRightDayRef.current = null
+      scroll.scrollLeft = Math.max(0, rightDay * dayStep - scroll.clientWidth)
+      return
+    }
+    if (!initialScrollPositionedRef.current) {
+      initialScrollPositionedRef.current = true
+      scroll.scrollLeft = Math.max(0, scroll.scrollWidth - scroll.clientWidth)
+    }
+  }, [chartWidth, dayStep, historyReady, points.length])
+
+  const loadOlderHistory = useCallback(async (additionalDays = TREND_HISTORY_CHUNK_DAYS) => {
+    const scroll = scrollRef.current
+    if (!scroll || loadingOlderRef.current) return
+    loadingOlderRef.current = true
+    setLoadingOlder(true)
+    const currentDays = historyDaysRef.current
+    const nextDays = currentDays + additionalDays
+    const olderFrom = addDays(today, -(nextDays - 1))
+    const olderTo = addDays(today, -currentDays)
+    const previousScrollWidth = scroll.scrollWidth
+    try {
+      const olderEntries = await getEntriesBetween(olderFrom, olderTo)
+      pendingPrependWidthRef.current = previousScrollWidth
+      historyDaysRef.current = nextDays
+      setHistoryDays(nextDays)
+      setHistoryEntries((current) => {
+        const byId = new Map([...olderEntries, ...current].map((entry) => [entry.id, entry]))
+        return sortMealEntries([...byId.values()])
+      })
+      setHistoryError(null)
+    } catch {
+      setHistoryError('過去の食事履歴を追加で読み込めませんでした。')
+    } finally {
+      loadingOlderRef.current = false
+      setLoadingOlder(false)
+    }
+  }, [today])
+
+  useEffect(() => {
+    if (!historyReady) return
+    const minimumHistoryDays = Math.max(TREND_MIN_HISTORY_DAYS, rangeDays * 2)
+    const missingDays = minimumHistoryDays - historyDaysRef.current
+    if (missingDays > 0) void loadOlderHistory(missingDays)
+  }, [historyReady, loadOlderHistory, rangeDays])
+
+  const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
+    if (!initialScrollPositionedRef.current || event.currentTarget.scrollLeft > event.currentTarget.clientWidth * 0.35) return
+    void loadOlderHistory()
+  }
+
+  const changeRange = (next: TrendRangeId) => {
+    if (next === range) return
+    const scroll = scrollRef.current
+    if (scroll) pendingRightDayRef.current = (scroll.scrollLeft + scroll.clientWidth) / dayStep
+    onRangeChange(next)
+  }
 
   return <>
     <section className="page-heading"><div><span className="eyebrow">GRAPHS</span><h1>グラフ</h1></div></section>
-    <section className="settings-card trend-toolbar-card"><div className="section-title"><div><span className="eyebrow">TREND</span><h2>表示する期間と栄養素</h2></div></div><div className="trend-range-tabs" role="tablist" aria-label="グラフの表示期間">{TREND_RANGE_OPTIONS.map((option) => <button key={option.id} type="button" role="tab" aria-selected={range === option.id} className={range === option.id ? 'active' : ''} onClick={() => onRangeChange(option.id)}>{option.label}</button>)}</div><label>表示する栄養素<select value={metric} onChange={(event) => setMetric(event.target.value as NutrientKey)}>{TREND_NUTRIENT_KEYS.map((key) => <option key={key} value={key}>{NUTRIENT_LABELS[key]}</option>)}</select></label><InfoPopover label="グラフの表示について" text="今日を含む固定期間で表示します。線は設定された1日の目標値です。" /></section>
-    <section className="trend-chart-card"><div className="trend-chart-heading"><div><span className="eyebrow">DAILY TREND</span><h2>{NUTRIENT_LABELS[metric]}の推移</h2></div><span>{recordedDays}日記録 / {points.length}日</span></div><div className="trend-chart-legend"><span className="trend-legend-bar" />摂取量{goalPosition !== null && <><span className="trend-legend-line" />目標 {formatGraphNutrient(goal)}{NUTRIENT_UNITS[metric]}</>}</div><div className="trend-chart-scroll"><div className="trend-chart"><div className="trend-chart-plot">{goalPosition !== null && <span className="trend-chart-goal-line" style={{ bottom: `${goalPosition}%` }} />}<div className="trend-chart-bars" style={{ gridTemplateColumns: `repeat(${Math.max(points.length, 1)}, minmax(2.7rem, 1fr))`, minWidth: `${Math.max(points.length * 3.2, 31)}rem` }}>{points.map((point) => { const availableValue = point.availableNutrients[metric]; const height = availableValue === null ? 0 : Math.min(100, Math.max(0, (availableValue / chartMax) * 100)); return <div className="trend-bar-column" key={point.date} title={`${point.date} ${NUTRIENT_LABELS[metric]} ${formatGraphNutrient(availableValue)}${NUTRIENT_UNITS[metric]}`}><span className={`trend-bar-value${availableValue === null ? ' is-missing' : ''}`}>{formatGraphNutrient(availableValue)}<small>{NUTRIENT_UNITS[metric]}</small></span><div className="trend-bar-track">{availableValue !== null && <span className="trend-bar-fill" style={{ height: `${height}%` }} />}</div><span className="trend-bar-date">{formatTrendDate(point.date)}</span></div> })}</div></div></div></div></section>
+    <section className="settings-card trend-toolbar-card"><div className="trend-range-tabs" role="tablist" aria-label="1画面に表示する期間">{TREND_RANGE_OPTIONS.map((option) => <button key={option.id} type="button" role="tab" aria-selected={range === option.id} className={range === option.id ? 'active' : ''} onClick={() => changeRange(option.id)}>{option.label}</button>)}</div><select className="trend-metric-select" aria-label="表示する栄養素" value={metric} onChange={(event) => setMetric(event.target.value as NutrientKey)}>{TREND_NUTRIENT_KEYS.map((key) => <option key={key} value={key}>{NUTRIENT_LABELS[key]}</option>)}</select></section>
+    <section className="trend-chart-card" aria-busy={!historyReady || loadingOlder}><div className="trend-chart-legend"><MealColorLegend />{goalPosition !== null && <span className="trend-goal-legend"><i className="trend-legend-line" />目標 {formatGraphNutrient(goal)}{NUTRIENT_UNITS[metric]}</span>}</div>{historyError && <p className="trend-load-status error-text">{historyError}</p>}<div ref={scrollRef} className="trend-chart-scroll" onScroll={handleScroll}><div className="trend-chart" style={{ width: `${chartWidth}px` }}><div className="trend-chart-plot">{goalPosition !== null && <span className="trend-chart-goal-line" style={{ bottom: `${goalPosition}%` }} />}<div className="trend-chart-bars" style={{ gridTemplateColumns: `repeat(${Math.max(points.length, 1)}, minmax(0, 1fr))`, gap: `${dayGap}px` }}>{points.map((point, index) => { const availableValue = point.availableNutrients[metric]; const height = availableValue === null ? 0 : Math.min(100, Math.max(0, (availableValue / chartMax) * 100)); const segments = MEAL_TYPES.map((type) => ({ type, value: point.availableNutrientsByMealType[type]?.[metric] ?? 0 })).filter((segment) => segment.value > 0); const segmentTotal = segments.reduce((sum, segment) => sum + segment.value, 0); const showLabel = index % labelInterval === 0 || index === points.length - 1; return <div className="trend-bar-column" key={point.date} title={`${point.date} ${NUTRIENT_LABELS[metric]} ${formatGraphNutrient(availableValue)}${NUTRIENT_UNITS[metric]}`}><span className={`trend-bar-value${availableValue === null ? ' is-missing' : ''}${showLabel ? '' : ' is-hidden'}`}>{formatGraphNutrient(availableValue)}<small>{NUTRIENT_UNITS[metric]}</small></span><div className="trend-bar-track">{availableValue !== null && segmentTotal > 0 && <span className="trend-bar-fill" style={{ height: `${height}%` }}>{segments.map((segment) => <i key={segment.type} className={`meal-segment meal-segment-${mealTone(segment.type)}`} style={{ height: `${(segment.value / segmentTotal) * 100}%` }} />)}</span>}</div><span className={`trend-bar-date${showLabel ? '' : ' is-hidden'}`}>{formatTrendDate(point.date)}</span></div> })}</div></div></div></div>{loadingOlder && <p className="trend-load-status">過去の記録を読み込んでいます…</p>}</section>
   </>
 }
 
@@ -1563,6 +1674,11 @@ function MealConfirmationView({ type, entries, subtotal, onAdd, onEdit, onDelete
   const dragStartOrderRef = useRef<MealEntry[]>(entries)
   const dragOffsetYRef = useRef(0)
   const dragPointerIdRef = useRef<number | null>(null)
+  const dragHandleRef = useRef<HTMLButtonElement | null>(null)
+  const dragFrameRef = useRef<number | null>(null)
+  const latestDragYRef = useRef(0)
+  const updateDragPositionRef = useRef<(clientY: number) => void>(() => undefined)
+  const finishDragRef = useRef<(pointerId: number | null, commit: boolean) => void>(() => undefined)
   const [dragPreview, setDragPreview] = useState<{ top: number; left: number; width: number; height: number } | null>(null)
   const [savingOrder, setSavingOrder] = useState(false)
   const savingOrderRef = useRef(false)
@@ -1614,20 +1730,25 @@ function MealConfirmationView({ type, entries, subtotal, onAdd, onEdit, onDelete
     const row = event.currentTarget.closest<HTMLElement>('[data-meal-entry-id]')
     if (!row) return
     const rect = row.getBoundingClientRect()
-    event.currentTarget.setPointerCapture(event.pointerId)
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId)
+    } catch {
+      // Global listeners registered below keep the drag usable even when capture is unavailable.
+    }
     dragStartOrderRef.current = orderedEntriesRef.current
     dragOffsetYRef.current = event.clientY - rect.top
     dragPointerIdRef.current = event.pointerId
+    dragHandleRef.current = event.currentTarget
+    latestDragYRef.current = event.clientY
     draggedEntryIdRef.current = entryId
     setDraggedEntryId(entryId)
     setDragPreview({ top: rect.top, left: rect.left, width: rect.width, height: rect.height })
   }
 
-  const moveDrag = (event: React.PointerEvent<HTMLButtonElement>) => {
+  const updateDragPosition = (clientY: number) => {
     const sourceId = draggedEntryIdRef.current
-    if (!sourceId || dragPointerIdRef.current !== event.pointerId) return
-    event.preventDefault()
-    setDragPreview((current) => current ? { ...current, top: event.clientY - dragOffsetYRef.current } : current)
+    if (!sourceId) return
+    setDragPreview((current) => current ? { ...current, top: clientY - dragOffsetYRef.current } : current)
     const source = orderedEntriesRef.current.find((entry) => entry.id === sourceId)
     if (!source || !listRef.current) return
     const remaining = orderedEntriesRef.current.filter((entry) => entry.id !== sourceId)
@@ -1638,7 +1759,7 @@ function MealConfirmationView({ type, entries, subtotal, onAdd, onEdit, onDelete
     let destination = remaining.length
     for (let index = 0; index < remaining.length; index += 1) {
       const rect = rowById.get(remaining[index].id)?.getBoundingClientRect()
-      if (rect && event.clientY < rect.top + rect.height / 2) {
+      if (rect && clientY < rect.top + rect.height / 2) {
         destination = index
         break
       }
@@ -1648,26 +1769,80 @@ function MealConfirmationView({ type, entries, subtotal, onAdd, onEdit, onDelete
     if (!next.every((entry, index) => entry.id === orderedEntriesRef.current[index]?.id)) updateLocalOrder(next)
   }
 
-  const finishDrag = async (event: React.PointerEvent<HTMLButtonElement>) => {
-    if (!draggedEntryIdRef.current || dragPointerIdRef.current !== event.pointerId) return
-    event.preventDefault()
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId)
-    draggedEntryIdRef.current = null
+  updateDragPositionRef.current = updateDragPosition
+
+  const finalizeDrag = (pointerId: number | null, commit: boolean) => {
+    if (!draggedEntryIdRef.current || dragPointerIdRef.current === null || (pointerId !== null && dragPointerIdRef.current !== pointerId)) return
+    const activePointerId = dragPointerIdRef.current
+    const handle = dragHandleRef.current
+    if (dragFrameRef.current !== null) {
+      window.cancelAnimationFrame(dragFrameRef.current)
+      dragFrameRef.current = null
+      if (commit) updateDragPositionRef.current(latestDragYRef.current)
+    }
+    const finalOrder = orderedEntriesRef.current
     dragPointerIdRef.current = null
+    draggedEntryIdRef.current = null
+    dragHandleRef.current = null
     setDraggedEntryId(null)
     setDragPreview(null)
-    await commitOrder(orderedEntriesRef.current)
+    try {
+      if (handle?.hasPointerCapture(activePointerId)) handle.releasePointerCapture(activePointerId)
+    } catch {
+      // The browser may already have released capture after moving the keyed row.
+    }
+    if (commit) void commitOrder(finalOrder)
+    else updateLocalOrder(dragStartOrderRef.current)
   }
 
-  const cancelDrag = (event: React.PointerEvent<HTMLButtonElement>) => {
-    if (!draggedEntryIdRef.current || dragPointerIdRef.current !== event.pointerId) return
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId)
-    draggedEntryIdRef.current = null
-    dragPointerIdRef.current = null
-    setDraggedEntryId(null)
-    setDragPreview(null)
-    updateLocalOrder(dragStartOrderRef.current)
-  }
+  finishDragRef.current = finalizeDrag
+
+  useEffect(() => {
+    if (!draggedEntryId) return
+
+    const queueMove = (event: PointerEvent) => {
+      if (dragPointerIdRef.current !== event.pointerId) return
+      event.preventDefault()
+      latestDragYRef.current = event.clientY
+      if (dragFrameRef.current !== null) return
+      dragFrameRef.current = window.requestAnimationFrame(() => {
+        dragFrameRef.current = null
+        updateDragPositionRef.current(latestDragYRef.current)
+      })
+    }
+    const commit = (event: PointerEvent) => {
+      if (dragPointerIdRef.current !== event.pointerId) return
+      event.preventDefault()
+      finishDragRef.current(event.pointerId, true)
+    }
+    const cancel = (event: PointerEvent) => {
+      if (dragPointerIdRef.current !== event.pointerId) return
+      finishDragRef.current(event.pointerId, false)
+    }
+    const cancelWithoutPointer = () => finishDragRef.current(null, false)
+    const cancelWhenHidden = () => {
+      if (document.visibilityState === 'hidden') cancelWithoutPointer()
+    }
+
+    document.addEventListener('pointermove', queueMove, { capture: true, passive: false })
+    window.addEventListener('pointerup', commit, true)
+    window.addEventListener('pointercancel', cancel, true)
+    window.addEventListener('blur', cancelWithoutPointer)
+    window.addEventListener('pagehide', cancelWithoutPointer)
+    document.addEventListener('visibilitychange', cancelWhenHidden)
+    return () => {
+      document.removeEventListener('pointermove', queueMove, true)
+      window.removeEventListener('pointerup', commit, true)
+      window.removeEventListener('pointercancel', cancel, true)
+      window.removeEventListener('blur', cancelWithoutPointer)
+      window.removeEventListener('pagehide', cancelWithoutPointer)
+      document.removeEventListener('visibilitychange', cancelWhenHidden)
+      if (dragFrameRef.current !== null) {
+        window.cancelAnimationFrame(dragFrameRef.current)
+        dragFrameRef.current = null
+      }
+    }
+  }, [draggedEntryId])
 
   const draggedEntry = draggedEntryId ? orderedEntries.find((entry) => entry.id === draggedEntryId) : null
 
@@ -1675,7 +1850,7 @@ function MealConfirmationView({ type, entries, subtotal, onAdd, onEdit, onDelete
     <section className="page-heading meal-confirmation-heading"><div><span className="eyebrow">MEAL CONFIRMATION</span><h1>{type}の確認</h1><p className="muted">登録内容を確認できます。≡をドラッグして表示順を変更できます。</p></div><button className="button ghost" type="button" onClick={onDone}>今日の記録へ</button></section>
     <section className="settings-card meal-confirmation-card">
       <div className="meal-confirmation-summary"><div><img className="meal-icon" src={MEAL_ICON_ASSETS[type]} alt="" aria-hidden="true" /><span>{type}</span></div><strong>{entries.length}件 · {formatNutrient(subtotal.energyKcal)} kcal</strong></div>
-      {orderedEntries.length > 0 ? <div ref={listRef} className={`meal-confirmation-list${draggedEntryId ? ' is-reordering' : ''}`}>{orderedEntries.map((entry, index) => <div className={`meal-confirmation-entry${draggedEntryId === entry.id ? ' is-drag-placeholder' : ''}`} key={entry.id} data-meal-entry-id={entry.id}><button className="meal-order-handle" type="button" aria-label={`${entry.foodSnapshot.name}をドラッグして並び替え`} disabled={savingOrder || orderedEntries.length < 2} onPointerDown={(event) => startDrag(event, entry.id)} onPointerMove={moveDrag} onPointerUp={(event) => void finishDrag(event)} onPointerCancel={cancelDrag}>≡</button><div className="meal-confirmation-entry-copy"><strong>{entry.foodSnapshot.name}{entry.foodSnapshot.maker ? `（${entry.foodSnapshot.maker}）` : ''}</strong><span>{entry.amount}{entry.amountUnit}{type === '間食' ? ` · ${formatTime(entry.eatenAt)}` : ''}</span></div><div className="meal-confirmation-entry-actions"><b>{formatNutrient(entry.calculatedNutrients.energyKcal)} kcal</b><div className="meal-order-buttons"><button type="button" aria-label={`${entry.foodSnapshot.name}を上へ移動`} disabled={savingOrder || index === 0} onClick={() => void moveByButton(entry.id, -1)}>↑</button><button type="button" aria-label={`${entry.foodSnapshot.name}を下へ移動`} disabled={savingOrder || index === orderedEntries.length - 1} onClick={() => void moveByButton(entry.id, 1)}>↓</button></div><button className="small-action" type="button" disabled={savingOrder} onClick={() => onEdit(entry)}>編集</button><button className="small-action danger-text" type="button" disabled={savingOrder} onClick={() => onDelete(entry)}>削除</button></div></div>)}</div> : <div className="empty-state">この区分の食事記録はありません。</div>}
+      {orderedEntries.length > 0 ? <div ref={listRef} className={`meal-confirmation-list${draggedEntryId ? ' is-reordering' : ''}`}>{orderedEntries.map((entry, index) => <div className={`meal-confirmation-entry${draggedEntryId === entry.id ? ' is-drag-placeholder' : ''}`} key={entry.id} data-meal-entry-id={entry.id}><button className="meal-order-handle" type="button" aria-label={`${entry.foodSnapshot.name}をドラッグして並び替え`} disabled={savingOrder || orderedEntries.length < 2} onPointerDown={(event) => startDrag(event, entry.id)} onPointerUp={(event) => finishDragRef.current(event.pointerId, true)} onPointerCancel={(event) => finishDragRef.current(event.pointerId, false)}>≡</button><div className="meal-confirmation-entry-copy"><strong>{entry.foodSnapshot.name}{entry.foodSnapshot.maker ? `（${entry.foodSnapshot.maker}）` : ''}</strong><span>{entry.amount}{entry.amountUnit}{type === '間食' ? ` · ${formatTime(entry.eatenAt)}` : ''}</span></div><div className="meal-confirmation-entry-actions"><b>{formatNutrient(entry.calculatedNutrients.energyKcal)} kcal</b><div className="meal-order-buttons"><button type="button" aria-label={`${entry.foodSnapshot.name}を上へ移動`} disabled={savingOrder || index === 0} onClick={() => void moveByButton(entry.id, -1)}>↑</button><button type="button" aria-label={`${entry.foodSnapshot.name}を下へ移動`} disabled={savingOrder || index === orderedEntries.length - 1} onClick={() => void moveByButton(entry.id, 1)}>↓</button></div><button className="small-action" type="button" disabled={savingOrder} onClick={() => onEdit(entry)}>編集</button><button className="small-action danger-text" type="button" disabled={savingOrder} onClick={() => onDelete(entry)}>削除</button></div></div>)}</div> : <div className="empty-state">この区分の食事記録はありません。</div>}
       <div className="meal-confirmation-actions"><button className="button primary" type="button" onClick={onAdd}>＋ {type}を追加</button><button className="button secondary" type="button" onClick={onDone}>登録を完了</button></div>
     </section>
     {draggedEntry && dragPreview && <div className="meal-drag-overlay" style={dragPreview} aria-hidden="true"><span className="meal-order-handle">≡</span><div className="meal-confirmation-entry-copy"><strong>{draggedEntry.foodSnapshot.name}{draggedEntry.foodSnapshot.maker ? `（${draggedEntry.foodSnapshot.maker}）` : ''}</strong><span>{draggedEntry.amount}{draggedEntry.amountUnit}{type === '間食' ? ` · ${formatTime(draggedEntry.eatenAt)}` : ''}</span></div><b>{formatNutrient(draggedEntry.calculatedNutrients.energyKcal)} kcal</b></div>}
@@ -2444,7 +2619,7 @@ function MealDetailsModal({ details, goals, onUpdateTimes, onClose }: { details:
   const [snackTimes, setSnackTimes] = useState<Record<string, string>>(() => Object.fromEntries(details.entries.map((entry) => [entry.id, toTokyoTimeInput(entry.eatenAt)])))
   const sharedEntryIds = details.entries.map((entry) => entry.id)
   const availableNutrients = sumAvailableNutrients(details.entries)
-  return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label={`${details.type}の栄養詳細`}><section className="modal-card"><div className="modal-heading"><div><span className="eyebrow">NUTRIENTS</span><h2>{details.type}の詳細</h2></div><button className="icon-button" type="button" onClick={onClose} aria-label="閉じる">×</button></div><div className="detail-total"><span>合計カロリー</span><strong>{formatNutrient(details.subtotal.energyKcal)}<small> kcal</small></strong></div><NutrientGoalGraphs nutrients={details.subtotal} availableNutrients={availableNutrients} goals={goals} /><section className="meal-time-editor"><div className="section-title"><div><span className="eyebrow">MEAL TIME</span><h3>食事時刻</h3></div></div>{details.type !== '間食' ? <form className="inline-time-form" onSubmit={(event) => { event.preventDefault(); onUpdateTimes(sharedEntryIds, sharedTime) }}><label><input aria-label="食事時刻" type="time" value={sharedTime} onChange={(event) => setSharedTime(event.target.value)} required /></label><button className="button secondary" type="submit">時刻を保存</button></form> : <div className="snack-time-list">{details.entries.map((entry) => <div className="snack-time-row" key={entry.id}><span>{entry.foodSnapshot.name}</span><input type="time" value={snackTimes[entry.id] ?? ''} onChange={(event) => setSnackTimes((current) => ({ ...current, [entry.id]: event.target.value }))} /><button className="small-action" type="button" onClick={() => onUpdateTimes([entry.id], snackTimes[entry.id] ?? '')}>保存</button></div>)}</div>}</section><div className="detail-entry-list">{details.entries.map((entry) => <div className="detail-entry" key={entry.id}><span>{entry.foodSnapshot.name} · {entry.amount}{entry.amountUnit}</span><strong>{formatNutrient(entry.calculatedNutrients.energyKcal)} kcal</strong></div>)}</div><button className="button ghost full-width" type="button" onClick={onClose}>閉じる</button></section></div>
+  return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label={`${details.type}の栄養詳細`}><section className="modal-card"><div className="modal-heading"><div><span className="eyebrow">NUTRIENTS</span><h2>{details.type}の詳細</h2></div><button className="icon-button" type="button" onClick={onClose} aria-label="閉じる">×</button></div><div className="detail-total"><span>合計カロリー</span><strong>{formatNutrient(details.subtotal.energyKcal)}<small> kcal</small></strong></div><NutrientGoalGraphs nutrients={details.subtotal} availableNutrients={availableNutrients} goals={goals} showReference={details.type !== '間食'} /><section className="meal-time-editor"><div className="section-title"><div><span className="eyebrow">MEAL TIME</span><h3>食事時刻</h3></div></div>{details.type !== '間食' ? <form className="inline-time-form" onSubmit={(event) => { event.preventDefault(); onUpdateTimes(sharedEntryIds, sharedTime) }}><label><input aria-label="食事時刻" type="time" value={sharedTime} onChange={(event) => setSharedTime(event.target.value)} required /></label><button className="button secondary" type="submit">時刻を保存</button></form> : <div className="snack-time-list">{details.entries.map((entry) => <div className="snack-time-row" key={entry.id}><span>{entry.foodSnapshot.name}</span><input type="time" value={snackTimes[entry.id] ?? ''} onChange={(event) => setSnackTimes((current) => ({ ...current, [entry.id]: event.target.value }))} /><button className="small-action" type="button" onClick={() => onUpdateTimes([entry.id], snackTimes[entry.id] ?? '')}>保存</button></div>)}</div>}</section><div className="detail-entry-list">{details.entries.map((entry) => <div className="detail-entry" key={entry.id}><span>{entry.foodSnapshot.name} · {entry.amount}{entry.amountUnit}</span><strong>{formatNutrient(entry.calculatedNutrients.energyKcal)} kcal</strong></div>)}</div><button className="button ghost full-width" type="button" onClick={onClose}>閉じる</button></section></div>
 }
 
 function FoodFormView({ draft, returnView, allowCommercialClassification, setDraft, foodGroups, foodAliases, foodRelatedTerms, externalNote, onSubmit, onClose }: { draft: FoodDraft; returnView: FoodFormReturnView; allowCommercialClassification: boolean; setDraft: React.Dispatch<React.SetStateAction<FoodDraft | null>>; foodGroups: FoodGroup[]; foodAliases: FoodAlias[]; foodRelatedTerms: FoodRelatedTerm[]; externalNote: string | null; onSubmit: (event: React.FormEvent<HTMLFormElement>) => void; onClose: () => void }) {
