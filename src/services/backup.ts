@@ -18,8 +18,16 @@ function isNonEmptyString(value: unknown): value is string {
 
 function isIsoDateTime(value: unknown): value is string {
   if (!isString(value)) return false
+  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d{1,9})?Z$/.exec(value)
+  if (!match) return false
   const date = new Date(value)
-  return !Number.isNaN(date.getTime()) && date.toISOString() === value
+  return !Number.isNaN(date.getTime())
+    && date.getUTCFullYear() === Number(match[1])
+    && date.getUTCMonth() + 1 === Number(match[2])
+    && date.getUTCDate() === Number(match[3])
+    && date.getUTCHours() === Number(match[4])
+    && date.getUTCMinutes() === Number(match[5])
+    && date.getUTCSeconds() === Number(match[6])
 }
 
 function isNullableNumber(value: unknown): value is number | null {
@@ -57,7 +65,7 @@ function isFood(value: unknown): value is Food {
   return isNonEmptyString(value.id) && isNonEmptyString(value.name) && isString(value.maker)
     && isString(value.barcode) && (!value.barcode || isValidBarcode(value.barcode))
     && (value.isCommercial === undefined || typeof value.isCommercial === 'boolean')
-    && ['mext', 'open_food_facts', 'user'].includes(String(value.source))
+    && ['mext', 'open_food_facts', 'imported', 'user'].includes(String(value.source))
     && isNonEmptyString(value.sourceVersion) && typeof value.baseAmount === 'number' && Number.isFinite(value.baseAmount) && value.baseAmount > 0 && value.baseAmount <= 100000
     && isValidUnit(String(value.baseUnit)) && isNullablePositiveNumber(value.servingAmount)
     && isInputUnitConversions(value.inputUnitConversions, String(value.baseUnit))

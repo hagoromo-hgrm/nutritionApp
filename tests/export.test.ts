@@ -129,6 +129,8 @@ describe('export formats', () => {
 
   it('外食・市販の明示フラグを保持し、旧形式との互換性も維持する', () => {
     expect(validateBackup({ ...backup, foods: [classifiedFood] }).foods[0].isCommercial).toBe(true)
+    expect(validateBackup({ ...backup, foods: [{ ...classifiedFood, source: 'imported' }] }).foods[0].source).toBe('imported')
+    expect(validateBackup({ ...backup, foods: [{ ...classifiedFood, createdAt: '2026-07-22T14:08:34.475979Z' }] }).foods[0].createdAt).toBe('2026-07-22T14:08:34.475979Z')
     const legacyFood = { ...classifiedFood }
     delete legacyFood.isCommercial
     expect(validateBackup({ ...backup, foods: [legacyFood] }).foods[0].isCommercial).toBeUndefined()

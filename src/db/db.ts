@@ -34,7 +34,7 @@ import {
   type MextFoodGroup,
 } from '../services/mextFoodData'
 
-const INITIAL_FOODS_VERSION = 9
+const INITIAL_FOODS_VERSION = 10
 const SEARCH_METADATA_VERSION = 8
 const LEGACY_INITIAL_FOOD_IDS = [
   'mext_rice_white',
@@ -269,11 +269,16 @@ export async function initializeDatabase(): Promise<void> {
         if (!existing) {
           foodsToPut.push(enrichedFood)
         } else if (
-          existing.source === 'mext'
-          && existing.createdAt === existing.updatedAt
+          existing.createdAt === existing.updatedAt
           && (
-            existing.sourceVersion.includes('増補2023年')
-            || existing.sourceVersion.includes('初期サンプル')
+            (
+              existing.source === 'mext'
+              && (
+                existing.sourceVersion.includes('増補2023年')
+                || existing.sourceVersion.includes('初期サンプル')
+              )
+            )
+            || (existing.source === 'imported' && bundledFood.source === 'imported')
           )
         ) {
           foodsToPut.push(enrichedFood)

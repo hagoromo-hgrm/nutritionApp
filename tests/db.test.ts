@@ -1,6 +1,7 @@
 import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { db, deleteFood, deleteMenu, exportBackup, getEntriesForDate, getFoodByBarcode, getRecentFoods, getSettings, initializeDatabase, recordFoodSelection, reorderMealEntries, replaceAllData, saveFood, saveFoodWithMetadata, saveMealEntries, saveMealEntry, saveMenu, searchFoodResults, searchMenus } from '../src/db/db'
+import { validateBackup } from '../src/services/backup'
 import { getFoodVariantBySourceId, hasFoodGroup as hasMextFoodGroup } from '../src/services/mextFoodData'
 import type { BackupData, Food, FoodAlias, FoodGroup, FoodRelatedTerm, MealEntry, Menu } from '../src/types'
 
@@ -30,8 +31,9 @@ describe('IndexedDB data safety', () => {
   })
 
   it('MEXTの収集済み食品を初期データとして検索できる', async () => {
-    expect(await db.foods.count()).toBe(2538)
-    expect(await db.foodGroups.count()).toBe(1494)
+    expect(await db.foods.count()).toBe(2682)
+    expect(await db.foods.where('source').equals('mext').count()).toBe(2538)
+    expect(await db.foodGroups.count()).toBe(1638)
     const amaranth = await db.foods.get('mext_01001')
     expect(amaranth?.baseUnit).toBe('g')
     expect(amaranth?.nutrients.calciumMg).toBe(160)
@@ -53,6 +55,27 @@ describe('IndexedDB data safety', () => {
     expect((await db.foodGroups.toArray()).filter((group) => group.generationVersion === 'mext-app-v2')).toHaveLength(1494)
     expect(await db.foodAliases.where('normalizedAlias').equals('塩').count()).toBe(0)
     expect(await db.foods.get('mext_chicken_breast')).toBeUndefined()
+  })
+
+  it('検証済みのimported食品だけを外食・市販として初期投入する', async () => {
+    expect(await db.foods.where('source').equals('imported').count()).toBe(144)
+    const famichiki = await db.foods.get('imported:9e784b46d56a4071')
+    if (!famichiki) throw new Error('imported食品が初期投入されていません')
+    expect(famichiki?.name).toBe('ファミチキ')
+    expect(famichiki?.maker).toBe('ファミリーマート')
+    expect(famichiki?.isCommercial).toBe(true)
+    expect(famichiki.foodGroupId).toBe(`food:${famichiki.id}`)
+    expect(famichiki?.inputUnitConversions).toEqual([])
+
+    const packagedBread = await db.foods.get('imported:fbd962b175e449ca')
+    expect(packagedBread?.baseUnit).toBe('その他')
+    expect(packagedBread?.servingUnit).toBe('包装')
+    expect(packagedBread?.inputUnitConversions).toEqual([{ unit: '包装', baseAmount: 1 }])
+    expect(await db.foods.get('imported:c93d4aba6bcd99bf')).toBeUndefined()
+
+    const searched = await searchFoodResults('ファミリーマート', { category: 'commercial' })
+    expect(searched.page.results.some((result) => result.food.id === famichiki?.id)).toBe(true)
+    expect(validateBackup(await exportBackup()).foods.filter((food) => food.source === 'imported')).toHaveLength(144)
   })
 
   it('食品グループをリセット状態で初期化する', async () => {
@@ -104,8 +127,8 @@ describe('IndexedDB data safety', () => {
     await initializeDatabase()
 
     expect(await db.foods.get(legacySample.id)).toBeUndefined()
-    expect(await db.foods.count()).toBe(2538)
-    expect(await db.foodGroups.count()).toBe(1494)
+    expect(await db.foods.count()).toBe(2682)
+    expect(await db.foodGroups.count()).toBe(1638)
   }, 30000)
 
   it('公式MEXT familyへ追加した手動食品を再初期化後も保持する', async () => {
@@ -212,7 +235,7 @@ describe('IndexedDB data safety', () => {
     expect(await getFoodByBarcode(barcode)).toMatchObject({ id: food.id, name: food.name, maker: food.maker, barcode, isCommercial: true })
     expect((await searchFoodResults('保存メーカー')).page.results[0]?.food.id).toBe(food.id)
     expect((await searchFoodResults(food.name)).page.results[0]?.food.id).toBe(food.id)
-    expect((await searchFoodResults('', { category: 'commercial' })).page.results.some((result) => result.food.id === food.id)).toBe(true)
+    expect((await searchFoodResults(food.name, { category: 'commercial' })).page.results.some((result) => result.food.id === food.id)).toBe(true)
   })
 
   it('メニューを保存して名前・区分で検索できる', async () => {

@@ -40,7 +40,7 @@ export const NUTRIENT_UNITS: Record<NutrientKey, string> = {
   saturatedFatG: 'g',
 }
 
-export type FoodSource = 'mext' | 'open_food_facts' | 'user'
+export type FoodSource = 'mext' | 'open_food_facts' | 'imported' | 'user'
 export type SearchMetadataSource = 'llm' | 'rule' | 'manual' | 'imported'
 /** 栄養価の基準量に使う、アプリが管理する単位。 */
 export type FoodUnit = 'g' | 'ml' | '個' | '合' | '袋' | '本' | '枚' | '食' | '丁' | '小さじ' | '杯' | 'その他'
