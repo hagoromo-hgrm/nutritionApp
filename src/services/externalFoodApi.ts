@@ -10,6 +10,9 @@ export interface ExternalFoodPreview {
   nutrients: Nutrients
 }
 
+/** 外部データに商品名がない場合は、保存される実データと区別できる表示用ラベルにする。 */
+export const EXTERNAL_UNNAMED_PRODUCT_LABEL = '名称未設定の商品'
+
 export type ExternalFoodApiErrorKind = 'timeout' | 'rate-limit' | 'unavailable' | 'http' | 'invalid-response' | 'network' | 'aborted'
 
 export class ExternalFoodApiError extends Error {
@@ -86,7 +89,7 @@ function parsePreview(payload: unknown, barcode: string): ExternalFoodPreview | 
     ? product.nutriments as Record<string, unknown>
     : {}
   return {
-    name: typeof product.product_name === 'string' && product.product_name.trim() ? product.product_name : '名称未設定の商品',
+    name: typeof product.product_name === 'string' && product.product_name.trim() ? product.product_name.trim() : EXTERNAL_UNNAMED_PRODUCT_LABEL,
     maker: typeof product.brands === 'string' ? product.brands : '',
     barcode,
     quantity,

@@ -39,7 +39,7 @@ import {
   searchMenuSets,
   setFavorite,
 } from './db/db'
-import { externalFoodErrorMessage, searchExternalFood, type ExternalFoodPreview } from './services/externalFoodApi'
+import { EXTERNAL_UNNAMED_PRODUCT_LABEL, externalFoodErrorMessage, searchExternalFood, type ExternalFoodPreview } from './services/externalFoodApi'
 import { backupToJson, downloadBlob, parseBackupText } from './services/backup'
 import { mealsToCsv, parseMealsCsv } from './services/csv'
 import { calculateBmi, calculateNutrients, estimateDailyGoals, formatNutrient, goalRate, incrementByBaseAmount, nutrientRangeForGoals, scaleNutritionGoals, sumByMealType, sumEntries, sumNutrients } from './services/nutrition'
@@ -90,6 +90,7 @@ import {
 } from './types'
 import { applyConstrainedMextFoodAttributePreferences, applyConstrainedUserFoodSelectionPreferences, getFoodAttributePreferencesForGroup, setFoodAttributePreference } from './services/foodAttributePreferences'
 import { normalizeSearchText, type FoodSearchResult } from './services/foodSearch'
+import { resolveBarcodeCommercialFlag, resolveFoodGroupDisplayName, shouldFollowFoodName } from './services/foodDraft'
 import {
   FOOD_MASTER_SEARCH_CATEGORIES,
   MEAL_SEARCH_CATEGORIES,
@@ -234,7 +235,7 @@ const emptyVariantInputs = (): Record<keyof FoodVariantAttributes, string> => Ob
 
 function emptyFoodDraft(barcode = '', initialName = ''): FoodDraft {
   return {
-    id: null, name: initialName, maker: '', barcode, isCommercial: false, source: 'user', sourceVersion: 'ユーザー入力',
+    id: null, name: initialName, maker: '', barcode, isCommercial: Boolean(barcode.trim()), source: 'user', sourceVersion: 'ユーザー入力',
     baseAmount: '100', baseUnit: 'g', servingAmount: '', servingUnit: 'g', menuIds: [], foodGroupId: '', groupDisplayName: initialName,
     groupReading: '', groupCategory: '', aliases: [], relatedTerms: [], variantAttributes: emptyVariantInputs(), nutrients: emptyNutrientInputs(),
   }
@@ -263,8 +264,9 @@ function foodToDraft(food: Food, group: FoodGroup | undefined, aliases: FoodAlia
 }
 
 function previewToDraft(preview: ExternalFoodPreview): FoodDraft {
+  const initialName = preview.name === EXTERNAL_UNNAMED_PRODUCT_LABEL ? '' : preview.name
   return {
-    ...emptyFoodDraft(preview.barcode, preview.name), maker: preview.maker, source: 'open_food_facts',
+    ...emptyFoodDraft(preview.barcode, initialName), groupDisplayName: initialName, maker: preview.maker, source: 'open_food_facts',
     sourceVersion: 'Open Food Facts（取得値は確認後に保存）', baseAmount: String(preview.baseAmount), baseUnit: preview.baseUnit,
     servingAmount: '', servingUnit: preview.baseUnit, menuIds: [],
     nutrients: Object.fromEntries(nutrientKeys.map((key) => [key, preview.nutrients[key] === null ? '' : String(preview.nutrients[key])])) as Record<NutrientKey, string>,
@@ -687,13 +689,14 @@ function App() {
       const now = new Date().toISOString()
       const foodId = foodDraft.id ?? createNewFoodId()
       const groupId = foodDraft.foodGroupId.trim() || createNewFoodGroupId()
-      const groupDisplayName = foodDraft.groupDisplayName.trim() || foodDraft.name.trim()
+      const previousFoodName = foodDraft.id ? foods.find((item) => item.id === foodDraft.id)?.name ?? '' : ''
+      const groupDisplayName = resolveFoodGroupDisplayName(foodDraft.groupDisplayName, foodDraft.name, previousFoodName)
       const existingGroup = foodGroups.find((group) => group.id === groupId)
       const isBundledMextGroup = hasMextFoodGroup(groupId)
       const variantAttributes = Object.fromEntries(variantAttributeKeys.map((key) => [key, foodDraft.variantAttributes[key].trim() || null])) as FoodVariantAttributes
       const food: Food = {
         id: foodId, name: foodDraft.name.trim(), officialName: foodDraft.name.trim(), displayName: groupDisplayName, maker: foodDraft.maker.trim(), barcode: foodDraft.barcode.trim(),
-        isCommercial: foodDraft.isCommercial,
+        isCommercial: resolveBarcodeCommercialFlag(foodDraft.isCommercial, foodDraft.barcode, foodFormOrigin === 'barcode'),
         source: foodDraft.source, sourceVersion: foodDraft.sourceVersion || 'ユーザー入力', baseAmount, baseUnit: foodDraft.baseUnit,
         servingAmount, servingUnit: servingAmount === null ? null : foodDraft.servingUnit, menuIds: foodDraft.menuIds, foodGroupId: groupId, variantAttributes, nutrients,
         createdAt: foodDraft.id ? (foods.find((item) => item.id === foodDraft.id)?.createdAt ?? now) : now, updatedAt: now,
@@ -2101,6 +2104,10 @@ function MealDetailsModal({ details, goals, onUpdateTimes, onClose }: { details:
 function FoodFormView({ draft, returnView, allowCommercialClassification, setDraft, foodGroups, foodAliases, foodRelatedTerms, menus, externalNote, onSubmit, onClose }: { draft: FoodDraft; returnView: FoodFormReturnView; allowCommercialClassification: boolean; setDraft: React.Dispatch<React.SetStateAction<FoodDraft | null>>; foodGroups: FoodGroup[]; foodAliases: FoodAlias[]; foodRelatedTerms: FoodRelatedTerm[]; menus: Menu[]; externalNote: string | null; onSubmit: (event: React.FormEvent<HTMLFormElement>) => void; onClose: () => void }) {
   const [activeTab, setActiveTab] = useState<'basic' | 'nutrition' | 'search' | 'menus'>('basic')
   const update = <K extends keyof FoodDraft>(key: K, value: FoodDraft[K]) => setDraft((current) => current ? { ...current, [key]: value } : current)
+  const updateProductName = (value: string) => setDraft((current) => {
+    if (!current) return current
+    return { ...current, name: value, groupDisplayName: shouldFollowFoodName(current.groupDisplayName, current.name) ? value : current.groupDisplayName }
+  })
   const selectFamily = (value: string) => setDraft((current) => {
     if (!current) return current
     const group = foodGroups.find((item) => item.id === value)
@@ -2126,7 +2133,7 @@ function FoodFormView({ draft, returnView, allowCommercialClassification, setDra
         </div>
 
         {activeTab === 'basic' && <div className="food-form-tab-panel" role="tabpanel">
-          <label>食品名*<input value={draft.name} onChange={(event) => update('name', event.target.value)} required /></label>
+          <label>食品名*<input value={draft.name} onChange={(event) => updateProductName(event.target.value)} required /></label>
           <label>メーカー<input value={draft.maker} onChange={(event) => update('maker', event.target.value)} /></label>
           <label>バーコード（JAN/GTIN）<input inputMode="numeric" value={draft.barcode} onChange={(event) => update('barcode', event.target.value)} placeholder="任意・8〜14桁" /></label>
           {allowCommercialClassification && <div className="food-commercial-setting"><label className="toggle-row"><input type="checkbox" checked={draft.isCommercial} onChange={(event) => update('isCommercial', event.target.checked)} />外食・市販として分類する</label><p className="helper-text">JAN/GTINがある食品は、チェックなしでも自動的に「外食・市販」へ表示されます。</p></div>}

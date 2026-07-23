@@ -246,7 +246,7 @@
 | `name` | 文字列 | ○ | 食品名・商品名 |
 | `maker` | 文字列 | - | メーカー名 |
 | `barcode` | 文字列 | - | JAN/GTIN。先頭ゼロを保持 |
-| `is_commercial` | 真偽値 | - | JAN/GTINがない食品をユーザー指定で「外食・市販」に分類する明示フラグ |
+| `is_commercial` | 真偽値 | - | JAN/GTINの有無にかかわらず、ユーザーが「外食・市販」と明示した分類を保持するフラグ。バーコードからの新規登録では自動的にtrueとする |
 | `source` | 列挙値 | ○ | `mext`, `open_food_facts`, `user` など |
 | `source_version` | 文字列 | - | 元データの版やAPI由来情報 |
 | `base_amount` | 数値 | ○ | 栄養値の基準量 |

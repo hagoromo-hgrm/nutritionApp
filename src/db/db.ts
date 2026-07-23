@@ -366,7 +366,11 @@ export async function getFoodById(id: string): Promise<Food | undefined> {
 }
 
 export async function getFoodByBarcode(barcode: string): Promise<Food | undefined> {
-  return db.foods.where('barcode').equals(barcode).first()
+  const normalized = barcode.trim()
+  if (!normalized) return undefined
+  const matches = await db.foods.where('barcode').equals(normalized).toArray()
+  // 旧形式ではJANの一意制約がないため、同じJANが複数ある場合は最新の端末内記録を使う。
+  return matches.sort((left, right) => right.updatedAt.localeCompare(left.updatedAt) || right.id.localeCompare(left.id))[0]
 }
 
 export async function saveFood(food: Food): Promise<void> {

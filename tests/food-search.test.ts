@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { normalizeSearchText, searchFoodResults } from '../src/services/foodSearch'
+import { resolveBarcodeCommercialFlag, resolveFoodGroupDisplayName } from '../src/services/foodDraft'
 import { FOOD_MASTER_SEARCH_CATEGORIES, MEAL_SEARCH_CATEGORIES, foodSearchCategoryIncludesFoods, foodSearchCategoryIncludesMenus, isCommercialFood } from '../src/services/foodClassification'
 import type { Food, FoodAlias, FoodGroup, FoodRelatedTerm, FoodUsageStat } from '../src/types'
 
@@ -24,6 +25,27 @@ describe('local food search', () => {
     const result = searchFoodResults('塩', { foods, groups, aliases, relatedTerms, usageStats: [] }, { now: new Date('2026-07-15T00:00:00Z') })
     expect(result.results[0].group.id).toBe('salt')
     expect(result.results[0].matchedBy).toBe('alias-exact')
+  })
+
+  it('メーカー名を検索対象に含める', () => {
+    const product = { ...food('maker-product', '商品名', 'maker-product'), maker: 'テストメーカー' }
+    const result = searchFoodResults('テストメーカー', { foods: [product], groups: [group('maker-product', '商品名', 'maker-product')], aliases: [], relatedTerms: [], usageStats: [] })
+    expect(result.results).toHaveLength(1)
+    expect(result.results[0].food.id).toBe(product.id)
+    expect(result.results[0].matchedBy).toBe('maker-exact')
+  })
+
+  it('バーコード導線から保存する食品は外食・市販の明示分類を有効にする', () => {
+    expect(resolveBarcodeCommercialFlag(false, '4901234567890', true)).toBe(true)
+    expect(resolveBarcodeCommercialFlag(true, '4901234567890', true)).toBe(true)
+    expect(resolveBarcodeCommercialFlag(false, '4901234567890', false)).toBe(false)
+  })
+
+  it('外部APIの元商品名から改名したとき、自動表示名だけ商品名へ追従する', () => {
+    expect(resolveFoodGroupDisplayName('元の商品名', 'ユーザー入力の商品名', '元の商品名')).toBe('ユーザー入力の商品名')
+    expect(resolveFoodGroupDisplayName('', 'ユーザー入力の商品名')).toBe('ユーザー入力の商品名')
+    expect(resolveFoodGroupDisplayName('名称未設定の商品', 'ユーザー入力の商品名')).toBe('ユーザー入力の商品名')
+    expect(resolveFoodGroupDisplayName('検索用の明示表示名', 'ユーザー入力の商品名', '元の商品名')).toBe('検索用の明示表示名')
   })
 
   it('グループを重複表示せず、既定バリエーションを選択する', () => {

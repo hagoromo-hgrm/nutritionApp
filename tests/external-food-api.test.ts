@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { ExternalFoodApiError, externalFoodErrorMessage, searchExternalFood } from '../src/services/externalFoodApi'
+import { EXTERNAL_UNNAMED_PRODUCT_LABEL, ExternalFoodApiError, externalFoodErrorMessage, searchExternalFood } from '../src/services/externalFoodApi'
 
 function response(body: unknown, status = 200): Response {
   return {
@@ -53,6 +53,17 @@ describe('external food API', () => {
     const preview = await searchExternalFood('4901234567890', 'https://example.com/api/v2/product')
     expect(preview?.name).toBe('旧形式商品')
     expect(preview?.baseAmount).toBe(100)
+  })
+
+  it('商品名が未設定でも保存前に判別できるラベルを返す', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response({
+      status: 1,
+      product: { product_name: '  ', brands: 'メーカー', quantity: '100 g', nutriments: {} },
+    })))
+
+    const preview = await searchExternalFood('4901234567890', 'https://example.com/product')
+    expect(preview?.name).toBe(EXTERNAL_UNNAMED_PRODUCT_LABEL)
+    expect(preview?.maker).toBe('メーカー')
   })
 
   it('404と商品なしレスポンスを接続エラーにしない', async () => {

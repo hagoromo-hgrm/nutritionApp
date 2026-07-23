@@ -35,11 +35,14 @@ export interface FoodSearchOptions {
 
 const EXACT_DISPLAY = 100
 const EXACT_ALIAS = 95
+const EXACT_MAKER = 90
 const PREFIX_DISPLAY = 80
 const PREFIX_ALIAS = 75
+const PREFIX_MAKER = 70
 const EXACT_READING = 70
 const PARTIAL_DISPLAY = 60
 const PARTIAL_ALIAS = 55
+const PARTIAL_MAKER = 50
 const PARTIAL_READING = 50
 const PARTIAL_OFFICIAL = 40
 const RELATED = 25
@@ -54,19 +57,23 @@ export function normalizeSearchText(value: string): string {
   return hiragana.replace(/[\p{White_Space}\p{Punctuation}\p{Symbol}_]+/gu, '')
 }
 
-function textScore(query: string, displayName: string, aliases: string[], reading: string | null, officialName: string, related: Array<{ term: string; weight: number }>): { score: number; matchedBy: string } {
+function textScore(query: string, displayName: string, aliases: string[], maker: string, reading: string | null, officialName: string, related: Array<{ term: string; weight: number }>): { score: number; matchedBy: string } {
   if (!query) return { score: 0, matchedBy: 'empty' }
   const display = normalizeSearchText(displayName)
   const normalizedAliases = aliases.map(normalizeSearchText).filter(Boolean)
+  const normalizedMaker = normalizeSearchText(maker)
   const normalizedReading = reading ? normalizeSearchText(reading) : ''
   const official = normalizeSearchText(officialName)
   if (display === query) return { score: EXACT_DISPLAY, matchedBy: 'display-exact' }
   if (normalizedAliases.includes(query)) return { score: EXACT_ALIAS, matchedBy: 'alias-exact' }
+  if (normalizedMaker === query) return { score: EXACT_MAKER, matchedBy: 'maker-exact' }
   if (display.startsWith(query)) return { score: PREFIX_DISPLAY, matchedBy: 'display-prefix' }
   if (normalizedAliases.some((alias) => alias.startsWith(query))) return { score: PREFIX_ALIAS, matchedBy: 'alias-prefix' }
+  if (normalizedMaker.startsWith(query)) return { score: PREFIX_MAKER, matchedBy: 'maker-prefix' }
   if (normalizedReading === query) return { score: EXACT_READING, matchedBy: 'reading-exact' }
   if (display.includes(query)) return { score: PARTIAL_DISPLAY, matchedBy: 'display-partial' }
   if (normalizedAliases.some((alias) => alias.includes(query))) return { score: PARTIAL_ALIAS, matchedBy: 'alias-partial' }
+  if (normalizedMaker.includes(query)) return { score: PARTIAL_MAKER, matchedBy: 'maker-partial' }
   if (normalizedReading.includes(query)) return { score: PARTIAL_READING, matchedBy: 'reading-partial' }
   if (official.includes(query)) return { score: PARTIAL_OFFICIAL, matchedBy: 'official-partial' }
   const matchingRelated = related.filter((item) => normalizeSearchText(item.term).includes(query))
@@ -133,7 +140,7 @@ export function searchFoodResults(query: string, data: FoodSearchData, options: 
     const aliases = aliasesByGroup.get(groupId) ?? []
     const related = (relatedByGroup.get(groupId) ?? []).map((term) => ({ term: term.term, weight: term.weight }))
     const rankedVariants = variants.map((food) => {
-      const match = textScore(normalizedQuery, group.displayName, aliases.map((alias) => alias.alias), group.reading, food.officialName ?? food.name, related)
+      const match = textScore(normalizedQuery, group.displayName, aliases.map((alias) => alias.alias), food.maker, group.reading, food.officialName ?? food.name, related)
       const favorite = data.favoriteIds?.has(food.id) ?? false
       const personal = personalScore(usageByFood.get(food.id), favorite)
       const recent = recentScore(usageByFood.get(food.id), now)

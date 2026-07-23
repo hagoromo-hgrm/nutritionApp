@@ -1,6 +1,6 @@
 import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { db, deleteFood, deleteMenu, exportBackup, getEntriesForDate, getRecentFoods, getSettings, initializeDatabase, recordFoodSelection, replaceAllData, saveFood, saveFoodWithMetadata, saveMealEntries, saveMealEntry, saveMenu, searchFoodResults, searchMenus } from '../src/db/db'
+import { db, deleteFood, deleteMenu, exportBackup, getEntriesForDate, getFoodByBarcode, getRecentFoods, getSettings, initializeDatabase, recordFoodSelection, replaceAllData, saveFood, saveFoodWithMetadata, saveMealEntries, saveMealEntry, saveMenu, searchFoodResults, searchMenus } from '../src/db/db'
 import { getFoodVariantBySourceId, hasFoodGroup as hasMextFoodGroup } from '../src/services/mextFoodData'
 import type { BackupData, Food, FoodAlias, FoodGroup, FoodRelatedTerm, MealEntry, Menu } from '../src/types'
 
@@ -190,6 +190,29 @@ describe('IndexedDB data safety', () => {
     expect((await db.foods.get(manualFood.id))?.foodGroupId).toBe(group.id)
     expect((await searchFoodResults('とり')).page.results[0]?.group.displayName).toBe('鶏肉')
     expect((await searchFoodResults('炭火串焼き')).page.results[0]?.group.displayName).toBe('鶏肉')
+  })
+
+  it('バーコード食品の名前・メーカー・分類フラグを保存し、再読取と検索で端末内記録を優先する', async () => {
+    const barcode = '0012345678901'
+    const now = '2026-07-15T00:00:00.000Z'
+    const food: Food = {
+      ...userFood,
+      id: 'barcode_saved_food', name: 'ユーザー入力商品', officialName: 'ユーザー入力商品', displayName: 'ユーザー入力商品',
+      maker: '保存メーカー', barcode, isCommercial: true, source: 'open_food_facts', sourceVersion: 'Open Food Facts（取得値は確認後に保存）',
+      foodGroupId: 'food:barcode_saved_food', createdAt: now, updatedAt: now,
+    }
+    const group: FoodGroup = {
+      id: food.foodGroupId ?? `food:${food.id}`, displayName: food.name, reading: null, category: null,
+      representativeScore: 0, defaultVariantId: food.id, isActive: true, metadataSource: 'manual', generationVersion: 'manual-v1', needsReview: false,
+      createdAt: now, updatedAt: now,
+    }
+
+    await saveFoodWithMetadata(food, { group, aliases: [], relatedTerms: [] })
+
+    expect(await getFoodByBarcode(barcode)).toMatchObject({ id: food.id, name: food.name, maker: food.maker, barcode, isCommercial: true })
+    expect((await searchFoodResults('保存メーカー')).page.results[0]?.food.id).toBe(food.id)
+    expect((await searchFoodResults(food.name)).page.results[0]?.food.id).toBe(food.id)
+    expect((await searchFoodResults('', { category: 'commercial' })).page.results.some((result) => result.food.id === food.id)).toBe(true)
   })
 
   it('メニューを保存して名前・区分で検索できる', async () => {
