@@ -69,10 +69,21 @@ describe('export formats', () => {
     expect(() => parseMealsCsv('\uFEFFid,date\r\nmeal_1,2026-07-15\r\n')).toThrow('列名と順序')
   })
 
+  it('CSV内で重複した食事IDを拒否する', () => {
+    const csv = mealsToCsv([entry, entry])
+    expect(() => parseMealsCsv(csv)).toThrow('IDが重複')
+  })
+
   it('不正なバックアップは取り込まない', () => {
     expect(validateBackup(backup)).toEqual(backup)
     expect(() => validateBackup({ ...backup, dataFormatVersion: 99 })).toThrow('対応していない')
     expect(() => validateBackup({ ...backup, settings: { ...backup.settings, goals: { energyKcal: 'bad' } } })).toThrow()
+    expect(() => validateBackup({ ...backup, exportedAt: '2026-02-30' })).toThrow('必須項目')
+    expect(() => validateBackup({ ...backup, mealEntries: [{ ...entry, id: '' }] })).toThrow('形式が不正')
+    expect(() => validateBackup({ ...backup, mealEntries: [entry, entry] })).toThrow('重複したID')
+    expect(() => validateBackup({ ...backup, mealEntries: [{ ...entry, amountUnit: 'ml' }] })).toThrow('形式が不正')
+    expect(() => validateBackup({ ...backup, foods: [{ ...classifiedFood, servingAmount: -1, servingUnit: '食' }] })).toThrow('形式が不正')
+    expect(() => validateBackup({ ...backup, foods: [{ ...classifiedFood, nutrients: { ...classifiedFood.nutrients, energyKcal: Number.POSITIVE_INFINITY } }] })).toThrow('形式が不正')
   })
 
   it('外食・市販の明示フラグを保持し、旧形式との互換性も維持する', () => {

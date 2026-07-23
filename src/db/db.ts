@@ -574,37 +574,63 @@ export async function getFavoriteFoods(): Promise<Food[]> {
 }
 
 export async function getRecentFoods(limit = 20): Promise<Food[]> {
-  const entries = await db.mealEntries.orderBy('eatenAt').reverse().toArray()
-  const ids: string[] = []
-  for (const entry of entries) {
-    if (!ids.includes(entry.foodId)) ids.push(entry.foodId)
-    if (ids.length >= limit) break
+  if (limit <= 0) return []
+  const recent: Food[] = []
+  const seen = new Set<string>()
+  const batchSize = Math.max(20, limit * 2)
+  let offset = 0
+  while (recent.length < limit) {
+    const entries = await db.mealEntries.orderBy('eatenAt').reverse().offset(offset).limit(batchSize).toArray()
+    if (entries.length === 0) break
+    offset += entries.length
+    const ids = entries.map((entry) => entry.foodId).filter((id) => {
+      if (seen.has(id)) return false
+      seen.add(id)
+      return true
+    })
+    const foods = await db.foods.bulkGet(ids)
+    for (const food of foods) {
+      if (food) recent.push(food)
+      if (recent.length >= limit) break
+    }
   }
-  const foods = await db.foods.bulkGet(ids)
-  return ids.map((id) => foods.find((food) => food?.id === id)).filter((food): food is Food => Boolean(food))
+  return recent
 }
 
 export async function exportBackup(): Promise<BackupData> {
-  const settings = await getSettings()
-  return {
-    format: 'nutrition-pwa-backup',
-    dataFormatVersion: settings.dataFormatVersion,
-    exportedAt: new Date().toISOString(),
-    foods: await db.foods.toArray(),
-    mealEntries: await db.mealEntries.toArray(),
-    favorites: await db.favorites.toArray(),
-    foodGroups: await db.foodGroups.toArray(),
-    foodAliases: await db.foodAliases.toArray(),
-    foodRelatedTerms: await db.foodRelatedTerms.toArray(),
-    foodUsageStats: await db.foodUsageStats.toArray(),
-    searchLogs: await db.searchLogs.toArray(),
-    menus: await db.menus.toArray(),
-    menuSets: await db.menuSets.toArray(),
-    settings,
-  }
+  await getSettings()
+  return db.transaction('r', [db.foods, db.mealEntries, db.favorites, db.settings, db.menus, db.menuSets, db.foodGroups, db.foodAliases, db.foodRelatedTerms, db.foodUsageStats, db.searchLogs], async () => {
+    const settings = await db.settings.get('app')
+    if (!settings) throw new Error('設定を読み込めませんでした。')
+    const [foods, mealEntries, favorites, foodGroups, foodAliases, foodRelatedTerms, foodUsageStats, searchLogs, menus, menuSets] = await Promise.all([
+      db.foods.toArray(), db.mealEntries.toArray(), db.favorites.toArray(), db.foodGroups.toArray(), db.foodAliases.toArray(),
+      db.foodRelatedTerms.toArray(), db.foodUsageStats.toArray(), db.searchLogs.toArray(), db.menus.toArray(), db.menuSets.toArray(),
+    ])
+    return {
+      format: 'nutrition-pwa-backup',
+      dataFormatVersion: settings.dataFormatVersion,
+      exportedAt: new Date().toISOString(),
+      foods,
+      mealEntries,
+      favorites,
+      foodGroups,
+      foodAliases,
+      foodRelatedTerms,
+      foodUsageStats,
+      searchLogs,
+      menus,
+      menuSets,
+      settings,
+    }
+  })
 }
 
-export async function replaceAllData(backup: BackupData): Promise<void> {
+export interface ReplaceAllDataResult {
+  committed: true
+  searchMetadataReady: boolean
+}
+
+export async function replaceAllData(backup: BackupData): Promise<ReplaceAllDataResult> {
   await db.transaction('rw', [db.foods, db.mealEntries, db.favorites, db.settings, db.metadata, db.menus, db.menuSets, db.foodGroups, db.foodAliases, db.foodRelatedTerms, db.foodUsageStats, db.searchLogs], async () => {
     await db.foods.clear()
     await db.mealEntries.clear()
@@ -636,7 +662,12 @@ export async function replaceAllData(backup: BackupData): Promise<void> {
       await db.metadata.put({ key: 'search-metadata-version', value: SEARCH_METADATA_VERSION })
     }
   })
-  await ensureSearchMetadata()
+  try {
+    await ensureSearchMetadata()
+    return { committed: true, searchMetadataReady: true }
+  } catch {
+    return { committed: true, searchMetadataReady: false }
+  }
 }
 
 export function createNewFoodId(): string {

@@ -1,8 +1,8 @@
 import 'fake-indexeddb/auto'
-import { beforeEach, describe, expect, it } from 'vitest'
-import { db, deleteFood, deleteMenu, exportBackup, getEntriesForDate, getSettings, initializeDatabase, recordFoodSelection, saveFood, saveFoodWithMetadata, saveMealEntries, saveMealEntry, saveMenu, searchFoodResults, searchMenus } from '../src/db/db'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { db, deleteFood, deleteMenu, exportBackup, getEntriesForDate, getRecentFoods, getSettings, initializeDatabase, recordFoodSelection, replaceAllData, saveFood, saveFoodWithMetadata, saveMealEntries, saveMealEntry, saveMenu, searchFoodResults, searchMenus } from '../src/db/db'
 import { getFoodVariantBySourceId, hasFoodGroup as hasMextFoodGroup } from '../src/services/mextFoodData'
-import type { Food, FoodAlias, FoodGroup, FoodRelatedTerm, MealEntry, Menu } from '../src/types'
+import type { BackupData, Food, FoodAlias, FoodGroup, FoodRelatedTerm, MealEntry, Menu } from '../src/types'
 
 const addedNutrients = { calciumMg: null, ironMg: null, vitaminAMcg: null, vitaminEMg: null, vitaminB1Mg: null, vitaminB2Mg: null, vitaminCMg: null, saturatedFatG: null }
 
@@ -162,6 +162,24 @@ describe('IndexedDB data safety', () => {
     expect(await db.foods.get(userFood.id)).toBeUndefined()
   })
 
+  it('最近使った食品は削除済み食品や料理メニューを除外して指定件数を返す', async () => {
+    const secondFood: Food = { ...userFood, id: 'user_food_2', name: 'テスト食品2' }
+    await saveFood(userFood)
+    await saveFood(secondFood)
+    const meal = (id: string, foodId: string, name: string, eatenAt: string): MealEntry => ({
+      id, eatenAt, mealType: '朝食', foodId,
+      foodSnapshot: { name, maker: '', barcode: '', baseAmount: 100, baseUnit: 'g', nutrients: { ...userFood.nutrients } },
+      amount: 100, amountUnit: 'g', calculatedNutrients: { ...userFood.nutrients },
+    })
+    await saveMealEntries([
+      meal('meal_old', userFood.id, userFood.name, '2026-07-15T00:00:00.000Z'),
+      meal('meal_middle', secondFood.id, secondFood.name, '2026-07-16T00:00:00.000Z'),
+      meal('meal_new', 'menu:deleted', '削除済み料理', '2026-07-17T00:00:00.000Z'),
+    ])
+
+    expect((await getRecentFoods(2)).map((food) => food.id)).toEqual([secondFood.id, userFood.id])
+  })
+
   it('手動食品のfamily・別名・属性を一括保存して検索できる', async () => {
     const now = '2026-07-15T00:00:00.000Z'
     const manualFood: Food = { ...userFood, id: 'manual_metadata_food', name: '自家製鶏肉', displayName: '鶏肉', foodGroupId: 'manual:chicken', variantAttributes: { species: '鶏', part: 'もも', skin: '皮なし', preparation: '焼き' }, createdAt: now, updatedAt: now }
@@ -236,5 +254,35 @@ describe('IndexedDB data safety', () => {
     }
     await saveMealEntry(menuEntry)
     expect((await getEntriesForDate('2026-07-15')).find((entry) => entry.id === menuEntry.id)?.menuSnapshot).toEqual(menuEntry.menuSnapshot)
+  })
+
+  it('全置換トランザクションが失敗した場合は既存データを保持する', async () => {
+    await saveFood(userFood)
+    const replacement = { ...userFood, id: 'replacement_food', name: '復元食品' }
+    const backup: BackupData = {
+      format: 'nutrition-pwa-backup', dataFormatVersion: 1, exportedAt: '2026-07-15T00:00:00.000Z',
+      foods: [replacement, replacement], mealEntries: [], favorites: [], settings: await getSettings(),
+    }
+
+    await expect(replaceAllData(backup)).rejects.toThrow()
+    expect(await db.foods.get(userFood.id)).toBeDefined()
+    expect(await db.foods.get(replacement.id)).toBeUndefined()
+  })
+
+  it('全置換後の検索データ更新失敗を、復元済みの結果として返す', async () => {
+    await saveFood(userFood)
+    const replacement = { ...userFood, id: 'replacement_food', name: '復元食品' }
+    const backup: BackupData = {
+      format: 'nutrition-pwa-backup', dataFormatVersion: 1, exportedAt: '2026-07-15T00:00:00.000Z',
+      foods: [replacement], mealEntries: [], favorites: [], settings: await getSettings(),
+    }
+    const metadataFailure = vi.spyOn(db.foodGroups, 'bulkPut').mockRejectedValueOnce(new Error('metadata failure'))
+
+    const result = await replaceAllData(backup)
+    metadataFailure.mockRestore()
+
+    expect(result).toEqual({ committed: true, searchMetadataReady: false })
+    expect(await db.foods.get(replacement.id)).toBeDefined()
+    expect(await db.foods.get(userFood.id)).toBeUndefined()
   })
 })

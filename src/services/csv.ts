@@ -124,6 +124,7 @@ export function parseMealsCsv(text: string): MealEntry[] {
     throw new Error('このPWAで出力した食事履歴CSVではありません。列名と順序を確認してください。')
   }
   const headerIndex = new Map<string, number>(CSV_HEADERS.map((header, index) => [header, index]))
+  const seenIds = new Set<string>()
   return rows.slice(1).map((row, rowIndex) => {
     const rowNumber = rowIndex + 2
     if (row.length !== CSV_HEADERS.length) throw new Error(`${rowNumber}行目の列数が不正です。`)
@@ -137,9 +138,12 @@ export function parseMealsCsv(text: string): MealEntry[] {
     const amountUnit = value('amount_unit')
     const baseUnit = value('base_unit')
 
-    if (!id || !eatenAt || Number.isNaN(new Date(eatenAt).getTime()) || date !== formatDateKey(eatenAt)) throw new Error(`${rowNumber}行目の日時またはIDが不正です。`)
+    const parsedDate = new Date(eatenAt)
+    if (!id || !eatenAt || Number.isNaN(parsedDate.getTime()) || parsedDate.toISOString() !== eatenAt || date !== formatDateKey(eatenAt)) throw new Error(`${rowNumber}行目の日時またはIDが不正です。`)
+    if (seenIds.has(id)) throw new Error(`${rowNumber}行目のIDが重複しています。`)
+    seenIds.add(id)
     if (!['朝食', '昼食', '夕食', '間食'].includes(mealType)) throw new Error(`${rowNumber}行目の食事区分が不正です。`)
-    if (!foodId || !foodName || !isValidUnit(amountUnit) || !isValidUnit(baseUnit)) throw new Error(`${rowNumber}行目の食品または単位が不正です。`)
+    if (!foodId || !foodName || !isValidUnit(amountUnit) || !isValidUnit(baseUnit) || amountUnit !== baseUnit) throw new Error(`${rowNumber}行目の食品または単位が不正です。`)
 
     const calculatedNutrients = parseNutrients(row, headerIndex, NUTRIENT_COLUMNS, rowNumber)
     const snapshotNutrients = parseNutrients(row, headerIndex, SNAPSHOT_NUTRIENT_COLUMNS, rowNumber)

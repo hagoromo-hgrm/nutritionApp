@@ -31,7 +31,6 @@ import {
   recordFoodSelection,
   saveFoodWithMetadata,
   saveMealEntries,
-  saveMealEntry,
   saveMenu,
   saveMenuSet,
   saveSettings,
@@ -381,8 +380,10 @@ function menuIngredientNames(menu: Menu, menus: Menu[], foods: Food[]): string {
 
 function App() {
   const [ready, setReady] = useState(false)
+  const [initializationError, setInitializationError] = useState<string | null>(null)
   const [view, setView] = useState<View>('today')
   const [selectedDate, setSelectedDate] = useState(currentDateKey())
+  const [loadedDate, setLoadedDate] = useState<string | null>(null)
   const [graphFrom, setGraphFrom] = useState(() => addDays(currentDateKey(), -13))
   const [graphTo, setGraphTo] = useState(currentDateKey())
   const [entries, setEntries] = useState<MealEntry[]>([])
@@ -435,7 +436,10 @@ function App() {
   const [csvTo, setCsvTo] = useState(currentMonthRange().to)
   const [counts, setCounts] = useState({ foods: 0, meals: 0, menus: 0, menuSets: 0 })
   const updateSWRef = useRef<((reloadPage?: boolean) => Promise<void>) | null>(null)
+  const selectedDateRef = useRef(selectedDate)
+  const loadRequestIdRef = useRef(0)
   const searchRequestIdRef = useRef(0)
+  const mealSaveInFlightRef = useRef(false)
   const menuSetRegistrationRef = useRef(false)
 
   const notify = useCallback((message: string) => {
@@ -443,13 +447,17 @@ function App() {
     window.setTimeout(() => setNotice((current) => current === message ? null : current), 3500)
   }, [])
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (): Promise<boolean> => {
+    const requestId = ++loadRequestIdRef.current
+    const requestedDate = selectedDateRef.current
+    setLoadedDate(null)
     try {
       const trendEntriesPromise = graphFrom && graphTo && graphFrom <= graphTo ? getEntriesBetween(graphFrom, graphTo) : Promise.resolve([] as MealEntry[])
       const [dateEntries, rangeEntries, resultFoods, resultGroups, resultAliases, resultRelatedTerms, recent, favorites, ids, currentSettings, foodCount, mealCount, menuCount, menuSetCount, foodKeys, resultMenus, resultMenuSets] = await Promise.all([
-        getEntriesForDate(selectedDate), trendEntriesPromise, getAllFoods(), getAllFoodGroups(), getAllFoodAliases(), getAllFoodRelatedTerms(), getRecentFoods(), getFavoriteFoods(), getFavoriteIds(),
+        getEntriesForDate(requestedDate), trendEntriesPromise, getAllFoods(), getAllFoodGroups(), getAllFoodAliases(), getAllFoodRelatedTerms(), getRecentFoods(), getFavoriteFoods(), getFavoriteIds(),
         getSettings(), db.foods.count(), db.mealEntries.count(), db.menus.count(), db.menuSets.count(), db.foods.toCollection().primaryKeys(), getAllMenus(), getAllMenuSets(),
       ])
+      if (requestId !== loadRequestIdRef.current || requestedDate !== selectedDateRef.current) return false
       setEntries(dateEntries)
       setTrendEntries(rangeEntries)
       setFoods(resultFoods)
@@ -466,14 +474,21 @@ function App() {
       setCounts({ foods: foodCount, meals: mealCount, menus: menuCount, menuSets: menuSetCount })
       setGoalInputs(Object.fromEntries(nutrientKeys.map((key) => [key, currentSettings.goals[key] === null ? '' : String(currentSettings.goals[key])])) as Record<NutrientKey, string>)
       setBodyProfileInputs(bodyProfileToDraft(currentSettings.bodyProfile))
+      setLoadedDate(requestedDate)
       setError(null)
+      return true
     } catch {
+      if (requestId !== loadRequestIdRef.current || requestedDate !== selectedDateRef.current) return false
+      setLoadedDate(null)
       setError('データを読み込めませんでした。ページを再読み込みして再試行してください。')
+      return false
     }
-  }, [graphFrom, graphTo, selectedDate])
+  }, [graphFrom, graphTo])
 
   useEffect(() => {
-    void initializeDatabase().then(() => setReady(true)).catch(() => setError('端末内データベースを初期化できませんでした。'))
+    void initializeDatabase()
+      .then(() => setReady(true))
+      .catch(() => setInitializationError('端末内データベースを初期化できませんでした。端末の空き容量を確認して再読み込みしてください。'))
     const updateSW = registerSW({
       onNeedRefresh: () => setUpdateAvailable(true),
       onOfflineReady: () => notify('オフライン利用の準備ができました。'),
@@ -482,7 +497,7 @@ function App() {
     return () => { updateSWRef.current = null }
   }, [notify])
 
-  useEffect(() => { if (ready) void load() }, [load, ready])
+  useEffect(() => { if (ready) void load() }, [load, ready, selectedDate])
 
   useEffect(() => {
     if (view === 'food-screen') window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
@@ -526,6 +541,28 @@ function App() {
 
   const showError = (message: string) => { setError(message); setNotice(null) }
 
+  const reloadAfterMutation = async (successMessage: string): Promise<boolean> => {
+    const refreshed = await load()
+    if (refreshed) notify(successMessage)
+    else showError(`${successMessage}。画面を更新できなかったため、再読み込みしてください。`)
+    return refreshed
+  }
+
+  const requireLoadedDate = (): boolean => {
+    if (loadedDate === selectedDate) return true
+    showError('選択日の食事データを読み込み中です。完了後に再試行してください。')
+    return false
+  }
+
+  const selectDate = (date: string) => {
+    if (!date || date === selectedDate) return
+    selectedDateRef.current = date
+    loadRequestIdRef.current += 1
+    setLoadedDate(null)
+    setEntries([])
+    setSelectedDate(date)
+  }
+
   const openMealForm = useCallback((food: Food, entry?: MealEntry, forcedMealType?: MealType) => {
     setMealFood(food)
     setEditingEntry(entry ?? null)
@@ -539,9 +576,13 @@ function App() {
     setError(null)
   }, [foods, menus])
 
-  const openMealTypePicker = () => setMealTypePicker({ food: null })
+  const openMealTypePicker = () => {
+    if (!requireLoadedDate()) return
+    setMealTypePicker({ food: null })
+  }
 
   const startCategoryRecord = (type: MealType, returnView: FoodScreenReturnView = 'today') => {
+    if (!requireLoadedDate()) return
     if (returnView !== 'meal-confirmation') setConfirmingMealType(null)
     setRecordingMealType(type)
     setMealType(type)
@@ -711,14 +752,17 @@ function App() {
         openMealForm(food, undefined, returnMealType)
         setView(returnSearchQuery ? 'search-results' : 'food-screen')
       } else setView(foodFormReturnView)
-      await load()
-      notify(foodDraft.id ? '食品を更新しました。' : '食品を登録しました。')
+      await reloadAfterMutation(foodDraft.id ? '食品を更新しました。' : '食品を登録しました。')
     } catch {
       showError('食品を保存できませんでした。入力を確認して再試行してください。')
     }
   }
 
   const saveMealRecord = async (food: Food, amountText: string, entryToEdit: MealEntry | null = editingEntry, menuSnapshot: MealMenuSnapshot | null = null) => {
+    if (!requireLoadedDate()) return false
+    if (mealSaveInFlightRef.current) return false
+    const targetDate = selectedDate
+    const currentEntries = entries
     const amount = Number(amountText)
     if (!isPositiveFinite(amount) || amount > 100000) { showError('分量は0より大きく、現実的な範囲の数値で入力してください。'); return false }
     const snapshotIngredients = menuSnapshot?.ingredients ?? []
@@ -728,10 +772,10 @@ function App() {
     const calculated = menuSnapshot
       ? calculateMealMenuEntryNutrients(menuSnapshot, amount, food.baseUnit)
       : calculateNutrients(food, amount, food.baseUnit)
-    const currentMealTime = entries.find((current) => current.mealType === mealType)?.eatenAt
+    const currentMealTime = currentEntries.find((current) => current.mealType === mealType)?.eatenAt
     const eatenAt = entryToEdit
       ? (mealType === '間食' ? entryToEdit.eatenAt : (currentMealTime ?? entryToEdit.eatenAt))
-      : isoForDate(selectedDate)
+      : isoForDate(targetDate)
     const entry: MealEntry = {
       id: entryToEdit?.id ?? createNewMealId(), eatenAt, mealType,
       foodId: food.id, foodSnapshot: {
@@ -740,10 +784,11 @@ function App() {
       }, amount, amountUnit: food.baseUnit, calculatedNutrients: calculated,
       ...(menuSnapshot ? { menuSnapshot: cloneMealMenuSnapshot(menuSnapshot) } : {}),
     }
+    mealSaveInFlightRef.current = true
     try {
       const entriesToSave = mealType === '間食'
         ? [entry]
-        : [entry, ...entries.filter((current) => current.mealType === mealType && current.id !== entry.id).map((current) => ({ ...current, eatenAt }))]
+        : [entry, ...currentEntries.filter((current) => current.mealType === mealType && current.id !== entry.id).map((current) => ({ ...current, eatenAt }))]
       await saveMealEntries(entriesToSave)
       if (pendingSearchQuery) {
         setSearchResults((current) => current.filter((group) => group.query !== pendingSearchQuery))
@@ -753,7 +798,17 @@ function App() {
       setEditingEntry(null)
       setMealMenuSnapshot(null)
       setRecordingMealType(null)
-      await load()
+      const refreshed = await load()
+      if (selectedDateRef.current !== targetDate) {
+        notify(`${targetDate}の食事を保存しました。`)
+        return true
+      }
+      if (!refreshed) {
+        setConfirmingMealType(null)
+        setView('today')
+        showError('食事は保存しましたが、画面を更新できませんでした。再読み込みしてください。')
+        return true
+      }
       if (entryToEdit) {
         setConfirmingMealType(null)
         setView('today')
@@ -766,6 +821,8 @@ function App() {
     } catch {
       showError('食事を保存できませんでした。保存先の空き容量を確認して再試行してください。')
       return false
+    } finally {
+      mealSaveInFlightRef.current = false
     }
   }
 
@@ -775,12 +832,15 @@ function App() {
   }
 
   const registerMenuSet = async (menuSet: MenuSet, returnSearchQuery: string | null = null) => {
+    if (!requireLoadedDate()) return false
     if (menuSetRegistrationRef.current) return false
     menuSetRegistrationRef.current = true
+    const targetDate = selectedDate
+    const currentEntries = entries
     const targetMealType = recordingMealType ?? mealType
     try {
-      const currentMealTime = entries.find((entry) => entry.mealType === targetMealType)?.eatenAt
-      const eatenAt = targetMealType === '間食' ? isoForDate(selectedDate) : (currentMealTime ?? isoForDate(selectedDate))
+      const currentMealTime = currentEntries.find((entry) => entry.mealType === targetMealType)?.eatenAt
+      const eatenAt = targetMealType === '間食' ? isoForDate(targetDate) : (currentMealTime ?? isoForDate(targetDate))
       const batch = createMenuSetMealBatch({
         menuSet, menus, foods, mealType: targetMealType, eatenAt, createId: createNewMealId,
       })
@@ -791,14 +851,24 @@ function App() {
       }
       const alignedExistingEntries = targetMealType === '間食'
         ? []
-        : entries.filter((entry) => entry.mealType === targetMealType).map((entry) => ({ ...entry, eatenAt }))
+        : currentEntries.filter((entry) => entry.mealType === targetMealType).map((entry) => ({ ...entry, eatenAt }))
       await saveMealEntries([...batch.entries, ...alignedExistingEntries])
       if (returnSearchQuery !== null) {
         setSearchResults((current) => current.filter((group) => group.query !== returnSearchQuery))
       }
       setPendingSearchQuery(null)
       setRecordingMealType(null)
-      await load()
+      const refreshed = await load()
+      if (selectedDateRef.current !== targetDate) {
+        notify(`${targetDate}の${targetMealType}へ「${menuSet.name}」の内容${batch.entries.length}件を登録しました。`)
+        return true
+      }
+      if (!refreshed) {
+        setConfirmingMealType(null)
+        setView('today')
+        showError(`「${menuSet.name}」の内容は登録しましたが、画面を更新できませんでした。再読み込みしてください。`)
+        return true
+      }
       setConfirmingMealType(targetMealType)
       setView('meal-confirmation')
       notify(`「${menuSet.name}」の内容${batch.entries.length}件を${targetMealType}へ一括登録しました。${missingCount > 0 ? `削除済みの${missingCount}件は除外しました。` : ''}`)
@@ -812,25 +882,28 @@ function App() {
   }
 
   const removeMeal = async (entry: MealEntry) => {
+    if (!requireLoadedDate()) return
     if (!window.confirm(`「${entry.foodSnapshot.name}」の食事記録を削除しますか？`)) return
-    try { await deleteMealEntry(entry.id); await load(); notify('食事記録を削除しました。') } catch { showError('食事記録を削除できませんでした。') }
+    try { await deleteMealEntry(entry.id); await reloadAfterMutation('食事記録を削除しました。') } catch { showError('食事記録を削除できませんでした。') }
   }
 
   const copyPreviousMeals = async () => {
-    const previous = await getEntriesForDate(addDays(selectedDate, -1))
-    const selected = copyMealType === 'すべて' ? previous : previous.filter((entry) => entry.mealType === copyMealType)
-    if (!selected.length) { notify('コピーできる前日の食事がありません。'); return }
-    if (!window.confirm(`${selected.length}件の前日の食事を${selectedDate}へコピーしますか？`)) return
+    if (!requireLoadedDate()) return
+    const targetDate = selectedDate
     try {
-      const eatenAt = isoForDate(selectedDate)
-      for (const entry of selected) await saveMealEntry({ ...entry, id: createNewMealId(), eatenAt })
-      await load()
-      notify(`${selected.length}件をコピーしました。`)
+      const previous = await getEntriesForDate(addDays(targetDate, -1))
+      const selected = copyMealType === 'すべて' ? previous : previous.filter((entry) => entry.mealType === copyMealType)
+      if (!selected.length) { notify('コピーできる前日の食事がありません。'); return }
+      if (selectedDateRef.current !== targetDate) { showError('日付が変更されたため、前日コピーを中止しました。'); return }
+      if (!window.confirm(`${selected.length}件の前日の食事を${targetDate}へコピーしますか？`)) return
+      const eatenAt = isoForDate(targetDate)
+      await saveMealEntries(selected.map((entry) => ({ ...entry, id: createNewMealId(), eatenAt })))
+      await reloadAfterMutation(`${selected.length}件をコピーしました。`)
     } catch { showError('前日の食事をコピーできませんでした。') }
   }
 
   const toggleFavorite = async (food: Food) => {
-    try { await setFavorite(food.id, !favoriteIds.has(food.id)); await load() } catch { showError('お気に入りを更新できませんでした。') }
+    try { await setFavorite(food.id, !favoriteIds.has(food.id)); await reloadAfterMutation('お気に入りを更新しました。') } catch { showError('お気に入りを更新できませんでした。') }
   }
 
   const openMealDetails = (type: MealType, mealEntries: MealEntry[], subtotal: Nutrients) => {
@@ -838,16 +911,18 @@ function App() {
   }
 
   const updateMealTimes = async (entryIds: string[], time: string) => {
-    const eatenAt = isoFromTokyoTimeInput(selectedDate, time)
+    if (!requireLoadedDate()) return
+    const targetDate = selectedDate
+    const currentEntries = entries
+    const eatenAt = isoFromTokyoTimeInput(targetDate, time)
     if (!eatenAt) { showError('食事時刻を正しく入力してください。'); return }
     const ids = new Set(entryIds)
-    const updates = entries.filter((entry) => ids.has(entry.id)).map((entry) => ({ ...entry, eatenAt }))
+    const updates = currentEntries.filter((entry) => ids.has(entry.id)).map((entry) => ({ ...entry, eatenAt }))
     if (updates.length === 0) return
     try {
       await saveMealEntries(updates)
       setMealDetails(null)
-      await load()
-      notify('食事時刻を更新しました。')
+      await reloadAfterMutation('食事時刻を更新しました。')
     } catch {
       showError('食事時刻を保存できませんでした。')
     }
@@ -1069,7 +1144,7 @@ function App() {
       aliases: [...new Set(menuDraft.aliases.map((alias) => alias.trim()).filter(Boolean))],
       createdAt: menuDraft.id ? (menus.find((item) => item.id === menuDraft.id)?.createdAt ?? now) : now, updatedAt: now,
     }
-    try { await saveMenu(menu); setMenuDraft(null); await load(); notify(menuDraft.id ? 'メニューを更新しました。' : 'メニューを登録しました。') } catch { showError('メニューを保存できませんでした。') }
+    try { await saveMenu(menu); setMenuDraft(null); await reloadAfterMutation(menuDraft.id ? 'メニューを更新しました。' : 'メニューを登録しました。') } catch { showError('メニューを保存できませんでした。') }
   }
 
   const saveMenuSetDraft = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -1080,17 +1155,17 @@ function App() {
       id: menuSetDraft.id ?? createNewMenuSetId(), name: menuSetDraft.name.trim(), menuIds: menuSetDraft.menuIds, foodIds: menuSetDraft.foodIds,
       createdAt: menuSetDraft.id ? (menuSets.find((item) => item.id === menuSetDraft.id)?.createdAt ?? now) : now, updatedAt: now,
     }
-    try { await saveMenuSet(menuSet); setMenuSetDraft(null); await load(); notify(menuSetDraft.id ? 'メニューセットを更新しました。' : 'メニューセットを登録しました。') } catch { showError('メニューセットを保存できませんでした。') }
+    try { await saveMenuSet(menuSet); setMenuSetDraft(null); await reloadAfterMutation(menuSetDraft.id ? 'メニューセットを更新しました。' : 'メニューセットを登録しました。') } catch { showError('メニューセットを保存できませんでした。') }
   }
 
   const removeMenu = async (menu: Menu) => {
     if (!window.confirm(`「${menu.name}」を削除しますか？`)) return
-    try { await deleteMenu(menu.id); await load(); notify('メニューを削除しました。') } catch (error) { showError(error instanceof Error ? error.message : 'メニューを削除できませんでした。') }
+    try { await deleteMenu(menu.id); await reloadAfterMutation('メニューを削除しました。') } catch (error) { showError(error instanceof Error ? error.message : 'メニューを削除できませんでした。') }
   }
 
   const removeMenuSet = async (menuSet: MenuSet) => {
     if (!window.confirm(`「${menuSet.name}」を削除しますか？`)) return
-    try { await deleteMenuSet(menuSet.id); await load(); notify('メニューセットを削除しました。') } catch { showError('メニューセットを削除できませんでした。') }
+    try { await deleteMenuSet(menuSet.id); await reloadAfterMutation('メニューセットを削除しました。') } catch { showError('メニューセットを削除できませんでした。') }
   }
 
   const toggleExternalApi = async (enabled: boolean) => {
@@ -1120,13 +1195,18 @@ function App() {
   }
 
   const exportJson = async () => {
+    let backup: Awaited<ReturnType<typeof exportBackup>>
     try {
-      const backup = await exportBackup()
+      backup = await exportBackup()
       downloadBlob(backupToJson(backup), `nutrition-backup-${formatFileTimestamp(new Date(backup.exportedAt))}.json`, 'application/json')
-      const next = settings ? { ...settings, lastBackupAt: backup.exportedAt } : null
+    } catch { showError('JSONバックアップを作成できませんでした。'); return }
+    const next = settings ? { ...settings, lastBackupAt: backup.exportedAt } : null
+    try {
       if (next) { await saveSettings(next); setSettings(next) }
       notify('JSONバックアップを出力しました。')
-    } catch { showError('JSONバックアップを作成できませんでした。') }
+    } catch {
+      showError('JSONバックアップは出力しましたが、最終バックアップ日時を保存できませんでした。')
+    }
   }
 
   const restoreJson = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -1138,9 +1218,16 @@ function App() {
       if (!window.confirm('現在のデータを自動退避してから、バックアップで全置換します。続けますか？')) return
       const current = await exportBackup()
       downloadBlob(backupToJson(current), `nutrition-auto-backup-${formatFileTimestamp(new Date(current.exportedAt))}.json`, 'application/json')
-      await replaceAllData(backup)
-      await load()
-      notify(`復元しました。食品${backup.foods.length}件、食事${backup.mealEntries.length}件、メニュー${backup.menus?.length ?? 0}件、セット${backup.menuSets?.length ?? 0}件です。自動退避も出力しました。`)
+      const result = await replaceAllData(backup)
+      const refreshed = await load()
+      const summary = `食品${backup.foods.length}件、食事${backup.mealEntries.length}件、メニュー${backup.menus?.length ?? 0}件、セット${backup.menuSets?.length ?? 0}件`
+      if (!refreshed) {
+        showError(`復元は完了しました（${summary}）。画面を再読み込みしてください。`)
+      } else if (!result.searchMetadataReady) {
+        showError(`復元は完了しました（${summary}）。検索データの更新に失敗したため、アプリを再起動してください。`)
+      } else {
+        notify(`復元しました。${summary}です。自動退避も出力しました。`)
+      }
     } catch (caught) { showError(caught instanceof Error ? caught.message : 'JSONを復元できませんでした。現在のデータは変更していません。') }
   }
 
@@ -1165,8 +1252,7 @@ function App() {
       const overwriteNotice = overwriteCount > 0 ? `同じIDの${overwriteCount}件は上書きされます。` : ''
       if (!window.confirm(`${imported.length}件の食事履歴を取り込みます。${overwriteNotice}\n続けますか？`)) return
       await saveMealEntries(imported)
-      await load()
-      notify(`${imported.length}件の食事履歴を取り込みました。`)
+      await reloadAfterMutation(`${imported.length}件の食事履歴を取り込みました。`)
     } catch (caught) {
       showError(caught instanceof Error ? caught.message : 'CSVを取り込めませんでした。既存データは変更していません。')
     }
@@ -1174,9 +1260,10 @@ function App() {
 
   const removeFood = async (food: Food) => {
     if (!window.confirm(`「${displayFoodName(food)}」を食品マスターから削除しますか？食事履歴は残ります。`)) return
-    try { await deleteFood(food.id); await load(); notify('食品を削除しました。食事履歴はスナップショットで残っています。') } catch { showError('食品を削除できませんでした。') }
+    try { await deleteFood(food.id); await reloadAfterMutation('食品を削除しました。食事履歴はスナップショットで残っています。') } catch { showError('食品を削除できませんでした。') }
   }
 
+  if (initializationError) return <div className="loading-screen loading-error"><div className="brand-mark">N</div><p>{initializationError}</p><button className="button primary" type="button" onClick={() => window.location.reload()}>再読み込み</button></div>
   if (!ready || !settings) return <div className="loading-screen"><div className="brand-mark">N</div><p>Nutritionを準備しています…</p></div>
 
   return (
@@ -1191,7 +1278,7 @@ function App() {
 
       <main className="content">
         {view === 'today' && <TodayView
-          selectedDate={selectedDate} setSelectedDate={setSelectedDate} total={total} goals={settings.goals} entries={entries} subtotals={subtotals}
+          selectedDate={selectedDate} setSelectedDate={selectDate} total={total} goals={settings.goals} entries={entries} subtotals={subtotals}
           existingFoodIds={existingFoodIds} onStartCategoryRecord={startCategoryRecord}
           onEditEntry={(entry) => openMealForm(snapshotToFood(entry), entry)} onDeleteEntry={removeMeal} onShowMealDetails={openMealDetails} onShowTodayDetails={() => setShowTodayDetails(true)}
         />}
@@ -1267,7 +1354,7 @@ function InfoPopover({ label, text, className = '' }: { label: string; text: str
 interface GoalSegment { type: MealType; value: number }
 
 function mealTone(type: MealType): string {
-  return ({ 朝食: 'lunch', 昼食: 'breakfast', 夕食: 'dinner', 間食: 'snack' })[type]
+  return ({ 朝食: 'breakfast', 昼食: 'lunch', 夕食: 'dinner', 間食: 'snack' })[type]
 }
 
 function GoalProgressBar({ label, value, goal, unit, range, colorClass = 'goal-progress-accent', segments, dark = false, targetPositionPercent = 50 }: { label: string; value: number | null; goal: number | null; unit: string; range: { min: number | null; max: number | null }; colorClass?: string; segments?: GoalSegment[]; dark?: boolean; targetPositionPercent?: number }) {
@@ -1347,7 +1434,7 @@ interface TodayViewProps {
 function TodayView(props: TodayViewProps) {
   const { selectedDate, setSelectedDate, total, goals, entries, subtotals, existingFoodIds, onStartCategoryRecord, onEditEntry, onDeleteEntry, onShowMealDetails, onShowTodayDetails } = props
   return <>
-    <section className="page-heading"><div><span className="eyebrow">DAILY LOG</span><h1>今日の記録</h1><p className="muted">食べたものを、あとから振り返れる形で。</p></div><div className="date-picker"><button type="button" onClick={() => setSelectedDate(addDays(selectedDate, -1))}>‹</button><input type="date" value={selectedDate} onChange={(event) => setSelectedDate(event.target.value)} /><button type="button" onClick={() => setSelectedDate(addDays(selectedDate, 1))}>›</button></div></section>
+    <section className="page-heading"><div><span className="eyebrow">DAILY LOG</span><h1>今日の記録</h1><p className="muted">食べたものを、あとから振り返れる形で。</p></div><div className="date-picker"><button type="button" onClick={() => setSelectedDate(addDays(selectedDate, -1))}>‹</button><input type="date" value={selectedDate} onChange={(event) => { if (event.target.value) setSelectedDate(event.target.value) }} /><button type="button" onClick={() => setSelectedDate(addDays(selectedDate, 1))}>›</button></div></section>
     <section className="hero-summary"><div className="hero-summary-heading"><div className="today-hero-copy"><span className="section-kicker">{selectedDate === currentDateKey() ? 'TODAY' : selectedDate}</span><strong>今日の進捗</strong></div><button className="hero-detail-button" type="button" onClick={onShowTodayDetails}>詳細を見る</button></div><GoalProgressBar label="カロリー" value={total.energyKcal} goal={goals.energyKcal} unit="kcal" range={nutrientRangeForGoals(goals, 'energyKcal')} segments={MEAL_TYPES.map((type) => ({ type, value: subtotals[type]?.energyKcal ?? 0 })).filter((segment) => segment.value > 0)} targetPositionPercent={75} dark /></section>
     <section className="section-block meals-section"><div className="section-title"><div><span className="eyebrow">MEALS</span><h2>食事の内訳</h2></div><span className="count-label">{entries.length}件</span></div>{MEAL_TYPES.map((type) => <MealGroup key={type} type={type} entries={entries.filter((entry) => entry.mealType === type)} subtotal={subtotals[type]} existingFoodIds={existingFoodIds} onEdit={onEditEntry} onDelete={onDeleteEntry} onShowDetails={onShowMealDetails} onRecord={onStartCategoryRecord} />)}</section>
   </>
