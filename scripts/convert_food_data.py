@@ -2,9 +2,13 @@
 """日本食品標準成分表等の確認済みCSVを、Nutrition PWAの食品JSONへ変換する。
 
 入力CSVの列:
-id,official_name,name,maker,barcode,base_amount,base_unit,energy_kcal,protein_g,fat_g,carbohydrate_g,fiber_g,salt_g,calcium_mg,iron_mg,vitamin_a_mcg,vitamin_e_mg,vitamin_b1_mg,vitamin_b2_mg,vitamin_c_mg,saturated_fat_g
+id,official_name,name,maker,barcode,base_amount,base_unit,serving_amount,
+serving_unit,input_unit_conversions,energy_kcal,protein_g,fat_g,
+carbohydrate_g,fiber_g,salt_g,calcium_mg,iron_mg,vitamin_a_mcg,
+vitamin_e_mg,vitamin_b1_mg,vitamin_b2_mg,vitamin_c_mg,saturated_fat_g
 
 元データの版・出典・取得日をコマンド引数で明示し、欠損値は null のまま出力する。
+入力単位列は任意で、旧CSVに存在しない場合は未設定として扱う。
 """
 
 from __future__ import annotations
@@ -47,8 +51,80 @@ def number_or_none(value: str) -> Optional[float]:
     return float(cleaned)
 
 
+def _valid_unit(value: Any) -> bool:
+    return (
+        isinstance(value, str)
+        and bool(value.strip())
+        and value == value.strip()
+        and len(value) <= 30
+        and not any(ord(character) < 32 or ord(character) == 127 for character in value)
+    )
+
+
+def _positive_number(value: Any, label: str) -> float:
+    try:
+        number = float(value)
+    except (TypeError, ValueError) as error:
+        raise ValueError(f"{label}は正の数で指定してください。") from error
+    if not number > 0 or number == float("inf"):
+        raise ValueError(f"{label}は正の有限値で指定してください。")
+    return number
+
+
+def parse_input_unit_conversions(raw_value: str, base_unit: str) -> list[dict[str, Any]]:
+    text = raw_value.strip()
+    if not text:
+        return []
+    try:
+        parsed = json.loads(text)
+    except json.JSONDecodeError as error:
+        raise ValueError("input_unit_conversionsはJSON配列で指定してください。") from error
+    if not isinstance(parsed, list):
+        raise ValueError("input_unit_conversionsはJSON配列で指定してください。")
+
+    conversions: list[dict[str, Any]] = []
+    seen_units: set[str] = set()
+    for index, item in enumerate(parsed):
+        if not isinstance(item, dict):
+            raise ValueError(f"input_unit_conversions[{index}]はオブジェクトで指定してください。")
+        unit = item.get("unit")
+        if not _valid_unit(unit):
+            raise ValueError(f"input_unit_conversions[{index}].unitが不正です。")
+        if unit == base_unit:
+            raise ValueError("入力単位は基準単位と重複できません。")
+        if unit in seen_units:
+            raise ValueError(f"入力単位{unit!r}が重複しています。")
+        seen_units.add(unit)
+        conversions.append({
+            "unit": unit,
+            "baseAmount": _positive_number(
+                item.get("baseAmount"),
+                f"input_unit_conversions[{index}].baseAmount",
+            ),
+        })
+    return conversions
+
+
 def convert_row(row: Dict[str, str], source_version: str, processed_at: str) -> Dict[str, Any]:
     created_at = processed_at
+    base_amount = _positive_number(row["base_amount"], "base_amount")
+    base_unit = row["base_unit"].strip()
+    if not _valid_unit(base_unit):
+        raise ValueError("base_unitが不正です。")
+    conversions = parse_input_unit_conversions(row.get("input_unit_conversions", ""), base_unit)
+    serving_amount_text = row.get("serving_amount", "").strip()
+    serving_unit_text = row.get("serving_unit", "").strip()
+    if bool(serving_amount_text) != bool(serving_unit_text):
+        raise ValueError("serving_amountとserving_unitは両方を指定してください。")
+    serving_amount = _positive_number(serving_amount_text, "serving_amount") if serving_amount_text else None
+    serving_unit = serving_unit_text or None
+    allowed_serving_units = {base_unit, *(conversion["unit"] for conversion in conversions)}
+    if serving_unit is not None and (
+        not _valid_unit(serving_unit)
+        or serving_unit not in allowed_serving_units
+    ):
+        raise ValueError("serving_unitは基準単位または登録済み入力単位を指定してください。")
+
     return {
         "id": row["id"].strip(),
         "officialName": row.get("official_name", row["name"]).strip(),
@@ -58,10 +134,11 @@ def convert_row(row: Dict[str, str], source_version: str, processed_at: str) -> 
         "barcode": row.get("barcode", "").strip(),
         "source": "mext",
         "sourceVersion": source_version,
-        "baseAmount": float(row["base_amount"]),
-        "baseUnit": row["base_unit"].strip(),
-        "servingAmount": None,
-        "servingUnit": None,
+        "baseAmount": base_amount,
+        "baseUnit": base_unit,
+        "servingAmount": serving_amount,
+        "servingUnit": serving_unit,
+        "inputUnitConversions": conversions,
         "nutrients": {target: number_or_none(row.get(source, "")) for source, target in NUTRIENTS},
         "createdAt": created_at,
         "updatedAt": created_at,

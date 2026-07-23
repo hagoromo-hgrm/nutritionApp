@@ -10,16 +10,18 @@ from __future__ import annotations
 
 import argparse
 import csv
+import json
 from pathlib import Path
 from typing import Any
 
 import openpyxl
 
-from food_data_rules import add_measure_note, clean_food_name, leading_category, preferred_measure, scale_value
+from food_data_rules import clean_food_name, food_input_defaults, leading_category
 
 
 CSV_COLUMNS = (
     "id", "official_name", "name", "maker", "barcode", "base_amount", "base_unit",
+    "serving_amount", "serving_unit", "input_unit_conversions",
     "energy_kcal", "protein_g", "fat_g", "carbohydrate_g", "fiber_g", "salt_g",
     "calcium_mg", "iron_mg", "vitamin_a_mcg", "vitamin_e_mg", "vitamin_b1_mg",
     "vitamin_b2_mg", "vitamin_c_mg", "saturated_fat_g",
@@ -115,31 +117,40 @@ def main() -> None:
             else:
                 saturated_fat = ""
 
-            measure = preferred_measure(clean_food_name(raw_name), leading_category(raw_name))
-            name = add_measure_note(clean_food_name(raw_name), measure)
-            factor = measure.reference_grams / 100
+            defaults = food_input_defaults(raw_name, leading_category(raw_name))
             rows.append({
                 "id": food_id(row[1]),
                 "official_name": raw_name,
-                "name": name,
+                "name": clean_food_name(raw_name),
                 "maker": "",
                 "barcode": "",
-                "base_amount": str(measure.amount),
-                "base_unit": measure.unit,
-                "energy_kcal": scale_value(clean_value(row[6]), factor),
-                "protein_g": scale_value(clean_value(row[9]), factor),
-                "fat_g": scale_value(clean_value(row[12]), factor),
-                "carbohydrate_g": scale_value(clean_value(row[20]), factor),
-                "fiber_g": scale_value(clean_value(row[18]), factor),
-                "salt_g": scale_value(clean_value(row[60]), factor),
-                "calcium_mg": scale_value(clean_value(row[25]), factor),
-                "iron_mg": scale_value(clean_value(row[28]), factor),
-                "vitamin_a_mcg": scale_value(clean_value(row[42]), factor),
-                "vitamin_e_mg": scale_value(clean_value(row[44]), factor),
-                "vitamin_b1_mg": scale_value(clean_value(row[49]), factor),
-                "vitamin_b2_mg": scale_value(clean_value(row[50]), factor),
-                "vitamin_c_mg": scale_value(clean_value(row[58]), factor),
-                "saturated_fat_g": scale_value(saturated_fat, factor),
+                "base_amount": "100",
+                "base_unit": "g",
+                "serving_amount": "" if defaults.serving_amount is None else str(defaults.serving_amount),
+                "serving_unit": defaults.serving_unit or "",
+                "input_unit_conversions": json.dumps(
+                    [
+                        {"unit": conversion.unit, "baseAmount": conversion.base_amount}
+                        for conversion in defaults.input_unit_conversions
+                    ],
+                    ensure_ascii=False,
+                    separators=(",", ":"),
+                ),
+                # MEXTの可食部100g当たりの値を変換・丸めずに保持する。
+                "energy_kcal": clean_value(row[6]),
+                "protein_g": clean_value(row[9]),
+                "fat_g": clean_value(row[12]),
+                "carbohydrate_g": clean_value(row[20]),
+                "fiber_g": clean_value(row[18]),
+                "salt_g": clean_value(row[60]),
+                "calcium_mg": clean_value(row[25]),
+                "iron_mg": clean_value(row[28]),
+                "vitamin_a_mcg": clean_value(row[42]),
+                "vitamin_e_mg": clean_value(row[44]),
+                "vitamin_b1_mg": clean_value(row[49]),
+                "vitamin_b2_mg": clean_value(row[50]),
+                "vitamin_c_mg": clean_value(row[58]),
+                "saturated_fat_g": clean_value(saturated_fat),
             })
     finally:
         book.close()
@@ -151,7 +162,7 @@ def main() -> None:
 
     args.output_csv.parent.mkdir(parents=True, exist_ok=True)
     with args.output_csv.open("w", encoding="utf-8-sig", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=CSV_COLUMNS)
+        writer = csv.DictWriter(handle, fieldnames=CSV_COLUMNS, lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
     populated = sum(bool(row["saturated_fat_g"]) for row in rows)
