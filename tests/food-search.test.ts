@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { normalizeSearchText, searchFoodResults } from '../src/services/foodSearch'
 import { resolveBarcodeCommercialFlag, resolveFoodGroupDisplayName } from '../src/services/foodDraft'
-import { FOOD_MASTER_SEARCH_CATEGORIES, MEAL_SEARCH_CATEGORIES, foodSearchCategoryIncludesFoods, foodSearchCategoryIncludesMenus, isCommercialFood } from '../src/services/foodClassification'
+import { FOOD_MASTER_SEARCH_CATEGORIES, MEAL_SEARCH_CATEGORIES, foodMatchesSearchCategory, foodSearchCategoryIncludesFoods, foodSearchCategoryIncludesMenus, isCommercialFood } from '../src/services/foodClassification'
 import type { Food, FoodAlias, FoodGroup, FoodRelatedTerm, FoodUsageStat } from '../src/types'
 
 const nutrients = { energyKcal: 100, proteinG: 1, fatG: 1, carbohydrateG: 1, fiberG: 1, saltG: 0, calciumMg: null, ironMg: null, vitaminAMcg: null, vitaminEMg: null, vitaminB1Mg: null, vitaminB2Mg: null, vitaminCMg: null, saturatedFatG: null }
@@ -65,10 +65,14 @@ describe('local food search', () => {
   })
 
   it('明示指定またはJANを持つ食品を外食・市販として判定する', () => {
-    expect(isCommercialFood({ ...food('general', '一般食品', 'general') })).toBe(false)
-    expect(isCommercialFood({ ...food('checked', '外食', 'checked'), isCommercial: true })).toBe(true)
-    expect(isCommercialFood({ ...food('jan', '市販品', 'jan'), barcode: '4901234567890' })).toBe(true)
+    const general = { ...food('general', '一般食品', 'general') }
+    const checked = { ...food('checked', '外食', 'checked'), isCommercial: true }
+    const jan = { ...food('jan', '市販品', 'jan'), barcode: '4901234567890' }
+    expect(isCommercialFood(general)).toBe(false)
+    expect(isCommercialFood(checked)).toBe(true)
+    expect(isCommercialFood(jan)).toBe(true)
     expect(isCommercialFood({ ...food('external', '外部由来', 'external'), source: 'open_food_facts' })).toBe(false)
+    expect([general, checked, jan].filter((item) => foodMatchesSearchCategory(item, 'commercial')).map(({ id }) => id)).toEqual(['checked', 'jan'])
   })
 
   it('分類してからページングし、混在familyでは一致するバリエーションだけを返す', () => {
