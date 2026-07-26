@@ -59,7 +59,7 @@ import {
   type NutrientEstimateAdoption,
   type NutrientEstimateEvaluation,
 } from './components/NutrientEstimatePanel'
-import { ESTIMATABLE_NUTRIENT_KEYS, toStoredNutrientEstimateResult } from './services/nutrientEstimator'
+import { ESTIMATABLE_NUTRIENT_KEYS, ESTIMATE_FIT_NUTRIENT_KEYS, toStoredNutrientEstimateResult } from './services/nutrientEstimator'
 import { calculateBmi, calculateNutrients, estimateDailyGoals, formatGraphNutrient, formatNutrient, getFoodDefaultServing, getFoodQuantityUnits, goalRate, incrementByQuantityUnit, nutrientRangeForGoals, scaleNutritionGoals, sumAvailableNutrients, sumByMealType, sumEntries, sumNutrients } from './services/nutrition'
 import { getMenuIngredients, menuToFood, menusWithUnsupportedIngredientUnits, wouldCreateMenuCycle } from './services/menuIngredients'
 import {
@@ -939,7 +939,10 @@ function App() {
         && evaluated.referenceMassSource === referenceMassSource
         && evaluated.ingredientsText?.trim() === food.ingredientsText?.trim()
         && evaluated.ingredientsSource?.provider === food.ingredientsSource?.provider
-        && evaluated.ingredientsSource?.verified === food.ingredientsSource?.verified)
+        && evaluated.ingredientsSource?.verified === food.ingredientsSource?.verified
+        && ESTIMATE_FIT_NUTRIENT_KEYS.every((key) => (
+          (evaluated.knownNutrients?.[key] ?? null) === food.nutrients[key]
+        )))
       if (pendingEstimation && !evaluationStillCurrent && (pendingAdoptionKeys.length > 0 || pendingEstimation.rejectedKeys.length > 0)) {
         showError('推計後に原材料、基準量または確認済み重量が変更されています。もう一度推計してから保存してください。')
         return
@@ -3023,6 +3026,10 @@ function FoodFormView({ draft, returnView, allowCommercialClassification, estima
     key,
     draft.nutrients[key].trim() === '' ? null : Number(draft.nutrients[key]),
   ])) as Pick<Nutrients, (typeof ESTIMATABLE_NUTRIENT_KEYS)[number]>
+  const knownEstimateFitNutrients = Object.fromEntries(ESTIMATE_FIT_NUTRIENT_KEYS.map((key) => [
+    key,
+    draft.nutrients[key].trim() === '' ? null : Number(draft.nutrients[key]),
+  ])) as Pick<Nutrients, (typeof ESTIMATE_FIT_NUTRIENT_KEYS)[number]>
   const hasEstimatableMissingValue = ESTIMATABLE_NUTRIENT_KEYS.some((key) => currentEstimateNutrients[key] === null)
   const queueEvaluation = (evaluation: NutrientEstimateEvaluation) => setDraft((current) => {
     if (!current) return current
@@ -3105,6 +3112,7 @@ function FoodFormView({ draft, returnView, allowCommercialClassification, estima
             referenceMassG={referenceMassG}
             referenceMassSource={referenceMassSource}
             currentNutrients={currentEstimateNutrients}
+            knownNutrients={knownEstimateFitNutrients}
             onEvaluated={queueEvaluation}
             onAdopt={queueAdoption}
             onRejectAll={queueRejection}

@@ -33,6 +33,7 @@ export interface NutrientEstimatePanelProps {
   referenceMassSource: string | null
   ingredientsSource: IngredientsSource | null
   currentNutrients: CurrentEstimateNutrients
+  knownNutrients: NutrientEstimateRequest['knownNutrients']
   onEvaluated?: (evaluation: NutrientEstimateEvaluation) => void
   onAdopt: (adoption: NutrientEstimateAdoption) => void
   onRejectAll?: (evaluation: NutrientEstimateEvaluation, nutrientKeys: EstimatableNutrientKey[]) => void
@@ -58,6 +59,7 @@ function requestKey(props: NutrientEstimatePanelProps): string {
     props.referenceMassG,
     props.referenceMassSource,
     props.ingredientsSource,
+    props.knownNutrients,
   ])
 }
 
@@ -83,6 +85,7 @@ export function NutrientEstimatePanel(props: NutrientEstimatePanelProps) {
       baseUnit: props.basis.baseUnit,
       ingredientsText: props.ingredientsText,
       ingredientsSource: props.ingredientsSource,
+      knownNutrients: props.knownNutrients,
       referenceMassG: props.referenceMassG,
       referenceMassSource: props.referenceMassSource,
       requestedNutrients,
@@ -157,7 +160,7 @@ export function NutrientEstimatePanel(props: NutrientEstimatePanelProps) {
         <span className="nutrient-estimate-badge">端末内</span>
       </div>
       <p className="nutrient-estimate-intro" id={`${id}-intro`}>
-        原材料表示と確認済み重量から、飽和脂肪酸、食物繊維、カルシウム、鉄、ビタミンA・E・B1・B2・Cのうち、未入力の栄養素だけを参考推計します。外部へ情報を送信せず、現在値は上書きしません。
+        原材料表示と確認済み重量から、飽和脂肪酸、食物繊維、カルシウム、鉄、ビタミンA・E・B1・B2・Cのうち、未入力の栄養素だけを参考推計します。入力済みの主要栄養値があれば配合比の推定にも使います。外部へ情報を送信せず、現在値は上書きしません。
       </p>
       <dl className="nutrient-estimate-basis">
         <div><dt>表示基準</dt><dd>{props.basis.baseAmount}{props.basis.baseUnit}当たり</dd></div>
@@ -240,7 +243,9 @@ function AvailableEstimateDetails({ estimate, unit }: { estimate: AvailableNutri
       <dl>
         <div><dt>範囲</dt><dd>{format(estimate.range.min)}〜{format(estimate.range.max)}{unit}</dd></div>
         <div><dt>信頼度</dt><dd>{CONFIDENCE_LABELS[estimate.confidence]}</dd></div>
-        <div><dt>方法</dt><dd>原材料表示順による端末内推計</dd></div>
+        <div><dt>方法</dt><dd>{estimate.method === 'browser_ingredient_macro_fit'
+          ? '原材料表示順と主要栄養値による端末内推計'
+          : '原材料表示順による端末内推計'}</dd></div>
         <div><dt>出典</dt><dd>{estimate.source}</dd></div>
       </dl>
       {estimate.warnings.length > 0 && (

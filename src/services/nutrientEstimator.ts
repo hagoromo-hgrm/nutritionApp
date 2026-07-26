@@ -1,4 +1,4 @@
-import { NUTRIENT_LABELS, type EstimationResult, type FoodUnit, type IngredientsSource, type NutrientKey } from '../types'
+import { NUTRIENT_LABELS, type EstimationResult, type FoodUnit, type IngredientsSource, type NutrientKey, type Nutrients } from '../types'
 
 export const ESTIMATABLE_NUTRIENT_KEYS = [
   'saturatedFatG',
@@ -13,6 +13,14 @@ export const ESTIMATABLE_NUTRIENT_KEYS = [
 ] as const satisfies readonly NutrientKey[]
 
 export type EstimatableNutrientKey = (typeof ESTIMATABLE_NUTRIENT_KEYS)[number]
+export const ESTIMATE_FIT_NUTRIENT_KEYS = [
+  'energyKcal',
+  'proteinG',
+  'fatG',
+  'carbohydrateG',
+  'saltG',
+] as const satisfies readonly NutrientKey[]
+export type EstimateFitNutrientKey = (typeof ESTIMATE_FIT_NUTRIENT_KEYS)[number]
 export type EstimateConfidence = 'high' | 'medium' | 'low' | 'unavailable'
 
 export interface NutrientEstimateBasis {
@@ -28,12 +36,13 @@ export interface NutrientEstimateRequest {
   referenceMassSource: string | null
   ingredientsText: string | null
   ingredientsSource: IngredientsSource | null
+  knownNutrients?: Partial<Pick<Nutrients, EstimateFitNutrientKey>>
   requestedNutrients?: readonly EstimatableNutrientKey[]
   requestedAt: string
 }
 
 interface EstimateDetails {
-  method: 'browser_ingredient_rule'
+  method: 'browser_ingredient_rule' | 'browser_ingredient_macro_fit'
   source: '文部科学省 日本食品標準成分表（八訂）増補2023年（2026年3月27日正誤表対応）'
   sourceFoodIds: string[]
   warnings: string[]
@@ -66,7 +75,7 @@ export interface NutrientEstimateResult {
   basis: NutrientEstimateBasis
   estimates: Record<EstimatableNutrientKey, NutrientEstimate>
   globalWarnings: string[]
-  modelVersion: 'browser-rule-0.2.0'
+  modelVersion: 'browser-rule-0.3.0'
   estimatedAt: string
 }
 
@@ -77,6 +86,11 @@ export function isEstimateAdoptable(currentValue: number | null, estimate: Nutri
 
 interface IngredientProfile {
   terms: readonly string[]
+  energyKcal: number
+  proteinG: number
+  fatG: number
+  carbohydrateG: number
+  saltG: number
   saturatedFatG: number | null
   fiberG: number | null
   calciumMg: number | null
@@ -97,6 +111,11 @@ interface IngredientProfile {
 const INGREDIENT_PROFILES: readonly IngredientProfile[] = [
   {
     terms: ['小麦全粒粉', '全粒粉'],
+    energyKcal: 320,
+    proteinG: 12.8,
+    fatG: 2.9,
+    carbohydrateG: 68.2,
+    saltG: 0,
     saturatedFatG: 0.53,
     fiberG: 11.2,
     calciumMg: 26,
@@ -110,6 +129,11 @@ const INGREDIENT_PROFILES: readonly IngredientProfile[] = [
   },
   {
     terms: ['オートミール', 'オーツ麦'],
+    energyKcal: 350,
+    proteinG: 13.7,
+    fatG: 5.7,
+    carbohydrateG: 69.1,
+    saltG: 0,
     saturatedFatG: 1.01,
     fiberG: 9.4,
     calciumMg: 47,
@@ -123,6 +147,11 @@ const INGREDIENT_PROFILES: readonly IngredientProfile[] = [
   },
   {
     terms: ['ショートニング'],
+    energyKcal: 881,
+    proteinG: 0,
+    fatG: 99.9,
+    carbohydrateG: 0,
+    saltG: 0,
     saturatedFatG: 51.13,
     fiberG: 0,
     calciumMg: 0,
@@ -137,6 +166,11 @@ const INGREDIENT_PROFILES: readonly IngredientProfile[] = [
   },
   {
     terms: ['マーガリン'],
+    energyKcal: 740,
+    proteinG: 0.3,
+    fatG: 84.3,
+    carbohydrateG: 0.1,
+    saltG: 1.3,
     saturatedFatG: 39,
     fiberG: 0,
     calciumMg: 14,
@@ -151,6 +185,11 @@ const INGREDIENT_PROFILES: readonly IngredientProfile[] = [
   },
   {
     terms: ['植物油脂', '植物油'],
+    energyKcal: 886.333333,
+    proteinG: 0,
+    fatG: 100,
+    carbohydrateG: 0,
+    saltG: 0,
     saturatedFatG: 23.003333,
     fiberG: 0,
     calciumMg: null,
@@ -165,6 +204,11 @@ const INGREDIENT_PROFILES: readonly IngredientProfile[] = [
   },
   {
     terms: ['バター'],
+    energyKcal: 700,
+    proteinG: 0.6,
+    fatG: 81,
+    carbohydrateG: 0.2,
+    saltG: 1.9,
     saturatedFatG: 50.45,
     fiberG: 0,
     calciumMg: 15,
@@ -179,6 +223,11 @@ const INGREDIENT_PROFILES: readonly IngredientProfile[] = [
   },
   {
     terms: ['チョコレート', 'チョコ'],
+    energyKcal: 550,
+    proteinG: 6.9,
+    fatG: 34.1,
+    carbohydrateG: 55.8,
+    saltG: 0.2,
     saturatedFatG: 19.88,
     fiberG: 3.9,
     calciumMg: 240,
@@ -193,6 +242,11 @@ const INGREDIENT_PROFILES: readonly IngredientProfile[] = [
   },
   {
     terms: ['ココアパウダー', 'ココア'],
+    energyKcal: 386,
+    proteinG: 18.5,
+    fatG: 21.6,
+    carbohydrateG: 42.4,
+    saltG: 0,
     saturatedFatG: 12.4,
     fiberG: 23.9,
     calciumMg: 140,
@@ -206,6 +260,11 @@ const INGREDIENT_PROFILES: readonly IngredientProfile[] = [
   },
   {
     terms: ['アーモンド'],
+    energyKcal: 609,
+    proteinG: 19.6,
+    fatG: 51.8,
+    carbohydrateG: 20.9,
+    saltG: 0,
     saturatedFatG: 3.95,
     fiberG: 10.1,
     calciumMg: 250,
@@ -219,6 +278,11 @@ const INGREDIENT_PROFILES: readonly IngredientProfile[] = [
   },
   {
     terms: ['ごま'],
+    energyKcal: 604,
+    proteinG: 19.8,
+    fatG: 53.8,
+    carbohydrateG: 16.5,
+    saltG: 0,
     saturatedFatG: 7.8,
     fiberG: 10.8,
     calciumMg: 1200,
@@ -233,6 +297,11 @@ const INGREDIENT_PROFILES: readonly IngredientProfile[] = [
   },
   {
     terms: ['大豆粉', 'きな粉'],
+    energyKcal: 451,
+    proteinG: 36.7,
+    fatG: 25.7,
+    carbohydrateG: 28.5,
+    saltG: 0,
     saturatedFatG: 3.59,
     fiberG: 18.1,
     calciumMg: 190,
@@ -247,6 +316,11 @@ const INGREDIENT_PROFILES: readonly IngredientProfile[] = [
   },
   {
     terms: ['小麦粉'],
+    energyKcal: 349,
+    proteinG: 8.3,
+    fatG: 1.5,
+    carbohydrateG: 75.8,
+    saltG: 0,
     saturatedFatG: 0.34,
     fiberG: 2.5,
     calciumMg: 20,
@@ -261,6 +335,11 @@ const INGREDIENT_PROFILES: readonly IngredientProfile[] = [
   },
   {
     terms: ['脱脂粉乳'],
+    energyKcal: 354,
+    proteinG: 34,
+    fatG: 1,
+    carbohydrateG: 53.3,
+    saltG: 1.4,
     saturatedFatG: 0.44,
     fiberG: 0,
     calciumMg: 1100,
@@ -274,6 +353,11 @@ const INGREDIENT_PROFILES: readonly IngredientProfile[] = [
   },
   {
     terms: ['全粉乳', '牛乳', '乳等を主要原料とする食品'],
+    energyKcal: 490,
+    proteinG: 25.5,
+    fatG: 26.2,
+    carbohydrateG: 39.3,
+    saltG: 1.1,
     saturatedFatG: 16.28,
     fiberG: 0,
     calciumMg: 890,
@@ -288,6 +372,11 @@ const INGREDIENT_PROFILES: readonly IngredientProfile[] = [
   },
   {
     terms: ['卵', '液卵'],
+    energyKcal: 142,
+    proteinG: 12.2,
+    fatG: 10.2,
+    carbohydrateG: 0.4,
+    saltG: 0.4,
     saturatedFatG: 3.12,
     fiberG: 0,
     calciumMg: 46,
@@ -302,9 +391,10 @@ const INGREDIENT_PROFILES: readonly IngredientProfile[] = [
   },
 ] as const
 
-const METHOD: EstimateDetails['method'] = 'browser_ingredient_rule'
+const FALLBACK_METHOD: EstimateDetails['method'] = 'browser_ingredient_rule'
+const FIT_METHOD: EstimateDetails['method'] = 'browser_ingredient_macro_fit'
 const SOURCE: EstimateDetails['source'] = '文部科学省 日本食品標準成分表（八訂）増補2023年（2026年3月27日正誤表対応）'
-const MODEL_VERSION = 'browser-rule-0.2.0' as const
+const MODEL_VERSION = 'browser-rule-0.3.0' as const
 
 function round(value: number): number {
   return Math.round(Math.max(0, value) * 1_000_000) / 1_000_000
@@ -341,13 +431,125 @@ function findProfile(ingredient: string): IngredientProfile | null {
   return INGREDIENT_PROFILES.find((profile) => profile.terms.some((term) => ingredient.includes(term))) ?? null
 }
 
+interface MacroFit {
+  ratios: number[]
+  normalizedError: number
+}
+
+function fnv1a(value: string): number {
+  let hash = 0x811c9dc5
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index)
+    hash = Math.imul(hash, 0x01000193)
+  }
+  return hash >>> 0
+}
+
+function createRandom(seed: number): () => number {
+  let state = seed || 0x9e3779b9
+  return () => {
+    state += 0x6d2b79f5
+    let value = state
+    value = Math.imul(value ^ (value >>> 15), value | 1)
+    value ^= value + Math.imul(value ^ (value >>> 7), value | 61)
+    return ((value ^ (value >>> 14)) >>> 0) / 4_294_967_296
+  }
+}
+
+/**
+ * qを順序付き単体へ変換する。どの候補も原材料表示順、非負、合計1を満たす。
+ * w[i] = Σ(j=i..n-1) q[j] / (j+1)
+ */
+function orderedRatiosFromQ(q: readonly number[]): number[] {
+  return q.map((_value, index) => q
+    .slice(index)
+    .reduce((sum, value, offset) => sum + value / (index + offset + 1), 0))
+}
+
+function fitIngredientRatios(
+  profiles: readonly IngredientProfile[],
+  referenceMassG: number,
+  knownNutrients: NutrientEstimateRequest['knownNutrients'],
+  seedInput: string,
+): MacroFit | null {
+  const fitKeys = ESTIMATE_FIT_NUTRIENT_KEYS.filter((key) => {
+    const value = knownNutrients?.[key]
+    return value !== null && value !== undefined && Number.isFinite(value) && value >= 0
+  })
+  if (profiles.length < 2 || fitKeys.length < 2) return null
+
+  const predict = (ratios: readonly number[], key: EstimateFitNutrientKey) => (
+    profiles.reduce((sum, profile, index) => sum + profile[key] * ratios[index], 0)
+    * referenceMassG / 100
+  )
+  const objective = (q: readonly number[]) => {
+    const ratios = orderedRatiosFromQ(q)
+    return fitKeys.reduce((sum, key) => {
+      const observed = knownNutrients![key]!
+      // 公表値の丸めと食品差を考慮し、微小値だけが目的関数を支配しない尺度にする。
+      const roundingWidth = key === 'energyKcal' ? 0.5 : 0.05
+      const scale = Math.max(roundingWidth, observed * 0.02)
+      const error = (predict(ratios, key) - observed) / scale
+      return sum + error * error
+    }, 0) / fitKeys.length
+  }
+
+  const count = profiles.length
+  const denominator = count * (count + 1) / 2
+  let bestQ = Array.from({ length: count }, (_value, index) => (index + 1) / denominator)
+  let bestError = objective(bestQ)
+  const random = createRandom(fnv1a(seedInput))
+
+  for (let scenario = 0; scenario < 4_096; scenario += 1) {
+    const exponential = Array.from({ length: count }, () => -Math.log(Math.max(random(), Number.EPSILON)))
+    const total = exponential.reduce((sum, value) => sum + value, 0)
+    const q = exponential.map((value) => value / total)
+    const error = objective(q)
+    if (error < bestError) {
+      bestQ = q
+      bestError = error
+    }
+  }
+
+  // 最良の決定的サンプルから、qの質量を座標間で移して局所的に詰める。
+  for (const step of [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001]) {
+    let improved = true
+    let iteration = 0
+    while (improved && iteration < 32) {
+      improved = false
+      iteration += 1
+      for (let from = 0; from < count; from += 1) {
+        const amount = Math.min(step, bestQ[from])
+        if (amount <= 0) continue
+        for (let to = 0; to < count; to += 1) {
+          if (to === from) continue
+          const candidate = [...bestQ]
+          candidate[from] -= amount
+          candidate[to] += amount
+          const error = objective(candidate)
+          if (error + 1e-12 < bestError) {
+            bestQ = candidate
+            bestError = error
+            improved = true
+          }
+        }
+      }
+    }
+  }
+
+  return {
+    ratios: orderedRatiosFromQ(bestQ),
+    normalizedError: bestError,
+  }
+}
+
 function unavailable(reason: string, nextAction: string, warnings: string[] = []): UnavailableNutrientEstimate {
   return {
     status: 'unavailable',
     value: null,
     range: null,
     confidence: 'unavailable',
-    method: METHOD,
+    method: FALLBACK_METHOD,
     source: SOURCE,
     sourceFoodIds: [],
     warnings,
@@ -378,7 +580,7 @@ function resultStatus(
 }
 
 /**
- * 原材料の表示順だけを使う、外部通信を行わない決定的な参考推計。
+ * 原材料表示順と入力済み主要栄養値を使う、外部通信を行わない決定的な参考推計。
  * referenceMassG は request の baseAmount/baseUnit に対応する明示的な内容物重量でなければならない。
  */
 export function estimateNutrients(request: NutrientEstimateRequest): NutrientEstimateResult {
@@ -424,18 +626,36 @@ export function estimateNutrients(request: NutrientEstimateRequest): NutrientEst
       const denominator = ingredients.reduce((total, _ingredient, index) => total + ingredients.length - index, 0)
       const unknown = matches.filter((match) => match.profile === null)
       const ambiguous = recognized.filter((match) => match.profile.ambiguous)
+      const fitted = unknown.length === 0
+        ? fitIngredientRatios(
+            recognized.map((match) => match.profile),
+            request.referenceMassG,
+            request.knownNutrients,
+            JSON.stringify({
+              ingredients: ingredients.map((ingredient) => ingredient.normalize('NFKC')),
+              referenceMassG: request.referenceMassG,
+              knownNutrients: ESTIMATE_FIT_NUTRIENT_KEYS.map((key) => [key, request.knownNutrients?.[key] ?? null]),
+              modelVersion: MODEL_VERSION,
+            }),
+          )
+        : null
+      const ingredientRatios = fitted?.ratios ?? ingredients.map((_ingredient, index) => (
+        (ingredients.length - index) / denominator
+      ))
       const unknownWeight = unknown.reduce((total, match) => {
         const index = matches.indexOf(match)
-        return total + (ingredients.length - index) / denominator
+        return total + ingredientRatios[index]
       }, 0)
       const warnings = [
-        '原材料の配合比は表示順から推定しています。',
+        fitted
+          ? '原材料の配合比は、表示順の制約を保ちながら入力済みの主要栄養値との整合から推定しています。'
+          : '原材料の配合比は表示順から推定しています。',
         '加工係数が未定義です。',
         ...(unknown.length > 0 ? [`参照データにない原材料があります（${unknown.map((match) => match.ingredient).join('、')}）。`] : []),
         ...(ambiguous.length > 0 ? [`参照食品の種類に幅がある原材料があります（${ambiguous.map((match) => match.ingredient).join('、')}）。`] : []),
       ]
       const confidence: AvailableNutrientEstimate['confidence'] =
-        unknown.length === 0 && ambiguous.length === 0 ? 'medium' : 'low'
+        unknown.length === 0 && ambiguous.length === 0 && (fitted === null || fitted.normalizedError <= 4) ? 'medium' : 'low'
       const minFactor = unknownWeight > 0 || ambiguous.length > 0 ? 0.5 : 0.75
       const maxFactor = unknownWeight > 0 || ambiguous.length > 0 ? 1.7 : 1.3
 
@@ -451,7 +671,7 @@ export function estimateNutrients(request: NutrientEstimateRequest): NutrientEst
         }
         const per100g = recognized.reduce((total, match) => {
           const index = matches.indexOf(match)
-          const assumedRatio = (ingredients.length - index) / denominator
+          const assumedRatio = ingredientRatios[index]
           return total + match.profile[key]! * assumedRatio
         }, 0)
         const value = round(per100g * request.referenceMassG! / 100)
@@ -463,7 +683,7 @@ export function estimateNutrients(request: NutrientEstimateRequest): NutrientEst
             max: round(value * maxFactor),
           },
           confidence,
-          method: METHOD,
+          method: fitted ? FIT_METHOD : FALLBACK_METHOD,
           source: SOURCE,
           sourceFoodIds: [...new Set(recognized.flatMap((match) => match.profile.sourceFoodIds))],
           warnings,

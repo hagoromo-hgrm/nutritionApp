@@ -32,7 +32,7 @@ describe('browser nutrient estimator', () => {
     expect(first.estimates.vitaminB1Mg.status).toBe('available')
     expect(first.estimates.vitaminB2Mg.status).toBe('available')
     expect(first.estimates.vitaminCMg.status).toBe('available')
-    expect(first.modelVersion).toBe('browser-rule-0.2.0')
+    expect(first.modelVersion).toBe('browser-rule-0.3.0')
   })
 
   it('明示的な基準重量がなければ単位から重量を推測しない', () => {
@@ -129,6 +129,27 @@ describe('browser nutrient estimator', () => {
       value: 0,
       range: { min: 0, max: 0 },
     })
+  })
+
+  it('入力済みの主要栄養値を使い、原材料順を保った配合比推定へ切り替える', () => {
+    const request: NutrientEstimateRequest = {
+      ...eligibleRequest,
+      referenceMassG: 100,
+      ingredientsText: '小麦粉、バター、ココアパウダー、卵',
+      knownNutrients: {
+        energyKcal: 439,
+        proteinG: 8.2,
+        fatG: 24.9,
+        carbohydrateG: 48.9,
+        saltG: 0.5,
+      },
+    }
+    const result = estimateNutrients(request)
+
+    expect(result.status).toBe('completed')
+    expect(result.estimates.fiberG.method).toBe('browser_ingredient_macro_fit')
+    expect(result.estimates.fiberG.warnings.join(' ')).toContain('主要栄養値との整合')
+    expect(estimateNutrients(request)).toEqual(result)
   })
 
   it('MEXT参照値の欠損をゼロ補完せず栄養素単位の部分成功にする', () => {
