@@ -133,6 +133,18 @@ const honey = profile('mext_03022', 'はちみつ', {
   calciumMg: 4, ironMg: 0.2, vitaminAMcg: 0, vitaminEMg: 0, vitaminB1Mg: null,
   vitaminB2Mg: 0.01, vitaminCMg: 0, saturatedFatG: null,
 })
+const lactoseProxy = profile('proxy_lactose_mext_03003', '乳糖（糖類代理）', {
+  energyKcal: 391, proteinG: 0, fatG: 0, carbohydrateG: 99.3, fiberG: 0, saltG: 0,
+  calciumMg: 1, ironMg: null, vitaminAMcg: 0, vitaminEMg: 0, vitaminB1Mg: 0,
+  vitaminB2Mg: 0, vitaminCMg: 0, saturatedFatG: 0,
+}, {
+  sourceFoodIds: ['mext_03003'],
+  ambiguous: true,
+  derivationWarnings: [
+    '乳糖の独立したMEXT食品項目がないため、上白糖を糖類の代理参照として使用しています。',
+    ZERO_SATURATED_FROM_ZERO_FAT,
+  ],
+})
 
 const butter = profile('mext_14017', 'バター', {
   energyKcal: 700, proteinG: 0.6, fatG: 81, carbohydrateG: 0.2, fiberG: 0, saltG: 1.9,
@@ -149,6 +161,17 @@ const shortening = profile('mext_14030', 'ショートニング', {
   calciumMg: 0, ironMg: 0, vitaminAMcg: 0, vitaminEMg: 9.5, vitaminB1Mg: 0,
   vitaminB2Mg: 0, vitaminCMg: 0, saturatedFatG: 51.13,
 }, { ambiguous: true })
+const cocoaButterProxy = profile('proxy_cocoa_butter_mext_14030', 'ココアバター（油脂代理）', {
+  energyKcal: 881, proteinG: 0, fatG: 99.9, carbohydrateG: 0, fiberG: 0, saltG: 0,
+  calciumMg: 0, ironMg: 0, vitaminAMcg: 0, vitaminEMg: 9.5, vitaminB1Mg: 0,
+  vitaminB2Mg: 0, vitaminCMg: 0, saturatedFatG: 51.13,
+}, {
+  sourceFoodIds: ['mext_14030'],
+  ambiguous: true,
+  derivationWarnings: [
+    'ココアバターの独立したMEXT食品項目がないため、ショートニングを油脂の代理参照として使用しています。',
+  ],
+})
 const palmOil = profile('mext_14009', 'パーム油', {
   energyKcal: 887, proteinG: 0, fatG: 100, carbohydrateG: 0, fiberG: 0, saltG: 0,
   calciumMg: null, ironMg: 0, vitaminAMcg: 0, vitaminEMg: 8.6, vitaminB1Mg: 0,
@@ -189,6 +212,17 @@ const cocoa = profile('mext_16048', 'ココアパウダー', {
   energyKcal: 386, proteinG: 18.5, fatG: 21.6, carbohydrateG: 42.4, fiberG: 23.9, saltG: 0,
   calciumMg: 140, ironMg: 14, vitaminAMcg: 3, vitaminEMg: 0.3, vitaminB1Mg: 0.16,
   vitaminB2Mg: 0.22, vitaminCMg: 0, saturatedFatG: 12.4,
+})
+const cacaoMassProxy = profile('proxy_cacao_mass_mext_15187', 'カカオマス（高カカオチョコレート代理）', {
+  energyKcal: 539, proteinG: 8.9, fatG: 41.3, carbohydrateG: 43.3, fiberG: 13.1, saltG: 0,
+  calciumMg: 71, ironMg: 9.3, vitaminAMcg: 3, vitaminEMg: 0.5, vitaminB1Mg: 0.15,
+  vitaminB2Mg: 0.11, vitaminCMg: 0, saturatedFatG: 23.3,
+}, {
+  sourceFoodIds: ['mext_15187'],
+  ambiguous: true,
+  derivationWarnings: [
+    'カカオマスの独立したMEXT食品項目がないため、スイートチョコレート（カカオ増量）を代理参照として使用しています。',
+  ],
 })
 const almond = profile('mext_05001', 'アーモンド', {
   energyKcal: 609, proteinG: 19.6, fatG: 51.8, carbohydrateG: 20.9, fiberG: 10.1, saltG: 0,
@@ -305,6 +339,16 @@ const apple = profile('mext_07176', 'りんご', {
   calciumMg: 4, ironMg: 0.1, vitaminAMcg: 2, vitaminEMg: 0.4, vitaminB1Mg: 0.02,
   vitaminB2Mg: 0.01, vitaminCMg: 6, saturatedFatG: 0.04,
 }, { ambiguous: true })
+const compressedYeast = profile('mext_17082', 'パン酵母（圧搾）', {
+  energyKcal: 105, proteinG: 16.5, fatG: 1.5, carbohydrateG: 12.1, fiberG: 10.3, saltG: 0.1,
+  calciumMg: 16, ironMg: 2.2, vitaminAMcg: null, vitaminEMg: null, vitaminB1Mg: 2.21,
+  vitaminB2Mg: 1.78, vitaminCMg: 0, saturatedFatG: 0.19,
+}, { priorProbability: 0.15, ambiguous: true })
+const dryYeast = profile('mext_17083', 'パン酵母（乾燥）', {
+  energyKcal: 307, proteinG: 37.1, fatG: 6.8, carbohydrateG: 43.1, fiberG: 32.6, saltG: 0.3,
+  calciumMg: 19, ironMg: 13, vitaminAMcg: 0, vitaminEMg: null, vitaminB1Mg: 8.81,
+  vitaminB2Mg: 3.72, vitaminCMg: 1, saturatedFatG: 0.79,
+}, { priorProbability: 0.85, ambiguous: true })
 const salt = profile('mext_17012', '食塩', {
   energyKcal: 0, proteinG: 0, fatG: 0, carbohydrateG: 0, fiberG: 0, saltG: 99.5,
   calciumMg: 22, ironMg: null, vitaminAMcg: 0, vitaminEMg: null, vitaminB1Mg: 0,
@@ -328,7 +372,9 @@ const GROUPS: readonly IngredientProfileGroup[] = [
   { aliases: ['ぶどう糖', 'ブドウ糖', 'グルコース'], candidates: [glucose] },
   { aliases: ['水あめ', '水飴'], candidates: [starchSyrup] },
   { aliases: ['はちみつ', '蜂蜜'], candidates: [honey] },
+  { aliases: ['乳糖', 'ラクトース'], candidates: [lactoseProxy] },
   { aliases: ['ショートニング'], candidates: [shortening] },
+  { aliases: ['ココアバター', 'カカオバター'], candidates: [cocoaButterProxy] },
   { aliases: ['マーガリン', 'ファットスプレッド'], candidates: [margarine] },
   { aliases: ['バター', '発酵バター'], candidates: [butter] },
   { aliases: ['パーム油'], candidates: [palmOil] },
@@ -337,6 +383,7 @@ const GROUPS: readonly IngredientProfileGroup[] = [
   { aliases: ['植物油脂', '植物油', '食用植物油脂'], candidates: [palmOil, canolaOil, soyOil] },
   { aliases: ['チョコレート', 'チョコ', 'チョコチップ', '準チョコレート'], candidates: [chocolate] },
   { aliases: ['ココアパウダー', 'ココア'], candidates: [cocoa] },
+  { aliases: ['カカオマス', 'ココアマス', 'カカオペースト'], candidates: [cacaoMassProxy] },
   { aliases: ['アーモンド', 'アーモンドパウダー', 'アーモンドプードル'], candidates: [almond] },
   { aliases: ['ごま', 'ゴマ', '胡麻'], candidates: [sesame] },
   { aliases: ['大豆粉', 'きな粉', 'きなこ'], candidates: [kinako] },
@@ -357,6 +404,9 @@ const GROUPS: readonly IngredientProfileGroup[] = [
   { aliases: ['干しぶどう', 'レーズン'], candidates: [raisin] },
   { aliases: ['バナナ'], candidates: [banana] },
   { aliases: ['りんご', 'リンゴ'], candidates: [apple] },
+  { aliases: ['ドライイースト', '乾燥酵母'], candidates: [dryYeast] },
+  { aliases: ['生イースト', '圧搾酵母'], candidates: [compressedYeast] },
+  { aliases: ['イースト', 'パン酵母', '酵母'], candidates: [dryYeast, compressedYeast] },
   { aliases: ['食塩', '塩'], candidates: [salt] },
 ] as const
 

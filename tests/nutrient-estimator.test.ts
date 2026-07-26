@@ -33,7 +33,7 @@ describe('browser nutrient estimator', () => {
     expect(first.estimates.vitaminB1Mg.status).toBe('available')
     expect(first.estimates.vitaminB2Mg.status).toBe('available')
     expect(first.estimates.vitaminCMg.status).toBe('available')
-    expect(first.modelVersion).toBe('browser-rule-0.4.0')
+    expect(first.modelVersion).toBe('browser-rule-0.4.1')
   })
 
   it('明示的な基準重量がなければ単位から重量を推測しない', () => {
@@ -265,5 +265,37 @@ describe('browser nutrient estimator', () => {
     if (result.estimates.fiberG.status === 'unavailable') {
       expect(result.estimates.fiberG.reason).toContain('寄与を0とみなせない')
     }
+  })
+
+  it('カカオマス・乳糖・ココアバター・イーストを含む商品を代理参照付きで部分推計する', () => {
+    const result = estimateNutrients({
+      ...eligibleRequest,
+      productName: '発酵カカオクッキー',
+      referenceMassG: 100,
+      ingredientsText: '小麦粉、砂糖、カカオマス、乳糖、ココアバター、イースト／乳化剤、香料',
+      knownNutrients: {
+        energyKcal: 500,
+        proteinG: 7,
+        fatG: 25,
+        carbohydrateG: 62,
+        saltG: 0.2,
+      },
+    })
+
+    expect(result.status).toBe('partial')
+    expect(result.estimates.saturatedFatG.status).toBe('available')
+    expect(result.estimates.fiberG.status).toBe('available')
+    expect(result.estimates.calciumMg.status).toBe('available')
+    expect(result.estimates.ironMg.status).toBe('unavailable')
+    expect(result.estimates.vitaminEMg.status).toBe('unavailable')
+    expect(result.estimates.fiberG.confidence).toBe('low')
+    expect(result.estimates.fiberG.sourceFoodIds).toEqual(expect.arrayContaining([
+      'mext_15187',
+      'mext_03003',
+      'mext_14030',
+      'mext_17083',
+    ]))
+    expect(result.estimates.fiberG.warnings.join(' ')).toContain('代理参照')
+    expect(result.estimates.fiberG.warnings.join(' ')).not.toContain('未対応原材料')
   })
 })

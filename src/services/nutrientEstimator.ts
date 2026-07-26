@@ -86,7 +86,7 @@ export interface NutrientEstimateResult {
   basis: NutrientEstimateBasis
   estimates: Record<EstimatableNutrientKey, NutrientEstimate>
   globalWarnings: string[]
-  modelVersion: 'browser-rule-0.4.0'
+  modelVersion: 'browser-rule-0.4.1'
   estimatedAt: string
 }
 
@@ -98,7 +98,7 @@ export function isEstimateAdoptable(currentValue: number | null, estimate: Nutri
 const FALLBACK_METHOD: EstimateDetails['method'] = 'browser_ingredient_rule'
 const FIT_METHOD: EstimateDetails['method'] = 'browser_ingredient_macro_fit'
 const SOURCE: EstimateDetails['source'] = '文部科学省 日本食品標準成分表（八訂）増補2023年（2026年3月27日正誤表対応）'
-const MODEL_VERSION = 'browser-rule-0.4.0' as const
+const MODEL_VERSION = 'browser-rule-0.4.1' as const
 const MAX_PROFILE_COMBINATIONS = 64
 const MAX_COMPOUND_CANDIDATES = 24
 
