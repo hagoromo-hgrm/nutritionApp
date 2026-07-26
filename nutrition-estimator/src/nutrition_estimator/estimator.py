@@ -9,7 +9,7 @@ from .normalize import normalize_ingredients
 from .optimizer import Scenario, optimize
 from .profiles import NON_CONTRIBUTING_ADDITIVES, candidates_for
 
-MODEL_VERSION = "0.1.0"
+MODEL_VERSION = "0.2.0"
 DEFAULT_SEED = 20260725
 DEFAULT_SAMPLES = 900
 
@@ -79,7 +79,7 @@ def estimate(
             payload,
             "NO_SUPPORTED_MISSING_NUTRIENTS",
             "推計対象の欠損栄養素がありません。",
-            "fiberGまたはsaturatedFatGがnullのときだけ推計を実行してください。",
+            "対応する栄養素がnullのときだけ推計を実行してください。",
         )
     targets = tuple(
         key for key in request.missing_nutrients if request.known_nutrients.get(key) is None

@@ -7,7 +7,19 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Mapping
 
-SUPPORTED_NUTRIENTS = frozenset({"saturatedFatG", "fiberG"})
+SUPPORTED_NUTRIENTS = frozenset(
+    {
+        "saturatedFatG",
+        "fiberG",
+        "calciumMg",
+        "ironMg",
+        "vitaminAMcg",
+        "vitaminEMg",
+        "vitaminB1Mg",
+        "vitaminB2Mg",
+        "vitaminCMg",
+    }
+)
 KNOWN_NUTRIENTS = frozenset(
     {
         "energyKcal",

@@ -3,6 +3,7 @@ from __future__ import annotations
 import copy
 
 from nutrition_estimator import compute_input_hash, estimate
+from nutrition_estimator.profiles import candidates_for
 
 
 def _rehash(payload: dict[str, object]) -> None:
@@ -89,6 +90,71 @@ def test_null_is_missing(cookie_request: dict[str, object]) -> None:
 
     assert result["status"] == "completed"
     assert set(result["estimates"]) == {"fiberG"}
+
+
+def test_all_supported_nutrients_are_estimated_when_profiles_have_values(
+    cookie_request: dict[str, object],
+) -> None:
+    targets = [
+        "fiberG",
+        "saturatedFatG",
+        "calciumMg",
+        "ironMg",
+        "vitaminAMcg",
+        "vitaminEMg",
+        "vitaminB1Mg",
+        "vitaminB2Mg",
+        "vitaminCMg",
+    ]
+    for target in targets:
+        cookie_request["knownNutrients"][target] = None
+    cookie_request["missingNutrients"] = targets
+    cookie_request["ingredientsText"] = "小麦粉、ショートニング、チョコレート"
+    _rehash(cookie_request)
+
+    result = estimate(cookie_request, seed=73, samples_per_combination=1200)
+
+    assert result["status"] == "completed"
+    assert set(result["estimates"]) == set(targets)
+    assert all(item["sourceFoodIds"] for item in result["estimates"].values())
+    assert {
+        "mext_01015",
+        "mext_14030",
+        "mext_15116",
+    }.issubset(result["candidateTrace"]["sourceFoodIds"])
+
+
+def test_missing_mext_values_produce_partial_result_without_zero_fill(
+    cookie_request: dict[str, object],
+) -> None:
+    targets = ["calciumMg", "ironMg", "vitaminEMg"]
+    for target in targets:
+        cookie_request["knownNutrients"][target] = None
+    cookie_request["missingNutrients"] = targets
+    _rehash(cookie_request)
+
+    result = estimate(cookie_request, seed=37, samples_per_combination=1200)
+
+    assert result["status"] == "partial"
+    assert set(result["estimates"]) == {"calciumMg"}
+    assert "ironMg" not in result["estimates"]
+    assert "vitaminEMg" not in result["estimates"]
+
+
+def test_micro_nutrient_profiles_match_verified_mext_values_and_nulls() -> None:
+    flour = candidates_for("小麦粉")[0].nutrients_per_100g
+    sugar = candidates_for("砂糖")[0].nutrients_per_100g
+    skim_milk = candidates_for("脱脂粉乳")[0].nutrients_per_100g
+
+    assert flour["calciumMg"] == 20.0
+    assert flour["ironMg"] == 0.5
+    assert flour["vitaminAMcg"] == 0.0
+    assert flour["vitaminEMg"] == 0.3
+    assert flour["vitaminB1Mg"] == 0.11
+    assert flour["vitaminB2Mg"] == 0.03
+    assert flour["vitaminCMg"] == 0.0
+    assert sugar["ironMg"] is None
+    assert skim_milk["vitaminEMg"] is None
 
 
 def test_modified_input_hash_is_rejected(cookie_request: dict[str, object]) -> None:

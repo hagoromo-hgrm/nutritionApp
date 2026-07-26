@@ -25,6 +25,14 @@ describe('browser nutrient estimator', () => {
     expect(first.estimates.fiberG.status).toBe('available')
     expect(first.estimates.fiberG.value).not.toBeNull()
     expect(first.estimates.fiberG.range).not.toBeNull()
+    expect(first.estimates.calciumMg.status).toBe('available')
+    expect(first.estimates.ironMg.status).toBe('available')
+    expect(first.estimates.vitaminAMcg.status).toBe('available')
+    expect(first.estimates.vitaminEMg.status).toBe('available')
+    expect(first.estimates.vitaminB1Mg.status).toBe('available')
+    expect(first.estimates.vitaminB2Mg.status).toBe('available')
+    expect(first.estimates.vitaminCMg.status).toBe('available')
+    expect(first.modelVersion).toBe('browser-rule-0.2.0')
   })
 
   it('明示的な基準重量がなければ単位から重量を推測しない', () => {
@@ -92,9 +100,52 @@ describe('browser nutrient estimator', () => {
       requestedNutrients: ['fiberG'],
     })
 
-    expect(result.status).toBe('partial')
+    expect(result.status).toBe('completed')
     expect(result.estimates.fiberG.status).toBe('available')
     expect(result.estimates.saturatedFatG.status).toBe('unavailable')
+    expect(result.estimates.calciumMg.status).toBe('unavailable')
+  })
+
+  it('MEXTの実値からカルシウム・鉄・ビタミンを推計し出典食品IDを保持する', () => {
+    const result = estimateNutrients({
+      ...eligibleRequest,
+      referenceMassG: 100,
+      ingredientsText: 'アーモンド',
+    })
+
+    expect(result.status).toBe('completed')
+    expect(result.estimates.calciumMg).toMatchObject({
+      status: 'available',
+      value: 250,
+      sourceFoodIds: ['mext_05001'],
+    })
+    expect(result.estimates.ironMg).toMatchObject({ status: 'available', value: 3.6 })
+    expect(result.estimates.vitaminAMcg).toMatchObject({ status: 'available', value: 1 })
+    expect(result.estimates.vitaminEMg).toMatchObject({ status: 'available', value: 30 })
+    expect(result.estimates.vitaminB1Mg).toMatchObject({ status: 'available', value: 0.2 })
+    expect(result.estimates.vitaminB2Mg).toMatchObject({ status: 'available', value: 1.06 })
+    expect(result.estimates.vitaminCMg).toMatchObject({
+      status: 'available',
+      value: 0,
+      range: { min: 0, max: 0 },
+    })
+  })
+
+  it('MEXT参照値の欠損をゼロ補完せず栄養素単位の部分成功にする', () => {
+    const result = estimateNutrients({
+      ...eligibleRequest,
+      ingredientsText: '脱脂粉乳',
+    })
+
+    expect(result.status).toBe('partial')
+    expect(result.estimates.calciumMg.status).toBe('available')
+    expect(result.estimates.vitaminEMg).toMatchObject({
+      status: 'unavailable',
+      value: null,
+      range: null,
+      confidence: 'unavailable',
+    })
+    expect(result.estimates.vitaminEMg.warnings.join(' ')).toContain('mext_13010')
   })
 
   it('未知または曖昧な原材料を警告し信頼度を低くする', () => {

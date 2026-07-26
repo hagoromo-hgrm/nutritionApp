@@ -11,7 +11,7 @@ import {
   saveEstimationRequest,
   saveEstimationResult,
 } from '../src/services/nutrientEstimationStore'
-import { estimateNutrients, toStoredNutrientEstimateResult } from '../src/services/nutrientEstimator'
+import { ESTIMATABLE_NUTRIENT_KEYS, estimateNutrients, toStoredNutrientEstimateResult } from '../src/services/nutrientEstimator'
 import type { EstimationResult, Food, MealEntry } from '../src/types'
 
 const nutrients = {
@@ -34,6 +34,7 @@ function resultFor(requestId: string, inputHash: string): EstimationResult {
     estimates: {
       fiberG: { value: 1.25, range: { min: 1, max: 1.5 }, confidence: 'medium', method: 'test', warnings: [] },
       saturatedFatG: { value: 0.8, confidence: 'low', method: 'test', warnings: ['参考値です'] },
+      calciumMg: { value: 12, range: { min: 8, max: 16 }, confidence: 'low', method: 'test', warnings: ['参考値です'] },
     },
     globalWarnings: [], modelVersion: 'test-1', estimatedAt: '2026-07-25T00:01:00.000Z',
   }
@@ -58,7 +59,7 @@ describe('nutrient estimation store', () => {
       referenceMassSource: food.estimationReferenceMassSource ?? null,
       ingredientsText: food.ingredientsText ?? null,
       ingredientsSource: food.ingredientsSource ?? null,
-      requestedNutrients: ['fiberG', 'saturatedFatG'],
+      requestedNutrients: ESTIMATABLE_NUTRIENT_KEYS,
       requestedAt,
     })
     await saveEstimationRequest(request)
@@ -68,12 +69,15 @@ describe('nutrient estimation store', () => {
       baseAmount: food.baseAmount,
       baseUnit: food.baseUnit,
     }))
-    await adoptEstimatedNutrients(request.requestId, ['fiberG'])
+    await adoptEstimatedNutrients(request.requestId, ['fiberG', 'calciumMg'])
 
     const adopted = await getFoodById(food.id)
     expect(browserResult.estimates.fiberG.status).toBe('available')
+    expect(browserResult.estimates.calciumMg.status).toBe('available')
     expect(adopted?.nutrients.fiberG).toBe(browserResult.estimates.fiberG.value)
+    expect(adopted?.nutrients.calciumMg).toBe(browserResult.estimates.calciumMg.value)
     expect(adopted?.nutrientMetadata?.fiberG?.sourceFoodIds).toContain('mext_01015')
+    expect(adopted?.nutrientMetadata?.calciumMg?.sourceFoodIds).toContain('mext_01015')
   })
 
   it('明示された基準重量だけを推計入力へ渡し、単位からgを推測しない', () => {
@@ -95,13 +99,15 @@ describe('nutrient estimation store', () => {
     await saveEstimationRequest(request)
     await saveEstimationResult(resultFor(request.requestId, request.inputHash))
 
-    const decisions = await adoptEstimatedNutrients(request.requestId, ['fiberG', 'saturatedFatG'])
-    expect(decisions).toHaveLength(2)
+    const decisions = await adoptEstimatedNutrients(request.requestId, ['fiberG', 'saturatedFatG', 'calciumMg'])
+    expect(decisions).toHaveLength(3)
     const adopted = await getFoodById(food.id)
     expect(adopted?.nutrients.fiberG).toBe(1.25)
+    expect(adopted?.nutrients.calciumMg).toBe(12)
     expect(adopted?.nutrientMetadata?.fiberG).toMatchObject({ origin: 'estimated', requestId: request.requestId, modelVersion: 'test-1' })
     expect((await db.mealEntries.get(entry.id))?.foodSnapshot.nutrients.fiberG).toBeNull()
-    expect((await getEstimationDecisionsForFood(food.id)).items).toHaveLength(2)
+    expect((await db.mealEntries.get(entry.id))?.foodSnapshot.nutrients.calciumMg).toBeNull()
+    expect((await getEstimationDecisionsForFood(food.id)).items).toHaveLength(3)
 
     await expect(adoptEstimatedNutrients(request.requestId, ['fiberG'])).rejects.toThrow('変更')
   })

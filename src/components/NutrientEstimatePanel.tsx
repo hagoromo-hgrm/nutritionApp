@@ -144,7 +144,11 @@ export function NutrientEstimatePanel(props: NutrientEstimatePanelProps) {
   }
 
   return (
-    <section className="nutrient-estimate-panel" aria-labelledby={`${id}-title`}>
+    <section
+      className="nutrient-estimate-panel"
+      aria-labelledby={`${id}-title`}
+      aria-describedby={`${id}-intro`}
+    >
       <div className="nutrient-estimate-heading">
         <div>
           <span className="eyebrow">REFERENCE ESTIMATE</span>
@@ -152,8 +156,8 @@ export function NutrientEstimatePanel(props: NutrientEstimatePanelProps) {
         </div>
         <span className="nutrient-estimate-badge">端末内</span>
       </div>
-      <p className="nutrient-estimate-intro">
-        原材料表示と確認済み重量から、飽和脂肪酸と食物繊維の参考候補を計算します。外部へ情報を送信しません。
+      <p className="nutrient-estimate-intro" id={`${id}-intro`}>
+        原材料表示と確認済み重量から、飽和脂肪酸、食物繊維、カルシウム、鉄、ビタミンA・E・B1・B2・Cのうち、未入力の栄養素だけを参考推計します。外部へ情報を送信せず、現在値は上書きしません。
       </p>
       <dl className="nutrient-estimate-basis">
         <div><dt>表示基準</dt><dd>{props.basis.baseAmount}{props.basis.baseUnit}当たり</dd></div>
@@ -174,7 +178,11 @@ export function NutrientEstimatePanel(props: NutrientEstimatePanelProps) {
             const currentValue = props.currentNutrients[key]
             const canSelect = isEstimateAdoptable(currentValue, estimate)
             return (
-              <article className={`nutrient-estimate-item${canSelect ? '' : ' is-disabled'}`} key={key}>
+              <article
+                className={`nutrient-estimate-item${canSelect ? '' : ' is-disabled'}`}
+                key={key}
+                aria-labelledby={`${id}-${key}-label`}
+              >
                 <label className="nutrient-estimate-select" htmlFor={`${id}-${key}`}>
                   <input
                     id={`${id}-${key}`}
@@ -185,7 +193,7 @@ export function NutrientEstimatePanel(props: NutrientEstimatePanelProps) {
                     aria-label={`${NUTRIENT_LABELS[key]}の推計値を採用対象にする`}
                   />
                   <span>
-                    <strong>{NUTRIENT_LABELS[key]}</strong>
+                    <strong id={`${id}-${key}-label`}>{NUTRIENT_LABELS[key]}</strong>
                     <small>現在値 {currentValue === null ? '未入力' : `${format(currentValue)}${NUTRIENT_UNITS[key]}`}</small>
                   </span>
                 </label>

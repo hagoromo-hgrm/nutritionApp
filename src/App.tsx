@@ -59,7 +59,7 @@ import {
   type NutrientEstimateAdoption,
   type NutrientEstimateEvaluation,
 } from './components/NutrientEstimatePanel'
-import { toStoredNutrientEstimateResult } from './services/nutrientEstimator'
+import { ESTIMATABLE_NUTRIENT_KEYS, toStoredNutrientEstimateResult } from './services/nutrientEstimator'
 import { calculateBmi, calculateNutrients, estimateDailyGoals, formatGraphNutrient, formatNutrient, getFoodDefaultServing, getFoodQuantityUnits, goalRate, incrementByQuantityUnit, nutrientRangeForGoals, scaleNutritionGoals, sumAvailableNutrients, sumByMealType, sumEntries, sumNutrients } from './services/nutrition'
 import { getMenuIngredients, menuToFood, menusWithUnsupportedIngredientUnits, wouldCreateMenuCycle } from './services/menuIngredients'
 import {
@@ -2867,7 +2867,7 @@ function SettingsView({ settings, estimationSettings, goalInputs, setGoalInputs,
       <div className="section-title"><div><span className="eyebrow">FOOD MASTER</span><h2>食品登録</h2></div></div>
       <div className="food-master-actions"><button className="button primary" type="button" onClick={onOpenNewFood}>＋ 新しい食品を登録</button><button className="button secondary" type="button" onClick={onOpenFoodMaster}>登録済み食品を確認・検索</button></div>
       <div className="settings-info-row settings-inline-row nutrient-estimate-setting">
-        <label className="toggle-row"><input type="checkbox" checked={estimationSettings.enabled} onChange={(event) => onToggleNutrientEstimator(event.target.checked)} />欠損した飽和脂肪酸・食物繊維の参考推計を使う</label>
+        <label className="toggle-row"><input type="checkbox" checked={estimationSettings.enabled} onChange={(event) => onToggleNutrientEstimator(event.target.checked)} />欠損した飽和脂肪酸・食物繊維・ビタミン・ミネラルの参考推計を使う</label>
         <InfoPopover className="settings-info" label="参考推計について" text="確認済みの原材料表示と重量を使い、端末内だけで参考候補を計算します。初期値は無効です。結果は確認後に手動で採用し、既存値を上書きしません。" />
       </div>
     </section>
@@ -3019,11 +3019,11 @@ function FoodFormView({ draft, returnView, allowCommercialClassification, estima
   const ingredientsSource = draft.ingredientsSourceProvider.trim()
     ? { provider: draft.ingredientsSourceProvider.trim(), verified: true as const }
     : null
-  const currentEstimateNutrients = {
-    saturatedFatG: draft.nutrients.saturatedFatG.trim() === '' ? null : Number(draft.nutrients.saturatedFatG),
-    fiberG: draft.nutrients.fiberG.trim() === '' ? null : Number(draft.nutrients.fiberG),
-  }
-  const hasEstimatableMissingValue = currentEstimateNutrients.saturatedFatG === null || currentEstimateNutrients.fiberG === null
+  const currentEstimateNutrients = Object.fromEntries(ESTIMATABLE_NUTRIENT_KEYS.map((key) => [
+    key,
+    draft.nutrients[key].trim() === '' ? null : Number(draft.nutrients[key]),
+  ])) as Pick<Nutrients, (typeof ESTIMATABLE_NUTRIENT_KEYS)[number]>
+  const hasEstimatableMissingValue = ESTIMATABLE_NUTRIENT_KEYS.some((key) => currentEstimateNutrients[key] === null)
   const queueEvaluation = (evaluation: NutrientEstimateEvaluation) => setDraft((current) => {
     if (!current) return current
     return { ...withoutPendingEstimation(current), pendingEstimation: { evaluation, adoption: null, rejectedKeys: [] } }

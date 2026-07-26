@@ -1,6 +1,16 @@
-import type { EstimationResult, FoodUnit, IngredientsSource, NutrientKey } from '../types'
+import { NUTRIENT_LABELS, type EstimationResult, type FoodUnit, type IngredientsSource, type NutrientKey } from '../types'
 
-export const ESTIMATABLE_NUTRIENT_KEYS = ['saturatedFatG', 'fiberG'] as const satisfies readonly NutrientKey[]
+export const ESTIMATABLE_NUTRIENT_KEYS = [
+  'saturatedFatG',
+  'fiberG',
+  'calciumMg',
+  'ironMg',
+  'vitaminAMcg',
+  'vitaminEMg',
+  'vitaminB1Mg',
+  'vitaminB2Mg',
+  'vitaminCMg',
+] as const satisfies readonly NutrientKey[]
 
 export type EstimatableNutrientKey = (typeof ESTIMATABLE_NUTRIENT_KEYS)[number]
 export type EstimateConfidence = 'high' | 'medium' | 'low' | 'unavailable'
@@ -56,7 +66,7 @@ export interface NutrientEstimateResult {
   basis: NutrientEstimateBasis
   estimates: Record<EstimatableNutrientKey, NutrientEstimate>
   globalWarnings: string[]
-  modelVersion: 'browser-rule-0.1.0'
+  modelVersion: 'browser-rule-0.2.0'
   estimatedAt: string
 }
 
@@ -67,8 +77,15 @@ export function isEstimateAdoptable(currentValue: number | null, estimate: Nutri
 
 interface IngredientProfile {
   terms: readonly string[]
-  saturatedFatG: number
-  fiberG: number
+  saturatedFatG: number | null
+  fiberG: number | null
+  calciumMg: number | null
+  ironMg: number | null
+  vitaminAMcg: number | null
+  vitaminEMg: number | null
+  vitaminB1Mg: number | null
+  vitaminB2Mg: number | null
+  vitaminCMg: number | null
   sourceFoodIds: readonly string[]
   ambiguous?: boolean
 }
@@ -78,26 +95,216 @@ interface IngredientProfile {
  * 曖昧な工業原材料は候補食品の中央寄りの値を使い、必ず低信頼度と広い範囲を返す。
  */
 const INGREDIENT_PROFILES: readonly IngredientProfile[] = [
-  { terms: ['小麦全粒粉', '全粒粉'], saturatedFatG: 0.53, fiberG: 11.2, sourceFoodIds: ['mext_01023'] },
-  { terms: ['オートミール', 'オーツ麦'], saturatedFatG: 1.01, fiberG: 9.4, sourceFoodIds: ['mext_01004'] },
-  { terms: ['ショートニング'], saturatedFatG: 51.13, fiberG: 0, sourceFoodIds: ['mext_14030'], ambiguous: true },
-  { terms: ['マーガリン'], saturatedFatG: 39, fiberG: 0, sourceFoodIds: ['mext_14029'], ambiguous: true },
-  { terms: ['植物油脂', '植物油'], saturatedFatG: 23.003333, fiberG: 0, sourceFoodIds: ['mext_14008', 'mext_14005', 'mext_14009'], ambiguous: true },
-  { terms: ['バター'], saturatedFatG: 50.45, fiberG: 0, sourceFoodIds: ['mext_14017'], ambiguous: true },
-  { terms: ['チョコレート', 'チョコ'], saturatedFatG: 19.88, fiberG: 3.9, sourceFoodIds: ['mext_15116'], ambiguous: true },
-  { terms: ['ココアパウダー', 'ココア'], saturatedFatG: 12.4, fiberG: 23.9, sourceFoodIds: ['mext_16048'] },
-  { terms: ['アーモンド'], saturatedFatG: 3.95, fiberG: 10.1, sourceFoodIds: ['mext_05001'] },
-  { terms: ['ごま'], saturatedFatG: 7.8, fiberG: 10.8, sourceFoodIds: ['mext_05017'], ambiguous: true },
-  { terms: ['大豆粉', 'きな粉'], saturatedFatG: 3.59, fiberG: 18.1, sourceFoodIds: ['mext_04029'], ambiguous: true },
-  { terms: ['小麦粉'], saturatedFatG: 0.34, fiberG: 2.5, sourceFoodIds: ['mext_01015'], ambiguous: true },
-  { terms: ['脱脂粉乳'], saturatedFatG: 0.44, fiberG: 0, sourceFoodIds: ['mext_13010'] },
-  { terms: ['全粉乳', '牛乳', '乳等を主要原料とする食品'], saturatedFatG: 16.28, fiberG: 0, sourceFoodIds: ['mext_13009'], ambiguous: true },
-  { terms: ['卵', '液卵'], saturatedFatG: 3.12, fiberG: 0, sourceFoodIds: ['mext_12004'], ambiguous: true },
+  {
+    terms: ['小麦全粒粉', '全粒粉'],
+    saturatedFatG: 0.53,
+    fiberG: 11.2,
+    calciumMg: 26,
+    ironMg: 3.1,
+    vitaminAMcg: 0,
+    vitaminEMg: 1,
+    vitaminB1Mg: 0.34,
+    vitaminB2Mg: 0.09,
+    vitaminCMg: 0,
+    sourceFoodIds: ['mext_01023'],
+  },
+  {
+    terms: ['オートミール', 'オーツ麦'],
+    saturatedFatG: 1.01,
+    fiberG: 9.4,
+    calciumMg: 47,
+    ironMg: 3.9,
+    vitaminAMcg: 0,
+    vitaminEMg: 0.6,
+    vitaminB1Mg: 0.2,
+    vitaminB2Mg: 0.08,
+    vitaminCMg: 0,
+    sourceFoodIds: ['mext_01004'],
+  },
+  {
+    terms: ['ショートニング'],
+    saturatedFatG: 51.13,
+    fiberG: 0,
+    calciumMg: 0,
+    ironMg: 0,
+    vitaminAMcg: 0,
+    vitaminEMg: 9.5,
+    vitaminB1Mg: 0,
+    vitaminB2Mg: 0,
+    vitaminCMg: 0,
+    sourceFoodIds: ['mext_14030'],
+    ambiguous: true,
+  },
+  {
+    terms: ['マーガリン'],
+    saturatedFatG: 39,
+    fiberG: 0,
+    calciumMg: 14,
+    ironMg: null,
+    vitaminAMcg: 24,
+    vitaminEMg: 15,
+    vitaminB1Mg: 0.01,
+    vitaminB2Mg: 0.03,
+    vitaminCMg: 0,
+    sourceFoodIds: ['mext_14029'],
+    ambiguous: true,
+  },
+  {
+    terms: ['植物油脂', '植物油'],
+    saturatedFatG: 23.003333,
+    fiberG: 0,
+    calciumMg: null,
+    ironMg: 0,
+    vitaminAMcg: 0,
+    vitaminEMg: 11.2,
+    vitaminB1Mg: 0,
+    vitaminB2Mg: 0,
+    vitaminCMg: 0,
+    sourceFoodIds: ['mext_14008', 'mext_14005', 'mext_14009'],
+    ambiguous: true,
+  },
+  {
+    terms: ['バター'],
+    saturatedFatG: 50.45,
+    fiberG: 0,
+    calciumMg: 15,
+    ironMg: 0.1,
+    vitaminAMcg: 520,
+    vitaminEMg: 1.5,
+    vitaminB1Mg: 0.01,
+    vitaminB2Mg: 0.03,
+    vitaminCMg: 0,
+    sourceFoodIds: ['mext_14017'],
+    ambiguous: true,
+  },
+  {
+    terms: ['チョコレート', 'チョコ'],
+    saturatedFatG: 19.88,
+    fiberG: 3.9,
+    calciumMg: 240,
+    ironMg: 2.4,
+    vitaminAMcg: 66,
+    vitaminEMg: 0.7,
+    vitaminB1Mg: 0.19,
+    vitaminB2Mg: 0.41,
+    vitaminCMg: 0,
+    sourceFoodIds: ['mext_15116'],
+    ambiguous: true,
+  },
+  {
+    terms: ['ココアパウダー', 'ココア'],
+    saturatedFatG: 12.4,
+    fiberG: 23.9,
+    calciumMg: 140,
+    ironMg: 14,
+    vitaminAMcg: 3,
+    vitaminEMg: 0.3,
+    vitaminB1Mg: 0.16,
+    vitaminB2Mg: 0.22,
+    vitaminCMg: 0,
+    sourceFoodIds: ['mext_16048'],
+  },
+  {
+    terms: ['アーモンド'],
+    saturatedFatG: 3.95,
+    fiberG: 10.1,
+    calciumMg: 250,
+    ironMg: 3.6,
+    vitaminAMcg: 1,
+    vitaminEMg: 30,
+    vitaminB1Mg: 0.2,
+    vitaminB2Mg: 1.06,
+    vitaminCMg: 0,
+    sourceFoodIds: ['mext_05001'],
+  },
+  {
+    terms: ['ごま'],
+    saturatedFatG: 7.8,
+    fiberG: 10.8,
+    calciumMg: 1200,
+    ironMg: 9.6,
+    vitaminAMcg: 1,
+    vitaminEMg: 0.1,
+    vitaminB1Mg: 0.95,
+    vitaminB2Mg: 0.25,
+    vitaminCMg: null,
+    sourceFoodIds: ['mext_05017'],
+    ambiguous: true,
+  },
+  {
+    terms: ['大豆粉', 'きな粉'],
+    saturatedFatG: 3.59,
+    fiberG: 18.1,
+    calciumMg: 190,
+    ironMg: 8,
+    vitaminAMcg: null,
+    vitaminEMg: 1.7,
+    vitaminB1Mg: 0.07,
+    vitaminB2Mg: 0.24,
+    vitaminCMg: 1,
+    sourceFoodIds: ['mext_04029'],
+    ambiguous: true,
+  },
+  {
+    terms: ['小麦粉'],
+    saturatedFatG: 0.34,
+    fiberG: 2.5,
+    calciumMg: 20,
+    ironMg: 0.5,
+    vitaminAMcg: 0,
+    vitaminEMg: 0.3,
+    vitaminB1Mg: 0.11,
+    vitaminB2Mg: 0.03,
+    vitaminCMg: 0,
+    sourceFoodIds: ['mext_01015'],
+    ambiguous: true,
+  },
+  {
+    terms: ['脱脂粉乳'],
+    saturatedFatG: 0.44,
+    fiberG: 0,
+    calciumMg: 1100,
+    ironMg: 0.5,
+    vitaminAMcg: 6,
+    vitaminEMg: null,
+    vitaminB1Mg: 0.3,
+    vitaminB2Mg: 1.6,
+    vitaminCMg: 5,
+    sourceFoodIds: ['mext_13010'],
+  },
+  {
+    terms: ['全粉乳', '牛乳', '乳等を主要原料とする食品'],
+    saturatedFatG: 16.28,
+    fiberG: 0,
+    calciumMg: 890,
+    ironMg: 0.4,
+    vitaminAMcg: 180,
+    vitaminEMg: 0.6,
+    vitaminB1Mg: 0.25,
+    vitaminB2Mg: 1.1,
+    vitaminCMg: 5,
+    sourceFoodIds: ['mext_13009'],
+    ambiguous: true,
+  },
+  {
+    terms: ['卵', '液卵'],
+    saturatedFatG: 3.12,
+    fiberG: 0,
+    calciumMg: 46,
+    ironMg: 1.5,
+    vitaminAMcg: 210,
+    vitaminEMg: 1.3,
+    vitaminB1Mg: 0.06,
+    vitaminB2Mg: 0.37,
+    vitaminCMg: 0,
+    sourceFoodIds: ['mext_12004'],
+    ambiguous: true,
+  },
 ] as const
 
 const METHOD: EstimateDetails['method'] = 'browser_ingredient_rule'
 const SOURCE: EstimateDetails['source'] = '文部科学省 日本食品標準成分表（八訂）増補2023年（2026年3月27日正誤表対応）'
-const MODEL_VERSION = 'browser-rule-0.1.0' as const
+const MODEL_VERSION = 'browser-rule-0.2.0' as const
 
 function round(value: number): number {
   return Math.round(Math.max(0, value) * 1_000_000) / 1_000_000
@@ -149,16 +356,24 @@ function unavailable(reason: string, nextAction: string, warnings: string[] = []
   }
 }
 
-function unavailablePair(reason: string, nextAction: string): Record<EstimatableNutrientKey, UnavailableNutrientEstimate> {
-  return {
-    saturatedFatG: unavailable(reason, nextAction),
-    fiberG: unavailable(reason, nextAction),
-  }
+function mapEstimatableNutrients<T>(
+  mapper: (key: EstimatableNutrientKey) => T,
+): Record<EstimatableNutrientKey, T> {
+  return Object.fromEntries(ESTIMATABLE_NUTRIENT_KEYS.map((key) => [key, mapper(key)])) as Record<EstimatableNutrientKey, T>
 }
 
-function resultStatus(estimates: Record<EstimatableNutrientKey, NutrientEstimate>): NutrientEstimateResult['status'] {
-  const availableCount = ESTIMATABLE_NUTRIENT_KEYS.filter((key) => estimates[key].status === 'available').length
-  if (availableCount === ESTIMATABLE_NUTRIENT_KEYS.length) return 'completed'
+function unavailableAll(reason: string, nextAction: string): Record<EstimatableNutrientKey, UnavailableNutrientEstimate> {
+  return mapEstimatableNutrients(() => unavailable(reason, nextAction))
+}
+
+function resultStatus(
+  estimates: Record<EstimatableNutrientKey, NutrientEstimate>,
+  requested: ReadonlySet<EstimatableNutrientKey>,
+): NutrientEstimateResult['status'] {
+  const requestedKeys = ESTIMATABLE_NUTRIENT_KEYS.filter((key) => requested.has(key))
+  if (requestedKeys.length === 0) return 'failed'
+  const availableCount = requestedKeys.filter((key) => estimates[key].status === 'available').length
+  if (availableCount === requestedKeys.length) return 'completed'
   return availableCount === 0 ? 'failed' : 'partial'
 }
 
@@ -171,27 +386,27 @@ export function estimateNutrients(request: NutrientEstimateRequest): NutrientEst
   let estimates: Record<EstimatableNutrientKey, NutrientEstimate>
 
   if (!Number.isFinite(request.baseAmount) || request.baseAmount <= 0 || request.baseUnit.trim() === '') {
-    estimates = unavailablePair(
+    estimates = unavailableAll(
       '推計の基準量または基準単位が正しくありません。',
       '食品の基準量と単位を確認するか、推計せず食品登録を続けてください。',
     )
   } else if (request.referenceMassG === null || !Number.isFinite(request.referenceMassG) || request.referenceMassG <= 0) {
-    estimates = unavailablePair(
+    estimates = unavailableAll(
       '基準量に対応する内容物重量が確認できないため推計できません。',
       'パッケージで内容物重量を確認してg単位で入力するか、推計せず食品登録を続けてください。',
     )
   } else if (!request.referenceMassSource?.trim()) {
-    estimates = unavailablePair(
+    estimates = unavailableAll(
       '基準重量の根拠が入力されていないため推計できません。',
       '「パッケージ表示」など重量を確認した根拠を入力するか、推計せず食品登録を続けてください。',
     )
   } else if (!request.ingredientsText?.trim()) {
-    estimates = unavailablePair(
+    estimates = unavailableAll(
       '原材料情報が存在しないため推計できません。',
       'パッケージの原材料表示を確認して手入力するか、推計せず食品登録を続けてください。',
     )
   } else if (!request.ingredientsSource?.provider.trim() || request.ingredientsSource.verified !== true) {
-    estimates = unavailablePair(
+    estimates = unavailableAll(
       '原材料表示の取得元が確認されていないため推計できません。',
       '原材料の取得元を選び、内容を確認済みにしてから再実行してください。',
     )
@@ -201,7 +416,7 @@ export function estimateNutrients(request: NutrientEstimateRequest): NutrientEst
     const recognized = matches.filter((match): match is { ingredient: string; profile: IngredientProfile } => match.profile !== null)
 
     if (ingredients.length === 0 || recognized.length === 0) {
-      estimates = unavailablePair(
+      estimates = unavailableAll(
         '対応できる原材料を確認できないため推計できません。',
         '原材料表示を見直して栄養値を手入力するか、推計せず食品登録を続けてください。',
       )
@@ -224,11 +439,20 @@ export function estimateNutrients(request: NutrientEstimateRequest): NutrientEst
       const minFactor = unknownWeight > 0 || ambiguous.length > 0 ? 0.5 : 0.75
       const maxFactor = unknownWeight > 0 || ambiguous.length > 0 ? 1.7 : 1.3
 
-      const makeEstimate = (key: EstimatableNutrientKey): AvailableNutrientEstimate => {
+      const makeEstimate = (key: EstimatableNutrientKey): NutrientEstimate => {
+        const missing = recognized.filter((match) => match.profile[key] === null)
+        if (missing.length > 0) {
+          const missingSourceFoodIds = [...new Set(missing.flatMap((match) => match.profile.sourceFoodIds))]
+          return unavailable(
+            `参照食品の${NUTRIENT_LABELS[key]}が欠損しているため、この栄養素は推計できません。`,
+            'パッケージの栄養成分表示を確認して手入力するか、この栄養素を採用せず食品登録を続けてください。',
+            [`MEXT参照値が欠損しています（食品ID: ${missingSourceFoodIds.join('、')}）。`],
+          )
+        }
         const per100g = recognized.reduce((total, match) => {
           const index = matches.indexOf(match)
           const assumedRatio = (ingredients.length - index) / denominator
-          return total + match.profile[key] * assumedRatio
+          return total + match.profile[key]! * assumedRatio
         }, 0)
         const value = round(per100g * request.referenceMassG! / 100)
         return {
@@ -246,20 +470,15 @@ export function estimateNutrients(request: NutrientEstimateRequest): NutrientEst
         }
       }
 
-      estimates = {
-        saturatedFatG: requested.has('saturatedFatG')
-          ? makeEstimate('saturatedFatG')
-          : unavailable('この栄養素は今回の推計対象に選ばれていません。', '必要な場合は推計対象に含めて再実行してください。'),
-        fiberG: requested.has('fiberG')
-          ? makeEstimate('fiberG')
-          : unavailable('この栄養素は今回の推計対象に選ばれていません。', '必要な場合は推計対象に含めて再実行してください。'),
-      }
+      estimates = mapEstimatableNutrients((key) => requested.has(key)
+        ? makeEstimate(key)
+        : unavailable('この栄養素は今回の推計対象に選ばれていません。', '必要な場合は推計対象に含めて再実行してください。'))
     }
   }
 
   return {
     requestId: request.requestId,
-    status: resultStatus(estimates),
+    status: resultStatus(estimates, requested),
     basis: { baseAmount: request.baseAmount, baseUnit: request.baseUnit },
     estimates,
     globalWarnings: ['参考推計であり、実測値やパッケージ表示と同等の正確性を保証しません。'],
