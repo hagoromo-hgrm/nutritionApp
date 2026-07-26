@@ -933,6 +933,7 @@ function App() {
       const referenceMassG = food.baseUnit === 'g' ? food.baseAmount : (food.estimationReferenceMassG ?? null)
       const referenceMassSource = food.baseUnit === 'g' ? '基準単位がg' : (food.estimationReferenceMassSource ?? null)
       const evaluationStillCurrent = Boolean(evaluated
+        && (evaluated.productName?.trim() ?? '') === food.name.trim()
         && evaluated.baseAmount === food.baseAmount
         && evaluated.baseUnit === food.baseUnit
         && evaluated.referenceMassG === referenceMassG
@@ -3107,6 +3108,7 @@ function FoodFormView({ draft, returnView, allowCommercialClassification, estima
           })}</div>
           {estimationEnabled && hasEstimatableMissingValue && <NutrientEstimatePanel
             basis={{ baseAmount: Number(draft.baseAmount), baseUnit: draft.baseUnit }}
+            productName={draft.name.trim() || null}
             ingredientsText={draft.ingredientsText.trim() || null}
             ingredientsSource={ingredientsSource}
             referenceMassG={referenceMassG}

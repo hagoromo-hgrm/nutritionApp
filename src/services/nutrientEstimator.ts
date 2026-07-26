@@ -1,4 +1,14 @@
-import { NUTRIENT_LABELS, type EstimationResult, type FoodUnit, type IngredientsSource, type NutrientKey, type Nutrients } from '../types'
+import { parseIngredientDeclaration, type ParsedIngredient } from './ingredientParser'
+import { resolveIngredientCandidates, type IngredientProfile } from './nutrientEstimatorProfiles'
+import {
+  NUTRIENT_KEYS,
+  NUTRIENT_LABELS,
+  type EstimationResult,
+  type FoodUnit,
+  type IngredientsSource,
+  type NutrientKey,
+  type Nutrients,
+} from '../types'
 
 export const ESTIMATABLE_NUTRIENT_KEYS = [
   'saturatedFatG',
@@ -30,6 +40,7 @@ export interface NutrientEstimateBasis {
 
 export interface NutrientEstimateRequest {
   requestId: string
+  productName?: string | null
   baseAmount: number
   baseUnit: string
   referenceMassG: number | null
@@ -75,7 +86,7 @@ export interface NutrientEstimateResult {
   basis: NutrientEstimateBasis
   estimates: Record<EstimatableNutrientKey, NutrientEstimate>
   globalWarnings: string[]
-  modelVersion: 'browser-rule-0.3.0'
+  modelVersion: 'browser-rule-0.4.0'
   estimatedAt: string
 }
 
@@ -84,356 +95,148 @@ export function isEstimateAdoptable(currentValue: number | null, estimate: Nutri
   return currentValue === null && estimate.status === 'available'
 }
 
-interface IngredientProfile {
-  terms: readonly string[]
-  energyKcal: number
-  proteinG: number
-  fatG: number
-  carbohydrateG: number
-  saltG: number
-  saturatedFatG: number | null
-  fiberG: number | null
-  calciumMg: number | null
-  ironMg: number | null
-  vitaminAMcg: number | null
-  vitaminEMg: number | null
-  vitaminB1Mg: number | null
-  vitaminB2Mg: number | null
-  vitaminCMg: number | null
-  sourceFoodIds: readonly string[]
-  ambiguous?: boolean
-}
-
-/*
- * `data/mext/processed/mext_foods.json` の検証済み100g値から選んだ参照プロファイル。
- * 曖昧な工業原材料は候補食品の中央寄りの値を使い、必ず低信頼度と広い範囲を返す。
- */
-const INGREDIENT_PROFILES: readonly IngredientProfile[] = [
-  {
-    terms: ['小麦全粒粉', '全粒粉'],
-    energyKcal: 320,
-    proteinG: 12.8,
-    fatG: 2.9,
-    carbohydrateG: 68.2,
-    saltG: 0,
-    saturatedFatG: 0.53,
-    fiberG: 11.2,
-    calciumMg: 26,
-    ironMg: 3.1,
-    vitaminAMcg: 0,
-    vitaminEMg: 1,
-    vitaminB1Mg: 0.34,
-    vitaminB2Mg: 0.09,
-    vitaminCMg: 0,
-    sourceFoodIds: ['mext_01023'],
-  },
-  {
-    terms: ['オートミール', 'オーツ麦'],
-    energyKcal: 350,
-    proteinG: 13.7,
-    fatG: 5.7,
-    carbohydrateG: 69.1,
-    saltG: 0,
-    saturatedFatG: 1.01,
-    fiberG: 9.4,
-    calciumMg: 47,
-    ironMg: 3.9,
-    vitaminAMcg: 0,
-    vitaminEMg: 0.6,
-    vitaminB1Mg: 0.2,
-    vitaminB2Mg: 0.08,
-    vitaminCMg: 0,
-    sourceFoodIds: ['mext_01004'],
-  },
-  {
-    terms: ['ショートニング'],
-    energyKcal: 881,
-    proteinG: 0,
-    fatG: 99.9,
-    carbohydrateG: 0,
-    saltG: 0,
-    saturatedFatG: 51.13,
-    fiberG: 0,
-    calciumMg: 0,
-    ironMg: 0,
-    vitaminAMcg: 0,
-    vitaminEMg: 9.5,
-    vitaminB1Mg: 0,
-    vitaminB2Mg: 0,
-    vitaminCMg: 0,
-    sourceFoodIds: ['mext_14030'],
-    ambiguous: true,
-  },
-  {
-    terms: ['マーガリン'],
-    energyKcal: 740,
-    proteinG: 0.3,
-    fatG: 84.3,
-    carbohydrateG: 0.1,
-    saltG: 1.3,
-    saturatedFatG: 39,
-    fiberG: 0,
-    calciumMg: 14,
-    ironMg: null,
-    vitaminAMcg: 24,
-    vitaminEMg: 15,
-    vitaminB1Mg: 0.01,
-    vitaminB2Mg: 0.03,
-    vitaminCMg: 0,
-    sourceFoodIds: ['mext_14029'],
-    ambiguous: true,
-  },
-  {
-    terms: ['植物油脂', '植物油'],
-    energyKcal: 886.333333,
-    proteinG: 0,
-    fatG: 100,
-    carbohydrateG: 0,
-    saltG: 0,
-    saturatedFatG: 23.003333,
-    fiberG: 0,
-    calciumMg: null,
-    ironMg: 0,
-    vitaminAMcg: 0,
-    vitaminEMg: 11.2,
-    vitaminB1Mg: 0,
-    vitaminB2Mg: 0,
-    vitaminCMg: 0,
-    sourceFoodIds: ['mext_14008', 'mext_14005', 'mext_14009'],
-    ambiguous: true,
-  },
-  {
-    terms: ['バター'],
-    energyKcal: 700,
-    proteinG: 0.6,
-    fatG: 81,
-    carbohydrateG: 0.2,
-    saltG: 1.9,
-    saturatedFatG: 50.45,
-    fiberG: 0,
-    calciumMg: 15,
-    ironMg: 0.1,
-    vitaminAMcg: 520,
-    vitaminEMg: 1.5,
-    vitaminB1Mg: 0.01,
-    vitaminB2Mg: 0.03,
-    vitaminCMg: 0,
-    sourceFoodIds: ['mext_14017'],
-    ambiguous: true,
-  },
-  {
-    terms: ['チョコレート', 'チョコ'],
-    energyKcal: 550,
-    proteinG: 6.9,
-    fatG: 34.1,
-    carbohydrateG: 55.8,
-    saltG: 0.2,
-    saturatedFatG: 19.88,
-    fiberG: 3.9,
-    calciumMg: 240,
-    ironMg: 2.4,
-    vitaminAMcg: 66,
-    vitaminEMg: 0.7,
-    vitaminB1Mg: 0.19,
-    vitaminB2Mg: 0.41,
-    vitaminCMg: 0,
-    sourceFoodIds: ['mext_15116'],
-    ambiguous: true,
-  },
-  {
-    terms: ['ココアパウダー', 'ココア'],
-    energyKcal: 386,
-    proteinG: 18.5,
-    fatG: 21.6,
-    carbohydrateG: 42.4,
-    saltG: 0,
-    saturatedFatG: 12.4,
-    fiberG: 23.9,
-    calciumMg: 140,
-    ironMg: 14,
-    vitaminAMcg: 3,
-    vitaminEMg: 0.3,
-    vitaminB1Mg: 0.16,
-    vitaminB2Mg: 0.22,
-    vitaminCMg: 0,
-    sourceFoodIds: ['mext_16048'],
-  },
-  {
-    terms: ['アーモンド'],
-    energyKcal: 609,
-    proteinG: 19.6,
-    fatG: 51.8,
-    carbohydrateG: 20.9,
-    saltG: 0,
-    saturatedFatG: 3.95,
-    fiberG: 10.1,
-    calciumMg: 250,
-    ironMg: 3.6,
-    vitaminAMcg: 1,
-    vitaminEMg: 30,
-    vitaminB1Mg: 0.2,
-    vitaminB2Mg: 1.06,
-    vitaminCMg: 0,
-    sourceFoodIds: ['mext_05001'],
-  },
-  {
-    terms: ['ごま'],
-    energyKcal: 604,
-    proteinG: 19.8,
-    fatG: 53.8,
-    carbohydrateG: 16.5,
-    saltG: 0,
-    saturatedFatG: 7.8,
-    fiberG: 10.8,
-    calciumMg: 1200,
-    ironMg: 9.6,
-    vitaminAMcg: 1,
-    vitaminEMg: 0.1,
-    vitaminB1Mg: 0.95,
-    vitaminB2Mg: 0.25,
-    vitaminCMg: null,
-    sourceFoodIds: ['mext_05017'],
-    ambiguous: true,
-  },
-  {
-    terms: ['大豆粉', 'きな粉'],
-    energyKcal: 451,
-    proteinG: 36.7,
-    fatG: 25.7,
-    carbohydrateG: 28.5,
-    saltG: 0,
-    saturatedFatG: 3.59,
-    fiberG: 18.1,
-    calciumMg: 190,
-    ironMg: 8,
-    vitaminAMcg: null,
-    vitaminEMg: 1.7,
-    vitaminB1Mg: 0.07,
-    vitaminB2Mg: 0.24,
-    vitaminCMg: 1,
-    sourceFoodIds: ['mext_04029'],
-    ambiguous: true,
-  },
-  {
-    terms: ['小麦粉'],
-    energyKcal: 349,
-    proteinG: 8.3,
-    fatG: 1.5,
-    carbohydrateG: 75.8,
-    saltG: 0,
-    saturatedFatG: 0.34,
-    fiberG: 2.5,
-    calciumMg: 20,
-    ironMg: 0.5,
-    vitaminAMcg: 0,
-    vitaminEMg: 0.3,
-    vitaminB1Mg: 0.11,
-    vitaminB2Mg: 0.03,
-    vitaminCMg: 0,
-    sourceFoodIds: ['mext_01015'],
-    ambiguous: true,
-  },
-  {
-    terms: ['脱脂粉乳'],
-    energyKcal: 354,
-    proteinG: 34,
-    fatG: 1,
-    carbohydrateG: 53.3,
-    saltG: 1.4,
-    saturatedFatG: 0.44,
-    fiberG: 0,
-    calciumMg: 1100,
-    ironMg: 0.5,
-    vitaminAMcg: 6,
-    vitaminEMg: null,
-    vitaminB1Mg: 0.3,
-    vitaminB2Mg: 1.6,
-    vitaminCMg: 5,
-    sourceFoodIds: ['mext_13010'],
-  },
-  {
-    terms: ['全粉乳', '牛乳', '乳等を主要原料とする食品'],
-    energyKcal: 490,
-    proteinG: 25.5,
-    fatG: 26.2,
-    carbohydrateG: 39.3,
-    saltG: 1.1,
-    saturatedFatG: 16.28,
-    fiberG: 0,
-    calciumMg: 890,
-    ironMg: 0.4,
-    vitaminAMcg: 180,
-    vitaminEMg: 0.6,
-    vitaminB1Mg: 0.25,
-    vitaminB2Mg: 1.1,
-    vitaminCMg: 5,
-    sourceFoodIds: ['mext_13009'],
-    ambiguous: true,
-  },
-  {
-    terms: ['卵', '液卵'],
-    energyKcal: 142,
-    proteinG: 12.2,
-    fatG: 10.2,
-    carbohydrateG: 0.4,
-    saltG: 0.4,
-    saturatedFatG: 3.12,
-    fiberG: 0,
-    calciumMg: 46,
-    ironMg: 1.5,
-    vitaminAMcg: 210,
-    vitaminEMg: 1.3,
-    vitaminB1Mg: 0.06,
-    vitaminB2Mg: 0.37,
-    vitaminCMg: 0,
-    sourceFoodIds: ['mext_12004'],
-    ambiguous: true,
-  },
-] as const
-
 const FALLBACK_METHOD: EstimateDetails['method'] = 'browser_ingredient_rule'
 const FIT_METHOD: EstimateDetails['method'] = 'browser_ingredient_macro_fit'
 const SOURCE: EstimateDetails['source'] = '文部科学省 日本食品標準成分表（八訂）増補2023年（2026年3月27日正誤表対応）'
-const MODEL_VERSION = 'browser-rule-0.3.0' as const
+const MODEL_VERSION = 'browser-rule-0.4.0' as const
+const MAX_PROFILE_COMBINATIONS = 64
+const MAX_COMPOUND_CANDIDATES = 24
+
+interface CandidateCombination {
+  profiles: IngredientProfile[]
+  priorProbability: number
+}
+
+interface MacroFit {
+  profiles: IngredientProfile[]
+  ratios: number[]
+  normalizedError: number | null
+  usedMacroFit: boolean
+  score: number
+}
 
 function round(value: number): number {
   return Math.round(Math.max(0, value) * 1_000_000) / 1_000_000
 }
 
-function splitIngredients(text: string): string[] {
-  const withoutHeading = text
-    .normalize('NFKC')
-    .replace(/^\s*原材料(?:名)?\s*[:：]\s*/u, '')
+function normalizePriors(candidates: readonly IngredientProfile[]): IngredientProfile[] {
+  const total = candidates.reduce((sum, candidate) => sum + Math.max(0, candidate.priorProbability), 0)
+  return candidates
+    .map((candidate) => ({
+      ...candidate,
+      priorProbability: total > 0 ? Math.max(0, candidate.priorProbability) / total : 1 / candidates.length,
+    }))
+    .sort((left, right) => (
+      right.priorProbability - left.priorProbability
+      || left.profileId.localeCompare(right.profileId)
+    ))
+}
 
-  const ingredients: string[] = []
-  let current = ''
-  let depth = 0
+function compoundRatioTemplates(count: number): Array<{ ratios: number[]; prior: number }> {
+  const normalize = (values: number[]) => {
+    const total = values.reduce((sum, value) => sum + value, 0)
+    return values.map((value) => value / total)
+  }
+  if (count === 1) return [{ ratios: [1], prior: 1 }]
+  return [
+    { ratios: normalize(Array.from({ length: count }, (_value, index) => count - index)), prior: 0.4 },
+    { ratios: normalize(Array.from({ length: count }, (_value, index) => 0.7 ** index)), prior: 0.25 },
+    { ratios: normalize(Array.from({ length: count }, (_value, index) => 0.45 ** index)), prior: 0.2 },
+    { ratios: Array.from({ length: count }, () => 1 / count), prior: 0.15 },
+  ]
+}
 
-  for (const character of withoutHeading) {
-    if (character === '(' || character === '（') depth += 1
-    if (character === ')' || character === '）') depth = Math.max(0, depth - 1)
+function combineCandidateSets(
+  candidateSets: readonly (readonly IngredientProfile[])[],
+  limit: number,
+): CandidateCombination[] {
+  let combinations: CandidateCombination[] = [{ profiles: [], priorProbability: 1 }]
+  for (const candidates of candidateSets) {
+    combinations = combinations
+      .flatMap((combination) => candidates.map((candidate) => ({
+        profiles: [...combination.profiles, candidate],
+        priorProbability: combination.priorProbability * candidate.priorProbability,
+      })))
+      .sort((left, right) => (
+        right.priorProbability - left.priorProbability
+        || left.profiles.map((profile) => profile.profileId).join('|')
+          .localeCompare(right.profiles.map((profile) => profile.profileId).join('|'))
+      ))
+      .slice(0, limit)
+  }
+  const total = combinations.reduce((sum, combination) => sum + combination.priorProbability, 0)
+  return combinations.map((combination) => ({
+    ...combination,
+    priorProbability: total > 0 ? combination.priorProbability / total : 1 / combinations.length,
+  }))
+}
 
-    if (depth === 0 && /[、,，;；/\n]/u.test(character)) {
-      const value = current.trim()
-      if (value) ingredients.push(value)
-      current = ''
-    } else {
-      current += character
-    }
+function makeCompoundProfile(
+  ingredient: ParsedIngredient,
+  profiles: readonly IngredientProfile[],
+  ratios: readonly number[],
+  priorProbability: number,
+): IngredientProfile {
+  const nutrients = Object.fromEntries(NUTRIENT_KEYS.map((key) => {
+    const values = profiles.map((profile) => profile.nutrients[key])
+    if (values.some((value) => value === null)) return [key, null]
+    return [key, values.reduce<number>((sum, value, index) => sum + value! * ratios[index], 0)]
+  })) as Nutrients
+  const profileIds = profiles.map((profile) => profile.profileId)
+  return {
+    profileId: `compound:${ingredient.normalizedName}:${profileIds.join('+')}:${ratios.map((ratio) => ratio.toFixed(3)).join('-')}`,
+    canonicalName: ingredient.normalizedName,
+    nutrients,
+    sourceFoodIds: [...new Set(profiles.flatMap((profile) => profile.sourceFoodIds))],
+    priorProbability,
+    ambiguous: true,
+    derivationWarnings: [
+      `複合原材料「${ingredient.normalizedName}」の括弧内は、表示順を保った複数の配合候補として推計しています。`,
+      ...profiles.flatMap((profile) => profile.derivationWarnings ?? []),
+    ],
+  }
+}
+
+function candidatesForIngredient(
+  ingredient: ParsedIngredient,
+  productName: string | null | undefined,
+): IngredientProfile[] {
+  const direct = resolveIngredientCandidates(ingredient.normalizedName, productName)
+  if (ingredient.components.length === 0) return direct
+
+  const componentCandidates = ingredient.components.map((component) => candidatesForIngredient(component, productName))
+  if (componentCandidates.some((candidates) => candidates.length === 0)) {
+    return normalizePriors(direct.map((candidate) => ({
+      ...candidate,
+      ambiguous: true,
+      derivationWarnings: [
+        ...(candidate.derivationWarnings ?? []),
+        `複合原材料「${ingredient.normalizedName}」の括弧内に未対応原材料があるため、外側の名称だけを参照しました。`,
+      ],
+    })))
   }
 
-  const value = current.trim()
-  if (value) ingredients.push(value)
-  return ingredients
-}
-
-function findProfile(ingredient: string): IngredientProfile | null {
-  return INGREDIENT_PROFILES.find((profile) => profile.terms.some((term) => ingredient.includes(term))) ?? null
-}
-
-interface MacroFit {
-  ratios: number[]
-  normalizedError: number
+  const componentCombinations = combineCandidateSets(componentCandidates, MAX_COMPOUND_CANDIDATES)
+  const compoundCandidates = componentCombinations.flatMap((combination) => (
+    compoundRatioTemplates(combination.profiles.length).map((template) => makeCompoundProfile(
+      ingredient,
+      combination.profiles,
+      template.ratios,
+      combination.priorProbability * template.prior,
+    ))
+  ))
+  // 外側の名称に直接対応する参照がある場合も候補として残すが、括弧内表示をより強い根拠にする。
+  const directCandidates = direct.map((candidate) => ({
+    ...candidate,
+    priorProbability: candidate.priorProbability * 0.15,
+    ambiguous: true,
+    derivationWarnings: [
+      ...(candidate.derivationWarnings ?? []),
+      `複合原材料「${ingredient.normalizedName}」は外側名称による代替候補も比較しました。`,
+    ],
+  }))
+  return normalizePriors([...compoundCandidates, ...directCandidates])
+    .slice(0, MAX_COMPOUND_CANDIDATES)
 }
 
 function fnv1a(value: string): number {
@@ -466,24 +269,33 @@ function orderedRatiosFromQ(q: readonly number[]): number[] {
     .reduce((sum, value, offset) => sum + value / (index + offset + 1), 0))
 }
 
+function fallbackRatios(count: number): number[] {
+  const denominator = count * (count + 1) / 2
+  return Array.from({ length: count }, (_value, index) => (count - index) / denominator)
+}
+
 function fitIngredientRatios(
-  profiles: readonly IngredientProfile[],
+  combination: CandidateCombination,
   referenceMassG: number,
   knownNutrients: NutrientEstimateRequest['knownNutrients'],
   seedInput: string,
-): MacroFit | null {
+  scenarioCount: number,
+): MacroFit {
+  const profiles = combination.profiles
   const fitKeys = ESTIMATE_FIT_NUTRIENT_KEYS.filter((key) => {
     const value = knownNutrients?.[key]
-    return value !== null && value !== undefined && Number.isFinite(value) && value >= 0
+    return value !== null
+      && value !== undefined
+      && Number.isFinite(value)
+      && value >= 0
+      && profiles.every((profile) => profile.nutrients[key] !== null)
   })
-  if (profiles.length < 2 || fitKeys.length < 2) return null
-
   const predict = (ratios: readonly number[], key: EstimateFitNutrientKey) => (
-    profiles.reduce((sum, profile, index) => sum + profile[key] * ratios[index], 0)
+    profiles.reduce((sum, profile, index) => sum + profile.nutrients[key]! * ratios[index], 0)
     * referenceMassG / 100
   )
-  const objective = (q: readonly number[]) => {
-    const ratios = orderedRatiosFromQ(q)
+  const objectiveForRatios = (ratios: readonly number[]) => {
+    if (fitKeys.length === 0) return null
     return fitKeys.reduce((sum, key) => {
       const observed = knownNutrients![key]!
       // 公表値の丸めと食品差を考慮し、微小値だけが目的関数を支配しない尺度にする。
@@ -495,51 +307,63 @@ function fitIngredientRatios(
   }
 
   const count = profiles.length
-  const denominator = count * (count + 1) / 2
-  let bestQ = Array.from({ length: count }, (_value, index) => (index + 1) / denominator)
-  let bestError = objective(bestQ)
-  const random = createRandom(fnv1a(seedInput))
+  let ratios = fallbackRatios(count)
+  let normalizedError = objectiveForRatios(ratios)
+  const usedMacroFit = count >= 2 && fitKeys.length >= 2
 
-  for (let scenario = 0; scenario < 4_096; scenario += 1) {
-    const exponential = Array.from({ length: count }, () => -Math.log(Math.max(random(), Number.EPSILON)))
-    const total = exponential.reduce((sum, value) => sum + value, 0)
-    const q = exponential.map((value) => value / total)
-    const error = objective(q)
-    if (error < bestError) {
-      bestQ = q
-      bestError = error
+  if (usedMacroFit) {
+    const denominator = count * (count + 1) / 2
+    let bestQ = Array.from({ length: count }, (_value, index) => (index + 1) / denominator)
+    let bestError = objectiveForRatios(orderedRatiosFromQ(bestQ))!
+    const random = createRandom(fnv1a(seedInput))
+
+    for (let scenario = 0; scenario < scenarioCount; scenario += 1) {
+      const exponential = Array.from({ length: count }, () => -Math.log(Math.max(random(), Number.EPSILON)))
+      const total = exponential.reduce((sum, value) => sum + value, 0)
+      const q = exponential.map((value) => value / total)
+      const error = objectiveForRatios(orderedRatiosFromQ(q))!
+      if (error < bestError) {
+        bestQ = q
+        bestError = error
+      }
     }
-  }
 
-  // 最良の決定的サンプルから、qの質量を座標間で移して局所的に詰める。
-  for (const step of [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001]) {
-    let improved = true
-    let iteration = 0
-    while (improved && iteration < 32) {
-      improved = false
-      iteration += 1
-      for (let from = 0; from < count; from += 1) {
-        const amount = Math.min(step, bestQ[from])
-        if (amount <= 0) continue
-        for (let to = 0; to < count; to += 1) {
-          if (to === from) continue
-          const candidate = [...bestQ]
-          candidate[from] -= amount
-          candidate[to] += amount
-          const error = objective(candidate)
-          if (error + 1e-12 < bestError) {
-            bestQ = candidate
-            bestError = error
-            improved = true
+    for (const step of [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001]) {
+      let improved = true
+      let iteration = 0
+      while (improved && iteration < 32) {
+        improved = false
+        iteration += 1
+        for (let from = 0; from < count; from += 1) {
+          const amount = Math.min(step, bestQ[from])
+          if (amount <= 0) continue
+          for (let to = 0; to < count; to += 1) {
+            if (to === from) continue
+            const candidate = [...bestQ]
+            candidate[from] -= amount
+            candidate[to] += amount
+            const error = objectiveForRatios(orderedRatiosFromQ(candidate))!
+            if (error + 1e-12 < bestError) {
+              bestQ = candidate
+              bestError = error
+              improved = true
+            }
           }
         }
       }
     }
+    ratios = orderedRatiosFromQ(bestQ)
+    normalizedError = bestError
   }
 
+  // 商品名等の事前確率は、主要栄養値との整合を覆さない弱いペナルティとしてだけ使う。
+  const priorPenalty = -Math.log(Math.max(combination.priorProbability, 1e-9)) * 0.08
   return {
-    ratios: orderedRatiosFromQ(bestQ),
-    normalizedError: bestError,
+    profiles,
+    ratios,
+    normalizedError,
+    usedMacroFit,
+    score: (normalizedError ?? 0) + priorPenalty,
   }
 }
 
@@ -564,8 +388,12 @@ function mapEstimatableNutrients<T>(
   return Object.fromEntries(ESTIMATABLE_NUTRIENT_KEYS.map((key) => [key, mapper(key)])) as Record<EstimatableNutrientKey, T>
 }
 
-function unavailableAll(reason: string, nextAction: string): Record<EstimatableNutrientKey, UnavailableNutrientEstimate> {
-  return mapEstimatableNutrients(() => unavailable(reason, nextAction))
+function unavailableAll(
+  reason: string,
+  nextAction: string,
+  warnings: string[] = [],
+): Record<EstimatableNutrientKey, UnavailableNutrientEstimate> {
+  return mapEstimatableNutrients(() => unavailable(reason, nextAction, warnings))
 }
 
 function resultStatus(
@@ -580,7 +408,7 @@ function resultStatus(
 }
 
 /**
- * 原材料表示順と入力済み主要栄養値を使う、外部通信を行わない決定的な参考推計。
+ * 原材料表示順、商品名の弱い事前確率、入力済み主要栄養値を使う、外部通信を行わない決定的な参考推計。
  * referenceMassG は request の baseAmount/baseUnit に対応する明示的な内容物重量でなければならない。
  */
 export function estimateNutrients(request: NutrientEstimateRequest): NutrientEstimateResult {
@@ -613,67 +441,97 @@ export function estimateNutrients(request: NutrientEstimateRequest): NutrientEst
       '原材料の取得元を選び、内容を確認済みにしてから再実行してください。',
     )
   } else {
-    const ingredients = splitIngredients(request.ingredientsText)
-    const matches = ingredients.map((ingredient) => ({ ingredient, profile: findProfile(ingredient) }))
-    const recognized = matches.filter((match): match is { ingredient: string; profile: IngredientProfile } => match.profile !== null)
+    const declaration = parseIngredientDeclaration(request.ingredientsText)
+    const resolved = declaration.ingredients.map((ingredient) => ({
+      ingredient,
+      candidates: candidatesForIngredient(ingredient, request.productName),
+    }))
+    const unknown = resolved.filter((item) => item.candidates.length === 0)
 
-    if (ingredients.length === 0 || recognized.length === 0) {
+    if (declaration.ingredients.length === 0) {
       estimates = unavailableAll(
-        '対応できる原材料を確認できないため推計できません。',
+        '食品として扱える原材料を確認できないため推計できません。',
         '原材料表示を見直して栄養値を手入力するか、推計せず食品登録を続けてください。',
       )
+    } else if (unknown.length > 0) {
+      const unknownNames = unknown.map((item) => item.ingredient.normalizedName)
+      estimates = unavailableAll(
+        `参照データにない原材料（${unknownNames.join('、')}）の寄与を0とみなせないため推計できません。`,
+        '原材料表示を見直して栄養値を手入力するか、未対応原材料が追加されるまで推計せず食品登録を続けてください。',
+        [`未対応原材料: ${unknownNames.join('、')}`],
+      )
     } else {
-      const denominator = ingredients.reduce((total, _ingredient, index) => total + ingredients.length - index, 0)
-      const unknown = matches.filter((match) => match.profile === null)
-      const ambiguous = recognized.filter((match) => match.profile.ambiguous)
-      const fitted = unknown.length === 0
-        ? fitIngredientRatios(
-            recognized.map((match) => match.profile),
-            request.referenceMassG,
-            request.knownNutrients,
-            JSON.stringify({
-              ingredients: ingredients.map((ingredient) => ingredient.normalize('NFKC')),
-              referenceMassG: request.referenceMassG,
-              knownNutrients: ESTIMATE_FIT_NUTRIENT_KEYS.map((key) => [key, request.knownNutrients?.[key] ?? null]),
-              modelVersion: MODEL_VERSION,
-            }),
-          )
-        : null
-      const ingredientRatios = fitted?.ratios ?? ingredients.map((_ingredient, index) => (
-        (ingredients.length - index) / denominator
+      const combinations = combineCandidateSets(
+        resolved.map((item) => item.candidates),
+        MAX_PROFILE_COMBINATIONS,
+      )
+      const scenarioCount = Math.max(512, Math.floor(4_096 / Math.max(1, combinations.length)))
+      const fits = combinations.map((combination) => fitIngredientRatios(
+        combination,
+        request.referenceMassG!,
+        request.knownNutrients,
+        JSON.stringify({
+          productName: request.productName?.normalize('NFKC') ?? null,
+          ingredients: declaration.ingredients.map((ingredient) => ingredient.normalizedName),
+          profiles: combination.profiles.map((profile) => profile.profileId),
+          referenceMassG: request.referenceMassG,
+          knownNutrients: ESTIMATE_FIT_NUTRIENT_KEYS.map((key) => [key, request.knownNutrients?.[key] ?? null]),
+          modelVersion: MODEL_VERSION,
+        }),
+        scenarioCount,
       ))
-      const unknownWeight = unknown.reduce((total, match) => {
-        const index = matches.indexOf(match)
-        return total + ingredientRatios[index]
-      }, 0)
+      const selected = fits.sort((left, right) => (
+        left.score - right.score
+        || left.profiles.map((profile) => profile.profileId).join('|')
+          .localeCompare(right.profiles.map((profile) => profile.profileId).join('|'))
+      ))[0]
+      const hasCandidateAmbiguity = resolved.some((item) => item.candidates.length > 1)
+        || selected.profiles.some((profile) => profile.ambiguous)
+      const hasCompound = declaration.ingredients.some((ingredient) => ingredient.components.length > 0)
+      const hasAdditives = declaration.additives.length > 0
       const warnings = [
-        fitted
-          ? '原材料の配合比は、表示順の制約を保ちながら入力済みの主要栄養値との整合から推定しています。'
-          : '原材料の配合比は表示順から推定しています。',
-        '加工係数が未定義です。',
-        ...(unknown.length > 0 ? [`参照データにない原材料があります（${unknown.map((match) => match.ingredient).join('、')}）。`] : []),
-        ...(ambiguous.length > 0 ? [`参照食品の種類に幅がある原材料があります（${ambiguous.map((match) => match.ingredient).join('、')}）。`] : []),
+        selected.usedMacroFit
+          ? '原材料の配合比は、表示順の制約内で入力済み主要栄養値との整合が高い候補を推定しています。'
+          : '原材料の配合比は表示順から推定しており、実際の配合比ではありません。',
+        ...(hasCandidateAmbiguity
+          ? ['同じ原材料名に複数の参照食品候補があるため、候補ごとの事前確率と主要栄養値の整合を比較しています。']
+          : []),
+        ...(hasCandidateAmbiguity && request.productName?.trim()
+          ? [`商品名「${request.productName.trim()}」は候補選択の弱い事前確率にだけ使用し、原材料の明示語と主要栄養値を優先しています。`]
+          : []),
+        ...(hasCompound
+          ? ['括弧付きの複合原材料は、外側の表示順と括弧内の表示順を別々に保って解析しています。']
+          : []),
+        ...(hasAdditives
+          ? [`添加物区画（${declaration.additives.map((item) => item.normalizedName).join('、')}）は主原材料の配合比から分離しています。栄養寄与を0とはみなさず、この参考推計の対象外として不確実性を広げています。`]
+          : []),
+        ...(declaration.inferredAdditiveBoundary
+          ? ['「／」がないため、既知の添加物名から添加物区画の開始位置を推定しました。']
+          : []),
+        ...selected.profiles.flatMap((profile) => profile.derivationWarnings ?? []),
       ]
-      const confidence: AvailableNutrientEstimate['confidence'] =
-        unknown.length === 0 && ambiguous.length === 0 && (fitted === null || fitted.normalizedError <= 4) ? 'medium' : 'low'
-      const minFactor = unknownWeight > 0 || ambiguous.length > 0 ? 0.5 : 0.75
-      const maxFactor = unknownWeight > 0 || ambiguous.length > 0 ? 1.7 : 1.3
+      const confidence: AvailableNutrientEstimate['confidence'] = (
+        hasCandidateAmbiguity
+        || hasCompound
+        || hasAdditives
+        || !selected.usedMacroFit
+        || (selected.normalizedError ?? Number.POSITIVE_INFINITY) > 4
+      ) ? 'low' : 'medium'
+      const [minFactor, maxFactor] = confidence === 'low' ? [0.5, 1.7] : [0.75, 1.3]
 
       const makeEstimate = (key: EstimatableNutrientKey): NutrientEstimate => {
-        const missing = recognized.filter((match) => match.profile[key] === null)
-        if (missing.length > 0) {
-          const missingSourceFoodIds = [...new Set(missing.flatMap((match) => match.profile.sourceFoodIds))]
+        const missingProfiles = selected.profiles.filter((profile) => profile.nutrients[key] === null)
+        if (missingProfiles.length > 0) {
+          const missingSourceFoodIds = [...new Set(missingProfiles.flatMap((profile) => profile.sourceFoodIds))]
           return unavailable(
             `参照食品の${NUTRIENT_LABELS[key]}が欠損しているため、この栄養素は推計できません。`,
             'パッケージの栄養成分表示を確認して手入力するか、この栄養素を採用せず食品登録を続けてください。',
             [`MEXT参照値が欠損しています（食品ID: ${missingSourceFoodIds.join('、')}）。`],
           )
         }
-        const per100g = recognized.reduce((total, match) => {
-          const index = matches.indexOf(match)
-          const assumedRatio = ingredientRatios[index]
-          return total + match.profile[key]! * assumedRatio
-        }, 0)
+        const per100g = selected.profiles.reduce((total, profile, index) => (
+          total + profile.nutrients[key]! * selected.ratios[index]
+        ), 0)
         const value = round(per100g * request.referenceMassG! / 100)
         return {
           status: 'available',
@@ -683,10 +541,10 @@ export function estimateNutrients(request: NutrientEstimateRequest): NutrientEst
             max: round(value * maxFactor),
           },
           confidence,
-          method: fitted ? FIT_METHOD : FALLBACK_METHOD,
+          method: selected.usedMacroFit ? FIT_METHOD : FALLBACK_METHOD,
           source: SOURCE,
-          sourceFoodIds: [...new Set(recognized.flatMap((match) => match.profile.sourceFoodIds))],
-          warnings,
+          sourceFoodIds: [...new Set(selected.profiles.flatMap((profile) => profile.sourceFoodIds))],
+          warnings: [...new Set(warnings)],
         }
       }
 
@@ -726,7 +584,7 @@ export function toStoredNutrientEstimateResult(
       warnings: [...estimate.warnings],
     }
   }
-  const unavailable = Object.values(result.estimates).find((estimate) => estimate.status === 'unavailable')
+  const unavailableEstimate = Object.values(result.estimates).find((estimate) => estimate.status === 'unavailable')
   return {
     requestId: result.requestId,
     foodId: input.foodId,
@@ -735,8 +593,8 @@ export function toStoredNutrientEstimateResult(
     basis: { baseAmount: input.baseAmount, baseUnit: input.baseUnit },
     estimates,
     globalWarnings: [...result.globalWarnings],
-    ...(result.status === 'failed' && unavailable?.status === 'unavailable'
-      ? { error: { code: 'ESTIMATE_UNAVAILABLE', message: unavailable.reason, nextAction: unavailable.nextAction } }
+    ...(result.status === 'failed' && unavailableEstimate?.status === 'unavailable'
+      ? { error: { code: 'ESTIMATE_UNAVAILABLE', message: unavailableEstimate.reason, nextAction: unavailableEstimate.nextAction } }
       : {}),
     modelVersion: result.modelVersion,
     estimatedAt: result.estimatedAt,

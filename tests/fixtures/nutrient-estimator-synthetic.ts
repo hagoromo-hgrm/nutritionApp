@@ -52,6 +52,11 @@ export const SYNTHETIC_MEXT_REFERENCE = {
     saturatedFatG: 0.53, fiberG: 11.2, calciumMg: 26, ironMg: 3.1,
     vitaminAMcg: 0, vitaminEMg: 1, vitaminB1Mg: 0.34, vitaminB2Mg: 0.09, vitaminCMg: 0,
   },
+  mext_03003: {
+    energyKcal: 391, proteinG: 0, fatG: 0, carbohydrateG: 99.3, saltG: 0,
+    saturatedFatG: 0, fiberG: 0, calciumMg: 1, ironMg: null,
+    vitaminAMcg: 0, vitaminEMg: 0, vitaminB1Mg: 0, vitaminB2Mg: 0, vitaminCMg: 0,
+  },
   mext_04029: {
     energyKcal: 451, proteinG: 36.7, fatG: 25.7, carbohydrateG: 28.5, saltG: 0,
     saturatedFatG: 3.59, fiberG: 18.1, calciumMg: 190, ironMg: 8,
@@ -66,6 +71,16 @@ export const SYNTHETIC_MEXT_REFERENCE = {
     energyKcal: 604, proteinG: 19.8, fatG: 53.8, carbohydrateG: 16.5, saltG: 0,
     saturatedFatG: 7.8, fiberG: 10.8, calciumMg: 1200, ironMg: 9.6,
     vitaminAMcg: 1, vitaminEMg: 0.1, vitaminB1Mg: 0.95, vitaminB2Mg: 0.25, vitaminCMg: null,
+  },
+  mext_07107: {
+    energyKcal: 93, proteinG: 1.1, fatG: 0.2, carbohydrateG: 22.5, saltG: 0,
+    saturatedFatG: 0.07, fiberG: 1.1, calciumMg: 6, ironMg: 0.3,
+    vitaminAMcg: 5, vitaminEMg: 0.5, vitaminB1Mg: 0.05, vitaminB2Mg: 0.04, vitaminCMg: 16,
+  },
+  mext_07142: {
+    energyKcal: 50, proteinG: 1.2, fatG: 0.5, carbohydrateG: 14.2, saltG: 0,
+    saturatedFatG: 0.03, fiberG: 6.9, calciumMg: 41, ironMg: 0.3,
+    vitaminAMcg: 20, vitaminEMg: 3.4, vitaminB1Mg: 0.07, vitaminB2Mg: 0.1, vitaminCMg: 160,
   },
   mext_12004: {
     energyKcal: 142, proteinG: 12.2, fatG: 10.2, carbohydrateG: 0.4, saltG: 0.4,
@@ -86,6 +101,11 @@ export const SYNTHETIC_MEXT_REFERENCE = {
     energyKcal: 700, proteinG: 0.6, fatG: 81, carbohydrateG: 0.2, saltG: 1.9,
     saturatedFatG: 50.45, fiberG: 0, calciumMg: 15, ironMg: 0.1,
     vitaminAMcg: 520, vitaminEMg: 1.5, vitaminB1Mg: 0.01, vitaminB2Mg: 0.03, vitaminCMg: 0,
+  },
+  mext_14009: {
+    energyKcal: 887, proteinG: 0, fatG: 100, carbohydrateG: 0, saltG: 0,
+    saturatedFatG: 47.08, fiberG: 0, calciumMg: null, ironMg: 0,
+    vitaminAMcg: 0, vitaminEMg: 8.6, vitaminB1Mg: 0, vitaminB2Mg: 0, vitaminCMg: 0,
   },
   mext_14030: {
     energyKcal: 881, proteinG: 0, fatG: 99.9, carbohydrateG: 0, saltG: 0,
@@ -126,13 +146,14 @@ function makeCase(
   id: string,
   name: string,
   ingredients: readonly SyntheticIngredient[],
+  ingredientsText = ingredients.map((ingredient) => ingredient.ingredient).join('、'),
 ): SyntheticNutrientEstimatorCase {
   const referenceMassG = ingredients.reduce((total, ingredient) => total + ingredient.massG, 0)
   return {
     id,
     name,
     referenceMassG,
-    ingredientsText: ingredients.map((ingredient) => ingredient.ingredient).join('、'),
+    ingredientsText,
     trueComposition: ingredients.map((ingredient) => ({
       ...ingredient,
       ratio: round(ingredient.massG / referenceMassG, 6),
@@ -224,4 +245,20 @@ export const SYNTHETIC_NUTRIENT_ESTIMATOR_CASES: readonly SyntheticNutrientEstim
     { ingredient: 'ココアパウダー', sourceFoodId: 'mext_16048', massG: 15 },
     { ingredient: '脱脂粉乳', sourceFoodId: 'mext_13010', massG: 5 },
   ]),
+  makeCase('cookie-13', 'チョコ植物油脂クッキー', [
+    { ingredient: '小麦粉', sourceFoodId: 'mext_01015', massG: 50 },
+    { ingredient: '植物油脂', sourceFoodId: 'mext_14009', massG: 30 },
+    { ingredient: 'ココアパウダー', sourceFoodId: 'mext_16048', massG: 15 },
+    { ingredient: '全粉乳', sourceFoodId: 'mext_13009', massG: 5 },
+  ], '小麦粉、植物油脂、ココアパウダー、全粉乳／膨張剤、香料'),
+  makeCase('yuzu-14', 'ゆずピール砂糖漬け', [
+    { ingredient: 'ゆず', sourceFoodId: 'mext_07142', massG: 55 },
+    { ingredient: '砂糖', sourceFoodId: 'mext_03003', massG: 45 },
+  ], 'ゆず砂糖漬け（ゆず、砂糖）'),
+  makeCase('cookie-15', 'バナナオートクッキー', [
+    { ingredient: 'バナナ', sourceFoodId: 'mext_07107', massG: 45 },
+    { ingredient: 'オートミール', sourceFoodId: 'mext_01004', massG: 30 },
+    { ingredient: 'アーモンド', sourceFoodId: 'mext_05001', massG: 15 },
+    { ingredient: '卵', sourceFoodId: 'mext_12004', massG: 10 },
+  ], 'バナナ、オートミール、アーモンド、卵／膨張剤、香料'),
 ]

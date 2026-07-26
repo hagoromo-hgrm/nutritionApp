@@ -5,7 +5,25 @@ import unicodedata
 from dataclasses import asdict, dataclass
 
 _ORIGIN_WORDS = ("国内製造", "国内産", "国産", "外国製造", "日本製造")
-_ADDITIVES = ("膨張剤", "乳化剤", "香料", "着色料", "酸化防止剤", "保存料")
+_ADDITIVES = (
+    "増粘剤",
+    "増粘多糖類",
+    "ゲル化剤",
+    "安定剤",
+    "膨張剤",
+    "乳化剤",
+    "香料",
+    "着色料",
+    "酸味料",
+    "甘味料",
+    "調味料",
+    "保存料",
+    "酸化防止剤",
+    "pH調整剤",
+    "発色剤",
+    "漂白剤",
+    "糊料",
+)
 _ALIASES = {
     "小麦": "小麦粉",
     "薄力粉": "小麦粉",
@@ -55,7 +73,13 @@ def _split_top_level(text: str) -> list[str]:
             depth += 1
         elif char in "）)" and depth:
             depth -= 1
-        if char in "、,，／/" and depth == 0:
+        if char in "／/" and depth == 0:
+            item = "".join(buffer).strip()
+            if item:
+                parts.append(item)
+            buffer = []
+            parts.append("/")
+        elif char in "、,，;；\n\r" and depth == 0:
             item = "".join(buffer).strip()
             if item:
                 parts.append(item)

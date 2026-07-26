@@ -47,6 +47,7 @@ function calculateBenchmark(): AccuracyBenchmark {
   for (const fixture of SYNTHETIC_NUTRIENT_ESTIMATOR_CASES) {
     const result = estimateNutrients({
       requestId: `accuracy-${fixture.id}`,
+      productName: fixture.name,
       baseAmount: 1,
       baseUnit: '袋',
       referenceMassG: fixture.referenceMassG,
@@ -66,7 +67,7 @@ function calculateBenchmark(): AccuracyBenchmark {
       availabilityMatches.get(key)!.push(truthAvailable === estimateAvailable)
 
       if (truth === null || estimate.status !== 'available') continue
-      expect(estimate.method).toBe('browser_ingredient_macro_fit')
+      expect(['browser_ingredient_macro_fit', 'browser_ingredient_rule']).toContain(estimate.method)
       const error = Math.abs(estimate.value - truth)
       absoluteErrors.get(key)!.push(error)
       if (truth !== 0) absolutePercentageErrors.get(key)!.push(error / Math.abs(truth))

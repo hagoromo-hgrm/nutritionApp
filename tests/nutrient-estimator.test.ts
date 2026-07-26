@@ -3,6 +3,7 @@ import { estimateNutrients, isEstimateAdoptable, type NutrientEstimateRequest } 
 
 const eligibleRequest: NutrientEstimateRequest = {
   requestId: 'estimate-test-1',
+  productName: 'ココアバタークッキー',
   baseAmount: 1,
   baseUnit: '袋',
   referenceMassG: 80,
@@ -18,7 +19,7 @@ describe('browser nutrient estimator', () => {
     const second = estimateNutrients(eligibleRequest)
 
     expect(second).toEqual(first)
-    expect(first.status).toBe('completed')
+    expect(first.status).toBe('partial')
     expect(first.basis).toEqual({ baseAmount: 1, baseUnit: '袋' })
     expect(first.estimatedAt).toBe(eligibleRequest.requestedAt)
     expect(first.estimates.saturatedFatG.status).toBe('available')
@@ -26,13 +27,13 @@ describe('browser nutrient estimator', () => {
     expect(first.estimates.fiberG.value).not.toBeNull()
     expect(first.estimates.fiberG.range).not.toBeNull()
     expect(first.estimates.calciumMg.status).toBe('available')
-    expect(first.estimates.ironMg.status).toBe('available')
+    expect(first.estimates.ironMg.status).toBe('unavailable')
     expect(first.estimates.vitaminAMcg.status).toBe('available')
     expect(first.estimates.vitaminEMg.status).toBe('available')
     expect(first.estimates.vitaminB1Mg.status).toBe('available')
     expect(first.estimates.vitaminB2Mg.status).toBe('available')
     expect(first.estimates.vitaminCMg.status).toBe('available')
-    expect(first.modelVersion).toBe('browser-rule-0.3.0')
+    expect(first.modelVersion).toBe('browser-rule-0.4.0')
   })
 
   it('明示的な基準重量がなければ単位から重量を推測しない', () => {
@@ -179,6 +180,90 @@ describe('browser nutrient estimator', () => {
     expect(estimate.status).toBe('available')
     expect(estimate.confidence).toBe('low')
     expect(estimate.warnings.join(' ')).toContain('香料')
-    expect(estimate.warnings.join(' ')).toContain('参照食品の種類に幅')
+    expect(estimate.warnings.join(' ')).toContain('複数の参照食品候補')
+  })
+
+  it('複合原材料の括弧内を階層化し、外側と内側の表示順を別々に保つ', () => {
+    const result = estimateNutrients({
+      ...eligibleRequest,
+      productName: 'ゆずピール砂糖漬け',
+      referenceMassG: 100,
+      ingredientsText: 'ゆず砂糖漬け（ゆず、砂糖）',
+      knownNutrients: {
+        energyKcal: 203,
+        proteinG: 0.7,
+        fatG: 0.3,
+        carbohydrateG: 52.5,
+        saltG: 0,
+      },
+    })
+
+    expect(result.estimates.fiberG.status).toBe('available')
+    expect(result.estimates.vitaminCMg.status).toBe('available')
+    expect(result.estimates.fiberG.sourceFoodIds).toEqual(expect.arrayContaining(['mext_07142', 'mext_03003']))
+    expect(result.estimates.fiberG.warnings.join(' ')).toContain('複合原材料')
+    // ADR-015の限定規則に従い、脂質0gから導出した場合は警告を残す。
+    expect(result.estimates.saturatedFatG.status).toBe('available')
+    expect(result.estimates.saturatedFatG.warnings.join(' ')).toContain('脂質が0g')
+  })
+
+  it('スラッシュ以降の添加物を主原材料の配合比から分離する', () => {
+    const result = estimateNutrients({
+      ...eligibleRequest,
+      productName: 'はちみつビスケット',
+      ingredientsText: '小麦粉、はちみつ／増粘剤、香料',
+    })
+
+    expect(result.estimates.fiberG.status).toBe('available')
+    expect(result.estimates.fiberG.confidence).toBe('low')
+    expect(result.estimates.fiberG.warnings.join(' ')).toContain('添加物区画（増粘剤、香料）')
+    expect(result.estimates.fiberG.warnings.join(' ')).not.toContain('未対応原材料')
+  })
+
+  it('商品名を曖昧候補の弱い事前確率に使い、原材料の明示語を優先する', () => {
+    const chocolate = estimateNutrients({
+      ...eligibleRequest,
+      productName: 'チョコクッキー',
+      referenceMassG: 100,
+      ingredientsText: '小麦粉、植物油脂',
+      knownNutrients: undefined,
+    })
+    const dressing = estimateNutrients({
+      ...eligibleRequest,
+      productName: '和風ドレッシング',
+      referenceMassG: 100,
+      ingredientsText: '小麦粉、植物油脂',
+      knownNutrients: undefined,
+    })
+    const explicitCanola = estimateNutrients({
+      ...eligibleRequest,
+      productName: 'チョコクッキー',
+      referenceMassG: 100,
+      ingredientsText: '小麦粉、なたね油',
+      knownNutrients: undefined,
+    })
+
+    expect(chocolate.estimates.saturatedFatG.sourceFoodIds).toContain('mext_14009')
+    expect(dressing.estimates.saturatedFatG.sourceFoodIds).toContain('mext_14008')
+    expect(explicitCanola.estimates.saturatedFatG.sourceFoodIds).toContain('mext_14008')
+    expect(explicitCanola.estimates.saturatedFatG.sourceFoodIds).not.toContain('mext_14009')
+    expect(chocolate.estimates.saturatedFatG.warnings.join(' ')).toContain('弱い事前確率')
+  })
+
+  it('食品原材料が未対応なら既知分だけを合計せず推計不可にする', () => {
+    const result = estimateNutrients({
+      ...eligibleRequest,
+      ingredientsText: '小麦粉、未対応の果実加工品',
+    })
+
+    expect(result.status).toBe('failed')
+    expect(result.estimates.fiberG).toMatchObject({
+      status: 'unavailable',
+      value: null,
+      range: null,
+    })
+    if (result.estimates.fiberG.status === 'unavailable') {
+      expect(result.estimates.fiberG.reason).toContain('寄与を0とみなせない')
+    }
   })
 })

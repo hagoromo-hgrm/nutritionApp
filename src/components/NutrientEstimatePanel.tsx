@@ -28,6 +28,7 @@ export interface NutrientEstimateEvaluation {
 
 export interface NutrientEstimatePanelProps {
   basis: NutrientEstimateBasis
+  productName: string | null
   ingredientsText: string | null
   referenceMassG: number | null
   referenceMassSource: string | null
@@ -55,6 +56,7 @@ function requestKey(props: NutrientEstimatePanelProps): string {
   return JSON.stringify([
     props.basis.baseAmount,
     props.basis.baseUnit,
+    props.productName,
     props.ingredientsText,
     props.referenceMassG,
     props.referenceMassSource,
@@ -81,6 +83,7 @@ export function NutrientEstimatePanel(props: NutrientEstimatePanelProps) {
     const requestedNutrients = ESTIMATABLE_NUTRIENT_KEYS.filter((key) => props.currentNutrients[key] === null)
     const request: NutrientEstimateRequest = {
       requestId: `browser-estimate-${Date.now()}`,
+      productName: props.productName,
       baseAmount: props.basis.baseAmount,
       baseUnit: props.basis.baseUnit,
       ingredientsText: props.ingredientsText,
@@ -160,7 +163,7 @@ export function NutrientEstimatePanel(props: NutrientEstimatePanelProps) {
         <span className="nutrient-estimate-badge">端末内</span>
       </div>
       <p className="nutrient-estimate-intro" id={`${id}-intro`}>
-        原材料表示と確認済み重量から、飽和脂肪酸、食物繊維、カルシウム、鉄、ビタミンA・E・B1・B2・Cのうち、未入力の栄養素だけを参考推計します。入力済みの主要栄養値があれば配合比の推定にも使います。外部へ情報を送信せず、現在値は上書きしません。
+        原材料表示、商品名、確認済み重量から、飽和脂肪酸、食物繊維、カルシウム、鉄、ビタミンA・E・B1・B2・Cのうち、未入力の栄養素だけを参考推計します。商品名は曖昧な参照候補を選ぶ弱い手掛かりに限り、入力済みの主要栄養値と原材料の明示語を優先します。外部へ情報を送信せず、現在値は上書きしません。
       </p>
       <dl className="nutrient-estimate-basis">
         <div><dt>表示基準</dt><dd>{props.basis.baseAmount}{props.basis.baseUnit}当たり</dd></div>
