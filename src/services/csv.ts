@@ -1,5 +1,5 @@
 import { formatDateKey } from '../utils/date'
-import type { MealEntry, NutrientKey, Nutrients } from '../types'
+import { NUTRIENT_KEYS, type MealEntry, type NutrientKey, type NutrientMetadataMap, type Nutrients } from '../types'
 import { isMealMenuSnapshot } from './mealMenuSnapshots'
 import { isFoodUnitConversion, isValidQuantityUnit, isValidUnit } from '../utils/validation'
 
@@ -48,9 +48,14 @@ export const SORTED_CSV_HEADERS = [
   'sort_order',
 ] as const
 
-export const CSV_HEADERS = [
+export const USER_FACING_CSV_HEADERS = [
   ...SORTED_CSV_HEADERS,
   'user_facing_name',
+] as const
+
+export const CSV_HEADERS = [
+  ...USER_FACING_CSV_HEADERS,
+  'food_snapshot_nutrient_metadata_json',
 ] as const
 
 function escapeCsv(value: string | number | null): string {
@@ -70,6 +75,7 @@ export function mealsToCsv(entries: MealEntry[]): string {
     entry.menuSnapshot ? JSON.stringify(entry.menuSnapshot) : '',
     entry.sortOrder ?? '',
     entry.foodSnapshot.userFacingName ?? '',
+    entry.foodSnapshot.nutrientMetadata ? JSON.stringify(entry.foodSnapshot.nutrientMetadata) : '',
   ])
   return `\uFEFF${[CSV_HEADERS, ...rows].map((row) => row.map(escapeCsv).join(',')).join('\r\n')}\r\n`
 }
@@ -154,14 +160,45 @@ function parseInputUnitConversions(value: string, rowNumber: number): MealEntry[
   }
 }
 
+function parseNutrientMetadata(value: string, rowNumber: number): NutrientMetadataMap | undefined {
+  if (!value) return undefined
+  try {
+    const parsed: unknown = JSON.parse(value)
+    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) throw new Error('invalid')
+    const metadata = parsed as Record<string, unknown>
+    for (const [key, item] of Object.entries(metadata)) {
+      if (!(NUTRIENT_KEYS as readonly string[]).includes(key) || typeof item !== 'object' || item === null || Array.isArray(item)) throw new Error('invalid')
+      const record = item as Record<string, unknown>
+      if (!['manufacturer_label', 'external_source', 'user_input', 'estimated', 'derived', 'unknown'].includes(String(record.origin))) throw new Error('origin')
+      if (record.source !== undefined && typeof record.source !== 'string') throw new Error('source')
+      if (record.verified !== undefined && typeof record.verified !== 'boolean') throw new Error('verified')
+      if (record.confidence !== undefined && !['high', 'medium', 'low', 'unavailable'].includes(String(record.confidence))) throw new Error('confidence')
+      if (record.sourceFoodIds !== undefined && (!Array.isArray(record.sourceFoodIds) || !record.sourceFoodIds.every((id) => typeof id === 'string' && id.length > 0))) throw new Error('sourceFoodIds')
+      if (record.estimatedRange !== undefined && (typeof record.estimatedRange !== 'object' || record.estimatedRange === null || Array.isArray(record.estimatedRange)
+        || typeof (record.estimatedRange as Record<string, unknown>).min !== 'number' || !Number.isFinite((record.estimatedRange as Record<string, unknown>).min)
+        || typeof (record.estimatedRange as Record<string, unknown>).max !== 'number' || !Number.isFinite((record.estimatedRange as Record<string, unknown>).max)
+        || Number((record.estimatedRange as Record<string, unknown>).min) < 0
+        || Number((record.estimatedRange as Record<string, unknown>).max) < Number((record.estimatedRange as Record<string, unknown>).min))) throw new Error('estimatedRange')
+      if (record.method !== undefined && (typeof record.method !== 'string' || !record.method.trim())) throw new Error('method')
+      if (record.modelVersion !== undefined && (typeof record.modelVersion !== 'string' || !record.modelVersion.trim())) throw new Error('modelVersion')
+      if (record.requestId !== undefined && (typeof record.requestId !== 'string' || !record.requestId.trim())) throw new Error('requestId')
+      if (record.adoptedAt !== undefined && (typeof record.adoptedAt !== 'string' || Number.isNaN(new Date(record.adoptedAt).getTime()))) throw new Error('adoptedAt')
+    }
+    return parsed as NutrientMetadataMap
+  } catch {
+    throw new Error(`${rowNumber}行目の栄養値由来情報が不正です。`)
+  }
+}
+
 export function parseMealsCsv(text: string): MealEntry[] {
   const rows = parseCsvRows(text)
   const headers = rows[0] ?? []
   const isCurrentHeader = headers.length === CSV_HEADERS.length && headers.every((header, index) => header === CSV_HEADERS[index])
+  const isUserFacingHeader = headers.length === USER_FACING_CSV_HEADERS.length && headers.every((header, index) => header === USER_FACING_CSV_HEADERS[index])
   const isSortedHeader = headers.length === SORTED_CSV_HEADERS.length && headers.every((header, index) => header === SORTED_CSV_HEADERS[index])
   const isPreviousHeader = headers.length === PREVIOUS_CSV_HEADERS.length && headers.every((header, index) => header === PREVIOUS_CSV_HEADERS[index])
   const isLegacyHeader = headers.length === LEGACY_CSV_HEADERS.length && headers.every((header, index) => header === LEGACY_CSV_HEADERS[index])
-  if (rows.length === 0 || (!isCurrentHeader && !isSortedHeader && !isPreviousHeader && !isLegacyHeader)) {
+  if (rows.length === 0 || (!isCurrentHeader && !isUserFacingHeader && !isSortedHeader && !isPreviousHeader && !isLegacyHeader)) {
     throw new Error('このPWAで出力した食事履歴CSVではありません。列名と順序を確認してください。')
   }
   const headerIndex = new Map<string, number>(headers.map((header, index) => [header, index]))
@@ -181,6 +218,7 @@ export function parseMealsCsv(text: string): MealEntry[] {
     const sortOrderText = value('sort_order')
     const sortOrder = sortOrderText === '' ? undefined : Number(sortOrderText)
     const userFacingName = value('user_facing_name').trim()
+    const nutrientMetadata = parseNutrientMetadata(value('food_snapshot_nutrient_metadata_json'), rowNumber)
 
     const parsedDate = new Date(eatenAt)
     if (!id || !eatenAt || Number.isNaN(parsedDate.getTime()) || parsedDate.toISOString() !== eatenAt || date !== formatDateKey(eatenAt)) throw new Error(`${rowNumber}行目の日時またはIDが不正です。`)
@@ -225,6 +263,7 @@ export function parseMealsCsv(text: string): MealEntry[] {
         baseUnit,
         ...(inputUnitConversions ? { inputUnitConversions } : {}),
         nutrients: snapshotNutrients,
+        ...(nutrientMetadata ? { nutrientMetadata } : {}),
       },
       amount: parsePositiveNumber(value('amount'), '分量', rowNumber),
       amountUnit,

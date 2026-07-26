@@ -41,13 +41,18 @@ describe('meal menu snapshots', () => {
     customFood.servingAmount = 2
     customFood.servingUnit = '切れ'
     customFood.inputUnitConversions = [{ unit: '切れ', baseAmount: 40 }]
+    customFood.nutrientMetadata = {
+      fiberG: { origin: 'estimated', source: 'MEXT', sourceFoodIds: ['mext_01015'], requestId: 'estimate_1' },
+    }
     const ingredient = createMealFoodIngredientSnapshot(customFood)
     expect(ingredient).toMatchObject({ amount: 2, unit: '切れ' })
     expect(ingredient.foodSnapshot.inputUnitConversions).toEqual([{ unit: '切れ', baseAmount: 40 }])
     const cloned = cloneMealMenuSnapshot({ sourceMenuId: 'm', sourceMenuName: 'm', ingredients: [ingredient] })
     if (cloned.ingredients[0].kind !== 'food' || ingredient.kind !== 'food') throw new Error('食品食材がありません')
     cloned.ingredients[0].foodSnapshot.inputUnitConversions![0].baseAmount = 50
+    cloned.ingredients[0].foodSnapshot.nutrientMetadata!.fiberG!.sourceFoodIds![0] = 'changed'
     expect(ingredient.foodSnapshot.inputUnitConversions?.[0].baseAmount).toBe(40)
+    expect(ingredient.foodSnapshot.nutrientMetadata?.fiberG?.sourceFoodIds).toEqual(['mext_01015'])
   })
 
   it('カスタム単位の構成を明示換算し、未登録単位は拒否する', () => {

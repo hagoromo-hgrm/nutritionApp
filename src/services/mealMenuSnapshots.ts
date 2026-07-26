@@ -28,6 +28,9 @@ function foodSnapshot(food: Food): FoodSnapshot {
     baseUnit: food.baseUnit,
     inputUnitConversions: food.inputUnitConversions?.map((conversion) => ({ ...conversion })),
     nutrients: { ...food.nutrients },
+    nutrientMetadata: food.nutrientMetadata
+      ? Object.fromEntries(Object.entries(food.nutrientMetadata).map(([key, metadata]) => [key, { ...metadata, sourceFoodIds: metadata.sourceFoodIds ? [...metadata.sourceFoodIds] : undefined }]))
+      : undefined,
   }
 }
 
@@ -117,6 +120,9 @@ function snapshotFoodAsFood(snapshot: FoodSnapshot, id: string): Food {
     servingUnit: null,
     inputUnitConversions: snapshot.inputUnitConversions?.map((conversion) => ({ ...conversion })),
     nutrients: snapshot.nutrients,
+    nutrientMetadata: snapshot.nutrientMetadata
+      ? Object.fromEntries(Object.entries(snapshot.nutrientMetadata).map(([key, metadata]) => [key, { ...metadata, sourceFoodIds: metadata.sourceFoodIds ? [...metadata.sourceFoodIds] : undefined }]))
+      : undefined,
     createdAt: '',
     updatedAt: '',
   }
@@ -155,6 +161,9 @@ function cloneIngredient(ingredient: MealIngredientSnapshot): MealIngredientSnap
         ...ingredient.foodSnapshot,
         inputUnitConversions: ingredient.foodSnapshot.inputUnitConversions?.map((conversion) => ({ ...conversion })),
         nutrients: { ...ingredient.foodSnapshot.nutrients },
+        nutrientMetadata: ingredient.foodSnapshot.nutrientMetadata
+          ? Object.fromEntries(Object.entries(ingredient.foodSnapshot.nutrientMetadata).map(([key, metadata]) => [key, { ...metadata, sourceFoodIds: metadata.sourceFoodIds ? [...metadata.sourceFoodIds] : undefined }]))
+          : undefined,
       },
     }
   }
@@ -167,6 +176,28 @@ export function cloneMealMenuSnapshot(snapshot: MealMenuSnapshot): MealMenuSnaps
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
+}
+
+function isSnapshotNutrientMetadata(value: unknown): boolean {
+  if (value === undefined) return true
+  if (!isRecord(value)) return false
+  return Object.entries(value).every(([key, metadata]) => {
+    if (!(NUTRIENT_KEYS as readonly string[]).includes(key) || !isRecord(metadata)
+      || !['manufacturer_label', 'external_source', 'user_input', 'estimated', 'derived', 'unknown'].includes(String(metadata.origin))) return false
+    if (metadata.source !== undefined && typeof metadata.source !== 'string') return false
+    if (metadata.verified !== undefined && typeof metadata.verified !== 'boolean') return false
+    if (metadata.confidence !== undefined && !['high', 'medium', 'low', 'unavailable'].includes(String(metadata.confidence))) return false
+    if (metadata.sourceFoodIds !== undefined && (!Array.isArray(metadata.sourceFoodIds)
+      || !metadata.sourceFoodIds.every((id) => typeof id === 'string' && id.length > 0))) return false
+    if (metadata.estimatedRange !== undefined && (!isRecord(metadata.estimatedRange)
+      || typeof metadata.estimatedRange.min !== 'number' || !Number.isFinite(metadata.estimatedRange.min) || metadata.estimatedRange.min < 0
+      || typeof metadata.estimatedRange.max !== 'number' || !Number.isFinite(metadata.estimatedRange.max) || metadata.estimatedRange.max < metadata.estimatedRange.min)) return false
+    if (metadata.method !== undefined && (typeof metadata.method !== 'string' || !metadata.method.trim())) return false
+    if (metadata.modelVersion !== undefined && (typeof metadata.modelVersion !== 'string' || !metadata.modelVersion.trim())) return false
+    if (metadata.requestId !== undefined && (typeof metadata.requestId !== 'string' || !metadata.requestId.trim())) return false
+    return metadata.adoptedAt === undefined
+      || (typeof metadata.adoptedAt === 'string' && !Number.isNaN(new Date(metadata.adoptedAt).getTime()))
+  })
 }
 
 function isFoodSnapshot(value: unknown): value is FoodSnapshot {
@@ -182,6 +213,7 @@ function isFoodSnapshot(value: unknown): value is FoodSnapshot {
     && (value.officialName === undefined || typeof value.officialName === 'string')
     && (value.displayName === undefined || typeof value.displayName === 'string')
     && (value.userFacingName === undefined || typeof value.userFacingName === 'string')
+    && isSnapshotNutrientMetadata(value.nutrientMetadata)
 }
 
 function isMealIngredientSnapshot(value: unknown): value is MealIngredientSnapshot {

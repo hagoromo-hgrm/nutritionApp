@@ -6,6 +6,33 @@ export const NUTRIENT_KEYS = [
 export type NutrientKey = (typeof NUTRIENT_KEYS)[number]
 export type Nutrients = Record<NutrientKey, number | null>
 
+export type NutrientOrigin = 'manufacturer_label' | 'external_source' | 'user_input' | 'estimated' | 'derived' | 'unknown'
+export type EstimationConfidence = 'high' | 'medium' | 'low' | 'unavailable'
+
+/** 栄養値の由来。推計値は値だけでなく不確実性も一緒に保持する。 */
+export interface NutrientMetadata {
+  origin: NutrientOrigin
+  source?: string
+  verified?: boolean
+  confidence?: EstimationConfidence
+  estimatedRange?: { min: number; max: number }
+  method?: string
+  modelVersion?: string
+  sourceFoodIds?: string[]
+  requestId?: string
+  adoptedAt?: string
+}
+
+export type NutrientMetadataMap = Partial<Record<NutrientKey, NutrientMetadata>>
+
+export interface IngredientsSource {
+  provider: string
+  retrievedAt?: string
+  version?: string
+  verified?: boolean
+  note?: string
+}
+
 export const NUTRIENT_LABELS: Record<NutrientKey, string> = {
   energyKcal: 'エネルギー',
   proteinG: 'たんぱく質',
@@ -78,6 +105,13 @@ export interface Food {
   foodGroupId?: string
   variantAttributes?: FoodVariantAttributes
   nutrients: Nutrients
+  /** パッケージ等から確認した原材料表示。未確認の外部値は保存しない。 */
+  ingredientsText?: string | null
+  ingredientsSource?: IngredientsSource | null
+  /** 基準量に対応する質量を明示できる場合だけ設定する。単位から推測してはならない。 */
+  estimationReferenceMassG?: number | null
+  estimationReferenceMassSource?: string | null
+  nutrientMetadata?: NutrientMetadataMap
   createdAt: string
   updatedAt: string
 }
@@ -191,6 +225,8 @@ export interface FoodSnapshot {
   /** 食品マスターが削除済みの場合に、未集計の履歴として保持する印。 */
   missing?: boolean
   nutrients: Nutrients
+  /** 記録時点の由来を固定し、後から食品マスターの推計採用を遡及させない。 */
+  nutrientMetadata?: NutrientMetadataMap
 }
 
 export interface MealFoodIngredientSnapshot {
@@ -330,6 +366,101 @@ export interface MetadataRecord {
   value: string | number | boolean
 }
 
+export type EstimationRequestStatus = 'pending' | 'processing' | 'completed' | 'partial' | 'failed' | 'cancelled'
+export type EstimationDecisionKind = 'adopted' | 'rejected' | 'reverted'
+export type EstimationTrigger = 'manual' | 'after_barcode'
+
+export interface NutritionEstimationInput {
+  requestId: string
+  foodId: string
+  barcode: string
+  name: string
+  maker: string
+  estimatorCategoryId?: string | null
+  baseAmount: number
+  baseUnit: FoodUnit
+  inputUnitConversions: FoodUnitConversion[]
+  referenceMassG?: number | null
+  referenceMassSource?: string | null
+  knownNutrients: Partial<Nutrients>
+  missingNutrients: NutrientKey[]
+  ingredientsText: string | null
+  ingredientsSource: IngredientsSource | null
+  requestedAt: string
+  /** 競合検出用に要求作成時の食品更新日時も保存する。 */
+  foodUpdatedAt: string
+  inputHash: string
+}
+
+export interface EstimationRequest {
+  requestId: string
+  foodId: string
+  barcode: string
+  inputSnapshot: NutritionEstimationInput
+  status: EstimationRequestStatus
+  inputHash: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface NutrientEstimate {
+  value: number
+  range?: { min: number; max: number }
+  confidence: EstimationConfidence
+  method: string
+  source?: string
+  sourceFoodIds?: string[]
+  warnings: string[]
+}
+
+export interface EstimationResult {
+  requestId: string
+  foodId: string
+  inputHash: string
+  status: Extract<EstimationRequestStatus, 'completed' | 'partial' | 'failed'>
+  basis?: { baseAmount: number; baseUnit: FoodUnit }
+  estimates: Partial<Record<NutrientKey, NutrientEstimate>>
+  globalWarnings: string[]
+  optimization?: { converged: boolean; objectiveError?: number; scenarioCount?: number }
+  error?: { code: string; message: string; nextAction: string }
+  modelVersion: string
+  estimatedAt: string
+}
+
+export interface EstimationDecision {
+  decisionId: string
+  requestId: string
+  foodId: string
+  nutrientKey: NutrientKey
+  decision: EstimationDecisionKind
+  previousValue: number | null
+  previousMetadata?: NutrientMetadata
+  adoptedValue?: number
+  adoptedMetadata?: NutrientMetadata
+  foodUpdatedAtBeforeDecision: string
+  foodUpdatedAtAfterDecision?: string
+  decidedAt: string
+}
+
+export interface EstimationSettings {
+  id: 'default'
+  enabled: boolean
+  trigger: EstimationTrigger
+  /** 正本要件により自動採用は許可しない。 */
+  applyMode: 'manual'
+  minimumConfidenceForSuggestion: EstimationConfidence
+  updatedAt: string
+}
+
+export const DEFAULT_ESTIMATION_SETTINGS: EstimationSettings = {
+  id: 'default',
+  enabled: false,
+  trigger: 'manual',
+  applyMode: 'manual',
+  minimumConfidenceForSuggestion: 'low',
+  updatedAt: '1970-01-01T00:00:00.000Z',
+}
+
 export interface BackupData {
   format: 'nutrition-pwa-backup'
   dataFormatVersion: number
@@ -345,6 +476,12 @@ export interface BackupData {
   menus?: Menu[]
   menuSets?: MenuSet[]
   settings: AppSettings
+  /** v2からの推計関連データ。v1バックアップには存在しない。 */
+  estimationDataFormatVersion?: number
+  estimationSettings?: EstimationSettings
+  estimationRequests?: EstimationRequest[]
+  estimationResults?: EstimationResult[]
+  estimationDecisions?: EstimationDecision[]
 }
 
 export const EMPTY_NUTRIENTS: Nutrients = {
@@ -379,7 +516,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   goals: DEFAULT_GOALS,
   displayUnit: 'default',
   lastBackupAt: null,
-  dataFormatVersion: 1,
+  dataFormatVersion: 2,
   externalApiEnabled: false,
   externalApiEndpoint: 'https://world.openfoodfacts.org/api/v3/product',
   mealTimeMode: 'auto',

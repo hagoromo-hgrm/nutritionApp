@@ -43,6 +43,23 @@ import {
 import { EXTERNAL_UNNAMED_PRODUCT_LABEL, externalFoodErrorMessage, searchExternalFood, type ExternalFoodPreview } from './services/externalFoodApi'
 import { backupToJson, downloadBlob, parseBackupText } from './services/backup'
 import { mealsToCsv, parseMealsCsv } from './services/csv'
+import {
+  adoptEstimatedNutrients,
+  createEstimationRequest,
+  getEstimationDecisionsForFood,
+  getEstimationSettings,
+  rejectEstimatedNutrients,
+  revertEstimatedNutrient,
+  saveEstimationRequest,
+  saveEstimationResult,
+  saveEstimationSettings,
+} from './services/nutrientEstimationStore'
+import {
+  NutrientEstimatePanel,
+  type NutrientEstimateAdoption,
+  type NutrientEstimateEvaluation,
+} from './components/NutrientEstimatePanel'
+import { toStoredNutrientEstimateResult } from './services/nutrientEstimator'
 import { calculateBmi, calculateNutrients, estimateDailyGoals, formatGraphNutrient, formatNutrient, getFoodDefaultServing, getFoodQuantityUnits, goalRate, incrementByQuantityUnit, nutrientRangeForGoals, scaleNutritionGoals, sumAvailableNutrients, sumByMealType, sumEntries, sumNutrients } from './services/nutrition'
 import { getMenuIngredients, menuToFood, menusWithUnsupportedIngredientUnits, wouldCreateMenuCycle } from './services/menuIngredients'
 import {
@@ -92,6 +109,8 @@ import {
   type NutrientKey,
   type Nutrients,
   type NutritionGoals,
+  type EstimationSettings,
+  type NutrientMetadataMap,
   type QuantityUnit,
 } from './types'
 import { applyConstrainedMextFoodAttributePreferences, applyConstrainedUserFoodSelectionPreferences, getFoodAttributePreferencesForGroup, setFoodAttributePreference } from './services/foodAttributePreferences'
@@ -210,6 +229,12 @@ interface BodyProfileDraft {
   activityLevel: ActivityLevel
 }
 
+interface PendingEstimationDecision {
+  evaluation: NutrientEstimateEvaluation
+  adoption: NutrientEstimateAdoption | null
+  rejectedKeys: NutrientKey[]
+}
+
 interface FoodDraft {
   id: string | null
   name: string
@@ -233,6 +258,12 @@ interface FoodDraft {
   relatedTerms: string[]
   variantAttributes: Record<keyof FoodVariantAttributes, string>
   nutrients: Record<NutrientKey, string>
+  ingredientsText: string
+  ingredientsSourceProvider: string
+  estimationReferenceMassG: string
+  estimationReferenceMassSource: string
+  nutrientMetadata: NutrientMetadataMap
+  pendingEstimation: PendingEstimationDecision | null
 }
 
 interface VariantPickerState {
@@ -267,6 +298,7 @@ const SETTINGS_ICON_ASSET = `${ASSET_BASE_URL}assets/settings-icon.png`
 
 const nutrientKeys = [...NUTRIENT_KEYS]
 const emptyNutrientInputs = (): Record<NutrientKey, string> => Object.fromEntries(nutrientKeys.map((key) => [key, ''])) as Record<NutrientKey, string>
+const formatEstimateInput = (value: number): string => value.toFixed(1)
 const variantAttributeKeys: Array<keyof FoodVariantAttributes> = ['species', 'part', 'variety', 'nameSpecification', 'cultivation', 'sourceBean', 'skin', 'preparation', 'processing']
 const variantAttributeLabels: Record<keyof FoodVariantAttributes, string> = {
   species: '種類', part: '部位', variety: '品種・区分', nameSpecification: '名称仕様', cultivation: '栽培方法', sourceBean: '原料豆', skin: '皮の状態', preparation: '調理方法', processing: '加工状態',
@@ -278,6 +310,8 @@ function emptyFoodDraft(barcode = '', initialName = ''): FoodDraft {
     id: null, name: initialName, maker: '', barcode, isCommercial: Boolean(barcode.trim()), source: 'user', sourceVersion: 'ユーザー入力',
     baseAmount: '100', baseUnit: 'g', inputUnit: '', inputUnitBaseAmount: '', servingAmount: '', servingUnit: 'g', menuIds: [], foodGroupId: '', groupDisplayName: initialName,
     groupReading: '', groupCategory: '', aliases: [], relatedTerms: [], variantAttributes: emptyVariantInputs(), nutrients: emptyNutrientInputs(),
+    ingredientsText: '', ingredientsSourceProvider: '', estimationReferenceMassG: '', estimationReferenceMassSource: '',
+    nutrientMetadata: {}, pendingEstimation: null,
   }
 }
 
@@ -302,6 +336,12 @@ function foodToDraft(food: Food, group: FoodGroup | undefined, aliases: FoodAlia
     relatedTerms: relatedTerms.filter((term) => term.isActive).map((term) => term.term),
     variantAttributes: Object.fromEntries(variantAttributeKeys.map((key) => [key, food.variantAttributes?.[key] ?? ''])) as Record<keyof FoodVariantAttributes, string>,
     nutrients: Object.fromEntries(nutrientKeys.map((key) => [key, food.nutrients[key] === null ? '' : String(food.nutrients[key])])) as Record<NutrientKey, string>,
+    ingredientsText: food.ingredientsText ?? '',
+    ingredientsSourceProvider: food.ingredientsSource?.provider ?? '',
+    estimationReferenceMassG: food.estimationReferenceMassG === null || food.estimationReferenceMassG === undefined ? '' : String(food.estimationReferenceMassG),
+    estimationReferenceMassSource: food.estimationReferenceMassSource ?? '',
+    nutrientMetadata: Object.fromEntries(Object.entries(food.nutrientMetadata ?? {}).map(([key, metadata]) => [key, { ...metadata, sourceFoodIds: metadata.sourceFoodIds ? [...metadata.sourceFoodIds] : undefined }])) as NutrientMetadataMap,
+    pendingEstimation: null,
   }
 }
 
@@ -321,6 +361,9 @@ function snapshotToFood(entry: MealEntry): Food {
     source: 'user', sourceVersion: '食事記録スナップショット', baseAmount: entry.foodSnapshot.baseAmount,
     baseUnit: entry.foodSnapshot.baseUnit, servingAmount: null, servingUnit: null,
     inputUnitConversions: entry.foodSnapshot.inputUnitConversions?.map((conversion) => ({ ...conversion })), nutrients: entry.foodSnapshot.nutrients,
+    nutrientMetadata: entry.foodSnapshot.nutrientMetadata
+      ? Object.fromEntries(Object.entries(entry.foodSnapshot.nutrientMetadata).map(([key, metadata]) => [key, { ...metadata, sourceFoodIds: metadata.sourceFoodIds ? [...metadata.sourceFoodIds] : undefined }])) as NutrientMetadataMap
+      : undefined,
     createdAt: entry.eatenAt, updatedAt: entry.eatenAt,
   }
 }
@@ -452,6 +495,7 @@ function App() {
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set())
   const [existingFoodIds, setExistingFoodIds] = useState<Set<string>>(new Set())
   const [settings, setSettings] = useState<Awaited<ReturnType<typeof getSettings>> | null>(null)
+  const [estimationSettings, setEstimationSettings] = useState<EstimationSettings | null>(null)
   const [searchBars, setSearchBars] = useState([''])
   const [searchResults, setSearchResults] = useState<SearchResultGroup[]>([])
   const [pendingSearchQuery, setPendingSearchQuery] = useState<string | null>(null)
@@ -508,9 +552,9 @@ function App() {
     const requestedDate = selectedDateRef.current
     setLoadedDate(null)
     try {
-      const [dateEntries, resultFoods, resultGroups, resultAliases, resultRelatedTerms, recent, favorites, ids, currentSettings, foodCount, mealCount, menuCount, menuSetCount, foodKeys, resultMenus, resultMenuSets] = await Promise.all([
+      const [dateEntries, resultFoods, resultGroups, resultAliases, resultRelatedTerms, recent, favorites, ids, currentSettings, currentEstimationSettings, foodCount, mealCount, menuCount, menuSetCount, foodKeys, resultMenus, resultMenuSets] = await Promise.all([
         getEntriesForDate(requestedDate), getAllFoods(), getAllFoodGroups(), getAllFoodAliases(), getAllFoodRelatedTerms(), getRecentFoods(), getFavoriteFoods(), getFavoriteIds(),
-        getSettings(), db.foods.count(), db.mealEntries.count(), db.menus.count(), db.menuSets.count(), db.foods.toCollection().primaryKeys(), getAllMenus(), getAllMenuSets(),
+        getSettings(), getEstimationSettings(), db.foods.count(), db.mealEntries.count(), db.menus.count(), db.menuSets.count(), db.foods.toCollection().primaryKeys(), getAllMenus(), getAllMenuSets(),
       ])
       if (requestId !== loadRequestIdRef.current || requestedDate !== selectedDateRef.current) return false
       setEntries(dateEntries)
@@ -525,6 +569,7 @@ function App() {
       setFavoriteIds(ids)
       setExistingFoodIds(new Set([...foodKeys, ...resultMenus.map((menu) => `menu:${menu.id}`), ...resultMenuSets.map((menuSet) => `menu-set:${menuSet.id}`)]))
       setSettings(currentSettings)
+      setEstimationSettings(currentEstimationSettings)
       setCounts({ foods: foodCount, meals: mealCount, menus: menuCount, menuSets: menuSetCount })
       setGoalInputs(Object.fromEntries(nutrientKeys.map((key) => [key, currentSettings.goals[key] === null ? '' : String(currentSettings.goals[key])])) as Record<NutrientKey, string>)
       setBodyProfileInputs(bodyProfileToDraft(currentSettings.bodyProfile))
@@ -752,6 +797,18 @@ function App() {
     if (!foodDraft || !foodDraft.name.trim()) { showError('食品名を入力してください。'); return }
     const baseAmount = Number(foodDraft.baseAmount)
     if (!isPositiveFinite(baseAmount) || !isValidUnit(foodDraft.baseUnit)) { showError('基準量は正の数値で入力してください。'); return }
+    const ingredientsText = foodDraft.ingredientsText.trim() || null
+    const ingredientsSourceProvider = foodDraft.ingredientsSourceProvider.trim()
+    if (ingredientsText !== null && !ingredientsSourceProvider) { showError('原材料表示の取得元を選択してください。推計しない場合も、入力した原材料の根拠を保存します。'); return }
+    if (ingredientsText === null && ingredientsSourceProvider) { showError('原材料表示を入力するか、取得元を未選択に戻してください。'); return }
+    const estimationReferenceMassG = foodDraft.baseUnit === 'g'
+      ? null
+      : (foodDraft.estimationReferenceMassG.trim() ? Number(foodDraft.estimationReferenceMassG) : null)
+    const estimationReferenceMassSource = foodDraft.baseUnit === 'g'
+      ? null
+      : (foodDraft.estimationReferenceMassSource.trim() || null)
+    if (estimationReferenceMassG !== null && !isPositiveFinite(estimationReferenceMassG)) { showError('確認済み重量は0より大きいg単位の数値で入力してください。'); return }
+    if ((estimationReferenceMassG === null) !== (estimationReferenceMassSource === null)) { showError('確認済み重量と、その根拠を両方入力してください。'); return }
     if (foodDraft.barcode && !isValidBarcode(foodDraft.barcode)) { showError('バーコードは8〜14桁の数字で入力してください。'); return }
     const servingAmount = foodDraft.servingAmount.trim() ? Number(foodDraft.servingAmount) : null
     if (servingAmount !== null && !isPositiveFinite(servingAmount)) { showError('既定量は正の数値で入力してください。'); return }
@@ -787,11 +844,33 @@ function App() {
       const existingGroup = foodGroups.find((group) => group.id === groupId)
       const isBundledMextGroup = hasMextFoodGroup(groupId)
       const variantAttributes = Object.fromEntries(variantAttributeKeys.map((key) => [key, foodDraft.variantAttributes[key].trim() || null])) as FoodVariantAttributes
+      const pendingAdoptionValues = foodDraft.pendingEstimation?.adoption?.values ?? {}
+      const pendingAdoptionKeys = Object.keys(pendingAdoptionValues) as Array<keyof typeof pendingAdoptionValues>
+      const persistedNutrients = { ...nutrients }
+      const persistedMetadata = Object.fromEntries(Object.entries(foodDraft.nutrientMetadata).map(([key, metadata]) => [
+        key,
+        { ...metadata, sourceFoodIds: metadata.sourceFoodIds ? [...metadata.sourceFoodIds] : undefined },
+      ])) as NutrientMetadataMap
+      for (const key of pendingAdoptionKeys) {
+        const pendingValue = pendingAdoptionValues[key]
+        if (pendingValue === undefined || foodDraft.nutrients[key] !== formatEstimateInput(pendingValue)) {
+          showError('推計候補を反映した後に対象値が変更されています。もう一度推計してから保存してください。')
+          return
+        }
+        persistedNutrients[key] = null
+        delete persistedMetadata[key]
+      }
       const food: Food = {
         id: foodId, name: foodDraft.name.trim(), officialName: foodDraft.name.trim(), displayName: groupDisplayName, maker: foodDraft.maker.trim(), barcode: foodDraft.barcode.trim(),
         isCommercial: resolveBarcodeCommercialFlag(foodDraft.isCommercial, foodDraft.barcode, foodFormOrigin === 'barcode'),
         source: foodDraft.source, sourceVersion: foodDraft.sourceVersion || 'ユーザー入力', baseAmount, baseUnit: foodDraft.baseUnit,
-        servingAmount, servingUnit: servingAmount === null ? null : servingUnit, inputUnitConversions, menuIds: foodDraft.menuIds, foodGroupId: groupId, variantAttributes, nutrients,
+        servingAmount, servingUnit: servingAmount === null ? null : servingUnit, inputUnitConversions, menuIds: foodDraft.menuIds, foodGroupId: groupId, variantAttributes,
+        nutrients: persistedNutrients,
+        ingredientsText,
+        ingredientsSource: ingredientsText ? { provider: ingredientsSourceProvider, verified: true } : null,
+        estimationReferenceMassG,
+        estimationReferenceMassSource,
+        nutrientMetadata: persistedMetadata,
         createdAt: foodDraft.id ? (foods.find((item) => item.id === foodDraft.id)?.createdAt ?? now) : now, updatedAt: now,
       }
       const foodsAfterSave = [...foods.filter((item) => item.id !== food.id), food]
@@ -843,7 +922,46 @@ function App() {
         }))
       const returnMealType = foodFormMealType
       const returnSearchQuery = foodFormSearchQuery
+      const pendingEstimation = foodDraft.pendingEstimation
+      const evaluated = pendingEstimation?.evaluation.request
+      const referenceMassG = food.baseUnit === 'g' ? food.baseAmount : (food.estimationReferenceMassG ?? null)
+      const referenceMassSource = food.baseUnit === 'g' ? '基準単位がg' : (food.estimationReferenceMassSource ?? null)
+      const evaluationStillCurrent = Boolean(evaluated
+        && evaluated.baseAmount === food.baseAmount
+        && evaluated.baseUnit === food.baseUnit
+        && evaluated.referenceMassG === referenceMassG
+        && evaluated.referenceMassSource === referenceMassSource
+        && evaluated.ingredientsText?.trim() === food.ingredientsText?.trim()
+        && evaluated.ingredientsSource?.provider === food.ingredientsSource?.provider
+        && evaluated.ingredientsSource?.verified === food.ingredientsSource?.verified)
+      if (pendingEstimation && !evaluationStillCurrent && (pendingAdoptionKeys.length > 0 || pendingEstimation.rejectedKeys.length > 0)) {
+        showError('推計後に原材料、基準量または確認済み重量が変更されています。もう一度推計してから保存してください。')
+        return
+      }
       await saveFoodWithMetadata(food, { group, aliases, relatedTerms: related })
+      let savedFood = food
+      if (pendingEstimation) {
+        if (evaluationStillCurrent) {
+          const request = createEstimationRequest(food, {
+            requestId: evaluated!.requestId,
+            now: evaluated!.requestedAt,
+          })
+          await saveEstimationRequest(request)
+          await saveEstimationResult(toStoredNutrientEstimateResult(pendingEstimation.evaluation.result, {
+            foodId: food.id,
+            inputHash: request.inputHash,
+            baseAmount: food.baseAmount,
+            baseUnit: food.baseUnit,
+          }))
+          if (pendingEstimation.rejectedKeys.length > 0) {
+            await rejectEstimatedNutrients(request.requestId, pendingEstimation.rejectedKeys)
+          }
+          if (pendingAdoptionKeys.length > 0) {
+            await adoptEstimatedNutrients(request.requestId, pendingAdoptionKeys)
+            savedFood = await db.foods.get(food.id) ?? food
+          }
+        }
+      }
       setFoodDraft(null)
       setFoodFormMealType(null)
       setFoodFormSearchQuery(null)
@@ -852,12 +970,17 @@ function App() {
           setPendingSearchQuery(returnSearchQuery)
           await searchFoodsAndMenus()
         }
-        openMealForm(food, undefined, returnMealType)
+        openMealForm(savedFood, undefined, returnMealType)
         setView(returnSearchQuery ? 'search-results' : 'food-screen')
       } else setView(foodFormReturnView)
-      await reloadAfterMutation(foodDraft.id ? '食品を更新しました。' : '食品を登録しました。')
-    } catch {
-      showError('食品を保存できませんでした。入力を確認して再試行してください。')
+      const savedMessage = pendingAdoptionKeys.length > 0
+        ? '推計値を採用して食品を保存しました。保存済みの食事記録は変更していません。'
+        : (foodDraft.pendingEstimation?.rejectedKeys.length ?? 0) > 0
+          ? '推計値を不採用として記録し、食品を保存しました。'
+          : (foodDraft.id ? '食品を更新しました。' : '食品を登録しました。')
+      await reloadAfterMutation(savedMessage)
+    } catch (caught) {
+      showError(caught instanceof Error ? caught.message : '食品を保存できませんでした。入力を確認して再試行してください。')
     }
   }
 
@@ -904,6 +1027,9 @@ function App() {
         name: food.displayName ?? food.name, officialName: food.officialName, displayName: food.displayName, userFacingName: resolvedUserFacingName,
         maker: food.maker, barcode: food.barcode, baseAmount: food.baseAmount,
         baseUnit: food.baseUnit, inputUnitConversions: food.inputUnitConversions?.map((conversion) => ({ ...conversion })), nutrients: { ...snapshotNutrients },
+        nutrientMetadata: food.nutrientMetadata
+          ? Object.fromEntries(Object.entries(food.nutrientMetadata).map(([key, metadata]) => [key, { ...metadata, sourceFoodIds: metadata.sourceFoodIds ? [...metadata.sourceFoodIds] : undefined }])) as NutrientMetadataMap
+          : undefined,
       }, amount, amountUnit, calculatedNutrients: calculated,
       ...(menuSnapshot ? { menuSnapshot: cloneMealMenuSnapshot(menuSnapshot) } : {}),
     }
@@ -1350,6 +1476,49 @@ function App() {
     try { await saveSettings(next); setSettings(next); notify(enabled ? '外部商品APIを有効にしました。' : '外部商品APIを無効にしました。') } catch { showError('外部商品APIの設定を保存できませんでした。') }
   }
 
+  const toggleNutrientEstimator = async (enabled: boolean) => {
+    if (!estimationSettings) return
+    try {
+      await saveEstimationSettings({
+        enabled,
+        trigger: 'manual',
+        applyMode: 'manual',
+        minimumConfidenceForSuggestion: estimationSettings.minimumConfidenceForSuggestion,
+      })
+      const next = await getEstimationSettings()
+      setEstimationSettings(next)
+      notify(enabled ? '栄養素の参考推計を有効にしました。' : '栄養素の参考推計を無効にしました。')
+    } catch {
+      showError('参考推計の設定を保存できませんでした。もう一度お試しください。')
+    }
+  }
+
+  const revertFoodEstimate = async (foodId: string, nutrientKey: NutrientKey) => {
+    try {
+      const history = await getEstimationDecisionsForFood(foodId, { limit: 100 })
+      const reverted = new Set(history.items
+        .filter((decision) => decision.decision === 'reverted')
+        .map((decision) => `${decision.requestId}:${decision.nutrientKey}`))
+      const adopted = history.items.find((decision) => (
+        decision.decision === 'adopted'
+        && decision.nutrientKey === nutrientKey
+        && !reverted.has(`${decision.requestId}:${decision.nutrientKey}`)
+      ))
+      if (!adopted) throw new Error('取り消せる採用履歴が見つかりません。')
+      await revertEstimatedNutrient(adopted.decisionId)
+      const refreshedFood = await db.foods.get(foodId)
+      if (!refreshedFood) throw new Error('食品を読み直せませんでした。食品管理へ戻って再度開いてください。')
+      const group = foodGroups.find((item) => item.id === refreshedFood.foodGroupId)
+      const aliases = group ? foodAliases.filter((alias) => alias.foodGroupId === group.id) : []
+      const relatedTerms = group ? foodRelatedTerms.filter((term) => term.foodGroupId === group.id) : []
+      setFoodDraft(foodToDraft(refreshedFood, group, aliases, relatedTerms))
+      await load()
+      notify(`${NUTRIENT_LABELS[nutrientKey]}の推計採用を取り消しました。保存済みの食事記録は変更していません。`)
+    } catch (caught) {
+      showError(caught instanceof Error ? caught.message : '推計値の採用を取り消せませんでした。食品を確認して再試行してください。')
+    }
+  }
+
   const changeDefaultMealTimeMode = async (mode: MealTimeMode) => {
     if (!settings) return
     const next = { ...settings, mealTimeMode: mode }
@@ -1471,8 +1640,8 @@ function App() {
         />}
         {view === 'graphs' && <GraphsView range={graphRange} onRangeChange={setGraphRange} goals={settings.goals} />}
         {view === 'food-screen' && <FoodsView recordingMealType={recordingMealType} foods={foods} foodGroups={foodGroups} menus={menus} menuSets={menuSets} recentFoods={recentFoods} favoriteFoods={favoriteFoods} favoriteIds={favoriteIds} onSelectFood={handleFoodSelection} onSelectMenuSet={(menuSet) => void registerMenuSet(menuSet)} onToggleFavorite={toggleFavorite} onEditFood={(food) => openFoodForm(food, '', 'food-screen', null, null, '', foodScreenReturnView === 'settings' ? 'settings' : 'meal')} onDeleteFood={removeFood} onOpenSearch={() => openSearchInput(recordingMealType ? 'meal' : 'food-master')} onOpenScanner={() => setShowScanner(true)} onBack={() => { setRecordingMealType(null); setView(foodScreenReturnView) }} backLabel={foodScreenReturnView === 'settings' ? '← 設定' : '← 記録'} copyMealType={copyMealType} setCopyMealType={setCopyMealType} onCopyPrevious={copyPreviousMeals} />}
-        {view === 'food-form' && foodDraft && <FoodFormView draft={foodDraft} returnView={foodFormReturnView} allowCommercialClassification={foodFormOrigin === 'settings'} setDraft={setFoodDraft} foodGroups={foodGroups} foodAliases={foodAliases} foodRelatedTerms={foodRelatedTerms} externalNote={externalNote} onSubmit={saveFoodDraft} onClose={() => { setFoodDraft(null); setFoodFormMealType(null); setFoodFormSearchQuery(null); setView(foodFormReturnView) }} />}
-        {view === 'settings' && <SettingsView settings={settings} goalInputs={goalInputs} setGoalInputs={setGoalInputs} onSaveGoals={saveGoals} onToggleExternalApi={toggleExternalApi} onChangeDefaultMealTimeMode={changeDefaultMealTimeMode} onExportJson={exportJson} onRestoreJson={restoreJson} onExportCsv={exportCsv} onImportCsv={importCsv} csvFrom={csvFrom} csvTo={csvTo} setCsvFrom={setCsvFrom} setCsvTo={setCsvTo} counts={counts} bodyProfileInputs={bodyProfileInputs} setBodyProfileInputs={setBodyProfileInputs} onSaveBodyProfile={saveBodyProfile} onOpenNewFood={() => openFoodForm(undefined, '', 'settings', null, null, '', 'settings')} onOpenFoodMaster={() => { setRecordingMealType(null); setFoodScreenReturnView('settings'); setView('food-screen') }} estimatedGoals={estimateDailyGoals(settings.bodyProfile ?? DEFAULT_BODY_PROFILE)} bmi={calculateBmi(settings.bodyProfile ?? DEFAULT_BODY_PROFILE)} />}
+        {view === 'food-form' && foodDraft && <FoodFormView draft={foodDraft} returnView={foodFormReturnView} allowCommercialClassification={foodFormOrigin === 'settings'} estimationEnabled={estimationSettings?.enabled === true} setDraft={setFoodDraft} foodGroups={foodGroups} foodAliases={foodAliases} foodRelatedTerms={foodRelatedTerms} externalNote={externalNote} onRevertEstimate={(foodId, nutrientKey) => void revertFoodEstimate(foodId, nutrientKey)} onSubmit={saveFoodDraft} onClose={() => { setFoodDraft(null); setFoodFormMealType(null); setFoodFormSearchQuery(null); setView(foodFormReturnView) }} />}
+        {view === 'settings' && estimationSettings && <SettingsView settings={settings} estimationSettings={estimationSettings} goalInputs={goalInputs} setGoalInputs={setGoalInputs} onSaveGoals={saveGoals} onToggleExternalApi={toggleExternalApi} onToggleNutrientEstimator={toggleNutrientEstimator} onChangeDefaultMealTimeMode={changeDefaultMealTimeMode} onExportJson={exportJson} onRestoreJson={restoreJson} onExportCsv={exportCsv} onImportCsv={importCsv} csvFrom={csvFrom} csvTo={csvTo} setCsvFrom={setCsvFrom} setCsvTo={setCsvTo} counts={counts} bodyProfileInputs={bodyProfileInputs} setBodyProfileInputs={setBodyProfileInputs} onSaveBodyProfile={saveBodyProfile} onOpenNewFood={() => openFoodForm(undefined, '', 'settings', null, null, '', 'settings')} onOpenFoodMaster={() => { setRecordingMealType(null); setFoodScreenReturnView('settings'); setView('food-screen') }} estimatedGoals={estimateDailyGoals(settings.bodyProfile ?? DEFAULT_BODY_PROFILE)} bmi={calculateBmi(settings.bodyProfile ?? DEFAULT_BODY_PROFILE)} />}
         {view === 'menus' && <MenuView menus={menus} menuSets={menuSets} foods={foods} onNewMenu={() => setMenuDraft({ id: null, name: '', category: '主菜', ingredients: [], aliases: [] })} onEditMenu={(menu) => setMenuDraft({ id: menu.id, name: menu.name, category: menu.category, ingredients: getMenuIngredients(menu, foods).map((ingredient) => ({ ...ingredient, amount: String(ingredient.amount) })), aliases: menu.aliases ?? [] })} onDeleteMenu={removeMenu} onNewMenuSet={() => setMenuSetDraft({ id: null, name: '', menuIds: [], foodIds: [], foodItems: [] })} onEditMenuSet={(menuSet) => { const foodItems = getMenuSetFoodItems(menuSet, foods); setMenuSetDraft({ id: menuSet.id, name: menuSet.name, menuIds: menuSet.menuIds, foodIds: foodItems.map((item) => item.foodId), foodItems: foodItems.map((item) => ({ ...item, amount: String(item.amount) })) }) }} onDeleteMenuSet={removeMenuSet} onBack={() => setView('today')} />}
         {view === 'search-input' && <SearchInputView bars={searchBars} setBars={setSearchBars} onSearch={() => void searchFoodsAndMenus()} onBack={() => setView('food-screen')} />}
         {view === 'search-results' && <SearchResultsView groups={searchResults} purpose={searchPurpose} category={searchCategory} searching={searchingResults} onCategoryChange={changeSearchCategory} onSelect={handleSearchResultSelect} onAddFood={(query) => openFoodForm(undefined, '', 'food-screen', searchPurpose === 'meal' ? (recordingMealType ?? mealType) : null, searchPurpose === 'meal' ? (query || null) : null, query, searchPurpose === 'food-master' ? 'settings' : 'meal')} onLoadMore={(index) => void loadMoreSearchResults(index)} onBack={leaveSearchResults} />}
@@ -2652,10 +2821,12 @@ function MenuSetEditorModal({ draft, setDraft, menus, foods, foodGroups, recentF
 
 interface SettingsViewProps {
   settings: Awaited<ReturnType<typeof getSettings>>
+  estimationSettings: EstimationSettings
   goalInputs: Record<NutrientKey, string>
   setGoalInputs: React.Dispatch<React.SetStateAction<Record<NutrientKey, string>>>
   onSaveGoals: (event: React.FormEvent<HTMLFormElement>) => void
   onToggleExternalApi: (enabled: boolean) => void
+  onToggleNutrientEstimator: (enabled: boolean) => void
   onChangeDefaultMealTimeMode: (mode: MealTimeMode) => void
   onExportJson: () => void
   onRestoreJson: (event: React.ChangeEvent<HTMLInputElement>) => void
@@ -2675,7 +2846,7 @@ interface SettingsViewProps {
   bmi: number | null
 }
 
-function SettingsView({ settings, goalInputs, setGoalInputs, onSaveGoals, onToggleExternalApi, onChangeDefaultMealTimeMode, onExportJson, onRestoreJson, onExportCsv, onImportCsv, csvFrom, csvTo, setCsvFrom, setCsvTo, counts, bodyProfileInputs, setBodyProfileInputs, onSaveBodyProfile, onOpenNewFood, onOpenFoodMaster, estimatedGoals, bmi }: SettingsViewProps) {
+function SettingsView({ settings, estimationSettings, goalInputs, setGoalInputs, onSaveGoals, onToggleExternalApi, onToggleNutrientEstimator, onChangeDefaultMealTimeMode, onExportJson, onRestoreJson, onExportCsv, onImportCsv, csvFrom, csvTo, setCsvFrom, setCsvTo, counts, bodyProfileInputs, setBodyProfileInputs, onSaveBodyProfile, onOpenNewFood, onOpenFoodMaster, estimatedGoals, bmi }: SettingsViewProps) {
   const configuredGoalCount = NUTRIENT_KEYS.filter((key) => settings.goals[key] !== null).length
   return <>
     <section className="page-heading"><div><span className="eyebrow">SETTINGS</span><h1>設定・データ管理</h1></div></section>
@@ -2689,6 +2860,10 @@ function SettingsView({ settings, goalInputs, setGoalInputs, onSaveGoals, onTogg
     <section className="settings-card">
       <div className="section-title"><div><span className="eyebrow">FOOD MASTER</span><h2>食品登録</h2></div></div>
       <div className="food-master-actions"><button className="button primary" type="button" onClick={onOpenNewFood}>＋ 新しい食品を登録</button><button className="button secondary" type="button" onClick={onOpenFoodMaster}>登録済み食品を確認・検索</button></div>
+      <div className="settings-info-row settings-inline-row nutrient-estimate-setting">
+        <label className="toggle-row"><input type="checkbox" checked={estimationSettings.enabled} onChange={(event) => onToggleNutrientEstimator(event.target.checked)} />欠損した飽和脂肪酸・食物繊維の参考推計を使う</label>
+        <InfoPopover className="settings-info" label="参考推計について" text="確認済みの原材料表示と重量を使い、端末内だけで参考候補を計算します。初期値は無効です。結果は確認後に手動で採用し、既存値を上書きしません。" />
+      </div>
     </section>
     <section className="settings-card">
       <div className="section-title"><div><span className="eyebrow">MEAL TIME</span><h2>食事時刻</h2></div></div>
@@ -2787,27 +2962,37 @@ function MealDetailsModal({ details, goals, onUpdateTimes, onClose }: { details:
   return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label={`${details.type}の栄養詳細`}><section className="modal-card"><div className="modal-heading"><div><span className="eyebrow">NUTRIENTS</span><h2>{details.type}の詳細</h2></div><button className="icon-button" type="button" onClick={onClose} aria-label="閉じる">×</button></div><div className="detail-total"><span>合計カロリー</span><strong>{formatNutrient(details.subtotal.energyKcal)}<small> kcal</small></strong></div><NutrientGoalGraphs nutrients={details.subtotal} availableNutrients={availableNutrients} goals={goals} showReference={details.type !== '間食'} /><section className="meal-time-editor"><div className="section-title"><div><span className="eyebrow">MEAL TIME</span><h3>食事時刻</h3></div></div>{details.type !== '間食' ? <form className="inline-time-form" onSubmit={(event) => { event.preventDefault(); onUpdateTimes(sharedEntryIds, sharedTime) }}><label><input aria-label="食事時刻" type="time" value={sharedTime} onChange={(event) => setSharedTime(event.target.value)} required /></label><button className="button secondary" type="submit">時刻を保存</button></form> : <div className="snack-time-list">{details.entries.map((entry) => <div className="snack-time-row" key={entry.id}><span>{getMealEntryDisplayName(entry)}</span><input type="time" value={snackTimes[entry.id] ?? ''} onChange={(event) => setSnackTimes((current) => ({ ...current, [entry.id]: event.target.value }))} /><button className="small-action" type="button" onClick={() => onUpdateTimes([entry.id], snackTimes[entry.id] ?? '')}>保存</button></div>)}</div>}</section><div className="detail-entry-list">{details.entries.map((entry) => <div className="detail-entry" key={entry.id}><span>{getMealEntryDisplayName(entry)} · {entry.amount}{entry.amountUnit}</span><strong>{formatNutrient(entry.calculatedNutrients.energyKcal)} kcal</strong></div>)}</div><button className="button ghost full-width" type="button" onClick={onClose}>閉じる</button></section></div>
 }
 
-function FoodFormView({ draft, returnView, allowCommercialClassification, setDraft, foodGroups, foodAliases, foodRelatedTerms, externalNote, onSubmit, onClose }: { draft: FoodDraft; returnView: FoodFormReturnView; allowCommercialClassification: boolean; setDraft: React.Dispatch<React.SetStateAction<FoodDraft | null>>; foodGroups: FoodGroup[]; foodAliases: FoodAlias[]; foodRelatedTerms: FoodRelatedTerm[]; externalNote: string | null; onSubmit: (event: React.FormEvent<HTMLFormElement>) => void; onClose: () => void }) {
+function FoodFormView({ draft, returnView, allowCommercialClassification, estimationEnabled, setDraft, foodGroups, foodAliases, foodRelatedTerms, externalNote, onRevertEstimate, onSubmit, onClose }: { draft: FoodDraft; returnView: FoodFormReturnView; allowCommercialClassification: boolean; estimationEnabled: boolean; setDraft: React.Dispatch<React.SetStateAction<FoodDraft | null>>; foodGroups: FoodGroup[]; foodAliases: FoodAlias[]; foodRelatedTerms: FoodRelatedTerm[]; externalNote: string | null; onRevertEstimate: (foodId: string, nutrientKey: NutrientKey) => void; onSubmit: (event: React.FormEvent<HTMLFormElement>) => void; onClose: () => void }) {
   const [activeTab, setActiveTab] = useState<'basic' | 'nutrition' | 'search'>('basic')
-  const update = <K extends keyof FoodDraft>(key: K, value: FoodDraft[K]) => setDraft((current) => current ? { ...current, [key]: value } : current)
+  const withoutPendingEstimation = (current: FoodDraft): FoodDraft => {
+    const nutrients = { ...current.nutrients }
+    for (const [key, value] of Object.entries(current.pendingEstimation?.adoption?.values ?? {}) as Array<[NutrientKey, number]>) {
+      if (nutrients[key] === formatEstimateInput(value)) nutrients[key] = ''
+    }
+    return { ...current, nutrients, pendingEstimation: null }
+  }
+  const update = <K extends keyof FoodDraft>(key: K, value: FoodDraft[K]) => setDraft((current) => {
+    if (!current) return current
+    return { ...withoutPendingEstimation(current), [key]: value }
+  })
   const updateBaseUnit = (baseUnit: FoodUnit) => setDraft((current) => {
     if (!current) return current
     const normalizedInputUnit = current.inputUnit.trim()
     const inputUnit = normalizedInputUnit === current.baseUnit || normalizedInputUnit === baseUnit ? '' : current.inputUnit
     const allowed = [baseUnit, ...(inputUnit.trim() && inputUnit.trim() !== baseUnit ? [inputUnit.trim()] : [])]
-    return { ...current, baseUnit, inputUnit, inputUnitBaseAmount: inputUnit ? current.inputUnitBaseAmount : '', servingUnit: allowed.includes(current.servingUnit) ? current.servingUnit : baseUnit }
+    return { ...withoutPendingEstimation(current), baseUnit, inputUnit, inputUnitBaseAmount: inputUnit ? current.inputUnitBaseAmount : '', servingUnit: allowed.includes(current.servingUnit) ? current.servingUnit : baseUnit }
   })
   const updateInputUnit = (inputUnit: string) => setDraft((current) => {
     if (!current) return current
     const normalized = inputUnit.trim()
     const allowed = [current.baseUnit, ...(normalized && normalized !== current.baseUnit ? [normalized] : [])]
-    return { ...current, inputUnit, inputUnitBaseAmount: normalized && normalized !== current.baseUnit ? current.inputUnitBaseAmount : '', servingUnit: allowed.includes(current.servingUnit) ? current.servingUnit : current.baseUnit }
+    return { ...withoutPendingEstimation(current), inputUnit, inputUnitBaseAmount: normalized && normalized !== current.baseUnit ? current.inputUnitBaseAmount : '', servingUnit: allowed.includes(current.servingUnit) ? current.servingUnit : current.baseUnit }
   })
   const inputUnit = draft.inputUnit.trim()
   const servingUnitOptions = [...new Set([draft.baseUnit, ...(inputUnit && inputUnit !== draft.baseUnit ? [inputUnit] : [])])]
   const updateProductName = (value: string) => setDraft((current) => {
     if (!current) return current
-    return { ...current, name: value, groupDisplayName: shouldFollowFoodName(current.groupDisplayName, current.name) ? value : current.groupDisplayName }
+    return { ...withoutPendingEstimation(current), name: value, groupDisplayName: shouldFollowFoodName(current.groupDisplayName, current.name) ? value : current.groupDisplayName }
   })
   const selectFamily = (value: string) => setDraft((current) => {
     if (!current) return current
@@ -2821,6 +3006,43 @@ function FoodFormView({ draft, returnView, allowCommercialClassification, setDra
   })
   const addAlias = () => update('aliases', [...draft.aliases, { value: '', type: 'synonym' }])
   const addRelatedTerm = () => update('relatedTerms', [...draft.relatedTerms, ''])
+  const referenceMassG = draft.baseUnit === 'g'
+    ? (isPositiveFinite(Number(draft.baseAmount)) ? Number(draft.baseAmount) : null)
+    : (draft.estimationReferenceMassG.trim() && isPositiveFinite(Number(draft.estimationReferenceMassG)) ? Number(draft.estimationReferenceMassG) : null)
+  const referenceMassSource = draft.baseUnit === 'g' ? '基準単位がg' : (draft.estimationReferenceMassSource.trim() || null)
+  const ingredientsSource = draft.ingredientsSourceProvider.trim()
+    ? { provider: draft.ingredientsSourceProvider.trim(), verified: true as const }
+    : null
+  const currentEstimateNutrients = {
+    saturatedFatG: draft.nutrients.saturatedFatG.trim() === '' ? null : Number(draft.nutrients.saturatedFatG),
+    fiberG: draft.nutrients.fiberG.trim() === '' ? null : Number(draft.nutrients.fiberG),
+  }
+  const hasEstimatableMissingValue = currentEstimateNutrients.saturatedFatG === null || currentEstimateNutrients.fiberG === null
+  const queueEvaluation = (evaluation: NutrientEstimateEvaluation) => setDraft((current) => {
+    if (!current) return current
+    return { ...withoutPendingEstimation(current), pendingEstimation: { evaluation, adoption: null, rejectedKeys: [] } }
+  })
+  const queueAdoption = (adoption: NutrientEstimateAdoption) => setDraft((current) => {
+    if (!current) return current
+    const nutrients = { ...current.nutrients }
+    for (const [key, value] of Object.entries(adoption.values) as Array<[NutrientKey, number]>) nutrients[key] = formatEstimateInput(value)
+    return {
+      ...current,
+      nutrients,
+      pendingEstimation: { evaluation: { request: adoption.request, result: adoption.result }, adoption, rejectedKeys: [] },
+    }
+  })
+  const queueRejection = (evaluation: NutrientEstimateEvaluation, nutrientKeys: NutrientKey[]) => setDraft((current) => {
+    if (!current) return current
+    return { ...withoutPendingEstimation(current), pendingEstimation: { evaluation, adoption: null, rejectedKeys: nutrientKeys } }
+  })
+  const updateNutrientValue = (key: NutrientKey, value: string) => setDraft((current) => {
+    if (!current) return current
+    const cleared = withoutPendingEstimation(current)
+    const nutrientMetadata = { ...cleared.nutrientMetadata }
+    if (nutrientMetadata[key]?.origin === 'estimated') delete nutrientMetadata[key]
+    return { ...cleared, nutrients: { ...cleared.nutrients, [key]: value }, nutrientMetadata }
+  })
   return <>
     <section className="page-heading food-form-heading"><div><span className="eyebrow">FOOD MASTER</span><h1>{draft.id ? '食品を編集' : '新しい食品を登録'}</h1></div><button className="button ghost" type="button" onClick={onClose}>{returnView === 'settings' ? '← 設定へ' : '← 食品画面へ'}</button></section>
     <section className="settings-card food-form-card">
@@ -2841,10 +3063,50 @@ function FoodFormView({ draft, returnView, allowCommercialClassification, setDra
           <div className="two-fields"><label>入力用単位（任意）<input list="food-input-unit-options" value={draft.inputUnit} onChange={(event) => updateInputUnit(event.target.value)} placeholder="例：個、杯、パック、切れ" /><datalist id="food-input-unit-options">{FOOD_UNITS.map((unit) => <option key={unit} value={unit} />)}</datalist></label>{inputUnit && inputUnit !== draft.baseUnit ? <label>1入力単位あたりの基準量<input type="number" min="0.01" max="100000" step="any" value={draft.inputUnitBaseAmount} onChange={(event) => update('inputUnitBaseAmount', event.target.value)} placeholder={`例：60（${draft.baseUnit}）`} /><span className="field-hint">{draft.baseUnit}で入力</span></label> : <p className="helper-text">「切れ」「パック」など任意の単位名を追加できます。空欄なら基準単位だけを使います。</p>}</div>
           <div className="two-fields"><label>既定の入力分量<input type="number" min="0.01" step="any" value={draft.servingAmount} onChange={(event) => update('servingAmount', event.target.value)} placeholder="任意" /></label><label>既定の入力単位<select value={draft.servingUnit} onChange={(event) => update('servingUnit', event.target.value)}>{servingUnitOptions.map((unit) => <option key={unit} value={unit}>{unit}</option>)}</select></label></div>
           <p className="helper-text">栄養値の基準量は {draft.baseAmount || '—'}{draft.baseUnit} のまま保存します。既定量と食事入力だけ、明示した入力用単位を使えます。</p>
+          <div className="food-form-subsection ingredient-source-editor">
+            <h3>原材料と推計用の確認情報</h3>
+            <p className="helper-text">パッケージ等で確認した内容だけを保存します。未確認の外部値は使わず、単位から重量を推測しません。</p>
+            <label>原材料表示<textarea rows={4} value={draft.ingredientsText} onChange={(event) => update('ingredientsText', event.target.value)} placeholder="例：小麦粉、砂糖、バター、ココアパウダー" /></label>
+            <label>原材料の取得元<select value={draft.ingredientsSourceProvider} onChange={(event) => update('ingredientsSourceProvider', event.target.value)}>
+              <option value="">未選択</option>
+              <option value="パッケージ表示">パッケージ表示（確認済み）</option>
+              <option value="端末内に保存済み">端末内に保存済み（確認済み）</option>
+              <option value="Open Food Facts">Open Food Facts（取得後に確認済み）</option>
+              <option value="その他">その他（確認済み）</option>
+            </select></label>
+            {draft.baseUnit === 'g'
+              ? <p className="helper-text">基準単位がgのため、確認済み重量には基準量 {draft.baseAmount || '—'}g を使用します。</p>
+              : <div className="two-fields">
+                <label>基準量に対応する確認済み重量（g）<input type="number" min="0.01" step="any" value={draft.estimationReferenceMassG} onChange={(event) => update('estimationReferenceMassG', event.target.value)} placeholder="例：80" /></label>
+                <label>重量の根拠<input value={draft.estimationReferenceMassSource} onChange={(event) => update('estimationReferenceMassSource', event.target.value)} placeholder="例：パッケージ内容量" /></label>
+              </div>}
+          </div>
           <p className="source-line">出典: {draft.sourceVersion}（保存前に内容を確認してください）</p>
         </div>}
 
-        {activeTab === 'nutrition' && <div className="food-form-tab-panel" role="tabpanel"><div className="section-title"><div><span className="eyebrow">NUTRIENTS</span><h2>基準量あたりの栄養値</h2></div></div><div className="nutrient-input-grid">{NUTRIENT_KEYS.map((key) => <label key={key}>{NUTRIENT_LABELS[key]}<div className="unit-input"><input type="number" min="0" step="any" value={draft.nutrients[key]} onChange={(event) => update('nutrients', { ...draft.nutrients, [key]: event.target.value })} placeholder="未設定" /><span>{NUTRIENT_UNITS[key]}</span></div></label>)}</div></div>}
+        {activeTab === 'nutrition' && <div className="food-form-tab-panel" role="tabpanel">
+          <div className="section-title"><div><span className="eyebrow">NUTRIENTS</span><h2>基準量あたりの栄養値</h2></div></div>
+          <div className="nutrient-input-grid">{NUTRIENT_KEYS.map((key) => {
+            const metadata = draft.nutrientMetadata[key]
+            return <label key={key}>{NUTRIENT_LABELS[key]}<div className="unit-input"><input type="number" min="0" step="any" value={draft.nutrients[key]} onChange={(event) => updateNutrientValue(key, event.target.value)} placeholder="未設定" /><span>{NUTRIENT_UNITS[key]}</span></div>
+              {metadata?.origin === 'estimated' && <span className="estimated-origin-row"><small>参考推計 · 信頼度 {metadata.confidence ?? '不明'}</small>{draft.id && <button type="button" className="small-action" onClick={() => onRevertEstimate(draft.id!, key)}>採用を取り消す</button>}</span>}
+            </label>
+          })}</div>
+          {estimationEnabled && hasEstimatableMissingValue && <NutrientEstimatePanel
+            basis={{ baseAmount: Number(draft.baseAmount), baseUnit: draft.baseUnit }}
+            ingredientsText={draft.ingredientsText.trim() || null}
+            ingredientsSource={ingredientsSource}
+            referenceMassG={referenceMassG}
+            referenceMassSource={referenceMassSource}
+            currentNutrients={currentEstimateNutrients}
+            onEvaluated={queueEvaluation}
+            onAdopt={queueAdoption}
+            onRejectAll={queueRejection}
+            disabled={!isPositiveFinite(Number(draft.baseAmount))}
+          />}
+          {draft.pendingEstimation?.adoption && <p className="nutrient-estimate-queued" role="status">推計候補を入力欄へ反映済みです。画面下の「保存する」で採用と履歴保存を確定します。</p>}
+          {!estimationEnabled && hasEstimatableMissingValue && <p className="helper-text">参考推計は設定の「食品登録」から有効にできます。推計せず空欄のまま保存することもできます。</p>}
+        </div>}
 
         {activeTab === 'search' && <div className="food-form-tab-panel" role="tabpanel">
           <div className="section-title"><div><span className="eyebrow">SEARCH</span><h2>検索表示とバリエーション</h2></div></div>

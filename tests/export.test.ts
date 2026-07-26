@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { validateBackup } from '../src/services/backup'
-import { CSV_HEADERS, LEGACY_CSV_HEADERS, PREVIOUS_CSV_HEADERS, SORTED_CSV_HEADERS, mealsToCsv, parseMealsCsv } from '../src/services/csv'
+import { CSV_HEADERS, LEGACY_CSV_HEADERS, PREVIOUS_CSV_HEADERS, SORTED_CSV_HEADERS, USER_FACING_CSV_HEADERS, mealsToCsv, parseMealsCsv } from '../src/services/csv'
 import type { BackupData, Food, MealEntry } from '../src/types'
 
 const addedNutrients = { calciumMg: null, ironMg: null, vitaminAMcg: null, vitaminEMg: null, vitaminB1Mg: null, vitaminB2Mg: null, vitaminCMg: null, saturatedFatG: null }
@@ -56,6 +56,31 @@ describe('export formats', () => {
     }
     const restored = parseMealsCsv(mealsToCsv([orderedEntry]))
     expect(restored).toEqual([orderedEntry])
+  })
+
+  it('推計由来メタデータを既定列の後ろに追加してCSVで移送する', () => {
+    const estimatedEntry: MealEntry = {
+      ...entry,
+      foodSnapshot: {
+        ...entry.foodSnapshot,
+        nutrientMetadata: {
+          fiberG: {
+            origin: 'estimated',
+            source: '文部科学省 日本食品標準成分表',
+            confidence: 'medium',
+            estimatedRange: { min: 1, max: 2 },
+            method: 'browser_ingredient_rule',
+            modelVersion: 'browser-rule-0.1.0',
+            sourceFoodIds: ['mext_01015'],
+            requestId: 'estimate_1',
+            adoptedAt: '2026-07-15T00:00:00.000Z',
+          },
+        },
+      },
+    }
+    const csv = mealsToCsv([estimatedEntry])
+    expect(CSV_HEADERS.at(-1)).toBe('food_snapshot_nutrient_metadata_json')
+    expect(parseMealsCsv(csv)).toEqual([estimatedEntry])
   })
 
   it('料理メニューの食事別構成をJSONとCSVで保持する', () => {
@@ -114,9 +139,19 @@ describe('export formats', () => {
     expect(parseMealsCsv(sortedCsv)).toEqual([sortedEntry])
   })
 
+  it('推計由来列を追加する前のCSVも取り込める', () => {
+    const previousCurrentEntry: MealEntry = { ...entry, sortOrder: 2, foodSnapshot: { ...entry.foodSnapshot, name: '米', maker: '', userFacingName: 'ご飯' } }
+    const modernRows = mealsToCsv([previousCurrentEntry]).replace(/^\uFEFF/, '').trimEnd().split('\r\n')
+    const modernHeaders = modernRows[0].split(',')
+    const modernValues = modernRows[1].split(',')
+    const indexes = USER_FACING_CSV_HEADERS.map((header) => modernHeaders.indexOf(header))
+    const csv = `\uFEFF${USER_FACING_CSV_HEADERS.join(',')}\r\n${indexes.map((index) => modernValues[index]).join(',')}\r\n`
+    expect(parseMealsCsv(csv)).toEqual([previousCurrentEntry])
+  })
+
   it('CSVの表示順は非負整数だけを受け入れる', () => {
     const csv = mealsToCsv([{ ...entry, sortOrder: 0 }])
-    const invalid = csv.replace(/,0,\r\n$/, ',-1,\r\n')
+    const invalid = csv.replace(/,0,,\r\n$/, ',-1,,\r\n')
     expect(() => parseMealsCsv(invalid)).toThrow('表示順')
   })
 
@@ -139,6 +174,20 @@ describe('export formats', () => {
     expect(() => validateBackup({ ...backup, mealEntries: [{ ...entry, amountUnit: 'ml' }] })).toThrow('形式が不正')
     expect(() => validateBackup({ ...backup, foods: [{ ...classifiedFood, servingAmount: -1, servingUnit: '食' }] })).toThrow('形式が不正')
     expect(() => validateBackup({ ...backup, foods: [{ ...classifiedFood, nutrients: { ...classifiedFood.nutrients, energyKcal: Number.POSITIVE_INFINITY } }] })).toThrow('形式が不正')
+  })
+
+  it('v2バックアップは推計設定と履歴ストアを含めて検証し、v1も引き続き読み込める', () => {
+    const v2 = {
+      ...backup,
+      dataFormatVersion: 2,
+      settings: { ...backup.settings, dataFormatVersion: 2 },
+      estimationDataFormatVersion: 1,
+      estimationSettings: { id: 'default' as const, enabled: false, trigger: 'manual' as const, applyMode: 'manual' as const, minimumConfidenceForSuggestion: 'low' as const, updatedAt: '2026-07-25T00:00:00.000Z' },
+      estimationRequests: [], estimationResults: [], estimationDecisions: [],
+    }
+    expect(validateBackup(v2).estimationSettings?.applyMode).toBe('manual')
+    expect(() => validateBackup({ ...v2, estimationSettings: { ...v2.estimationSettings, applyMode: 'automatic' } })).toThrow('推計関連データ')
+    expect(validateBackup(backup).dataFormatVersion).toBe(1)
   })
 
   it('外食・市販の明示フラグを保持し、旧形式との互換性も維持する', () => {

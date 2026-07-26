@@ -1,4 +1,4 @@
-import { NUTRIENT_KEYS, type AppSettings, type BackupData, type Food, type FoodAlias, type FoodGroup, type FoodRelatedTerm, type FoodSnapshot, type FoodUsageStat, type MealEntry, type Menu, type MenuIngredient, type MenuSet, type Nutrients, type SearchLog } from '../types'
+import { NUTRIENT_KEYS, type AppSettings, type BackupData, type EstimationDecision, type EstimationRequest, type EstimationResult, type EstimationSettings, type Food, type FoodAlias, type FoodGroup, type FoodRelatedTerm, type FoodSnapshot, type FoodUsageStat, type MealEntry, type Menu, type MenuIngredient, type MenuSet, type NutrientKey, type NutrientMetadataMap, type Nutrients, type SearchLog } from '../types'
 import { isFoodAttributePreference } from './foodAttributePreferences'
 import { hasMenuCycles, menusWithUnsupportedIngredientUnits } from './menuIngredients'
 import { isMealMenuSnapshot } from './mealMenuSnapshots'
@@ -60,6 +60,39 @@ function isVariantAttributes(value: unknown): boolean {
   return Object.values(value).every((item) => item === null || isString(item))
 }
 
+function isIngredientsSource(value: unknown): boolean {
+  if (value === undefined || value === null) return true
+  if (!isRecord(value) || !isNonEmptyString(value.provider)) return false
+  return (value.retrievedAt === undefined || isIsoDateTime(value.retrievedAt))
+    && (value.version === undefined || isString(value.version))
+    && (value.verified === undefined || typeof value.verified === 'boolean')
+    && (value.note === undefined || isString(value.note))
+}
+
+function isNutrientMetadata(value: unknown): boolean {
+  if (!isRecord(value) || !['manufacturer_label', 'external_source', 'user_input', 'estimated', 'derived', 'unknown'].includes(String(value.origin))) return false
+  if (value.source !== undefined && !isString(value.source)) return false
+  if (value.verified !== undefined && typeof value.verified !== 'boolean') return false
+  if (value.confidence !== undefined && !['high', 'medium', 'low', 'unavailable'].includes(String(value.confidence))) return false
+  if (value.estimatedRange !== undefined && (!isRecord(value.estimatedRange) || typeof value.estimatedRange.min !== 'number' || !Number.isFinite(value.estimatedRange.min) || value.estimatedRange.min < 0 || typeof value.estimatedRange.max !== 'number' || !Number.isFinite(value.estimatedRange.max) || value.estimatedRange.max < value.estimatedRange.min)) return false
+  return (value.method === undefined || isNonEmptyString(value.method))
+    && (value.modelVersion === undefined || isNonEmptyString(value.modelVersion))
+    && (value.sourceFoodIds === undefined || (Array.isArray(value.sourceFoodIds) && value.sourceFoodIds.every(isNonEmptyString)))
+    && (value.requestId === undefined || isNonEmptyString(value.requestId))
+    && (value.adoptedAt === undefined || isIsoDateTime(value.adoptedAt))
+}
+
+function isNutrientMetadataMap(value: unknown): value is NutrientMetadataMap {
+  if (value === undefined) return true
+  if (!isRecord(value)) return false
+  return Object.entries(value).every(([key, metadata]) => (NUTRIENT_KEYS as readonly string[]).includes(key) && isNutrientMetadata(metadata))
+}
+
+function isReferenceMass(value: unknown, source: unknown): boolean {
+  if (value === undefined || value === null) return source === undefined || source === null
+  return typeof value === 'number' && Number.isFinite(value) && value > 0 && value <= 100000 && isNonEmptyString(source)
+}
+
 function isFood(value: unknown): value is Food {
   if (!isRecord(value)) return false
   return isNonEmptyString(value.id) && isNonEmptyString(value.name) && isString(value.maker)
@@ -78,6 +111,10 @@ function isFood(value: unknown): value is Food {
     && (value.reading === undefined || value.reading === null || isString(value.reading))
     && (value.foodGroupId === undefined || isString(value.foodGroupId))
     && isVariantAttributes(value.variantAttributes)
+    && (value.ingredientsText === undefined || value.ingredientsText === null || isString(value.ingredientsText))
+    && isIngredientsSource(value.ingredientsSource)
+    && isReferenceMass(value.estimationReferenceMassG, value.estimationReferenceMassSource)
+    && isNutrientMetadataMap(value.nutrientMetadata)
 }
 
 function isSnapshot(value: unknown): value is FoodSnapshot {
@@ -90,6 +127,7 @@ function isSnapshot(value: unknown): value is FoodSnapshot {
     && (value.officialName === undefined || isString(value.officialName))
     && (value.displayName === undefined || isString(value.displayName))
     && (value.userFacingName === undefined || isString(value.userFacingName))
+    && isNutrientMetadataMap(value.nutrientMetadata)
 }
 
 function isFoodGroup(value: unknown): value is FoodGroup {
@@ -200,16 +238,82 @@ function isSettings(value: unknown): value is AppSettings {
   const goals = value.goals
   return NUTRIENT_KEYS.every((key) => isNullableNumber(goals[key]))
     && value.displayUnit === 'default' && (value.lastBackupAt === null || isIsoDateTime(value.lastBackupAt))
-    && value.dataFormatVersion === 1 && typeof value.externalApiEnabled === 'boolean'
+    && (value.dataFormatVersion === 1 || value.dataFormatVersion === 2) && typeof value.externalApiEnabled === 'boolean'
     && isNonEmptyString(value.externalApiEndpoint)
     && (value.mealTimeMode === undefined || value.mealTimeMode === 'auto' || value.mealTimeMode === 'manual')
     && (value.bodyProfile === undefined || isBodyProfile(value.bodyProfile))
     && isFoodAttributePreferences(value.foodAttributePreferences)
 }
 
+function isNutrientKey(value: unknown): value is NutrientKey {
+  return typeof value === 'string' && (NUTRIENT_KEYS as readonly string[]).includes(value)
+}
+
+function isEstimationInput(value: unknown): boolean {
+  if (!isRecord(value)) return false
+  const known = value.knownNutrients
+  return isNonEmptyString(value.requestId) && isNonEmptyString(value.foodId) && isString(value.barcode) && (!value.barcode || isValidBarcode(value.barcode))
+    && isString(value.name) && isString(value.maker) && (value.estimatorCategoryId === undefined || value.estimatorCategoryId === null || isNonEmptyString(value.estimatorCategoryId))
+    && typeof value.baseAmount === 'number' && Number.isFinite(value.baseAmount) && value.baseAmount > 0 && value.baseAmount <= 100000 && isValidUnit(String(value.baseUnit))
+    && isInputUnitConversions(value.inputUnitConversions, String(value.baseUnit))
+    && isReferenceMass(value.referenceMassG, value.referenceMassSource)
+    && isRecord(known) && Object.entries(known).every(([key, nutrient]) => isNutrientKey(key) && isNullableNumber(nutrient))
+    && Array.isArray(value.missingNutrients) && value.missingNutrients.every(isNutrientKey) && new Set(value.missingNutrients).size === value.missingNutrients.length
+    && (value.ingredientsText === null || isString(value.ingredientsText)) && isIngredientsSource(value.ingredientsSource)
+    && isIsoDateTime(value.requestedAt) && isIsoDateTime(value.foodUpdatedAt) && isNonEmptyString(value.inputHash)
+}
+
+function isEstimationRequest(value: unknown): value is EstimationRequest {
+  if (!isRecord(value)) return false
+  const inputSnapshot = value.inputSnapshot
+  return isNonEmptyString(value.requestId) && isNonEmptyString(value.foodId) && isString(value.barcode) && (!value.barcode || isValidBarcode(value.barcode))
+    && isEstimationInput(inputSnapshot) && (inputSnapshot as EstimationRequest['inputSnapshot']).requestId === value.requestId && (inputSnapshot as EstimationRequest['inputSnapshot']).foodId === value.foodId
+    && ['pending', 'processing', 'completed', 'partial', 'failed', 'cancelled'].includes(String(value.status))
+    && isNonEmptyString(value.inputHash) && (inputSnapshot as EstimationRequest['inputSnapshot']).inputHash === value.inputHash
+    && isIsoDateTime(value.createdAt) && isIsoDateTime(value.updatedAt)
+}
+
+function isNutrientEstimate(value: unknown): boolean {
+  if (!isRecord(value) || typeof value.value !== 'number' || !Number.isFinite(value.value) || value.value < 0) return false
+  if (value.range !== undefined && (!isRecord(value.range) || typeof value.range.min !== 'number' || !Number.isFinite(value.range.min) || value.range.min < 0 || typeof value.range.max !== 'number' || !Number.isFinite(value.range.max) || value.range.max < value.range.min)) return false
+  return ['high', 'medium', 'low', 'unavailable'].includes(String(value.confidence))
+    && isNonEmptyString(value.method)
+    && (value.source === undefined || isNonEmptyString(value.source))
+    && (value.sourceFoodIds === undefined || (Array.isArray(value.sourceFoodIds) && value.sourceFoodIds.every(isNonEmptyString)))
+    && Array.isArray(value.warnings) && value.warnings.every(isString)
+}
+
+function isEstimationResult(value: unknown): value is EstimationResult {
+  if (!isRecord(value) || !isNonEmptyString(value.requestId) || !isNonEmptyString(value.foodId) || !isNonEmptyString(value.inputHash)) return false
+  if (!['completed', 'partial', 'failed'].includes(String(value.status)) || !isRecord(value.estimates) || !Object.entries(value.estimates).every(([key, estimate]) => isNutrientKey(key) && isNutrientEstimate(estimate))) return false
+  if (value.basis !== undefined && (!isRecord(value.basis) || typeof value.basis.baseAmount !== 'number' || !Number.isFinite(value.basis.baseAmount) || value.basis.baseAmount <= 0 || !isValidUnit(String(value.basis.baseUnit)))) return false
+  if (!Array.isArray(value.globalWarnings) || !value.globalWarnings.every(isString) || !isNonEmptyString(value.modelVersion) || !isIsoDateTime(value.estimatedAt)) return false
+  const optimization = value.optimization
+  if (optimization !== undefined && (!isRecord(optimization) || typeof optimization.converged !== 'boolean' || (optimization.objectiveError !== undefined && (typeof optimization.objectiveError !== 'number' || !Number.isFinite(optimization.objectiveError) || optimization.objectiveError < 0)) || (optimization.scenarioCount !== undefined && (typeof optimization.scenarioCount !== 'number' || !Number.isInteger(optimization.scenarioCount) || optimization.scenarioCount < 0)))) return false
+  return value.error === undefined || (isRecord(value.error) && isNonEmptyString(value.error.code) && isNonEmptyString(value.error.message) && isNonEmptyString(value.error.nextAction))
+}
+
+function isEstimationDecision(value: unknown): value is EstimationDecision {
+  if (!isRecord(value) || !isNonEmptyString(value.decisionId) || !isNonEmptyString(value.requestId) || !isNonEmptyString(value.foodId) || !isNutrientKey(value.nutrientKey)) return false
+  return ['adopted', 'rejected', 'reverted'].includes(String(value.decision)) && isNullableNumber(value.previousValue)
+    && (value.previousMetadata === undefined || isNutrientMetadata(value.previousMetadata))
+    && (value.adoptedValue === undefined || (typeof value.adoptedValue === 'number' && Number.isFinite(value.adoptedValue) && value.adoptedValue >= 0))
+    && (value.adoptedMetadata === undefined || isNutrientMetadata(value.adoptedMetadata))
+    && isIsoDateTime(value.foodUpdatedAtBeforeDecision)
+    && (value.foodUpdatedAtAfterDecision === undefined || isIsoDateTime(value.foodUpdatedAtAfterDecision))
+    && isIsoDateTime(value.decidedAt)
+}
+
+function isEstimationSettings(value: unknown): value is EstimationSettings {
+  if (!isRecord(value)) return false
+  return value.id === 'default' && typeof value.enabled === 'boolean' && ['manual', 'after_barcode'].includes(String(value.trigger))
+    && value.applyMode === 'manual' && ['high', 'medium', 'low', 'unavailable'].includes(String(value.minimumConfidenceForSuggestion))
+    && isIsoDateTime(value.updatedAt)
+}
+
 export function validateBackup(value: unknown): BackupData {
   if (!isRecord(value)) throw new Error('JSONのトップレベルがオブジェクトではありません。')
-  if (value.format !== 'nutrition-pwa-backup' || value.dataFormatVersion !== 1) {
+  if (value.format !== 'nutrition-pwa-backup' || (value.dataFormatVersion !== 1 && value.dataFormatVersion !== 2)) {
     throw new Error('対応していないバックアップ形式またはバージョンです。')
   }
   if (!isIsoDateTime(value.exportedAt) || !Array.isArray(value.foods) || !Array.isArray(value.mealEntries)
@@ -256,6 +360,36 @@ export function validateBackup(value: unknown): BackupData {
     || (value.foodUsageStats !== undefined && !hasUniqueValues(value.foodUsageStats as FoodUsageStat[], (stat) => stat.foodId))
     || (value.searchLogs !== undefined && !hasUniqueValues(value.searchLogs as SearchLog[], (log) => log.id))) {
     throw new Error('検索関連データに重複したIDがあります。')
+  }
+  const hasEstimationFields = value.estimationDataFormatVersion !== undefined || value.estimationSettings !== undefined
+    || value.estimationRequests !== undefined || value.estimationResults !== undefined || value.estimationDecisions !== undefined
+  if (value.dataFormatVersion === 2 && (!hasEstimationFields || value.estimationDataFormatVersion !== 1
+    || !isEstimationSettings(value.estimationSettings) || !Array.isArray(value.estimationRequests)
+    || !Array.isArray(value.estimationResults) || !Array.isArray(value.estimationDecisions))) {
+    throw new Error('推計関連データの形式またはバージョンが不正です。')
+  }
+  if (hasEstimationFields && value.dataFormatVersion === 1) {
+    throw new Error('推計関連データを含むバックアップはデータ形式バージョン2である必要があります。')
+  }
+  if (value.dataFormatVersion === 2) {
+    const requests = value.estimationRequests as unknown[]
+    const results = value.estimationResults as unknown[]
+    const decisions = value.estimationDecisions as unknown[]
+    if (!requests.every(isEstimationRequest) || !results.every(isEstimationResult) || !decisions.every(isEstimationDecision)
+      || !hasUniqueValues(requests as EstimationRequest[], (request) => request.requestId)
+      || !hasUniqueValues(results as EstimationResult[], (result) => result.requestId)
+      || !hasUniqueValues(decisions as EstimationDecision[], (decision) => decision.decisionId)) {
+      throw new Error('推計要求、結果または採用履歴の形式が不正です。')
+    }
+    const requestById = new Map((requests as EstimationRequest[]).map((request) => [request.requestId, request]))
+    for (const result of results as EstimationResult[]) {
+      const request = requestById.get(result.requestId)
+      if (!request || request.foodId !== result.foodId || request.inputHash !== result.inputHash) throw new Error('推計結果の参照整合性が不正です。')
+    }
+    for (const decision of decisions as EstimationDecision[]) {
+      const request = requestById.get(decision.requestId)
+      if (!request || request.foodId !== decision.foodId) throw new Error('推計判断の参照整合性が不正です。')
+    }
   }
   // 旧形式のバックアップは元の形を保ったまま復元し、読み込み側の設定正規化に任せる。
   return value as unknown as BackupData

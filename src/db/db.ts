@@ -2,9 +2,14 @@ import Dexie, { type Table } from 'dexie'
 import {
   DEFAULT_SETTINGS,
   DEFAULT_BODY_PROFILE,
+  DEFAULT_ESTIMATION_SETTINGS,
   NUTRIENT_KEYS,
   type AppSettings,
   type BackupData,
+  type EstimationDecision,
+  type EstimationRequest,
+  type EstimationResult,
+  type EstimationSettings,
   type FavoriteRecord,
   type Food,
   type FoodAlias,
@@ -22,6 +27,7 @@ import {
 import { createId } from '../utils/id'
 import { estimateDailyGoals } from '../services/nutrition'
 import { normalizeFoodAttributePreferences } from '../services/foodAttributePreferences'
+import { validateBackup } from '../services/backup'
 import { getMenuFoodIds, getNestedMenuIds, wouldCreateMenuCycle } from '../services/menuIngredients'
 import { normalizeSearchText, searchFoodResults as searchFoodResultsPure, type FoodSearchPage } from '../services/foodSearch'
 import { normalizeMealEntryGroups, normalizeMealEntryOrder, sortMealEntries, sortMealEntryGroup } from '../services/mealEntryOrder'
@@ -63,6 +69,10 @@ export class NutritionDatabase extends Dexie {
   foodRelatedTerms!: Table<FoodRelatedTerm, string>
   foodUsageStats!: Table<FoodUsageStat, string>
   searchLogs!: Table<SearchLog, string>
+  estimationRequests!: Table<EstimationRequest, string>
+  estimationResults!: Table<EstimationResult, string>
+  estimationDecisions!: Table<EstimationDecision, string>
+  estimationSettings!: Table<EstimationSettings, string>
 
   constructor() {
     super('nutrition-pwa')
@@ -127,6 +137,25 @@ export class NutritionDatabase extends Dexie {
       food_usage_stats: 'foodId, selectionCount, lastSelectedAt, updatedAt',
       search_logs: 'id, createdAt, normalizedQuery, selectedFoodGroupId, selectedFoodVariantId, unselected',
     })
+    // 推計履歴は食品・状態・日時でページングする。既存ストアは作り直さず追加する。
+    this.version(6).stores({
+      foods: 'id, name, maker, barcode, source, foodGroupId, updatedAt',
+      meal_entries: 'id, eatenAt, mealType, foodId',
+      favorites: 'foodId, createdAt',
+      settings: 'id',
+      metadata: 'key',
+      menus: 'id, name, category, updatedAt',
+      menu_sets: 'id, name, updatedAt',
+      food_groups: 'id, displayName, category, updatedAt',
+      food_aliases: 'id, foodGroupId, foodVariantId, normalizedAlias, isActive',
+      food_related_terms: 'id, foodGroupId, normalizedTerm, isActive',
+      food_usage_stats: 'foodId, selectionCount, lastSelectedAt, updatedAt',
+      search_logs: 'id, createdAt, normalizedQuery, selectedFoodGroupId, selectedFoodVariantId, unselected',
+      estimation_requests: 'requestId, foodId, status, createdAt, updatedAt, [foodId+createdAt], [foodId+status]',
+      estimation_results: 'requestId, foodId, status, estimatedAt, [foodId+estimatedAt]',
+      estimation_decisions: 'decisionId, requestId, foodId, nutrientKey, decision, decidedAt, [foodId+decidedAt], [requestId+decidedAt]',
+      estimation_settings: 'id, updatedAt',
+    })
     this.mealEntries = this.table('meal_entries')
     this.menus = this.table('menus')
     this.menuSets = this.table('menu_sets')
@@ -135,6 +164,10 @@ export class NutritionDatabase extends Dexie {
     this.foodRelatedTerms = this.table('food_related_terms')
     this.foodUsageStats = this.table('food_usage_stats')
     this.searchLogs = this.table('search_logs')
+    this.estimationRequests = this.table('estimation_requests')
+    this.estimationResults = this.table('estimation_results')
+    this.estimationDecisions = this.table('estimation_decisions')
+    this.estimationSettings = this.table('estimation_settings')
   }
 }
 
@@ -243,6 +276,9 @@ export async function initializeDatabase(): Promise<void> {
   const { initialFoods } = await import('../data/initialFoods')
   const settings = await db.settings.get('app')
   if (!settings) await db.settings.put({ ...DEFAULT_SETTINGS, goals: { ...DEFAULT_SETTINGS.goals } })
+  if (!await db.estimationSettings.get('default')) {
+    await db.estimationSettings.put({ ...DEFAULT_ESTIMATION_SETTINGS })
+  }
 
   const seeded = await db.metadata.get('initial-foods-seeded')
   const seedVersion = await db.metadata.get('initial-foods-version')
@@ -252,7 +288,7 @@ export async function initializeDatabase(): Promise<void> {
       if (existing === 0) await db.foods.bulkAdd(initialFoods.map(enrichFoodForSearch))
       await db.metadata.put({ key: 'initial-foods-seeded', value: true })
       await db.metadata.put({ key: 'initial-foods-version', value: INITIAL_FOODS_VERSION })
-      await db.metadata.put({ key: 'schema-version', value: 5 })
+      await db.metadata.put({ key: 'schema-version', value: 6 })
     })
   } else if (seedVersion?.value !== INITIAL_FOODS_VERSION) {
     await db.transaction('rw', [db.foods, db.metadata], async () => {
@@ -292,7 +328,7 @@ export async function initializeDatabase(): Promise<void> {
         .map((food) => food.id)
       if (legacyIdsToDelete.length > 0) await db.foods.bulkDelete(legacyIdsToDelete)
       await db.metadata.put({ key: 'initial-foods-version', value: INITIAL_FOODS_VERSION })
-      await db.metadata.put({ key: 'schema-version', value: 5 })
+      await db.metadata.put({ key: 'schema-version', value: 6 })
     })
   }
   await ensureSearchMetadata()
@@ -303,6 +339,7 @@ export async function getSettings(): Promise<AppSettings> {
   const normalized = stored
     ? {
       ...DEFAULT_SETTINGS, ...stored, goals: { ...DEFAULT_SETTINGS.goals, ...stored.goals },
+      dataFormatVersion: Math.max(DEFAULT_SETTINGS.dataFormatVersion, stored.dataFormatVersion ?? 1),
       mealTimeMode: stored.mealTimeMode ?? 'auto', bodyProfile: { ...DEFAULT_BODY_PROFILE, ...stored.bodyProfile },
       foodAttributePreferences: normalizeFoodAttributePreferences(stored.foodAttributePreferences),
     }
@@ -315,7 +352,7 @@ export async function getSettings(): Promise<AppSettings> {
     }
   }
   const next = { ...normalized, goals }
-  if (stored && NUTRIENT_KEYS.some((key) => stored.goals[key] !== next.goals[key])) await db.settings.put(next)
+  if (stored && (stored.dataFormatVersion !== next.dataFormatVersion || NUTRIENT_KEYS.some((key) => stored.goals[key] !== next.goals[key]))) await db.settings.put(next)
   return next
 }
 
@@ -649,12 +686,13 @@ export async function getRecentFoods(limit = 20): Promise<Food[]> {
 
 export async function exportBackup(): Promise<BackupData> {
   await getSettings()
-  return db.transaction('r', [db.foods, db.mealEntries, db.favorites, db.settings, db.menus, db.menuSets, db.foodGroups, db.foodAliases, db.foodRelatedTerms, db.foodUsageStats, db.searchLogs], async () => {
+  return db.transaction('r', [db.foods, db.mealEntries, db.favorites, db.settings, db.menus, db.menuSets, db.foodGroups, db.foodAliases, db.foodRelatedTerms, db.foodUsageStats, db.searchLogs, db.estimationSettings, db.estimationRequests, db.estimationResults, db.estimationDecisions], async () => {
     const settings = await db.settings.get('app')
     if (!settings) throw new Error('設定を読み込めませんでした。')
-    const [foods, mealEntries, favorites, foodGroups, foodAliases, foodRelatedTerms, foodUsageStats, searchLogs, menus, menuSets] = await Promise.all([
+    const [foods, mealEntries, favorites, foodGroups, foodAliases, foodRelatedTerms, foodUsageStats, searchLogs, menus, menuSets, estimationSettings, estimationRequests, estimationResults, estimationDecisions] = await Promise.all([
       db.foods.toArray(), db.mealEntries.toArray(), db.favorites.toArray(), db.foodGroups.toArray(), db.foodAliases.toArray(),
       db.foodRelatedTerms.toArray(), db.foodUsageStats.toArray(), db.searchLogs.toArray(), db.menus.toArray(), db.menuSets.toArray(),
+      db.estimationSettings.get('default'), db.estimationRequests.toArray(), db.estimationResults.toArray(), db.estimationDecisions.toArray(),
     ])
     return {
       format: 'nutrition-pwa-backup',
@@ -671,6 +709,11 @@ export async function exportBackup(): Promise<BackupData> {
       menus,
       menuSets,
       settings,
+      estimationDataFormatVersion: 1,
+      estimationSettings,
+      estimationRequests,
+      estimationResults,
+      estimationDecisions,
     }
   })
 }
@@ -681,7 +724,9 @@ export interface ReplaceAllDataResult {
 }
 
 export async function replaceAllData(backup: BackupData): Promise<ReplaceAllDataResult> {
-  await db.transaction('rw', [db.foods, db.mealEntries, db.favorites, db.settings, db.metadata, db.menus, db.menuSets, db.foodGroups, db.foodAliases, db.foodRelatedTerms, db.foodUsageStats, db.searchLogs], async () => {
+  // UI以外の呼び出しでも、不正なバックアップで既存データを消さない。
+  const validatedBackup = validateBackup(backup)
+  await db.transaction('rw', [db.foods, db.mealEntries, db.favorites, db.settings, db.metadata, db.menus, db.menuSets, db.foodGroups, db.foodAliases, db.foodRelatedTerms, db.foodUsageStats, db.searchLogs, db.estimationSettings, db.estimationRequests, db.estimationResults, db.estimationDecisions], async () => {
     await db.foods.clear()
     await db.mealEntries.clear()
     await db.favorites.clear()
@@ -694,21 +739,29 @@ export async function replaceAllData(backup: BackupData): Promise<ReplaceAllData
     await db.foodRelatedTerms.clear()
     await db.foodUsageStats.clear()
     await db.searchLogs.clear()
-    if (backup.foods.length) await db.foods.bulkAdd(backup.foods)
-    if (backup.mealEntries.length) await db.mealEntries.bulkAdd(normalizeMealEntryGroups(backup.mealEntries))
-    if (backup.favorites.length) await db.favorites.bulkAdd(backup.favorites)
-    if (backup.menus?.length) await db.menus.bulkAdd(backup.menus)
-    if (backup.menuSets?.length) await db.menuSets.bulkAdd(backup.menuSets)
-    if (backup.foodGroups?.length) await db.foodGroups.bulkAdd(backup.foodGroups)
-    if (backup.foodAliases?.length) await db.foodAliases.bulkAdd(backup.foodAliases)
-    if (backup.foodRelatedTerms?.length) await db.foodRelatedTerms.bulkAdd(backup.foodRelatedTerms)
-    if (backup.foodUsageStats?.length) await db.foodUsageStats.bulkAdd(backup.foodUsageStats)
-    if (backup.searchLogs?.length) await db.searchLogs.bulkAdd(backup.searchLogs)
-    await db.settings.put(backup.settings)
-    await db.metadata.put({ key: 'schema-version', value: 5 })
+    await db.estimationSettings.clear()
+    await db.estimationRequests.clear()
+    await db.estimationResults.clear()
+    await db.estimationDecisions.clear()
+    if (validatedBackup.foods.length) await db.foods.bulkAdd(validatedBackup.foods)
+    if (validatedBackup.mealEntries.length) await db.mealEntries.bulkAdd(normalizeMealEntryGroups(validatedBackup.mealEntries))
+    if (validatedBackup.favorites.length) await db.favorites.bulkAdd(validatedBackup.favorites)
+    if (validatedBackup.menus?.length) await db.menus.bulkAdd(validatedBackup.menus)
+    if (validatedBackup.menuSets?.length) await db.menuSets.bulkAdd(validatedBackup.menuSets)
+    if (validatedBackup.foodGroups?.length) await db.foodGroups.bulkAdd(validatedBackup.foodGroups)
+    if (validatedBackup.foodAliases?.length) await db.foodAliases.bulkAdd(validatedBackup.foodAliases)
+    if (validatedBackup.foodRelatedTerms?.length) await db.foodRelatedTerms.bulkAdd(validatedBackup.foodRelatedTerms)
+    if (validatedBackup.foodUsageStats?.length) await db.foodUsageStats.bulkAdd(validatedBackup.foodUsageStats)
+    if (validatedBackup.searchLogs?.length) await db.searchLogs.bulkAdd(validatedBackup.searchLogs)
+    if (validatedBackup.estimationSettings) await db.estimationSettings.add(validatedBackup.estimationSettings)
+    if (validatedBackup.estimationRequests?.length) await db.estimationRequests.bulkAdd(validatedBackup.estimationRequests)
+    if (validatedBackup.estimationResults?.length) await db.estimationResults.bulkAdd(validatedBackup.estimationResults)
+    if (validatedBackup.estimationDecisions?.length) await db.estimationDecisions.bulkAdd(validatedBackup.estimationDecisions)
+    await db.settings.put(validatedBackup.settings)
+    await db.metadata.put({ key: 'schema-version', value: 6 })
     await db.metadata.put({ key: 'initial-foods-seeded', value: true })
     await db.metadata.put({ key: 'initial-foods-version', value: INITIAL_FOODS_VERSION })
-    if (backup.foodAliases !== undefined && backup.foodRelatedTerms !== undefined) {
+    if (validatedBackup.foodAliases !== undefined && validatedBackup.foodRelatedTerms !== undefined) {
       await db.metadata.put({ key: 'search-metadata-version', value: SEARCH_METADATA_VERSION })
     }
   })
