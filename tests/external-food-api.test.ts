@@ -22,6 +22,8 @@ describe('external food API', () => {
         product_name: 'テスト飲料',
         brands: 'メーカー',
         quantity: '500 ml',
+        ingredients_text: 'Water, sugar',
+        ingredients_text_ja: '水、砂糖',
         nutriments: {
           'energy-kcal_100g': 42,
           proteins_100g: 1.2,
@@ -36,23 +38,46 @@ describe('external food API', () => {
 
     const preview = await searchExternalFood('4901234567890', 'https://world.openfoodfacts.org/api/v3/product')
 
-    expect(preview).toMatchObject({ name: 'テスト飲料', maker: 'メーカー', baseAmount: 100, baseUnit: 'ml' })
+    expect(preview).toMatchObject({
+      name: 'テスト飲料',
+      maker: 'メーカー',
+      ingredientsText: '水、砂糖',
+      baseAmount: 100,
+      baseUnit: 'ml',
+    })
     expect(preview?.nutrients.calciumMg).toBe(125)
     expect(preview?.nutrients.vitaminAMcg).toBe(80)
     const [url, options] = fetchMock.mock.calls[0] as [URL, RequestInit]
     expect(url.toString()).toContain('/4901234567890.json?fields=')
+    expect(url.searchParams.get('fields')).toContain('ingredients_text_ja')
     expect((options.headers as Record<string, string>)['X-User-Agent']).toContain('nutrition-pwa')
   })
 
   it('旧v2形式も互換的に読み取る', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response({
       status: 1,
-      product: { product_name: '旧形式商品', quantity: '120 g', nutriments: { 'energy-kcal_100g': 100 } },
+      product: {
+        product_name: '旧形式商品',
+        quantity: '120 g',
+        ingredients_text: '小麦粉、砂糖',
+        nutriments: { 'energy-kcal_100g': 100 },
+      },
     })))
 
     const preview = await searchExternalFood('4901234567890', 'https://example.com/api/v2/product')
     expect(preview?.name).toBe('旧形式商品')
+    expect(preview?.ingredientsText).toBe('小麦粉、砂糖')
     expect(preview?.baseAmount).toBe(100)
+  })
+
+  it('原材料が未登録なら欠損を空文字やゼロへ変換しない', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response({
+      status: 1,
+      product: { product_name: '原材料未登録商品', quantity: '100 g', nutriments: {} },
+    })))
+
+    const preview = await searchExternalFood('4901234567890', 'https://example.com/product')
+    expect(preview?.ingredientsText).toBeNull()
   })
 
   it('商品名が未設定でも保存前に判別できるラベルを返す', async () => {

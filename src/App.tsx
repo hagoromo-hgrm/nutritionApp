@@ -351,6 +351,8 @@ function previewToDraft(preview: ExternalFoodPreview): FoodDraft {
     ...emptyFoodDraft(preview.barcode, initialName), groupDisplayName: initialName, maker: preview.maker, source: 'open_food_facts',
     sourceVersion: 'Open Food Facts（取得値は確認後に保存）', baseAmount: String(preview.baseAmount), baseUnit: preview.baseUnit,
     servingAmount: '', servingUnit: preview.baseUnit, menuIds: [],
+    ingredientsText: preview.ingredientsText ?? '',
+    ingredientsSourceProvider: preview.ingredientsText ? 'Open Food Facts' : '',
     nutrients: Object.fromEntries(nutrientKeys.map((key) => [key, preview.nutrients[key] === null ? '' : String(preview.nutrients[key])])) as Record<NutrientKey, string>,
   }
 }
@@ -771,14 +773,18 @@ function App() {
         try {
           const preview = await searchExternalFood(normalized, settings.externalApiEndpoint)
           if (preview) {
-            setExternalNote('Open Food Factsの取得値です。栄養成分表示と照合してから保存してください。')
+            setExternalNote(preview.ingredientsText
+              ? 'Open Food Factsの商品情報と原材料を自動入力しました。パッケージ表示と照合してから保存してください。'
+              : 'Open Food Factsの商品情報を自動入力しました。原材料は登録されていないため、必要に応じて手入力してください。栄養成分表示と照合してから保存してください。')
             setFoodDraft(previewToDraft(preview))
             setFoodFormMealType(recordingMealType)
             setFoodFormSearchQuery(null)
             setFoodFormReturnView('food-screen')
             setFoodFormOrigin('barcode')
             setView('food-form')
-            notify('外部商品情報を取得しました。内容を確認して保存してください。')
+            notify(preview.ingredientsText
+              ? '外部商品情報と原材料を入力しました。内容を確認して保存してください。'
+              : '外部商品情報を入力しました。原材料は見つかりませんでした。')
             return
           }
           notify('商品が見つかりませんでした。バーコードを保持して手入力登録へ進みます。')
@@ -2881,7 +2887,7 @@ function SettingsView({ settings, estimationSettings, goalInputs, setGoalInputs,
       <p className="helper-text">最終バックアップ: {settings.lastBackupAt ? formatDateTime(settings.lastBackupAt) : '未作成'}</p>
       <div className="settings-info-row settings-inline-row">
         <label className="toggle-row"><input type="checkbox" checked={settings.externalApiEnabled} onChange={(event) => onToggleExternalApi(event.target.checked)} />食品が見つからないときにOpen Food Factsを検索する</label>
-        <InfoPopover className="settings-info" label="外部APIについて" text="外部APIにはバーコード番号のみを送り、取得値は確認後に保存します。通信失敗時は手入力へ進みます。" />
+        <InfoPopover className="settings-info" label="外部APIについて" text="外部APIにはバーコード番号のみを送り、商品情報と原材料を確認用に自動入力します。取得値はパッケージと照合してから保存してください。通信失敗時は手入力へ進みます。" />
       </div>
       <div className="settings-info-row backup-actions">
         <div className="settings-action-buttons">
@@ -3065,13 +3071,13 @@ function FoodFormView({ draft, returnView, allowCommercialClassification, estima
           <p className="helper-text">栄養値の基準量は {draft.baseAmount || '—'}{draft.baseUnit} のまま保存します。既定量と食事入力だけ、明示した入力用単位を使えます。</p>
           <div className="food-form-subsection ingredient-source-editor">
             <h3>原材料と推計用の確認情報</h3>
-            <p className="helper-text">パッケージ等で確認した内容だけを保存します。未確認の外部値は使わず、単位から重量を推測しません。</p>
+            <p className="helper-text">パッケージ等で確認した内容だけを保存します。Open Food Factsからの自動入力はパッケージと照合し、単位から重量を推測しません。</p>
             <label>原材料表示<textarea rows={4} value={draft.ingredientsText} onChange={(event) => update('ingredientsText', event.target.value)} placeholder="例：小麦粉、砂糖、バター、ココアパウダー" /></label>
             <label>原材料の取得元<select value={draft.ingredientsSourceProvider} onChange={(event) => update('ingredientsSourceProvider', event.target.value)}>
               <option value="">未選択</option>
               <option value="パッケージ表示">パッケージ表示（確認済み）</option>
               <option value="端末内に保存済み">端末内に保存済み（確認済み）</option>
-              <option value="Open Food Facts">Open Food Facts（取得後に確認済み）</option>
+              <option value="Open Food Facts">Open Food Facts（保存前に要確認）</option>
               <option value="その他">その他（確認済み）</option>
             </select></label>
             {draft.baseUnit === 'g'

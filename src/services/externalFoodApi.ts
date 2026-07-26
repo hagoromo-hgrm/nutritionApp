@@ -5,6 +5,7 @@ export interface ExternalFoodPreview {
   maker: string
   barcode: string
   quantity: string
+  ingredientsText: string | null
   baseAmount: number
   baseUnit: FoodUnit
   nutrients: Nutrients
@@ -23,7 +24,7 @@ export class ExternalFoodApiError extends Error {
 }
 
 const REQUEST_TIMEOUT_MS = 10_000
-const PRODUCT_FIELDS = 'code,product_name,brands,quantity,nutriments'
+const PRODUCT_FIELDS = 'code,product_name,brands,quantity,ingredients_text,ingredients_text_ja,nutriments'
 const APP_IDENTIFIER = 'nutrition-pwa/0.1.0 (https://github.com/hagoromo-hgrm/nutritionApp)'
 
 function numberOrNull(value: unknown): number | null {
@@ -32,6 +33,14 @@ function numberOrNull(value: unknown): number | null {
 
 function quantityUnit(quantity: string): FoodUnit {
   return /(?:^|\s|\d)ml\b/i.test(quantity) ? 'ml' : 'g'
+}
+
+function ingredientsText(product: Record<string, unknown>): string | null {
+  // 日本のJAN利用を優先しつつ、商品側の主言語で返る共通フィールドへフォールバックする。
+  for (const candidate of [product.ingredients_text_ja, product.ingredients_text]) {
+    if (typeof candidate === 'string' && candidate.trim()) return candidate.trim()
+  }
+  return null
 }
 
 function nutrientValue(nutriments: Record<string, unknown>, key: string, targetUnit: 'g' | 'mg' | 'mcg'): number | null {
@@ -93,6 +102,7 @@ function parsePreview(payload: unknown, barcode: string): ExternalFoodPreview | 
     maker: typeof product.brands === 'string' ? product.brands : '',
     barcode,
     quantity,
+    ingredientsText: ingredientsText(product),
     // Open Food Factsの`*_100g`を使うため、商品の総内容量を栄養値の基準量にしない。
     baseAmount: 100,
     baseUnit: quantityUnit(quantity),
