@@ -21,6 +21,7 @@ export interface NutrientMetadata {
   sourceFoodIds?: string[]
   requestId?: string
   adoptedAt?: string
+  calibration?: EstimationCalibrationMetadata
 }
 
 export type NutrientMetadataMap = Partial<Record<NutrientKey, NutrientMetadata>>
@@ -69,6 +70,24 @@ export const NUTRIENT_UNITS: Record<NutrientKey, string> = {
 
 export type FoodSource = 'mext' | 'open_food_facts' | 'imported' | 'user'
 export type SearchMetadataSource = 'llm' | 'rule' | 'manual' | 'imported'
+export const ESTIMATOR_GENRE_IDS = [
+  'baked_sweets',
+  'cake_pastry',
+  'bread',
+  'chocolate',
+  'sugar_confectionery',
+  'snack_rice_cracker',
+  'frozen_dessert',
+  'dairy',
+  'drink_jelly_pudding',
+  'fried_food',
+  'noodle_flour_dish',
+  'prepared_meal',
+  'sauce_spread',
+  'other_unknown',
+] as const
+export type EstimatorGenreId = (typeof ESTIMATOR_GENRE_IDS)[number]
+export type EstimatorGenreSource = 'user' | 'off_category' | 'name_rule' | 'ingredient_rule' | 'unknown'
 /** 栄養価の基準量に使う、アプリが管理する単位。 */
 export type FoodUnit = 'g' | 'ml' | '個' | '合' | '袋' | '本' | '枚' | '食' | '丁' | '小さじ' | '杯' | 'その他'
 /** 食品ごとに明示登録された入力用単位。ユーザー定義ラベルを含む。 */
@@ -111,6 +130,9 @@ export interface Food {
   /** 基準量に対応する質量を明示できる場合だけ設定する。単位から推測してはならない。 */
   estimationReferenceMassG?: number | null
   estimationReferenceMassSource?: string | null
+  /** 推計専用のユーザー向け1階層ジャンル。食品検索用のfoodGroupIdとは分離する。 */
+  estimatorGenreId?: EstimatorGenreId | null
+  estimatorGenreSource?: EstimatorGenreSource | null
   nutrientMetadata?: NutrientMetadataMap
   createdAt: string
   updatedAt: string
@@ -377,6 +399,8 @@ export interface NutritionEstimationInput {
   name: string
   maker: string
   estimatorCategoryId?: string | null
+  estimatorGenreId?: EstimatorGenreId | null
+  estimatorGenreSource?: EstimatorGenreSource | null
   baseAmount: number
   baseUnit: FoodUnit
   inputUnitConversions: FoodUnitConversion[]
@@ -411,6 +435,16 @@ export interface NutrientEstimate {
   source?: string
   sourceFoodIds?: string[]
   warnings: string[]
+  calibration?: EstimationCalibrationMetadata
+}
+
+export interface EstimationCalibrationMetadata {
+  calibrationVersion: string
+  targetCoverage: number
+  actualCoverage?: number
+  sampleSize: number
+  datasetHash?: string
+  scope: 'genre_nutrient' | 'pooled_nutrient' | 'fallback'
 }
 
 export interface EstimationResult {
@@ -421,10 +455,22 @@ export interface EstimationResult {
   basis?: { baseAmount: number; baseUnit: FoodUnit }
   estimates: Partial<Record<NutrientKey, NutrientEstimate>>
   globalWarnings: string[]
+  unresolvedIngredients?: string[]
   optimization?: { converged: boolean; objectiveError?: number; scenarioCount?: number }
   error?: { code: string; message: string; nextAction: string }
   modelVersion: string
   estimatedAt: string
+}
+
+/** 未対応原材料は食品・バーコードへ紐付けず、端末内で集計値だけを保持する。 */
+export interface UnresolvedIngredientStat {
+  id: string
+  normalizedName: string
+  example: string
+  estimatorGenreId: EstimatorGenreId
+  count: number
+  firstSeenAt: string
+  lastSeenAt: string
 }
 
 export interface EstimationDecision {

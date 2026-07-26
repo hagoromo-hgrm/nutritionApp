@@ -1,0 +1,51 @@
+{
+  "format": "nutrition-estimator-fdc-profiles",
+  "formatVersion": 1,
+  "generatedAt": "2026-07-26T14:52:17.646323Z",
+  "transformVersion": "fdc-ingredient-profile-0.1.0",
+  "datasetReleases": [
+    "SR Legacy 04/2018"
+  ],
+  "attribution": "U.S. Department of Agriculture, Agricultural Research Service. FoodData Central.",
+  "profiles": [
+    {
+      "profileId": "fdc_cocoa_butter",
+      "canonicalName": "ココアバター",
+      "replaceProfileId": "proxy_cocoa_butter_mext_14030",
+      "basis": {
+        "amount": 100,
+        "unit": "g"
+      },
+      "nutrients": {
+        "energyKcal": 884.0,
+        "proteinG": 0.0,
+        "fatG": 100.0,
+        "carbohydrateG": 0.0,
+        "fiberG": 0.0,
+        "calciumMg": 0.0,
+        "ironMg": 0.0,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 1.8,
+        "vitaminB1Mg": 0.0,
+        "vitaminB2Mg": 0.0,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 59.7,
+        "saltG": 0.0
+      },
+      "source": {
+        "provider": "USDA FoodData Central",
+        "fdcId": 171421,
+        "description": "Oil, cocoa butter",
+        "dataType": "SR Legacy",
+        "publicationDate": "4/1/2019",
+        "datasetRelease": "SR Legacy 04/2018",
+        "sourceUrl": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/171421/nutrients",
+        "retrievedAt": "2026-07-26T14:48:00Z",
+        "reviewedAt": "2026-07-26",
+        "license": "CC0 1.0 / U.S. public domain",
+        "rawSha256": "294a0b6b699d1947cd7148df26f2da44877fa8c0570be8d52f9ad32761423dfe",
+        "transformVersion": "fdc-ingredient-profile-0.1.0"
+      }
+    }
+  ]
+}

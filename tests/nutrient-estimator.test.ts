@@ -33,7 +33,7 @@ describe('browser nutrient estimator', () => {
     expect(first.estimates.vitaminB1Mg.status).toBe('available')
     expect(first.estimates.vitaminB2Mg.status).toBe('available')
     expect(first.estimates.vitaminCMg.status).toBe('available')
-    expect(first.modelVersion).toBe('browser-rule-0.4.1')
+    expect(first.modelVersion).toBe('browser-rule-0.5.0')
   })
 
   it('明示的な基準重量がなければ単位から重量を推測しない', () => {
@@ -292,10 +292,29 @@ describe('browser nutrient estimator', () => {
     expect(result.estimates.fiberG.sourceFoodIds).toEqual(expect.arrayContaining([
       'mext_15187',
       'mext_03003',
-      'mext_14030',
+      'fdc:171421',
       'mext_17083',
     ]))
+    expect(result.estimates.fiberG.source).toContain('USDA FoodData Central')
     expect(result.estimates.fiberG.warnings.join(' ')).toContain('代理参照')
     expect(result.estimates.fiberG.warnings.join(' ')).not.toContain('未対応原材料')
+  })
+
+  it('ココアバターはFDCのレビュー済み直接値を使いMEXT代理参照を置き換える', () => {
+    const result = estimateNutrients({
+      ...eligibleRequest,
+      productName: 'ココアバター',
+      referenceMassG: 100,
+      ingredientsText: 'ココアバター',
+    })
+
+    expect(result.status).toBe('completed')
+    expect(result.estimates.saturatedFatG).toMatchObject({
+      status: 'available',
+      value: 59.7,
+      sourceFoodIds: ['fdc:171421'],
+    })
+    expect(result.estimates.vitaminEMg).toMatchObject({ status: 'available', value: 1.8 })
+    expect(result.estimates.saturatedFatG.warnings.join(' ')).toContain('FoodData Central')
   })
 })

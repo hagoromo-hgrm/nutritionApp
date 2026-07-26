@@ -174,6 +174,7 @@ describe('export formats', () => {
     expect(() => validateBackup({ ...backup, mealEntries: [{ ...entry, amountUnit: 'ml' }] })).toThrow('形式が不正')
     expect(() => validateBackup({ ...backup, foods: [{ ...classifiedFood, servingAmount: -1, servingUnit: '食' }] })).toThrow('形式が不正')
     expect(() => validateBackup({ ...backup, foods: [{ ...classifiedFood, nutrients: { ...classifiedFood.nutrients, energyKcal: Number.POSITIVE_INFINITY } }] })).toThrow('形式が不正')
+    expect(() => validateBackup({ ...backup, foods: [{ ...classifiedFood, estimatorGenreId: 'bread' }] })).toThrow('形式が不正')
   })
 
   it('v2バックアップは推計設定と履歴ストアを含めて検証し、v1も引き続き読み込める', () => {

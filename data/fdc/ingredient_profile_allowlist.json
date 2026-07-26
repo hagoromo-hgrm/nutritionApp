@@ -1,0 +1,31 @@
+{
+  "format": "nutrition-estimator-fdc-allowlist",
+  "formatVersion": 1,
+  "reviewedAt": "2026-07-26",
+  "profiles": [
+    {
+      "profileId": "fdc_cocoa_butter",
+      "canonicalName": "ココアバター",
+      "fdcId": 171421,
+      "descriptionIncludes": "Oil, cocoa butter",
+      "replaceProfileId": "proxy_cocoa_butter_mext_14030",
+      "datasetRelease": "SR Legacy 04/2018",
+      "retrievedAt": "2026-07-26T14:48:00Z",
+      "reviewedAt": "2026-07-26"
+    }
+  ],
+  "reviewQueue": [
+    {
+      "profileId": "fdc_lactose",
+      "canonicalName": "乳糖",
+      "searchQuery": "lactose",
+      "replaceProfileId": "proxy_lactose_mext_03003"
+    },
+    {
+      "profileId": "fdc_cacao_mass",
+      "canonicalName": "カカオマス",
+      "searchQuery": "cocoa mass",
+      "replaceProfileId": "proxy_cacao_mass_mext_15187"
+    }
+  ]
+}

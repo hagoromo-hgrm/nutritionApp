@@ -110,12 +110,25 @@ import {
   type Nutrients,
   type NutritionGoals,
   type EstimationSettings,
+  type EstimatorGenreId,
+  type EstimatorGenreSource,
   type NutrientMetadataMap,
   type QuantityUnit,
 } from './types'
 import { applyConstrainedMextFoodAttributePreferences, applyConstrainedUserFoodSelectionPreferences, getFoodAttributePreferencesForGroup, setFoodAttributePreference } from './services/foodAttributePreferences'
 import { normalizeSearchText, type FoodSearchResult } from './services/foodSearch'
 import { resolveBarcodeCommercialFlag, resolveFoodGroupDisplayName, shouldFollowFoodName } from './services/foodDraft'
+import {
+  ESTIMATOR_GENRE_LABELS,
+  ESTIMATOR_GENRE_OPTIONS,
+  inferEstimatorGenre,
+  refreshEstimatorGenre,
+} from './services/estimatorGenre'
+import {
+  recordUnresolvedIngredients,
+  unresolvedIngredientsToCsv,
+  unresolvedIngredientsToJson,
+} from './services/unresolvedIngredients'
 import {
   FOOD_MASTER_SEARCH_CATEGORIES,
   MEAL_SEARCH_CATEGORIES,
@@ -260,6 +273,8 @@ interface FoodDraft {
   nutrients: Record<NutrientKey, string>
   ingredientsText: string
   ingredientsSourceProvider: string
+  estimatorGenreId: EstimatorGenreId
+  estimatorGenreSource: EstimatorGenreSource
   estimationReferenceMassG: string
   estimationReferenceMassSource: string
   nutrientMetadata: NutrientMetadataMap
@@ -306,11 +321,13 @@ const variantAttributeLabels: Record<keyof FoodVariantAttributes, string> = {
 const emptyVariantInputs = (): Record<keyof FoodVariantAttributes, string> => Object.fromEntries(variantAttributeKeys.map((key) => [key, ''])) as Record<keyof FoodVariantAttributes, string>
 
 function emptyFoodDraft(barcode = '', initialName = ''): FoodDraft {
+  const genre = inferEstimatorGenre({ productName: initialName })
   return {
     id: null, name: initialName, maker: '', barcode, isCommercial: Boolean(barcode.trim()), source: 'user', sourceVersion: 'ユーザー入力',
     baseAmount: '100', baseUnit: 'g', inputUnit: '', inputUnitBaseAmount: '', servingAmount: '', servingUnit: 'g', menuIds: [], foodGroupId: '', groupDisplayName: initialName,
     groupReading: '', groupCategory: '', aliases: [], relatedTerms: [], variantAttributes: emptyVariantInputs(), nutrients: emptyNutrientInputs(),
     ingredientsText: '', ingredientsSourceProvider: '', estimationReferenceMassG: '', estimationReferenceMassSource: '',
+    estimatorGenreId: genre.id, estimatorGenreSource: genre.source,
     nutrientMetadata: {}, pendingEstimation: null,
   }
 }
@@ -325,6 +342,7 @@ function bodyProfileToDraft(profile: BodyProfile | undefined): BodyProfileDraft 
 
 function foodToDraft(food: Food, group: FoodGroup | undefined, aliases: FoodAlias[], relatedTerms: FoodRelatedTerm[]): FoodDraft {
   const conversion = food.inputUnitConversions?.[0]
+  const inferredGenre = inferEstimatorGenre({ productName: food.name, ingredientsText: food.ingredientsText })
   return {
     id: food.id, name: food.name, maker: food.maker, barcode: food.barcode, isCommercial: food.isCommercial === true, source: food.source,
     sourceVersion: food.sourceVersion, baseAmount: String(food.baseAmount), baseUnit: food.baseUnit,
@@ -338,21 +356,30 @@ function foodToDraft(food: Food, group: FoodGroup | undefined, aliases: FoodAlia
     nutrients: Object.fromEntries(nutrientKeys.map((key) => [key, food.nutrients[key] === null ? '' : String(food.nutrients[key])])) as Record<NutrientKey, string>,
     ingredientsText: food.ingredientsText ?? '',
     ingredientsSourceProvider: food.ingredientsSource?.provider ?? '',
+    estimatorGenreId: food.estimatorGenreId ?? inferredGenre.id,
+    estimatorGenreSource: food.estimatorGenreSource ?? inferredGenre.source,
     estimationReferenceMassG: food.estimationReferenceMassG === null || food.estimationReferenceMassG === undefined ? '' : String(food.estimationReferenceMassG),
     estimationReferenceMassSource: food.estimationReferenceMassSource ?? '',
-    nutrientMetadata: Object.fromEntries(Object.entries(food.nutrientMetadata ?? {}).map(([key, metadata]) => [key, { ...metadata, sourceFoodIds: metadata.sourceFoodIds ? [...metadata.sourceFoodIds] : undefined }])) as NutrientMetadataMap,
+    nutrientMetadata: Object.fromEntries(Object.entries(food.nutrientMetadata ?? {}).map(([key, metadata]) => [key, {
+      ...metadata,
+      sourceFoodIds: metadata.sourceFoodIds ? [...metadata.sourceFoodIds] : undefined,
+      calibration: metadata.calibration ? { ...metadata.calibration } : undefined,
+    }])) as NutrientMetadataMap,
     pendingEstimation: null,
   }
 }
 
 function previewToDraft(preview: ExternalFoodPreview): FoodDraft {
   const initialName = preview.name === EXTERNAL_UNNAMED_PRODUCT_LABEL ? '' : preview.name
+  const genre = inferEstimatorGenre({ productName: initialName, ingredientsText: preview.ingredientsText, offCategories: preview.categories })
   return {
     ...emptyFoodDraft(preview.barcode, initialName), groupDisplayName: initialName, maker: preview.maker, source: 'open_food_facts',
     sourceVersion: 'Open Food Facts（取得値は確認後に保存）', baseAmount: String(preview.baseAmount), baseUnit: preview.baseUnit,
     servingAmount: '', servingUnit: preview.baseUnit, menuIds: [],
     ingredientsText: preview.ingredientsText ?? '',
     ingredientsSourceProvider: preview.ingredientsText ? 'Open Food Facts' : '',
+    estimatorGenreId: genre.id,
+    estimatorGenreSource: genre.source,
     nutrients: Object.fromEntries(nutrientKeys.map((key) => [key, preview.nutrients[key] === null ? '' : String(preview.nutrients[key])])) as Record<NutrientKey, string>,
   }
 }
@@ -364,7 +391,11 @@ function snapshotToFood(entry: MealEntry): Food {
     baseUnit: entry.foodSnapshot.baseUnit, servingAmount: null, servingUnit: null,
     inputUnitConversions: entry.foodSnapshot.inputUnitConversions?.map((conversion) => ({ ...conversion })), nutrients: entry.foodSnapshot.nutrients,
     nutrientMetadata: entry.foodSnapshot.nutrientMetadata
-      ? Object.fromEntries(Object.entries(entry.foodSnapshot.nutrientMetadata).map(([key, metadata]) => [key, { ...metadata, sourceFoodIds: metadata.sourceFoodIds ? [...metadata.sourceFoodIds] : undefined }])) as NutrientMetadataMap
+      ? Object.fromEntries(Object.entries(entry.foodSnapshot.nutrientMetadata).map(([key, metadata]) => [key, {
+        ...metadata,
+        sourceFoodIds: metadata.sourceFoodIds ? [...metadata.sourceFoodIds] : undefined,
+        calibration: metadata.calibration ? { ...metadata.calibration } : undefined,
+      }])) as NutrientMetadataMap
       : undefined,
     createdAt: entry.eatenAt, updatedAt: entry.eatenAt,
   }
@@ -855,7 +886,11 @@ function App() {
       const persistedNutrients = { ...nutrients }
       const persistedMetadata = Object.fromEntries(Object.entries(foodDraft.nutrientMetadata).map(([key, metadata]) => [
         key,
-        { ...metadata, sourceFoodIds: metadata.sourceFoodIds ? [...metadata.sourceFoodIds] : undefined },
+        {
+          ...metadata,
+          sourceFoodIds: metadata.sourceFoodIds ? [...metadata.sourceFoodIds] : undefined,
+          calibration: metadata.calibration ? { ...metadata.calibration } : undefined,
+        },
       ])) as NutrientMetadataMap
       for (const key of pendingAdoptionKeys) {
         const pendingValue = pendingAdoptionValues[key]
@@ -876,6 +911,8 @@ function App() {
         ingredientsSource: ingredientsText ? { provider: ingredientsSourceProvider, verified: true } : null,
         estimationReferenceMassG,
         estimationReferenceMassSource,
+        estimatorGenreId: foodDraft.estimatorGenreId,
+        estimatorGenreSource: foodDraft.estimatorGenreSource,
         nutrientMetadata: persistedMetadata,
         createdAt: foodDraft.id ? (foods.find((item) => item.id === foodDraft.id)?.createdAt ?? now) : now, updatedAt: now,
       }
@@ -941,6 +978,7 @@ function App() {
         && evaluated.ingredientsText?.trim() === food.ingredientsText?.trim()
         && evaluated.ingredientsSource?.provider === food.ingredientsSource?.provider
         && evaluated.ingredientsSource?.verified === food.ingredientsSource?.verified
+        && (evaluated.estimatorGenreId ?? 'other_unknown') === (food.estimatorGenreId ?? 'other_unknown')
         && ESTIMATE_FIT_NUTRIENT_KEYS.every((key) => (
           (evaluated.knownNutrients?.[key] ?? null) === food.nutrients[key]
         )))
@@ -1038,7 +1076,11 @@ function App() {
         maker: food.maker, barcode: food.barcode, baseAmount: food.baseAmount,
         baseUnit: food.baseUnit, inputUnitConversions: food.inputUnitConversions?.map((conversion) => ({ ...conversion })), nutrients: { ...snapshotNutrients },
         nutrientMetadata: food.nutrientMetadata
-          ? Object.fromEntries(Object.entries(food.nutrientMetadata).map(([key, metadata]) => [key, { ...metadata, sourceFoodIds: metadata.sourceFoodIds ? [...metadata.sourceFoodIds] : undefined }])) as NutrientMetadataMap
+          ? Object.fromEntries(Object.entries(food.nutrientMetadata).map(([key, metadata]) => [key, {
+            ...metadata,
+            sourceFoodIds: metadata.sourceFoodIds ? [...metadata.sourceFoodIds] : undefined,
+            calibration: metadata.calibration ? { ...metadata.calibration } : undefined,
+          }])) as NutrientMetadataMap
           : undefined,
       }, amount, amountUnit, calculatedNutrients: calculated,
       ...(menuSnapshot ? { menuSnapshot: cloneMealMenuSnapshot(menuSnapshot) } : {}),
@@ -1564,6 +1606,23 @@ function App() {
     }
   }
 
+  const exportUnresolvedIngredients = async (format: 'json' | 'csv') => {
+    try {
+      const content = format === 'json'
+        ? await unresolvedIngredientsToJson()
+        : await unresolvedIngredientsToCsv()
+      const timestamp = formatFileTimestamp(new Date())
+      downloadBlob(
+        content,
+        `nutrition-unresolved-ingredients-${timestamp}.${format}`,
+        format === 'json' ? 'application/json' : 'text/csv;charset=utf-8',
+      )
+      notify(`未対応原材料の${format.toUpperCase()}を出力しました。商品名・バーコード・食事記録は含みません。`)
+    } catch {
+      showError('未対応原材料を出力できませんでした。もう一度お試しください。')
+    }
+  }
+
   const restoreJson = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     event.target.value = ''
@@ -1651,7 +1710,7 @@ function App() {
         {view === 'graphs' && <GraphsView range={graphRange} onRangeChange={setGraphRange} goals={settings.goals} />}
         {view === 'food-screen' && <FoodsView recordingMealType={recordingMealType} foods={foods} foodGroups={foodGroups} menus={menus} menuSets={menuSets} recentFoods={recentFoods} favoriteFoods={favoriteFoods} favoriteIds={favoriteIds} onSelectFood={handleFoodSelection} onSelectMenuSet={(menuSet) => void registerMenuSet(menuSet)} onToggleFavorite={toggleFavorite} onEditFood={(food) => openFoodForm(food, '', 'food-screen', null, null, '', foodScreenReturnView === 'settings' ? 'settings' : 'meal')} onDeleteFood={removeFood} onOpenSearch={() => openSearchInput(recordingMealType ? 'meal' : 'food-master')} onOpenScanner={() => setShowScanner(true)} onBack={() => { setRecordingMealType(null); setView(foodScreenReturnView) }} backLabel={foodScreenReturnView === 'settings' ? '← 設定' : '← 記録'} copyMealType={copyMealType} setCopyMealType={setCopyMealType} onCopyPrevious={copyPreviousMeals} />}
         {view === 'food-form' && foodDraft && <FoodFormView draft={foodDraft} returnView={foodFormReturnView} allowCommercialClassification={foodFormOrigin === 'settings'} estimationEnabled={estimationSettings?.enabled === true} setDraft={setFoodDraft} foodGroups={foodGroups} foodAliases={foodAliases} foodRelatedTerms={foodRelatedTerms} externalNote={externalNote} onRevertEstimate={(foodId, nutrientKey) => void revertFoodEstimate(foodId, nutrientKey)} onSubmit={saveFoodDraft} onClose={() => { setFoodDraft(null); setFoodFormMealType(null); setFoodFormSearchQuery(null); setView(foodFormReturnView) }} />}
-        {view === 'settings' && estimationSettings && <SettingsView settings={settings} estimationSettings={estimationSettings} goalInputs={goalInputs} setGoalInputs={setGoalInputs} onSaveGoals={saveGoals} onToggleExternalApi={toggleExternalApi} onToggleNutrientEstimator={toggleNutrientEstimator} onChangeDefaultMealTimeMode={changeDefaultMealTimeMode} onExportJson={exportJson} onRestoreJson={restoreJson} onExportCsv={exportCsv} onImportCsv={importCsv} csvFrom={csvFrom} csvTo={csvTo} setCsvFrom={setCsvFrom} setCsvTo={setCsvTo} counts={counts} bodyProfileInputs={bodyProfileInputs} setBodyProfileInputs={setBodyProfileInputs} onSaveBodyProfile={saveBodyProfile} onOpenNewFood={() => openFoodForm(undefined, '', 'settings', null, null, '', 'settings')} onOpenFoodMaster={() => { setRecordingMealType(null); setFoodScreenReturnView('settings'); setView('food-screen') }} estimatedGoals={estimateDailyGoals(settings.bodyProfile ?? DEFAULT_BODY_PROFILE)} bmi={calculateBmi(settings.bodyProfile ?? DEFAULT_BODY_PROFILE)} />}
+        {view === 'settings' && estimationSettings && <SettingsView settings={settings} estimationSettings={estimationSettings} goalInputs={goalInputs} setGoalInputs={setGoalInputs} onSaveGoals={saveGoals} onToggleExternalApi={toggleExternalApi} onToggleNutrientEstimator={toggleNutrientEstimator} onChangeDefaultMealTimeMode={changeDefaultMealTimeMode} onExportJson={exportJson} onRestoreJson={restoreJson} onExportCsv={exportCsv} onImportCsv={importCsv} onExportUnresolvedIngredients={exportUnresolvedIngredients} csvFrom={csvFrom} csvTo={csvTo} setCsvFrom={setCsvFrom} setCsvTo={setCsvTo} counts={counts} bodyProfileInputs={bodyProfileInputs} setBodyProfileInputs={setBodyProfileInputs} onSaveBodyProfile={saveBodyProfile} onOpenNewFood={() => openFoodForm(undefined, '', 'settings', null, null, '', 'settings')} onOpenFoodMaster={() => { setRecordingMealType(null); setFoodScreenReturnView('settings'); setView('food-screen') }} estimatedGoals={estimateDailyGoals(settings.bodyProfile ?? DEFAULT_BODY_PROFILE)} bmi={calculateBmi(settings.bodyProfile ?? DEFAULT_BODY_PROFILE)} />}
         {view === 'menus' && <MenuView menus={menus} menuSets={menuSets} foods={foods} onNewMenu={() => setMenuDraft({ id: null, name: '', category: '主菜', ingredients: [], aliases: [] })} onEditMenu={(menu) => setMenuDraft({ id: menu.id, name: menu.name, category: menu.category, ingredients: getMenuIngredients(menu, foods).map((ingredient) => ({ ...ingredient, amount: String(ingredient.amount) })), aliases: menu.aliases ?? [] })} onDeleteMenu={removeMenu} onNewMenuSet={() => setMenuSetDraft({ id: null, name: '', menuIds: [], foodIds: [], foodItems: [] })} onEditMenuSet={(menuSet) => { const foodItems = getMenuSetFoodItems(menuSet, foods); setMenuSetDraft({ id: menuSet.id, name: menuSet.name, menuIds: menuSet.menuIds, foodIds: foodItems.map((item) => item.foodId), foodItems: foodItems.map((item) => ({ ...item, amount: String(item.amount) })) }) }} onDeleteMenuSet={removeMenuSet} onBack={() => setView('today')} />}
         {view === 'search-input' && <SearchInputView bars={searchBars} setBars={setSearchBars} onSearch={() => void searchFoodsAndMenus()} onBack={() => setView('food-screen')} />}
         {view === 'search-results' && <SearchResultsView groups={searchResults} purpose={searchPurpose} category={searchCategory} searching={searchingResults} onCategoryChange={changeSearchCategory} onSelect={handleSearchResultSelect} onAddFood={(query) => openFoodForm(undefined, '', 'food-screen', searchPurpose === 'meal' ? (recordingMealType ?? mealType) : null, searchPurpose === 'meal' ? (query || null) : null, query, searchPurpose === 'food-master' ? 'settings' : 'meal')} onLoadMore={(index) => void loadMoreSearchResults(index)} onBack={leaveSearchResults} />}
@@ -2842,6 +2901,7 @@ interface SettingsViewProps {
   onRestoreJson: (event: React.ChangeEvent<HTMLInputElement>) => void
   onExportCsv: () => void
   onImportCsv: (event: React.ChangeEvent<HTMLInputElement>) => void
+  onExportUnresolvedIngredients: (format: 'json' | 'csv') => void
   csvFrom: string
   csvTo: string
   setCsvFrom: (value: string) => void
@@ -2856,7 +2916,7 @@ interface SettingsViewProps {
   bmi: number | null
 }
 
-function SettingsView({ settings, estimationSettings, goalInputs, setGoalInputs, onSaveGoals, onToggleExternalApi, onToggleNutrientEstimator, onChangeDefaultMealTimeMode, onExportJson, onRestoreJson, onExportCsv, onImportCsv, csvFrom, csvTo, setCsvFrom, setCsvTo, counts, bodyProfileInputs, setBodyProfileInputs, onSaveBodyProfile, onOpenNewFood, onOpenFoodMaster, estimatedGoals, bmi }: SettingsViewProps) {
+function SettingsView({ settings, estimationSettings, goalInputs, setGoalInputs, onSaveGoals, onToggleExternalApi, onToggleNutrientEstimator, onChangeDefaultMealTimeMode, onExportJson, onRestoreJson, onExportCsv, onImportCsv, onExportUnresolvedIngredients, csvFrom, csvTo, setCsvFrom, setCsvTo, counts, bodyProfileInputs, setBodyProfileInputs, onSaveBodyProfile, onOpenNewFood, onOpenFoodMaster, estimatedGoals, bmi }: SettingsViewProps) {
   const configuredGoalCount = NUTRIENT_KEYS.filter((key) => settings.goals[key] !== null).length
   return <>
     <section className="page-heading"><div><span className="eyebrow">SETTINGS</span><h1>設定・データ管理</h1></div></section>
@@ -2873,6 +2933,13 @@ function SettingsView({ settings, estimationSettings, goalInputs, setGoalInputs,
       <div className="settings-info-row settings-inline-row nutrient-estimate-setting">
         <label className="toggle-row"><input type="checkbox" checked={estimationSettings.enabled} onChange={(event) => onToggleNutrientEstimator(event.target.checked)} />欠損した飽和脂肪酸・食物繊維・ビタミン・ミネラルの参考推計を使う</label>
         <InfoPopover className="settings-info" label="参考推計について" text="確認済みの原材料表示と重量を使い、端末内だけで参考候補を計算します。初期値は無効です。結果は確認後に手動で採用し、既存値を上書きしません。" />
+      </div>
+      <div className="settings-info-row">
+        <div className="settings-action-buttons">
+          <button className="button ghost" type="button" onClick={() => onExportUnresolvedIngredients('json')}>未対応原材料 JSON</button>
+          <button className="button ghost" type="button" onClick={() => onExportUnresolvedIngredients('csv')}>未対応原材料 CSV</button>
+        </div>
+        <InfoPopover className="settings-info" label="未対応原材料の出力について" text="推計できなかった原材料名を端末内で件数集計し、手動で出力します。商品名、メーカー、バーコード、食品・食事記録との紐付けは含みません。" />
       </div>
     </section>
     <section className="settings-card">
@@ -3002,8 +3069,31 @@ function FoodFormView({ draft, returnView, allowCommercialClassification, estima
   const servingUnitOptions = [...new Set([draft.baseUnit, ...(inputUnit && inputUnit !== draft.baseUnit ? [inputUnit] : [])])]
   const updateProductName = (value: string) => setDraft((current) => {
     if (!current) return current
-    return { ...withoutPendingEstimation(current), name: value, groupDisplayName: shouldFollowFoodName(current.groupDisplayName, current.name) ? value : current.groupDisplayName }
+    const cleared = withoutPendingEstimation(current)
+    const genre = refreshEstimatorGenre(
+      { id: cleared.estimatorGenreId, source: cleared.estimatorGenreSource },
+      { productName: value, ingredientsText: cleared.ingredientsText },
+    )
+    return {
+      ...cleared,
+      name: value,
+      groupDisplayName: shouldFollowFoodName(current.groupDisplayName, current.name) ? value : current.groupDisplayName,
+      estimatorGenreId: genre.id,
+      estimatorGenreSource: genre.source,
+    }
   })
+  const updateIngredientsText = (value: string) => setDraft((current) => {
+    if (!current) return current
+    const cleared = withoutPendingEstimation(current)
+    const genre = refreshEstimatorGenre(
+      { id: cleared.estimatorGenreId, source: cleared.estimatorGenreSource },
+      { productName: cleared.name, ingredientsText: value },
+    )
+    return { ...cleared, ingredientsText: value, estimatorGenreId: genre.id, estimatorGenreSource: genre.source }
+  })
+  const selectEstimatorGenre = (value: EstimatorGenreId) => setDraft((current) => current
+    ? { ...withoutPendingEstimation(current), estimatorGenreId: value, estimatorGenreSource: 'user' }
+    : current)
   const selectFamily = (value: string) => setDraft((current) => {
     if (!current) return current
     const group = foodGroups.find((item) => item.id === value)
@@ -3032,10 +3122,19 @@ function FoodFormView({ draft, returnView, allowCommercialClassification, estima
     draft.nutrients[key].trim() === '' ? null : Number(draft.nutrients[key]),
   ])) as Pick<Nutrients, (typeof ESTIMATE_FIT_NUTRIENT_KEYS)[number]>
   const hasEstimatableMissingValue = ESTIMATABLE_NUTRIENT_KEYS.some((key) => currentEstimateNutrients[key] === null)
-  const queueEvaluation = (evaluation: NutrientEstimateEvaluation) => setDraft((current) => {
-    if (!current) return current
-    return { ...withoutPendingEstimation(current), pendingEstimation: { evaluation, adoption: null, rejectedKeys: [] } }
-  })
+  const queueEvaluation = (evaluation: NutrientEstimateEvaluation) => {
+    if (evaluation.result.unresolvedIngredients.length > 0) {
+      void recordUnresolvedIngredients(evaluation.result.unresolvedIngredients, draft.estimatorGenreId).catch(() => undefined)
+    }
+    setDraft((current) => {
+      if (!current) return current
+      return {
+        ...withoutPendingEstimation(current),
+        estimatorGenreSource: 'user',
+        pendingEstimation: { evaluation, adoption: null, rejectedKeys: [] },
+      }
+    })
+  }
   const queueAdoption = (adoption: NutrientEstimateAdoption) => setDraft((current) => {
     if (!current) return current
     const nutrients = { ...current.nutrients }
@@ -3080,7 +3179,7 @@ function FoodFormView({ draft, returnView, allowCommercialClassification, estima
           <div className="food-form-subsection ingredient-source-editor">
             <h3>原材料と推計用の確認情報</h3>
             <p className="helper-text">パッケージ等で確認した内容だけを保存します。Open Food Factsからの自動入力はパッケージと照合し、単位から重量を推測しません。</p>
-            <label>原材料表示<textarea rows={4} value={draft.ingredientsText} onChange={(event) => update('ingredientsText', event.target.value)} placeholder="例：小麦粉、砂糖、バター、ココアパウダー" /></label>
+            <label>原材料表示<textarea rows={4} value={draft.ingredientsText} onChange={(event) => updateIngredientsText(event.target.value)} placeholder="例：小麦粉、砂糖、バター、ココアパウダー" /></label>
             <label>原材料の取得元<select value={draft.ingredientsSourceProvider} onChange={(event) => update('ingredientsSourceProvider', event.target.value)}>
               <option value="">未選択</option>
               <option value="パッケージ表示">パッケージ表示（確認済み）</option>
@@ -3088,6 +3187,13 @@ function FoodFormView({ draft, returnView, allowCommercialClassification, estima
               <option value="Open Food Facts">Open Food Facts（保存前に要確認）</option>
               <option value="その他">その他（確認済み）</option>
             </select></label>
+            <label>食品ジャンル
+              <select value={draft.estimatorGenreId} onChange={(event) => selectEstimatorGenre(event.target.value as EstimatorGenreId)}>
+                {ESTIMATOR_GENRE_OPTIONS.map((option) => <option key={option.id} value={option.id}>{option.label}</option>)}
+              </select>
+              <span className="field-hint">{draft.estimatorGenreSource === 'user' ? '確認済み' : `自動候補: ${ESTIMATOR_GENRE_LABELS[draft.estimatorGenreId]}`}</span>
+            </label>
+            <p className="helper-text">商品名・原材料・Open Food Factsカテゴリから候補を設定します。正しければ変更せず推計でき、原材料候補を個別に選ぶ必要はありません。</p>
             {draft.baseUnit === 'g'
               ? <p className="helper-text">基準単位がgのため、確認済み重量には基準量 {draft.baseAmount || '—'}g を使用します。</p>
               : <div className="two-fields">
@@ -3109,6 +3215,7 @@ function FoodFormView({ draft, returnView, allowCommercialClassification, estima
           {estimationEnabled && hasEstimatableMissingValue && <NutrientEstimatePanel
             basis={{ baseAmount: Number(draft.baseAmount), baseUnit: draft.baseUnit }}
             productName={draft.name.trim() || null}
+            estimatorGenreId={draft.estimatorGenreId}
             ingredientsText={draft.ingredientsText.trim() || null}
             ingredientsSource={ingredientsSource}
             referenceMassG={referenceMassG}

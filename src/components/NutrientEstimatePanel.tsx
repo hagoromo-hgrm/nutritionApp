@@ -9,7 +9,8 @@ import {
   type NutrientEstimateRequest,
   type NutrientEstimateResult,
 } from '../services/nutrientEstimator'
-import { NUTRIENT_LABELS, NUTRIENT_UNITS, type IngredientsSource, type Nutrients } from '../types'
+import { NUTRIENT_LABELS, NUTRIENT_UNITS, type EstimatorGenreId, type IngredientsSource, type Nutrients } from '../types'
+import { ESTIMATOR_GENRE_LABELS } from '../services/estimatorGenre'
 
 type CurrentEstimateNutrients = Pick<Nutrients, EstimatableNutrientKey>
 
@@ -29,6 +30,7 @@ export interface NutrientEstimateEvaluation {
 export interface NutrientEstimatePanelProps {
   basis: NutrientEstimateBasis
   productName: string | null
+  estimatorGenreId: EstimatorGenreId
   ingredientsText: string | null
   referenceMassG: number | null
   referenceMassSource: string | null
@@ -57,6 +59,7 @@ function requestKey(props: NutrientEstimatePanelProps): string {
     props.basis.baseAmount,
     props.basis.baseUnit,
     props.productName,
+    props.estimatorGenreId,
     props.ingredientsText,
     props.referenceMassG,
     props.referenceMassSource,
@@ -84,6 +87,7 @@ export function NutrientEstimatePanel(props: NutrientEstimatePanelProps) {
     const request: NutrientEstimateRequest = {
       requestId: `browser-estimate-${Date.now()}`,
       productName: props.productName,
+      estimatorGenreId: props.estimatorGenreId,
       baseAmount: props.basis.baseAmount,
       baseUnit: props.basis.baseUnit,
       ingredientsText: props.ingredientsText,
@@ -168,6 +172,7 @@ export function NutrientEstimatePanel(props: NutrientEstimatePanelProps) {
       <dl className="nutrient-estimate-basis">
         <div><dt>表示基準</dt><dd>{props.basis.baseAmount}{props.basis.baseUnit}当たり</dd></div>
         <div><dt>確認済み重量</dt><dd>{props.referenceMassG === null ? '未入力' : `${props.referenceMassG}g`}</dd></div>
+        <div><dt>食品ジャンル</dt><dd>{ESTIMATOR_GENRE_LABELS[props.estimatorGenreId]}</dd></div>
       </dl>
       <button className="button secondary nutrient-estimate-run" type="button" onClick={runEstimate} disabled={props.disabled}>
         欠損値を推計

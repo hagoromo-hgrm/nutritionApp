@@ -23,6 +23,7 @@ import {
   type MenuSet,
   type Nutrients,
   type SearchLog,
+  type UnresolvedIngredientStat,
 } from '../types'
 import { createId } from '../utils/id'
 import { estimateDailyGoals } from '../services/nutrition'
@@ -73,6 +74,7 @@ export class NutritionDatabase extends Dexie {
   estimationResults!: Table<EstimationResult, string>
   estimationDecisions!: Table<EstimationDecision, string>
   estimationSettings!: Table<EstimationSettings, string>
+  unresolvedIngredientStats!: Table<UnresolvedIngredientStat, string>
 
   constructor() {
     super('nutrition-pwa')
@@ -156,6 +158,25 @@ export class NutritionDatabase extends Dexie {
       estimation_decisions: 'decisionId, requestId, foodId, nutrientKey, decision, decidedAt, [foodId+decidedAt], [requestId+decidedAt]',
       estimation_settings: 'id, updatedAt',
     })
+    this.version(7).stores({
+      foods: 'id, name, maker, barcode, source, foodGroupId, estimatorGenreId, updatedAt',
+      meal_entries: 'id, eatenAt, mealType, foodId',
+      favorites: 'foodId, createdAt',
+      settings: 'id',
+      metadata: 'key',
+      menus: 'id, name, category, updatedAt',
+      menu_sets: 'id, name, updatedAt',
+      food_groups: 'id, displayName, category, updatedAt',
+      food_aliases: 'id, foodGroupId, foodVariantId, normalizedAlias, isActive',
+      food_related_terms: 'id, foodGroupId, normalizedTerm, isActive',
+      food_usage_stats: 'foodId, selectionCount, lastSelectedAt, updatedAt',
+      search_logs: 'id, createdAt, normalizedQuery, selectedFoodGroupId, selectedFoodVariantId, unselected',
+      estimation_requests: 'requestId, foodId, status, createdAt, updatedAt, [foodId+createdAt], [foodId+status]',
+      estimation_results: 'requestId, foodId, status, estimatedAt, [foodId+estimatedAt]',
+      estimation_decisions: 'decisionId, requestId, foodId, nutrientKey, decision, decidedAt, [foodId+decidedAt], [requestId+decidedAt]',
+      estimation_settings: 'id, updatedAt',
+      unresolved_ingredient_stats: 'id, estimatorGenreId, count, lastSeenAt, [estimatorGenreId+lastSeenAt]',
+    })
     this.mealEntries = this.table('meal_entries')
     this.menus = this.table('menus')
     this.menuSets = this.table('menu_sets')
@@ -168,6 +189,7 @@ export class NutritionDatabase extends Dexie {
     this.estimationResults = this.table('estimation_results')
     this.estimationDecisions = this.table('estimation_decisions')
     this.estimationSettings = this.table('estimation_settings')
+    this.unresolvedIngredientStats = this.table('unresolved_ingredient_stats')
   }
 }
 
@@ -288,7 +310,7 @@ export async function initializeDatabase(): Promise<void> {
       if (existing === 0) await db.foods.bulkAdd(initialFoods.map(enrichFoodForSearch))
       await db.metadata.put({ key: 'initial-foods-seeded', value: true })
       await db.metadata.put({ key: 'initial-foods-version', value: INITIAL_FOODS_VERSION })
-      await db.metadata.put({ key: 'schema-version', value: 6 })
+      await db.metadata.put({ key: 'schema-version', value: 7 })
     })
   } else if (seedVersion?.value !== INITIAL_FOODS_VERSION) {
     await db.transaction('rw', [db.foods, db.metadata], async () => {
@@ -328,7 +350,7 @@ export async function initializeDatabase(): Promise<void> {
         .map((food) => food.id)
       if (legacyIdsToDelete.length > 0) await db.foods.bulkDelete(legacyIdsToDelete)
       await db.metadata.put({ key: 'initial-foods-version', value: INITIAL_FOODS_VERSION })
-      await db.metadata.put({ key: 'schema-version', value: 6 })
+      await db.metadata.put({ key: 'schema-version', value: 7 })
     })
   }
   await ensureSearchMetadata()
@@ -758,7 +780,7 @@ export async function replaceAllData(backup: BackupData): Promise<ReplaceAllData
     if (validatedBackup.estimationResults?.length) await db.estimationResults.bulkAdd(validatedBackup.estimationResults)
     if (validatedBackup.estimationDecisions?.length) await db.estimationDecisions.bulkAdd(validatedBackup.estimationDecisions)
     await db.settings.put(validatedBackup.settings)
-    await db.metadata.put({ key: 'schema-version', value: 6 })
+    await db.metadata.put({ key: 'schema-version', value: 7 })
     await db.metadata.put({ key: 'initial-foods-seeded', value: true })
     await db.metadata.put({ key: 'initial-foods-version', value: INITIAL_FOODS_VERSION })
     if (validatedBackup.foodAliases !== undefined && validatedBackup.foodRelatedTerms !== undefined) {

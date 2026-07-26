@@ -6,4 +6,8 @@ coverage/
 nutrition-backup-*.json
 nutrition-auto-backup-*.json
 data/private/
+data/estimator/private/
+data/fdc/raw/
+data/openfoodfacts/raw/
+data/openfoodfacts/generated/
 __pycache__/

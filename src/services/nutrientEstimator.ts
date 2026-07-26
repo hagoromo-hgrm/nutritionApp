@@ -1,9 +1,13 @@
 import { parseIngredientDeclaration, type ParsedIngredient } from './ingredientParser'
 import { resolveIngredientCandidates, type IngredientProfile } from './nutrientEstimatorProfiles'
+import { calibratedEstimateRange } from './nutrientEstimatorCalibration'
+import { ESTIMATOR_GENRE_PRIOR_VERSION } from '../data/nutrientEstimatorGenrePriors'
 import {
   NUTRIENT_KEYS,
   NUTRIENT_LABELS,
   type EstimationResult,
+  type EstimationCalibrationMetadata,
+  type EstimatorGenreId,
   type FoodUnit,
   type IngredientsSource,
   type NutrientKey,
@@ -32,6 +36,8 @@ export const ESTIMATE_FIT_NUTRIENT_KEYS = [
 ] as const satisfies readonly NutrientKey[]
 export type EstimateFitNutrientKey = (typeof ESTIMATE_FIT_NUTRIENT_KEYS)[number]
 export type EstimateConfidence = 'high' | 'medium' | 'low' | 'unavailable'
+const MEXT_SOURCE = '文部科学省 日本食品標準成分表（八訂）増補2023年（2026年3月27日正誤表対応）' as const
+const MEXT_FDC_SOURCE = `${MEXT_SOURCE} / USDA FoodData Central SR Legacy 04/2018` as const
 
 export interface NutrientEstimateBasis {
   baseAmount: number
@@ -41,6 +47,7 @@ export interface NutrientEstimateBasis {
 export interface NutrientEstimateRequest {
   requestId: string
   productName?: string | null
+  estimatorGenreId?: EstimatorGenreId | null
   baseAmount: number
   baseUnit: string
   referenceMassG: number | null
@@ -54,7 +61,7 @@ export interface NutrientEstimateRequest {
 
 interface EstimateDetails {
   method: 'browser_ingredient_rule' | 'browser_ingredient_macro_fit'
-  source: '文部科学省 日本食品標準成分表（八訂）増補2023年（2026年3月27日正誤表対応）'
+  source: typeof MEXT_SOURCE | typeof MEXT_FDC_SOURCE
   sourceFoodIds: string[]
   warnings: string[]
 }
@@ -67,6 +74,7 @@ export interface AvailableNutrientEstimate extends EstimateDetails {
     max: number
   }
   confidence: Exclude<EstimateConfidence, 'unavailable'>
+  calibration: EstimationCalibrationMetadata
 }
 
 export interface UnavailableNutrientEstimate extends EstimateDetails {
@@ -86,7 +94,8 @@ export interface NutrientEstimateResult {
   basis: NutrientEstimateBasis
   estimates: Record<EstimatableNutrientKey, NutrientEstimate>
   globalWarnings: string[]
-  modelVersion: 'browser-rule-0.4.1'
+  unresolvedIngredients: string[]
+  modelVersion: 'browser-rule-0.5.0'
   estimatedAt: string
 }
 
@@ -97,8 +106,8 @@ export function isEstimateAdoptable(currentValue: number | null, estimate: Nutri
 
 const FALLBACK_METHOD: EstimateDetails['method'] = 'browser_ingredient_rule'
 const FIT_METHOD: EstimateDetails['method'] = 'browser_ingredient_macro_fit'
-const SOURCE: EstimateDetails['source'] = '文部科学省 日本食品標準成分表（八訂）増補2023年（2026年3月27日正誤表対応）'
-const MODEL_VERSION = 'browser-rule-0.4.1' as const
+const SOURCE = MEXT_SOURCE
+const MODEL_VERSION = 'browser-rule-0.5.0' as const
 const MAX_PROFILE_COMBINATIONS = 64
 const MAX_COMPOUND_CANDIDATES = 24
 
@@ -200,11 +209,12 @@ function makeCompoundProfile(
 function candidatesForIngredient(
   ingredient: ParsedIngredient,
   productName: string | null | undefined,
+  genreId: EstimatorGenreId | null | undefined,
 ): IngredientProfile[] {
-  const direct = resolveIngredientCandidates(ingredient.normalizedName, productName)
+  const direct = resolveIngredientCandidates(ingredient.normalizedName, productName, genreId)
   if (ingredient.components.length === 0) return direct
 
-  const componentCandidates = ingredient.components.map((component) => candidatesForIngredient(component, productName))
+  const componentCandidates = ingredient.components.map((component) => candidatesForIngredient(component, productName, genreId))
   if (componentCandidates.some((candidates) => candidates.length === 0)) {
     return normalizePriors(direct.map((candidate) => ({
       ...candidate,
@@ -444,7 +454,7 @@ export function estimateNutrients(request: NutrientEstimateRequest): NutrientEst
     const declaration = parseIngredientDeclaration(request.ingredientsText)
     const resolved = declaration.ingredients.map((ingredient) => ({
       ingredient,
-      candidates: candidatesForIngredient(ingredient, request.productName),
+      candidates: candidatesForIngredient(ingredient, request.productName, request.estimatorGenreId),
     }))
     const unknown = resolved.filter((item) => item.candidates.length === 0)
 
@@ -472,6 +482,9 @@ export function estimateNutrients(request: NutrientEstimateRequest): NutrientEst
         request.knownNutrients,
         JSON.stringify({
           productName: request.productName?.normalize('NFKC') ?? null,
+          ...(request.estimatorGenreId && request.estimatorGenreId !== 'other_unknown'
+            ? { estimatorGenreId: request.estimatorGenreId }
+            : {}),
           ingredients: declaration.ingredients.map((ingredient) => ingredient.normalizedName),
           profiles: combination.profiles.map((profile) => profile.profileId),
           referenceMassG: request.referenceMassG,
@@ -499,6 +512,9 @@ export function estimateNutrients(request: NutrientEstimateRequest): NutrientEst
         ...(hasCandidateAmbiguity && request.productName?.trim()
           ? [`商品名「${request.productName.trim()}」は候補選択の弱い事前確率にだけ使用し、原材料の明示語と主要栄養値を優先しています。`]
           : []),
+        ...(request.estimatorGenreId && request.estimatorGenreId !== 'other_unknown'
+          ? [`食品ジャンルは候補選択の事前分布（${ESTIMATOR_GENRE_PRIOR_VERSION}）にだけ使用しています。`]
+          : []),
         ...(hasCompound
           ? ['括弧付きの複合原材料は、外側の表示順と括弧内の表示順を別々に保って解析しています。']
           : []),
@@ -517,8 +533,6 @@ export function estimateNutrients(request: NutrientEstimateRequest): NutrientEst
         || !selected.usedMacroFit
         || (selected.normalizedError ?? Number.POSITIVE_INFINITY) > 4
       ) ? 'low' : 'medium'
-      const [minFactor, maxFactor] = confidence === 'low' ? [0.5, 1.7] : [0.75, 1.3]
-
       const makeEstimate = (key: EstimatableNutrientKey): NutrientEstimate => {
         const missingProfiles = selected.profiles.filter((profile) => profile.nutrients[key] === null)
         if (missingProfiles.length > 0) {
@@ -533,18 +547,30 @@ export function estimateNutrients(request: NutrientEstimateRequest): NutrientEst
           total + profile.nutrients[key]! * selected.ratios[index]
         ), 0)
         const value = round(per100g * request.referenceMassG! / 100)
+        const calibrated = calibratedEstimateRange({
+          value,
+          nutrientKey: key,
+          genreId: request.estimatorGenreId,
+          confidence,
+        })
         return {
           status: 'available',
           value,
-          range: {
-            min: round(value * minFactor),
-            max: round(value * maxFactor),
-          },
-          confidence,
+          range: calibrated.range,
+          confidence: calibrated.confidence,
+          calibration: calibrated.calibration,
           method: selected.usedMacroFit ? FIT_METHOD : FALLBACK_METHOD,
-          source: SOURCE,
           sourceFoodIds: [...new Set(selected.profiles.flatMap((profile) => profile.sourceFoodIds))],
-          warnings: [...new Set(warnings)],
+          source: selected.profiles.some((profile) => profile.sourceFoodIds.some((id) => id.startsWith('fdc:')))
+            ? MEXT_FDC_SOURCE
+            : SOURCE,
+          warnings: [...new Set([
+            ...warnings,
+            ...(calibrated.processingDeferred
+              ? ['加工・調理係数を後回しにしているジャンル・栄養素のため、信頼度を低にしています。']
+              : []),
+            '教師データによる校正前のため、推定範囲は90%被覆率を目標とする暫定フォールバックです。',
+          ])],
         }
       }
 
@@ -560,6 +586,11 @@ export function estimateNutrients(request: NutrientEstimateRequest): NutrientEst
     basis: { baseAmount: request.baseAmount, baseUnit: request.baseUnit },
     estimates,
     globalWarnings: ['参考推計であり、実測値やパッケージ表示と同等の正確性を保証しません。'],
+    unresolvedIngredients: request.ingredientsText?.trim()
+      ? parseIngredientDeclaration(request.ingredientsText).ingredients
+        .filter((ingredient) => candidatesForIngredient(ingredient, request.productName, request.estimatorGenreId).length === 0)
+        .map((ingredient) => ingredient.normalizedName)
+      : [],
     modelVersion: MODEL_VERSION,
     estimatedAt: request.requestedAt,
   }
@@ -582,6 +613,7 @@ export function toStoredNutrientEstimateResult(
       source: estimate.source,
       sourceFoodIds: [...estimate.sourceFoodIds],
       warnings: [...estimate.warnings],
+      calibration: { ...estimate.calibration },
     }
   }
   const unavailableEstimate = Object.values(result.estimates).find((estimate) => estimate.status === 'unavailable')
@@ -593,6 +625,7 @@ export function toStoredNutrientEstimateResult(
     basis: { baseAmount: input.baseAmount, baseUnit: input.baseUnit },
     estimates,
     globalWarnings: [...result.globalWarnings],
+    unresolvedIngredients: [...result.unresolvedIngredients],
     ...(result.status === 'failed' && unavailableEstimate?.status === 'unavailable'
       ? { error: { code: 'ESTIMATE_UNAVAILABLE', message: unavailableEstimate.reason, nextAction: unavailableEstimate.nextAction } }
       : {}),

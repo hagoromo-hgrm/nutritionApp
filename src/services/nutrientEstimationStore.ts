@@ -30,6 +30,8 @@ export function createEstimationInputHash(food: Food): string {
     ingredientsSource: food.ingredientsSource ?? null,
     estimationReferenceMassG: food.estimationReferenceMassG ?? null,
     estimationReferenceMassSource: food.estimationReferenceMassSource ?? null,
+    estimatorGenreId: food.estimatorGenreId ?? null,
+    estimatorGenreSource: food.estimatorGenreSource ?? null,
     updatedAt: food.updatedAt,
   })
   // Web Cryptoは非同期のため、IndexedDBトランザクション内でも使える決定的な軽量ハッシュを採用する。
@@ -65,6 +67,8 @@ export function createEstimationInput(
     name: food.name,
     maker: food.maker,
     estimatorCategoryId: options.estimatorCategoryId ?? null,
+    estimatorGenreId: food.estimatorGenreId ?? null,
+    estimatorGenreSource: food.estimatorGenreSource ?? null,
     baseAmount: food.baseAmount,
     baseUnit: food.baseUnit,
     inputUnitConversions: (food.inputUnitConversions ?? []).map((conversion) => ({ ...conversion })),
@@ -182,6 +186,7 @@ function estimatedMetadata(requestId: string, estimate: NonNullable<EstimationRe
     ...(estimate.range ? { estimatedRange: { ...estimate.range } } : {}),
     ...(estimate.sourceFoodIds ? { sourceFoodIds: [...estimate.sourceFoodIds] } : {}),
     method: estimate.method, modelVersion, requestId, adoptedAt,
+    ...(estimate.calibration ? { calibration: { ...estimate.calibration } } : {}),
   }
 }
 

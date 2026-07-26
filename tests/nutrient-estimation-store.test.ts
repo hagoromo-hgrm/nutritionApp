@@ -78,6 +78,11 @@ describe('nutrient estimation store', () => {
     expect(adopted?.nutrients.calciumMg).toBe(browserResult.estimates.calciumMg.value)
     expect(adopted?.nutrientMetadata?.fiberG?.sourceFoodIds).toContain('mext_01015')
     expect(adopted?.nutrientMetadata?.calciumMg?.sourceFoodIds).toContain('mext_01015')
+    expect(adopted?.nutrientMetadata?.fiberG?.calibration).toMatchObject({
+      targetCoverage: 0.9,
+      sampleSize: 0,
+      scope: 'fallback',
+    })
   })
 
   it('明示された基準重量だけを推計入力へ渡し、単位からgを推測しない', () => {

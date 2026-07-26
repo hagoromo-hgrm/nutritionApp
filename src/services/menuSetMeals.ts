@@ -36,7 +36,11 @@ function createFoodSnapshot(food: Food): FoodSnapshot {
     inputUnitConversions: food.inputUnitConversions?.map((conversion) => ({ ...conversion })),
     nutrients: { ...food.nutrients },
     nutrientMetadata: food.nutrientMetadata
-      ? Object.fromEntries(Object.entries(food.nutrientMetadata).map(([key, metadata]) => [key, { ...metadata, sourceFoodIds: metadata.sourceFoodIds ? [...metadata.sourceFoodIds] : undefined }]))
+      ? Object.fromEntries(Object.entries(food.nutrientMetadata).map(([key, metadata]) => [key, {
+        ...metadata,
+        sourceFoodIds: metadata.sourceFoodIds ? [...metadata.sourceFoodIds] : undefined,
+        calibration: metadata.calibration ? { ...metadata.calibration } : undefined,
+      }]))
       : undefined,
   }
 }

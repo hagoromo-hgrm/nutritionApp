@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/hagoromo-hgrm/nutritionApp/data/estimator/training_schema.json",
+  "title": "NutritionApp nutrient estimator training data",
+  "type": "object",
+  "required": ["format", "formatVersion", "records"],
+  "properties": {
+    "format": { "const": "nutrition-estimator-training-data" },
+    "formatVersion": { "const": 1 },
+    "records": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/record" }
+    }
+  },
+  "$defs": {
+    "nutrientLabel": {
+      "type": "object",
+      "required": ["displayText", "unit", "basis", "decimalPlaces", "valueKind"],
+      "properties": {
+        "displayText": { "type": "string" },
+        "value": { "type": ["number", "null"], "minimum": 0 },
+        "rangeMin": { "type": ["number", "null"], "minimum": 0 },
+        "rangeMax": { "type": ["number", "null"], "minimum": 0 },
+        "unit": { "enum": ["kcal", "g", "mg", "mcg"] },
+        "basis": { "type": "string", "minLength": 1 },
+        "decimalPlaces": { "type": "integer", "minimum": 0, "maximum": 12 },
+        "valueKind": { "enum": ["fixed", "declared_range", "estimated"] }
+      },
+      "additionalProperties": false
+    },
+    "record": {
+      "type": "object",
+      "required": [
+        "recordId",
+        "genreId",
+        "productName",
+        "maker",
+        "productFamily",
+        "ingredientsText",
+        "ingredientsLanguage",
+        "baseAmount",
+        "baseUnit",
+        "referenceMassG",
+        "referenceMassSource",
+        "nutrients",
+        "sourceType",
+        "sourceReference",
+        "verifiedAt"
+      ],
+      "properties": {
+        "recordId": { "type": "string", "minLength": 1 },
+        "genreId": {
+          "enum": [
+            "baked_sweets",
+            "cake_pastry",
+            "bread",
+            "chocolate",
+            "sugar_confectionery",
+            "snack_rice_cracker",
+            "frozen_dessert",
+            "dairy",
+            "drink_jelly_pudding",
+            "fried_food",
+            "noodle_flour_dish",
+            "prepared_meal",
+            "sauce_spread",
+            "other_unknown"
+          ]
+        },
+        "productName": { "type": "string", "minLength": 1 },
+        "maker": { "type": "string", "minLength": 1 },
+        "productFamily": { "type": "string", "minLength": 1 },
+        "barcode": { "type": ["string", "null"], "pattern": "^[0-9]{8,14}$" },
+        "ingredientsText": { "type": "string", "minLength": 1 },
+        "ingredientsLanguage": { "type": "string", "minLength": 2 },
+        "baseAmount": { "type": "number", "exclusiveMinimum": 0 },
+        "baseUnit": { "type": "string", "minLength": 1 },
+        "referenceMassG": { "type": "number", "exclusiveMinimum": 0 },
+        "referenceMassSource": { "type": "string", "minLength": 1 },
+        "nutrients": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "enum": [
+              "energyKcal",
+              "proteinG",
+              "fatG",
+              "carbohydrateG",
+              "fiberG",
+              "calciumMg",
+              "ironMg",
+              "vitaminAMcg",
+              "vitaminEMg",
+              "vitaminB1Mg",
+              "vitaminB2Mg",
+              "vitaminCMg",
+              "saturatedFatG",
+              "saltG"
+            ]
+          },
+          "additionalProperties": { "$ref": "#/$defs/nutrientLabel" }
+        },
+        "sourceType": { "enum": ["package", "manufacturer", "public_database", "other"] },
+        "sourceReference": { "type": "string", "minLength": 1 },
+        "verifiedAt": { "type": "string", "format": "date-time" },
+        "notes": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    }
+  }
+}

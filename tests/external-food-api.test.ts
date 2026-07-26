@@ -22,6 +22,7 @@ describe('external food API', () => {
         product_name: 'テスト飲料',
         brands: 'メーカー',
         quantity: '500 ml',
+        categories_tags: ['en:beverages', 'en:sweetened-beverages'],
         ingredients_text: 'Water, sugar',
         ingredients_text_ja: '水、砂糖',
         nutriments: {
@@ -44,12 +45,14 @@ describe('external food API', () => {
       ingredientsText: '水、砂糖',
       baseAmount: 100,
       baseUnit: 'ml',
+      categories: ['en:beverages', 'en:sweetened-beverages'],
     })
     expect(preview?.nutrients.calciumMg).toBe(125)
     expect(preview?.nutrients.vitaminAMcg).toBe(80)
     const [url, options] = fetchMock.mock.calls[0] as [URL, RequestInit]
     expect(url.toString()).toContain('/4901234567890.json?fields=')
     expect(url.searchParams.get('fields')).toContain('ingredients_text_ja')
+    expect(url.searchParams.get('fields')).toContain('categories_tags')
     expect((options.headers as Record<string, string>)['X-User-Agent']).toContain('nutrition-pwa')
   })
 

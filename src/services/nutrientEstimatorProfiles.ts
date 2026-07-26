@@ -1,4 +1,6 @@
-import type { Nutrients } from '../types'
+import { genreProfileMultiplier } from '../data/nutrientEstimatorGenrePriors'
+import type { EstimatorGenreId, Nutrients } from '../types'
+import fdcProfilesArtifact from '../../data/fdc/app/ingredient_profiles.json'
 
 export interface IngredientProfile {
   profileId: string
@@ -38,6 +40,17 @@ function profile(
     priorProbability: options.priorProbability ?? 1,
     ...options,
   }
+}
+
+function reviewedFdcProfile(profileId: string): IngredientProfile {
+  const item = fdcProfilesArtifact.profiles.find((candidate) => candidate.profileId === profileId)
+  if (!item) throw new Error(`レビュー済みFDCプロファイルが見つかりません: ${profileId}`)
+  return profile(item.profileId, item.canonicalName, item.nutrients as Nutrients, {
+    sourceFoodIds: [`fdc:${item.source.fdcId}`],
+    derivationWarnings: [
+      `USDA FoodData Central ${item.source.dataType}の直接項目（FDC ID ${item.source.fdcId}）を使用しています。`,
+    ],
+  })
 }
 
 const wheatWeak = profile('mext_01015', '小麦薄力粉', {
@@ -161,17 +174,7 @@ const shortening = profile('mext_14030', 'ショートニング', {
   calciumMg: 0, ironMg: 0, vitaminAMcg: 0, vitaminEMg: 9.5, vitaminB1Mg: 0,
   vitaminB2Mg: 0, vitaminCMg: 0, saturatedFatG: 51.13,
 }, { ambiguous: true })
-const cocoaButterProxy = profile('proxy_cocoa_butter_mext_14030', 'ココアバター（油脂代理）', {
-  energyKcal: 881, proteinG: 0, fatG: 99.9, carbohydrateG: 0, fiberG: 0, saltG: 0,
-  calciumMg: 0, ironMg: 0, vitaminAMcg: 0, vitaminEMg: 9.5, vitaminB1Mg: 0,
-  vitaminB2Mg: 0, vitaminCMg: 0, saturatedFatG: 51.13,
-}, {
-  sourceFoodIds: ['mext_14030'],
-  ambiguous: true,
-  derivationWarnings: [
-    'ココアバターの独立したMEXT食品項目がないため、ショートニングを油脂の代理参照として使用しています。',
-  ],
-})
+const cocoaButterFdc = reviewedFdcProfile('fdc_cocoa_butter')
 const palmOil = profile('mext_14009', 'パーム油', {
   energyKcal: 887, proteinG: 0, fatG: 100, carbohydrateG: 0, fiberG: 0, saltG: 0,
   calciumMg: null, ironMg: 0, vitaminAMcg: 0, vitaminEMg: 8.6, vitaminB1Mg: 0,
@@ -374,7 +377,7 @@ const GROUPS: readonly IngredientProfileGroup[] = [
   { aliases: ['はちみつ', '蜂蜜'], candidates: [honey] },
   { aliases: ['乳糖', 'ラクトース'], candidates: [lactoseProxy] },
   { aliases: ['ショートニング'], candidates: [shortening] },
-  { aliases: ['ココアバター', 'カカオバター'], candidates: [cocoaButterProxy] },
+  { aliases: ['ココアバター', 'カカオバター'], candidates: [cocoaButterFdc] },
   { aliases: ['マーガリン', 'ファットスプレッド'], candidates: [margarine] },
   { aliases: ['バター', '発酵バター'], candidates: [butter] },
   { aliases: ['パーム油'], candidates: [palmOil] },
@@ -414,18 +417,20 @@ function normalize(value: string): string {
   return value.normalize('NFKC').replace(/\s+/gu, '').toLocaleLowerCase('ja-JP')
 }
 
-function adjustedPrior(profileItem: IngredientProfile, productName: string): number {
+function adjustedPrior(profileItem: IngredientProfile, productName: string, genreId?: EstimatorGenreId | null): number {
   const normalizedProductName = normalize(productName)
-  return (profileItem.priorSignals ?? []).reduce((prior, signal) => (
+  const nameAdjusted = (profileItem.priorSignals ?? []).reduce((prior, signal) => (
     signal.terms.some((term) => normalizedProductName.includes(normalize(term)))
       ? prior * signal.multiplier
       : prior
   ), profileItem.priorProbability)
+  return nameAdjusted * genreProfileMultiplier(genreId, profileItem.profileId)
 }
 
 export function resolveIngredientCandidates(
   ingredientName: string,
   productName: string | null | undefined,
+  genreId?: EstimatorGenreId | null,
 ): IngredientProfile[] {
   const normalizedIngredient = normalize(ingredientName)
   const group = GROUPS.find((item) => item.aliases.some((alias) => normalize(alias) === normalizedIngredient))
@@ -433,7 +438,7 @@ export function resolveIngredientCandidates(
 
   const adjusted = group.candidates.map((candidate) => ({
     ...candidate,
-    priorProbability: adjustedPrior(candidate, productName ?? ''),
+    priorProbability: adjustedPrior(candidate, productName ?? '', genreId),
   }))
   const total = adjusted.reduce((sum, candidate) => sum + candidate.priorProbability, 0)
   return adjusted

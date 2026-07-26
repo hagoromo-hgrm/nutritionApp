@@ -29,7 +29,11 @@ function foodSnapshot(food: Food): FoodSnapshot {
     inputUnitConversions: food.inputUnitConversions?.map((conversion) => ({ ...conversion })),
     nutrients: { ...food.nutrients },
     nutrientMetadata: food.nutrientMetadata
-      ? Object.fromEntries(Object.entries(food.nutrientMetadata).map(([key, metadata]) => [key, { ...metadata, sourceFoodIds: metadata.sourceFoodIds ? [...metadata.sourceFoodIds] : undefined }]))
+      ? Object.fromEntries(Object.entries(food.nutrientMetadata).map(([key, metadata]) => [key, {
+        ...metadata,
+        sourceFoodIds: metadata.sourceFoodIds ? [...metadata.sourceFoodIds] : undefined,
+        calibration: metadata.calibration ? { ...metadata.calibration } : undefined,
+      }]))
       : undefined,
   }
 }
@@ -121,7 +125,11 @@ function snapshotFoodAsFood(snapshot: FoodSnapshot, id: string): Food {
     inputUnitConversions: snapshot.inputUnitConversions?.map((conversion) => ({ ...conversion })),
     nutrients: snapshot.nutrients,
     nutrientMetadata: snapshot.nutrientMetadata
-      ? Object.fromEntries(Object.entries(snapshot.nutrientMetadata).map(([key, metadata]) => [key, { ...metadata, sourceFoodIds: metadata.sourceFoodIds ? [...metadata.sourceFoodIds] : undefined }]))
+      ? Object.fromEntries(Object.entries(snapshot.nutrientMetadata).map(([key, metadata]) => [key, {
+        ...metadata,
+        sourceFoodIds: metadata.sourceFoodIds ? [...metadata.sourceFoodIds] : undefined,
+        calibration: metadata.calibration ? { ...metadata.calibration } : undefined,
+      }]))
       : undefined,
     createdAt: '',
     updatedAt: '',
@@ -162,7 +170,11 @@ function cloneIngredient(ingredient: MealIngredientSnapshot): MealIngredientSnap
         inputUnitConversions: ingredient.foodSnapshot.inputUnitConversions?.map((conversion) => ({ ...conversion })),
         nutrients: { ...ingredient.foodSnapshot.nutrients },
         nutrientMetadata: ingredient.foodSnapshot.nutrientMetadata
-          ? Object.fromEntries(Object.entries(ingredient.foodSnapshot.nutrientMetadata).map(([key, metadata]) => [key, { ...metadata, sourceFoodIds: metadata.sourceFoodIds ? [...metadata.sourceFoodIds] : undefined }]))
+          ? Object.fromEntries(Object.entries(ingredient.foodSnapshot.nutrientMetadata).map(([key, metadata]) => [key, {
+            ...metadata,
+            sourceFoodIds: metadata.sourceFoodIds ? [...metadata.sourceFoodIds] : undefined,
+            calibration: metadata.calibration ? { ...metadata.calibration } : undefined,
+          }]))
           : undefined,
       },
     }
@@ -195,6 +207,23 @@ function isSnapshotNutrientMetadata(value: unknown): boolean {
     if (metadata.method !== undefined && (typeof metadata.method !== 'string' || !metadata.method.trim())) return false
     if (metadata.modelVersion !== undefined && (typeof metadata.modelVersion !== 'string' || !metadata.modelVersion.trim())) return false
     if (metadata.requestId !== undefined && (typeof metadata.requestId !== 'string' || !metadata.requestId.trim())) return false
+    if (metadata.calibration !== undefined) {
+      if (!isRecord(metadata.calibration)
+        || typeof metadata.calibration.calibrationVersion !== 'string' || !metadata.calibration.calibrationVersion.trim()
+        || typeof metadata.calibration.targetCoverage !== 'number' || !Number.isFinite(metadata.calibration.targetCoverage)
+        || metadata.calibration.targetCoverage <= 0 || metadata.calibration.targetCoverage >= 1
+        || typeof metadata.calibration.sampleSize !== 'number' || !Number.isInteger(metadata.calibration.sampleSize)
+        || metadata.calibration.sampleSize < 0
+        || !['genre_nutrient', 'pooled_nutrient', 'fallback'].includes(String(metadata.calibration.scope))
+        || (metadata.calibration.actualCoverage !== undefined
+          && (typeof metadata.calibration.actualCoverage !== 'number'
+            || !Number.isFinite(metadata.calibration.actualCoverage)
+            || metadata.calibration.actualCoverage < 0
+            || metadata.calibration.actualCoverage > 1))
+        || (metadata.calibration.datasetHash !== undefined
+          && (typeof metadata.calibration.datasetHash !== 'string'
+            || !metadata.calibration.datasetHash.trim()))) return false
+    }
     return metadata.adoptedAt === undefined
       || (typeof metadata.adoptedAt === 'string' && !Number.isNaN(new Date(metadata.adoptedAt).getTime()))
   })

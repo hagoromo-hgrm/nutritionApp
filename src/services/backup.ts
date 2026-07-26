@@ -1,4 +1,4 @@
-import { NUTRIENT_KEYS, type AppSettings, type BackupData, type EstimationDecision, type EstimationRequest, type EstimationResult, type EstimationSettings, type Food, type FoodAlias, type FoodGroup, type FoodRelatedTerm, type FoodSnapshot, type FoodUsageStat, type MealEntry, type Menu, type MenuIngredient, type MenuSet, type NutrientKey, type NutrientMetadataMap, type Nutrients, type SearchLog } from '../types'
+import { ESTIMATOR_GENRE_IDS, NUTRIENT_KEYS, type AppSettings, type BackupData, type EstimationDecision, type EstimationRequest, type EstimationResult, type EstimationSettings, type Food, type FoodAlias, type FoodGroup, type FoodRelatedTerm, type FoodSnapshot, type FoodUsageStat, type MealEntry, type Menu, type MenuIngredient, type MenuSet, type NutrientKey, type NutrientMetadataMap, type Nutrients, type SearchLog } from '../types'
 import { isFoodAttributePreference } from './foodAttributePreferences'
 import { hasMenuCycles, menusWithUnsupportedIngredientUnits } from './menuIngredients'
 import { isMealMenuSnapshot } from './mealMenuSnapshots'
@@ -69,6 +69,34 @@ function isIngredientsSource(value: unknown): boolean {
     && (value.note === undefined || isString(value.note))
 }
 
+function isEstimatorGenre(value: unknown): boolean {
+  return value === undefined || value === null
+    || (typeof value === 'string' && (ESTIMATOR_GENRE_IDS as readonly string[]).includes(value))
+}
+
+function isEstimatorGenreSource(value: unknown): boolean {
+  return value === undefined || value === null
+    || ['user', 'off_category', 'name_rule', 'ingredient_rule', 'unknown'].includes(String(value))
+}
+
+function isEstimatorGenrePair(genreId: unknown, source: unknown): boolean {
+  const genreMissing = genreId === undefined || genreId === null
+  const sourceMissing = source === undefined || source === null
+  return genreMissing === sourceMissing
+    && isEstimatorGenre(genreId)
+    && isEstimatorGenreSource(source)
+}
+
+function isCalibrationMetadata(value: unknown): boolean {
+  if (!isRecord(value)) return false
+  return isNonEmptyString(value.calibrationVersion)
+    && typeof value.targetCoverage === 'number' && Number.isFinite(value.targetCoverage) && value.targetCoverage > 0 && value.targetCoverage < 1
+    && (value.actualCoverage === undefined || (typeof value.actualCoverage === 'number' && Number.isFinite(value.actualCoverage) && value.actualCoverage >= 0 && value.actualCoverage <= 1))
+    && Number.isInteger(value.sampleSize) && Number(value.sampleSize) >= 0
+    && (value.datasetHash === undefined || isNonEmptyString(value.datasetHash))
+    && ['genre_nutrient', 'pooled_nutrient', 'fallback'].includes(String(value.scope))
+}
+
 function isNutrientMetadata(value: unknown): boolean {
   if (!isRecord(value) || !['manufacturer_label', 'external_source', 'user_input', 'estimated', 'derived', 'unknown'].includes(String(value.origin))) return false
   if (value.source !== undefined && !isString(value.source)) return false
@@ -80,6 +108,7 @@ function isNutrientMetadata(value: unknown): boolean {
     && (value.sourceFoodIds === undefined || (Array.isArray(value.sourceFoodIds) && value.sourceFoodIds.every(isNonEmptyString)))
     && (value.requestId === undefined || isNonEmptyString(value.requestId))
     && (value.adoptedAt === undefined || isIsoDateTime(value.adoptedAt))
+    && (value.calibration === undefined || isCalibrationMetadata(value.calibration))
 }
 
 function isNutrientMetadataMap(value: unknown): value is NutrientMetadataMap {
@@ -114,6 +143,7 @@ function isFood(value: unknown): value is Food {
     && (value.ingredientsText === undefined || value.ingredientsText === null || isString(value.ingredientsText))
     && isIngredientsSource(value.ingredientsSource)
     && isReferenceMass(value.estimationReferenceMassG, value.estimationReferenceMassSource)
+    && isEstimatorGenrePair(value.estimatorGenreId, value.estimatorGenreSource)
     && isNutrientMetadataMap(value.nutrientMetadata)
 }
 
@@ -254,6 +284,7 @@ function isEstimationInput(value: unknown): boolean {
   const known = value.knownNutrients
   return isNonEmptyString(value.requestId) && isNonEmptyString(value.foodId) && isString(value.barcode) && (!value.barcode || isValidBarcode(value.barcode))
     && isString(value.name) && isString(value.maker) && (value.estimatorCategoryId === undefined || value.estimatorCategoryId === null || isNonEmptyString(value.estimatorCategoryId))
+    && isEstimatorGenrePair(value.estimatorGenreId, value.estimatorGenreSource)
     && typeof value.baseAmount === 'number' && Number.isFinite(value.baseAmount) && value.baseAmount > 0 && value.baseAmount <= 100000 && isValidUnit(String(value.baseUnit))
     && isInputUnitConversions(value.inputUnitConversions, String(value.baseUnit))
     && isReferenceMass(value.referenceMassG, value.referenceMassSource)
@@ -281,13 +312,16 @@ function isNutrientEstimate(value: unknown): boolean {
     && (value.source === undefined || isNonEmptyString(value.source))
     && (value.sourceFoodIds === undefined || (Array.isArray(value.sourceFoodIds) && value.sourceFoodIds.every(isNonEmptyString)))
     && Array.isArray(value.warnings) && value.warnings.every(isString)
+    && (value.calibration === undefined || isCalibrationMetadata(value.calibration))
 }
 
 function isEstimationResult(value: unknown): value is EstimationResult {
   if (!isRecord(value) || !isNonEmptyString(value.requestId) || !isNonEmptyString(value.foodId) || !isNonEmptyString(value.inputHash)) return false
   if (!['completed', 'partial', 'failed'].includes(String(value.status)) || !isRecord(value.estimates) || !Object.entries(value.estimates).every(([key, estimate]) => isNutrientKey(key) && isNutrientEstimate(estimate))) return false
   if (value.basis !== undefined && (!isRecord(value.basis) || typeof value.basis.baseAmount !== 'number' || !Number.isFinite(value.basis.baseAmount) || value.basis.baseAmount <= 0 || !isValidUnit(String(value.basis.baseUnit)))) return false
-  if (!Array.isArray(value.globalWarnings) || !value.globalWarnings.every(isString) || !isNonEmptyString(value.modelVersion) || !isIsoDateTime(value.estimatedAt)) return false
+  if (!Array.isArray(value.globalWarnings) || !value.globalWarnings.every(isString)
+    || (value.unresolvedIngredients !== undefined && (!Array.isArray(value.unresolvedIngredients) || !value.unresolvedIngredients.every(isNonEmptyString)))
+    || !isNonEmptyString(value.modelVersion) || !isIsoDateTime(value.estimatedAt)) return false
   const optimization = value.optimization
   if (optimization !== undefined && (!isRecord(optimization) || typeof optimization.converged !== 'boolean' || (optimization.objectiveError !== undefined && (typeof optimization.objectiveError !== 'number' || !Number.isFinite(optimization.objectiveError) || optimization.objectiveError < 0)) || (optimization.scenarioCount !== undefined && (typeof optimization.scenarioCount !== 'number' || !Number.isInteger(optimization.scenarioCount) || optimization.scenarioCount < 0)))) return false
   return value.error === undefined || (isRecord(value.error) && isNonEmptyString(value.error.code) && isNonEmptyString(value.error.message) && isNonEmptyString(value.error.nextAction))
