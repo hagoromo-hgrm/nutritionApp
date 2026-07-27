@@ -1,0 +1,324 @@
+{
+  "format": "nutrition-estimator-spu-evaluation-summary",
+  "formatVersion": 1,
+  "modelVersion": "browser-rule-0.6.0",
+  "generatedAt": "2026-07-27T11:28:43.897Z",
+  "datasetHash": "1b38542e85851cc4f487b2ea73c88ccb504b3397b681b815a6b9dbe0ae127a9e",
+  "evaluationHash": "5ce64d5e756f185d40d1a25c257424c7f8010e4cbdd8a755b81a0d7d1c5585c9",
+  "recordCount": 367,
+  "evaluatedRecords": 355,
+  "failedRecords": 220,
+  "methodology": {
+    "split": "maker + productFamily deterministic 70/15/15",
+    "estimatedLabelsExcluded": true,
+    "labelValuesEvaluatedAsIntervals": true,
+    "unavailableValuesExcludedFromErrorAndCoverage": true,
+    "availabilityReportedSeparately": true
+  },
+  "calibrationDecision": {
+    "minimumSampleSizePerNutrient": 30,
+    "eligibleNutrients": [],
+    "adopted": false,
+    "reason": "推計可能な校正標本が栄養素ごとに30件未満のため、実測校正は採用しません。"
+  },
+  "dataWarnings": [
+    "baked_sweets: pilot target 50 not reached (13)",
+    "baked_sweets: maker share exceeds 20% (森永製菓: 13/13)",
+    "cake_pastry: pilot target 50 not reached (4)",
+    "cake_pastry: maker share exceeds 20% (森永製菓: 4/4)",
+    "chocolate: maker share exceeds 20% (明治: 42/54)",
+    "chocolate: maker share exceeds 20% (森永製菓: 12/54)",
+    "dairy: maker share exceeds 20% (明治: 117/119)",
+    "drink_jelly_pudding: maker share exceeds 20% (明治: 34/66)",
+    "drink_jelly_pudding: maker share exceeds 20% (森永製菓: 32/66)",
+    "frozen_dessert: pilot target 50 not reached (1)",
+    "frozen_dessert: maker share exceeds 20% (明治: 1/1)",
+    "other_unknown: maker share exceeds 20% (明治: 58/73)",
+    "other_unknown: maker share exceeds 20% (森永製菓: 15/73)",
+    "prepared_meal: pilot target 50 not reached (17)",
+    "prepared_meal: maker share exceeds 20% (明治: 17/17)",
+    "snack_rice_cracker: pilot target 50 not reached (6)",
+    "snack_rice_cracker: maker share exceeds 20% (森永製菓: 6/6)",
+    "sugar_confectionery: pilot target 50 not reached (14)",
+    "sugar_confectionery: maker share exceeds 20% (明治: 5/14)",
+    "sugar_confectionery: maker share exceeds 20% (森永製菓: 9/14)"
+  ],
+  "overall": {
+    "referenceCount": 877,
+    "availableCount": 135,
+    "availabilityPercent": 15.393387,
+    "pointInsideReferencePercent": 46.666667,
+    "rangeCoveragePercent": 62.222222,
+    "maeOutsideReference": 100.345078,
+    "mapeOutsideReferencePercent": 95.387234
+  },
+  "bySplit": {
+    "calibration": {
+      "referenceCount": 135,
+      "availableCount": 24,
+      "availabilityPercent": 17.777778,
+      "pointInsideReferencePercent": 58.333333,
+      "rangeCoveragePercent": 75,
+      "maeOutsideReference": 62.432546,
+      "mapeOutsideReferencePercent": 65.710311
+    },
+    "test": {
+      "referenceCount": 114,
+      "availableCount": 17,
+      "availabilityPercent": 14.912281,
+      "pointInsideReferencePercent": 47.058824,
+      "rangeCoveragePercent": 70.588235,
+      "maeOutsideReference": 6.52374,
+      "mapeOutsideReferencePercent": 58.174893
+    },
+    "train": {
+      "referenceCount": 628,
+      "availableCount": 94,
+      "availabilityPercent": 14.968153,
+      "pointInsideReferencePercent": 43.617021,
+      "rangeCoveragePercent": 57.446809,
+      "maeOutsideReference": 126.992563,
+      "mapeOutsideReferencePercent": 109.694212
+    }
+  },
+  "byNutrient": {
+    "calciumMg": {
+      "referenceCount": 208,
+      "availableCount": 53,
+      "availabilityPercent": 25.480769,
+      "pointInsideReferencePercent": 45.283019,
+      "rangeCoveragePercent": 62.264151,
+      "maeOutsideReference": 250.362322,
+      "mapeOutsideReferencePercent": 95.363347
+    },
+    "fiberG": {
+      "referenceCount": 131,
+      "availableCount": 82,
+      "availabilityPercent": 62.59542,
+      "pointInsideReferencePercent": 47.560976,
+      "rangeCoveragePercent": 62.195122,
+      "maeOutsideReference": 3.382714,
+      "mapeOutsideReferencePercent": 95.402672
+    },
+    "ironMg": {
+      "referenceCount": 74,
+      "availableCount": 0,
+      "availabilityPercent": 0,
+      "pointInsideReferencePercent": null,
+      "rangeCoveragePercent": null,
+      "maeOutsideReference": null,
+      "mapeOutsideReferencePercent": null
+    },
+    "vitaminAMcg": {
+      "referenceCount": 48,
+      "availableCount": 0,
+      "availabilityPercent": 0,
+      "pointInsideReferencePercent": null,
+      "rangeCoveragePercent": null,
+      "maeOutsideReference": null,
+      "mapeOutsideReferencePercent": null
+    },
+    "vitaminB1Mg": {
+      "referenceCount": 132,
+      "availableCount": 0,
+      "availabilityPercent": 0,
+      "pointInsideReferencePercent": null,
+      "rangeCoveragePercent": null,
+      "maeOutsideReference": null,
+      "mapeOutsideReferencePercent": null
+    },
+    "vitaminB2Mg": {
+      "referenceCount": 131,
+      "availableCount": 0,
+      "availabilityPercent": 0,
+      "pointInsideReferencePercent": null,
+      "rangeCoveragePercent": null,
+      "maeOutsideReference": null,
+      "mapeOutsideReferencePercent": null
+    },
+    "vitaminCMg": {
+      "referenceCount": 108,
+      "availableCount": 0,
+      "availabilityPercent": 0,
+      "pointInsideReferencePercent": null,
+      "rangeCoveragePercent": null,
+      "maeOutsideReference": null,
+      "mapeOutsideReferencePercent": null
+    },
+    "vitaminEMg": {
+      "referenceCount": 45,
+      "availableCount": 0,
+      "availabilityPercent": 0,
+      "pointInsideReferencePercent": null,
+      "rangeCoveragePercent": null,
+      "maeOutsideReference": null,
+      "mapeOutsideReferencePercent": null
+    }
+  },
+  "byGenre": {
+    "baked_sweets": {
+      "referenceCount": 36,
+      "availableCount": 1,
+      "availabilityPercent": 2.777778,
+      "pointInsideReferencePercent": 0,
+      "rangeCoveragePercent": 0,
+      "maeOutsideReference": 2.2,
+      "mapeOutsideReferencePercent": 77.192982
+    },
+    "cake_pastry": {
+      "referenceCount": 6,
+      "availableCount": 0,
+      "availabilityPercent": 0,
+      "pointInsideReferencePercent": null,
+      "rangeCoveragePercent": null,
+      "maeOutsideReference": null,
+      "mapeOutsideReferencePercent": null
+    },
+    "chocolate": {
+      "referenceCount": 137,
+      "availableCount": 36,
+      "availabilityPercent": 26.277372,
+      "pointInsideReferencePercent": 75,
+      "rangeCoveragePercent": 100,
+      "maeOutsideReference": 0.039098,
+      "mapeOutsideReferencePercent": 1.508017
+    },
+    "dairy": {
+      "referenceCount": 240,
+      "availableCount": 53,
+      "availabilityPercent": 22.083333,
+      "pointInsideReferencePercent": 45.283019,
+      "rangeCoveragePercent": 62.264151,
+      "maeOutsideReference": 250.362322,
+      "mapeOutsideReferencePercent": 95.363347
+    },
+    "drink_jelly_pudding": {
+      "referenceCount": 131,
+      "availableCount": 13,
+      "availabilityPercent": 9.923664,
+      "pointInsideReferencePercent": 7.692308,
+      "rangeCoveragePercent": 23.076923,
+      "maeOutsideReference": 20.448228,
+      "mapeOutsideReferencePercent": 481.252936
+    },
+    "frozen_dessert": {
+      "referenceCount": 3,
+      "availableCount": 0,
+      "availabilityPercent": 0,
+      "pointInsideReferencePercent": null,
+      "rangeCoveragePercent": null,
+      "maeOutsideReference": null,
+      "mapeOutsideReferencePercent": null
+    },
+    "other_unknown": {
+      "referenceCount": 259,
+      "availableCount": 28,
+      "availabilityPercent": 10.810811,
+      "pointInsideReferencePercent": 35.714286,
+      "rangeCoveragePercent": 39.285714,
+      "maeOutsideReference": 0.262429,
+      "mapeOutsideReferencePercent": 47.687478
+    },
+    "prepared_meal": {
+      "referenceCount": 17,
+      "availableCount": 0,
+      "availabilityPercent": 0,
+      "pointInsideReferencePercent": null,
+      "rangeCoveragePercent": null,
+      "maeOutsideReference": null,
+      "mapeOutsideReferencePercent": null
+    },
+    "snack_rice_cracker": {
+      "referenceCount": 6,
+      "availableCount": 0,
+      "availabilityPercent": 0,
+      "pointInsideReferencePercent": null,
+      "rangeCoveragePercent": null,
+      "maeOutsideReference": null,
+      "mapeOutsideReferencePercent": null
+    },
+    "sugar_confectionery": {
+      "referenceCount": 42,
+      "availableCount": 4,
+      "availabilityPercent": 9.52381,
+      "pointInsideReferencePercent": 25,
+      "rangeCoveragePercent": 25,
+      "maeOutsideReference": 0.15,
+      "mapeOutsideReferencePercent": 25
+    }
+  },
+  "calibrationByNutrient": {
+    "calciumMg": {
+      "referenceCount": 39,
+      "availableCount": 12,
+      "availabilityPercent": 30.769231,
+      "pointInsideReferencePercent": 50,
+      "rangeCoveragePercent": 66.666667,
+      "maeOutsideReference": 122.033938,
+      "mapeOutsideReferencePercent": 61.106133
+    },
+    "fiberG": {
+      "referenceCount": 23,
+      "availableCount": 12,
+      "availabilityPercent": 52.173913,
+      "pointInsideReferencePercent": 66.666667,
+      "rangeCoveragePercent": 83.333333,
+      "maeOutsideReference": 2.831154,
+      "mapeOutsideReferencePercent": 70.314489
+    },
+    "ironMg": {
+      "referenceCount": 8,
+      "availableCount": 0,
+      "availabilityPercent": 0,
+      "pointInsideReferencePercent": null,
+      "rangeCoveragePercent": null,
+      "maeOutsideReference": null,
+      "mapeOutsideReferencePercent": null
+    },
+    "vitaminAMcg": {
+      "referenceCount": 8,
+      "availableCount": 0,
+      "availabilityPercent": 0,
+      "pointInsideReferencePercent": null,
+      "rangeCoveragePercent": null,
+      "maeOutsideReference": null,
+      "mapeOutsideReferencePercent": null
+    },
+    "vitaminB1Mg": {
+      "referenceCount": 19,
+      "availableCount": 0,
+      "availabilityPercent": 0,
+      "pointInsideReferencePercent": null,
+      "rangeCoveragePercent": null,
+      "maeOutsideReference": null,
+      "mapeOutsideReferencePercent": null
+    },
+    "vitaminB2Mg": {
+      "referenceCount": 18,
+      "availableCount": 0,
+      "availabilityPercent": 0,
+      "pointInsideReferencePercent": null,
+      "rangeCoveragePercent": null,
+      "maeOutsideReference": null,
+      "mapeOutsideReferencePercent": null
+    },
+    "vitaminCMg": {
+      "referenceCount": 13,
+      "availableCount": 0,
+      "availabilityPercent": 0,
+      "pointInsideReferencePercent": null,
+      "rangeCoveragePercent": null,
+      "maeOutsideReference": null,
+      "mapeOutsideReferencePercent": null
+    },
+    "vitaminEMg": {
+      "referenceCount": 7,
+      "availableCount": 0,
+      "availabilityPercent": 0,
+      "pointInsideReferencePercent": null,
+      "rangeCoveragePercent": null,
+      "maeOutsideReference": null,
+      "mapeOutsideReferencePercent": null
+    }
+  }
+}

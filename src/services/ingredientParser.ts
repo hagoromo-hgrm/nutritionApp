@@ -128,6 +128,8 @@ function normalizeName(value: string): string {
   return value
     .normalize('NFKC')
     .replace(/^\s*(?:原材料(?:名)?|添加物)\s*[:：]\s*/u, '')
+    // メーカー一覧で商品バリエーションの見出しとして使われる「<チーズ>」等は原材料名ではない。
+    .replace(/^\s*[<＜][^>＞]+[>＞]\s*/u, '')
     .replace(/\s+/gu, '')
     .trim()
 }

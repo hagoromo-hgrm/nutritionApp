@@ -33,7 +33,7 @@ describe('browser nutrient estimator', () => {
     expect(first.estimates.vitaminB1Mg.status).toBe('available')
     expect(first.estimates.vitaminB2Mg.status).toBe('available')
     expect(first.estimates.vitaminCMg.status).toBe('available')
-    expect(first.modelVersion).toBe('browser-rule-0.5.0')
+    expect(first.modelVersion).toBe('browser-rule-0.6.0')
   })
 
   it('明示的な基準重量がなければ単位から重量を推測しない', () => {
@@ -316,5 +316,76 @@ describe('browser nutrient estimator', () => {
     })
     expect(result.estimates.vitaminEMg).toMatchObject({ status: 'available', value: 1.8 })
     expect(result.estimates.saturatedFatG.warnings.join(' ')).toContain('FoodData Central')
+  })
+
+  it('MEXT直接項目と明示した代理参照で市販品の頻出原材料を解決する', () => {
+    const result = estimateNutrients({
+      ...eligibleRequest,
+      productName: '食物繊維入りチーズゼリー',
+      referenceMassG: 100,
+      ingredientsText: 'デキストリン、乳清たんぱく、ナチュラルチーズ、寒天、ゼラチン',
+      knownNutrients: {
+        energyKcal: 250,
+        proteinG: 20,
+        fatG: 5,
+        carbohydrateG: 40,
+        saltG: 0.5,
+      },
+    })
+
+    expect(result.status).not.toBe('failed')
+    expect(result.unresolvedIngredients).toEqual([])
+    expect(result.estimates.fiberG.sourceFoodIds).toEqual(expect.arrayContaining([
+      'mext_09049',
+      'mext_13010',
+      'mext_11198',
+    ]))
+    expect(result.estimates.fiberG.warnings.join(' ')).toContain('代理参照')
+  })
+
+  it('栄養添加物の配合量が不明な栄養素だけを推計不可にする', () => {
+    const result = estimateNutrients({
+      ...eligibleRequest,
+      ingredientsText: '砂糖、乳糖／乳酸Ca、ピロリン酸鉄、V.B1、V.C',
+    })
+
+    expect(result.status).toBe('partial')
+    expect(result.estimates.calciumMg.status).toBe('unavailable')
+    expect(result.estimates.ironMg.status).toBe('unavailable')
+    expect(result.estimates.vitaminB1Mg.status).toBe('unavailable')
+    expect(result.estimates.vitaminCMg.status).toBe('unavailable')
+    expect(result.estimates.vitaminB2Mg.status).toBe('available')
+    expect(result.estimates.fiberG.status).toBe('available')
+    expect(result.estimates.calciumMg.warnings.join(' ')).toContain('未モデル化の栄養添加物')
+  })
+
+  it('デキストリンを通常原料と食物繊維用途で商品名から分ける', () => {
+    const ordinary = estimateNutrients({
+      ...eligibleRequest,
+      productName: 'プロテインパウダー',
+      referenceMassG: 100,
+      ingredientsText: 'デキストリン',
+      knownNutrients: undefined,
+      requestedNutrients: ['fiberG'],
+    })
+    const fiberProduct = estimateNutrients({
+      ...eligibleRequest,
+      productName: '食物繊維入りトロメイク',
+      referenceMassG: 100,
+      ingredientsText: 'デキストリン',
+      knownNutrients: undefined,
+      requestedNutrients: ['fiberG'],
+    })
+
+    expect(ordinary.estimates.fiberG).toMatchObject({
+      status: 'available',
+      value: 0,
+      sourceFoodIds: ['mext_02035'],
+    })
+    expect(fiberProduct.estimates.fiberG).toMatchObject({
+      status: 'available',
+      value: 79,
+      sourceFoodIds: ['mext_09049'],
+    })
   })
 })

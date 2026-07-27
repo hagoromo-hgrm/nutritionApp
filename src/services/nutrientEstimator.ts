@@ -36,6 +36,7 @@ export const ESTIMATE_FIT_NUTRIENT_KEYS = [
 ] as const satisfies readonly NutrientKey[]
 export type EstimateFitNutrientKey = (typeof ESTIMATE_FIT_NUTRIENT_KEYS)[number]
 export type EstimateConfidence = 'high' | 'medium' | 'low' | 'unavailable'
+export const NUTRIENT_ESTIMATOR_MODEL_VERSION = 'browser-rule-0.6.0' as const
 const MEXT_SOURCE = '文部科学省 日本食品標準成分表（八訂）増補2023年（2026年3月27日正誤表対応）' as const
 const MEXT_FDC_SOURCE = `${MEXT_SOURCE} / USDA FoodData Central SR Legacy 04/2018` as const
 
@@ -95,7 +96,7 @@ export interface NutrientEstimateResult {
   estimates: Record<EstimatableNutrientKey, NutrientEstimate>
   globalWarnings: string[]
   unresolvedIngredients: string[]
-  modelVersion: 'browser-rule-0.5.0'
+  modelVersion: typeof NUTRIENT_ESTIMATOR_MODEL_VERSION
   estimatedAt: string
 }
 
@@ -107,9 +108,20 @@ export function isEstimateAdoptable(currentValue: number | null, estimate: Nutri
 const FALLBACK_METHOD: EstimateDetails['method'] = 'browser_ingredient_rule'
 const FIT_METHOD: EstimateDetails['method'] = 'browser_ingredient_macro_fit'
 const SOURCE = MEXT_SOURCE
-const MODEL_VERSION = 'browser-rule-0.5.0' as const
+const MODEL_VERSION = NUTRIENT_ESTIMATOR_MODEL_VERSION
 const MAX_PROFILE_COMBINATIONS = 64
 const MAX_COMPOUND_CANDIDATES = 24
+
+const UNMODELED_ADDITIVE_NUTRIENT_TERMS: Partial<Record<EstimatableNutrientKey, readonly string[]>> = {
+  fiberG: ['セルロース', 'グルコマンナン', 'ペクチン', '増粘多糖類', '難消化性デキストリン'],
+  calciumMg: ['炭酸ca', '乳酸ca', 'クエン酸ca', 'リン酸ca', '焼成ca', '卵殻ca', '貝ca', 'カルシウム'],
+  ironMg: ['鉄', 'fe'],
+  vitaminAMcg: ['v.a', 'ビタミンa', 'レチノール', 'カロテン'],
+  vitaminEMg: ['v.e', 'ビタミンe', 'トコフェロール'],
+  vitaminB1Mg: ['v.b1', 'ビタミンb1', 'チアミン'],
+  vitaminB2Mg: ['v.b2', 'ビタミンb2', 'リボフラビン'],
+  vitaminCMg: ['v.c', 'ビタミンc', 'アスコルビン'],
+}
 
 interface CandidateCombination {
   profiles: IngredientProfile[]
@@ -126,6 +138,19 @@ interface MacroFit {
 
 function round(value: number): number {
   return Math.round(Math.max(0, value) * 1_000_000) / 1_000_000
+}
+
+function unmodeledAdditivesForNutrient(
+  additives: readonly ParsedIngredient[],
+  nutrientKey: EstimatableNutrientKey,
+): string[] {
+  const terms = UNMODELED_ADDITIVE_NUTRIENT_TERMS[nutrientKey] ?? []
+  return additives
+    .filter((additive) => {
+      const normalized = additive.normalizedName.normalize('NFKC').toLocaleLowerCase('ja-JP')
+      return terms.some((term) => normalized.includes(term))
+    })
+    .map((additive) => additive.normalizedName)
 }
 
 function normalizePriors(candidates: readonly IngredientProfile[]): IngredientProfile[] {
@@ -534,6 +559,14 @@ export function estimateNutrients(request: NutrientEstimateRequest): NutrientEst
         || (selected.normalizedError ?? Number.POSITIVE_INFINITY) > 4
       ) ? 'low' : 'medium'
       const makeEstimate = (key: EstimatableNutrientKey): NutrientEstimate => {
+        const unmodeledAdditives = unmodeledAdditivesForNutrient(declaration.additives, key)
+        if (unmodeledAdditives.length > 0) {
+          return unavailable(
+            `栄養寄与があり得る添加物（${unmodeledAdditives.join('、')}）の配合量が不明なため、この栄養素は推計できません。`,
+            'パッケージの栄養成分表示を確認して手入力するか、この栄養素を採用せず食品登録を続けてください。',
+            [`未モデル化の栄養添加物: ${unmodeledAdditives.join('、')}`],
+          )
+        }
         const missingProfiles = selected.profiles.filter((profile) => profile.nutrients[key] === null)
         if (missingProfiles.length > 0) {
           const missingSourceFoodIds = [...new Set(missingProfiles.flatMap((profile) => profile.sourceFoodIds))]

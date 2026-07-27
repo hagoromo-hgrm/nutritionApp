@@ -52,3 +52,27 @@ python3 scripts/validate_nutrient_estimator_training.py INPUT.json --output-mani
 ```
 
 分割はメーカーと`productFamily`をグループ化し、70%学習、15%校正、15%最終テストへ固定する。
+
+## メーカー公式CSV
+
+`data/spu_data/{maker}_{source}_{YYMMDD}.csv` はメーカー公式サイトから収集した検証用の原票として扱い、GitとPWAへ同梱しない。列は `カテゴリ`、`商品名`、`栄養素`、`原材料` の4列とする。次の手順で、明示的なg基準、主要栄養値、対象栄養素、原材料がそろう行だけを非公開の正規化データへ変換する。
+
+```bash
+python3 scripts/build_spu_estimator_training.py data/spu_data \
+  --output data/estimator/private/spu_training.json \
+  --report data/estimator/private/spu_training_report.json
+
+python3 scripts/validate_nutrient_estimator_training.py \
+  data/estimator/private/spu_training.json \
+  --output-manifest data/estimator/private/spu_training_manifest.json
+
+node_modules/.bin/vite-node scripts/evaluate_spu_nutrient_estimator.ts \
+  --training data/estimator/private/spu_training.json \
+  --manifest data/estimator/private/spu_training_manifest.json \
+  --output data/estimator/private/spu_evaluation.json \
+  --summary-output docs/analysis/spu_estimator_evaluation.json
+```
+
+メーカーのカテゴリ名はそのまま`genreId`へ流用せず、商品名、カテゴリ、原材料の順でアプリのジャンルへ決定的に変換する。変換レポートには元ファイルのSHA-256、除外理由、メーカーカテゴリからジャンルへの対応件数を残す。容量違い・味違いは`productFamily`へまとめ、同じ系列が学習・校正・最終テストへまたがらないようにする。
+
+「推定値」は独立評価から除外し、基準重量をgへ安全に対応付けられない行や、複数商品分の値が1行に併記された行は推測で分割しない。生CSV、正規化レコード、商品単位の評価結果は`data/estimator/private/`へ置き、コミットするのは個別商品を含まない集計結果だけとする。

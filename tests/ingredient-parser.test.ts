@@ -55,4 +55,10 @@ describe('ingredient declaration parser', () => {
     expect(parsed.ingredients.map((item) => item.normalizedName)).toEqual(['小麦粉', 'ゆず砂糖漬け(ゆず、砂糖'])
     expect(parsed.ingredients[1].components).toEqual([])
   })
+
+  it('商品バリエーション見出しを原材料名から除外する', () => {
+    const parsed = parseIngredientDeclaration('<チーズ>生乳、＜レモン味＞砂糖')
+
+    expect(parsed.ingredients.map((item) => item.normalizedName)).toEqual(['生乳', '砂糖'])
+  })
 })
