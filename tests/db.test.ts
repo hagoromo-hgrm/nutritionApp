@@ -1,9 +1,9 @@
 import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { db, deleteFood, deleteMenu, exportBackup, getEntriesForDate, getFoodByBarcode, getRecentFoods, getSettings, initializeDatabase, recordFoodSelection, reorderMealEntries, replaceAllData, saveFood, saveFoodWithMetadata, saveMealEntries, saveMealEntry, saveMenu, searchFoodResults, searchMenus } from '../src/db/db'
+import { db, deleteFood, deleteGeneralMenu, deleteMenu, exportBackup, getEntriesForDate, getFoodByBarcode, getRecentFoods, getSettings, initializeDatabase, recordFoodSelection, reorderMealEntries, replaceAllData, saveFood, saveFoodWithMetadata, saveGeneralMenu, saveMealEntries, saveMealEntry, saveMenu, saveMenuSet, searchFoodResults, searchGeneralMenus, searchMenus } from '../src/db/db'
 import { validateBackup } from '../src/services/backup'
 import { getFoodVariantBySourceId, hasFoodGroup as hasMextFoodGroup } from '../src/services/mextFoodData'
-import type { BackupData, Food, FoodAlias, FoodGroup, FoodRelatedTerm, MealEntry, Menu } from '../src/types'
+import type { BackupData, Food, FoodAlias, FoodGroup, FoodRelatedTerm, GeneralMenu, MealEntry, Menu } from '../src/types'
 
 const addedNutrients = { calciumMg: null, ironMg: null, vitaminAMcg: null, vitaminEMg: null, vitaminB1Mg: null, vitaminB2Mg: null, vitaminCMg: null, saturatedFatG: null }
 
@@ -289,6 +289,43 @@ describe('IndexedDB data safety', () => {
     expect((await searchMenus('テスト食品')).map((menu) => menu.id).sort()).toEqual(['menu_child', 'menu_parent'])
     await expect(saveMenu({ ...child, ingredients: [{ kind: 'menu', itemId: parent.id, amount: 1, unit: '食' }] })).rejects.toThrow('循環')
     await expect(deleteMenu(child.id)).rejects.toThrow('親メニュー')
+  })
+
+  it('一般メニューをMyメニューと別ストアでCRUDし、Myセット参照を削除時に整理する', async () => {
+    await saveFood(userFood)
+    const generalMenu: GeneralMenu = {
+      id: 'general_test', name: '一般テスト', category: '主食', foodIds: [userFood.id], aliases: ['一般別名'],
+      ingredients: [{ kind: 'food', itemId: userFood.id, amount: 50, unit: 'g' }],
+      createdAt: '2026-07-15T00:00:00.000Z', updatedAt: '2026-07-15T00:00:00.000Z',
+    }
+    await saveGeneralMenu(generalMenu)
+    expect(await db.menus.get(generalMenu.id)).toBeUndefined()
+    expect(await searchGeneralMenus('一般別名')).toEqual([generalMenu])
+    await saveMenuSet({ id: 'general_set', name: '一般セット', menuIds: [], generalMenuIds: [generalMenu.id], createdAt: generalMenu.createdAt, updatedAt: generalMenu.updatedAt })
+    const backup = await exportBackup()
+    expect(backup.generalMenus).toEqual([generalMenu])
+    expect(backup.menuSets?.[0].generalMenuIds).toEqual([generalMenu.id])
+    await deleteGeneralMenu(generalMenu.id)
+    expect(await db.generalMenus.get(generalMenu.id)).toBeUndefined()
+    expect((await db.menuSets.get('general_set'))?.generalMenuIds).toEqual([])
+    await replaceAllData(backup)
+    expect(await db.generalMenus.get(generalMenu.id)).toEqual(generalMenu)
+    expect((await db.menuSets.get('general_set'))?.generalMenuIds).toEqual([generalMenu.id])
+  })
+
+  it('一般メニューの構成に使われているMyメニューは削除しない', async () => {
+    const child: Menu = {
+      id: 'my_child', name: 'My子メニュー', category: '主菜', foodIds: [], ingredients: [],
+      createdAt: '2026-07-15T00:00:00.000Z', updatedAt: '2026-07-15T00:00:00.000Z',
+    }
+    const generalMenu: GeneralMenu = {
+      id: 'general_parent', name: '一般親メニュー', category: '主菜', foodIds: [],
+      ingredients: [{ kind: 'menu', itemId: child.id, amount: 1, unit: '食' }],
+      createdAt: child.createdAt, updatedAt: child.updatedAt,
+    }
+    await saveMenu(child)
+    await saveGeneralMenu(generalMenu)
+    await expect(deleteMenu(child.id)).rejects.toThrow('一般親メニュー')
   })
 
   it('初期設定に身体情報の既定値を持つ', async () => {

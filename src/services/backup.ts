@@ -1,4 +1,4 @@
-import { ESTIMATOR_GENRE_IDS, NUTRIENT_KEYS, type AppSettings, type BackupData, type EstimationDecision, type EstimationRequest, type EstimationResult, type EstimationSettings, type Food, type FoodAlias, type FoodGroup, type FoodRelatedTerm, type FoodSnapshot, type FoodUsageStat, type MealEntry, type Menu, type MenuIngredient, type MenuSet, type NutrientKey, type NutrientMetadataMap, type Nutrients, type SearchLog } from '../types'
+import { ESTIMATOR_GENRE_IDS, NUTRIENT_KEYS, type AppSettings, type BackupData, type EstimationDecision, type EstimationRequest, type EstimationResult, type EstimationSettings, type Food, type FoodAlias, type FoodGroup, type FoodRelatedTerm, type FoodSnapshot, type FoodUsageStat, type GeneralMenu, type MealEntry, type Menu, type MenuIngredient, type MenuSet, type NutrientKey, type NutrientMetadataMap, type Nutrients, type SearchLog } from '../types'
 import { isFoodAttributePreference } from './foodAttributePreferences'
 import { hasMenuCycles, menusWithUnsupportedIngredientUnits } from './menuIngredients'
 import { isMealMenuSnapshot } from './mealMenuSnapshots'
@@ -230,9 +230,14 @@ function isMenu(value: unknown): value is Menu {
     && isIsoDateTime(value.createdAt) && isIsoDateTime(value.updatedAt)
 }
 
+function isGeneralMenu(value: unknown): value is GeneralMenu {
+  return isMenu(value)
+}
+
 function isMenuSet(value: unknown): value is MenuSet {
   if (!isRecord(value)) return false
   return isNonEmptyString(value.id) && isNonEmptyString(value.name) && Array.isArray(value.menuIds) && value.menuIds.every(isNonEmptyString)
+    && (value.generalMenuIds === undefined || (Array.isArray(value.generalMenuIds) && value.generalMenuIds.every(isNonEmptyString)))
     && (value.foodIds === undefined || (Array.isArray(value.foodIds) && value.foodIds.every(isNonEmptyString)))
     && (value.foodItems === undefined || (Array.isArray(value.foodItems) && value.foodItems.every((item) => isRecord(item) && isNonEmptyString(item.foodId) && typeof item.amount === 'number' && Number.isFinite(item.amount) && item.amount > 0 && item.amount <= 100000 && isValidQuantityUnit(String(item.unit)))))
     && isIsoDateTime(value.createdAt) && isIsoDateTime(value.updatedAt)
@@ -361,18 +366,26 @@ export function validateBackup(value: unknown): BackupData {
     throw new Error('食品または食事記録に重複したIDがあります。')
   }
   if ((value.menus !== undefined && (!Array.isArray(value.menus) || !value.menus.every(isMenu)))
+    || (value.generalMenus !== undefined && (!Array.isArray(value.generalMenus) || !value.generalMenus.every(isGeneralMenu)))
     || (value.menuSets !== undefined && (!Array.isArray(value.menuSets) || !value.menuSets.every(isMenuSet)))) {
     throw new Error('メニューまたはメニューセットの形式が不正です。')
   }
   if ((value.menus !== undefined && !hasUniqueValues(value.menus as Menu[], (menu) => menu.id))
+    || (value.generalMenus !== undefined && !hasUniqueValues(value.generalMenus as GeneralMenu[], (menu) => menu.id))
     || (value.menuSets !== undefined && !hasUniqueValues(value.menuSets as MenuSet[], (menuSet) => menuSet.id))) {
     throw new Error('メニューまたはメニューセットに重複したIDがあります。')
   }
   if (value.menus !== undefined && hasMenuCycles(value.menus as Menu[])) {
     throw new Error('料理メニューが循環して参照されています。')
   }
+  if (value.generalMenus !== undefined && hasMenuCycles(value.generalMenus as GeneralMenu[])) {
+    throw new Error('一般メニューが循環して参照されています。')
+  }
   if (value.menus !== undefined && menusWithUnsupportedIngredientUnits(value.menus as Menu[], value.foods as Food[]).length > 0) {
     throw new Error('料理メニューに、食品の換算設定と一致しない入力単位があります。')
+  }
+  if (value.generalMenus !== undefined && menusWithUnsupportedIngredientUnits(value.generalMenus as GeneralMenu[], value.foods as Food[]).length > 0) {
+    throw new Error('一般メニューに、食品の換算設定と一致しない入力単位があります。')
   }
   if (value.menuSets !== undefined && menuSetsWithUnsupportedFoodUnits(value.menuSets as MenuSet[], value.foods as Food[]).length > 0) {
     throw new Error('メニューセットに、食品の換算設定と一致しない入力単位があります。')

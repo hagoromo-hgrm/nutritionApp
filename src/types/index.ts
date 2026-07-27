@@ -274,6 +274,8 @@ export type MealIngredientSnapshot = MealFoodIngredientSnapshot | MealMenuIngred
 export interface MealMenuSnapshot {
   sourceMenuId: string
   sourceMenuName: string
+  /** 未指定は既存データとの互換のためMyメニューとして扱う。 */
+  sourceKind?: 'my-menu' | 'general-menu' | 'temporary'
   ingredients: MealIngredientSnapshot[]
 }
 
@@ -311,10 +313,15 @@ export interface Menu {
   updatedAt: string
 }
 
+/** ユーザーが作成する一般メニュー。Myメニューとは別ストアで管理する。 */
+export type GeneralMenu = Menu
+
 export interface MenuSet {
   id: string
   name: string
   menuIds: string[]
+  /** 一般メニューをセットへ含めるための参照。未指定は空として扱う。 */
+  generalMenuIds?: string[]
   /** 新形式。食品の確定variantと入力分量を保持する。 */
   foodItems?: MenuSetFoodItem[]
   /** 旧形式。foodItemsがない場合は食品の既定量へ読み替える。 */
@@ -520,6 +527,7 @@ export interface BackupData {
   foodUsageStats?: FoodUsageStat[]
   searchLogs?: SearchLog[]
   menus?: Menu[]
+  generalMenus?: GeneralMenu[]
   menuSets?: MenuSet[]
   settings: AppSettings
   /** v2からの推計関連データ。v1バックアップには存在しない。 */

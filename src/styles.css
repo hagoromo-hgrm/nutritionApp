@@ -250,6 +250,11 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .menu-picker-copy strong, .menu-picker-copy small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .menu-picker-copy strong { font-size: .78rem; }
 .menu-picker-copy small { color: var(--muted); font-size: .65rem; }
+.menu-picker-create-temporary { display: flex; align-items: center; justify-content: space-between; gap: .8rem; width: 100%; border: 1px dashed #a9c7e5; border-radius: .9rem; padding: .8rem .9rem; color: var(--accent-deep); background: #f4f9ff; text-align: left; }
+.menu-picker-create-temporary > span { display: grid; min-width: 0; gap: .14rem; }
+.menu-picker-create-temporary strong { font-size: .8rem; }
+.menu-picker-create-temporary small { overflow: hidden; color: var(--muted); text-overflow: ellipsis; white-space: nowrap; font-size: .64rem; }
+.menu-picker-create-temporary > b { flex: 0 0 auto; font-size: 1.2rem; }
 
 .search-box { display: flex; align-items: center; gap: .5rem; border: 1px solid var(--line); border-radius: .8rem; padding: 0 .75rem; background: white; }
 .search-box span { color: var(--muted); font-size: 1.25rem; }
@@ -502,7 +507,7 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .menu-card > div:first-child { min-width: 0; display: grid; gap: .35rem; }
 .menu-card strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .86rem; }
 .menu-card small { overflow: hidden; color: var(--muted); text-overflow: ellipsis; white-space: nowrap; font-size: .68rem; }
-.menu-card-actions { display: flex; flex: 0 0 auto; gap: .2rem; }
+.menu-card-actions { display: flex; flex: 0 0 auto; flex-wrap: wrap; justify-content: flex-end; gap: .2rem; }
 .menu-management-tabs { margin-top: .2rem; }
 .menu-management-panel { margin-top: 1rem; }
 .menu-management-panel > .section-title { align-items: center; }
@@ -591,7 +596,7 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .floating-add { position: fixed; z-index: 6; right: max(1rem, env(safe-area-inset-right)); bottom: calc(4.8rem + env(safe-area-inset-bottom)); display: grid; place-items: center; width: 3.5rem; height: 3.5rem; border: 0; border-radius: 50%; color: white; background: var(--accent); box-shadow: 0 .6rem 1.4rem rgba(69, 111, 159, .3); font-size: 1.8rem; line-height: 1; }
 
 .modal-backdrop { position: fixed; z-index: 10; inset: 0; display: grid; place-items: end center; overflow: hidden; padding: 1rem; overscroll-behavior: contain; background: rgba(47, 65, 84, .35); }
-.modal-backdrop[aria-label="今日の栄養詳細"], .modal-backdrop[aria-label="料理メニューを設定"], .modal-backdrop[aria-label="メニューセットを設定"] { padding-bottom: .35rem; }
+.modal-backdrop[aria-label="今日の栄養詳細"], .modal-backdrop[aria-label$="メニューを設定"], .modal-backdrop[aria-label="Myセットを設定"] { padding-bottom: .35rem; }
 .modal-card { width: min(100%, 540px); max-height: calc(100vh - 2rem); overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; border-radius: 1.35rem; padding: 1.3rem; background: #fbfdff; box-shadow: 0 1.4rem 4rem rgba(48, 78, 112, .2); }
 .modal-backdrop[aria-label="今日の栄養詳細"], .modal-backdrop[aria-label$="の栄養詳細"] { place-items: stretch; padding: 0; }
 .modal-backdrop[aria-label="今日の栄養詳細"] > .modal-card, .modal-backdrop[aria-label$="の栄養詳細"] > .modal-card { width: 100%; max-width: none; height: 100vh; height: 100dvh; max-height: none; border-radius: 0; padding: max(1.3rem, env(safe-area-inset-top)) max(1.3rem, env(safe-area-inset-right)) max(1.3rem, env(safe-area-inset-bottom)) max(1.3rem, env(safe-area-inset-left)); }

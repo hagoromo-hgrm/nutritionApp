@@ -1,9 +1,10 @@
-import type { Food, FoodSnapshot, MealEntry, MealType, Menu, MenuSet, MenuSetFoodItem } from '../types'
+import type { Food, FoodSnapshot, GeneralMenu, MealEntry, MealType, Menu, MenuSet, MenuSetFoodItem } from '../types'
 import { calculateNutrients, getFoodDefaultServing } from './nutrition'
 import { menuToFood } from './menuIngredients'
 import {
   calculateMealMenuEntryNutrients,
   calculateMealMenuSnapshotNutrients,
+  createGeneralMealMenuSnapshot,
   createMealMenuSnapshot,
 } from './mealMenuSnapshots'
 import { getMextUserFacingFoodName } from './mealEntryDisplay'
@@ -11,6 +12,7 @@ import { getMextUserFacingFoodName } from './mealEntryDisplay'
 interface CreateMenuSetMealBatchOptions {
   menuSet: MenuSet
   menus: Menu[]
+  generalMenus?: GeneralMenu[]
   foods: Food[]
   mealType: MealType
   eatenAt: string
@@ -20,6 +22,7 @@ interface CreateMenuSetMealBatchOptions {
 export interface MenuSetMealBatch {
   entries: MealEntry[]
   missingMenuIds: string[]
+  missingGeneralMenuIds: string[]
   missingFoodIds: string[]
 }
 
@@ -58,11 +61,13 @@ export function getMenuSetFoodItems(menuSet: MenuSet, foods: Food[]): MenuSetFoo
 
 /** メニューセットを、セット名ではなく構成項目ごとの独立した食事記録へ展開する。 */
 export function createMenuSetMealBatch(options: CreateMenuSetMealBatchOptions): MenuSetMealBatch {
-  const { menuSet, menus, foods, mealType, eatenAt, createId } = options
+  const { menuSet, menus, generalMenus = [], foods, mealType, eatenAt, createId } = options
   const menusById = new Map(menus.map((menu) => [menu.id, menu]))
+  const generalMenusById = new Map(generalMenus.map((menu) => [menu.id, menu]))
   const foodsById = new Map(foods.map((food) => [food.id, food]))
   const entries: MealEntry[] = []
   const missingMenuIds: string[] = []
+  const missingGeneralMenuIds: string[] = []
   const missingFoodIds: string[] = []
 
   for (const menuId of menuSet.menuIds) {
@@ -73,6 +78,32 @@ export function createMenuSetMealBatch(options: CreateMenuSetMealBatchOptions): 
     }
     const menuFood = menuToFood(menu, menus, foods)
     const menuSnapshot = createMealMenuSnapshot(menu, menus, foods)
+    const snapshotNutrients = calculateMealMenuSnapshotNutrients(menuSnapshot)
+    entries.push({
+      id: createId(),
+      eatenAt,
+      mealType,
+      foodId: menuFood.id,
+      foodSnapshot: {
+        ...createFoodSnapshot(menuFood),
+        nutrients: { ...snapshotNutrients },
+      },
+      amount: 1,
+      amountUnit: '食',
+      calculatedNutrients: calculateMealMenuEntryNutrients(menuSnapshot, 1, '食'),
+      menuSnapshot,
+    })
+  }
+
+  for (const generalMenuId of menuSet.generalMenuIds ?? []) {
+    const generalMenu = generalMenusById.get(generalMenuId)
+    if (!generalMenu) {
+      missingGeneralMenuIds.push(generalMenuId)
+      continue
+    }
+    const convertedMenuFood = menuToFood(generalMenu, [...menus, generalMenu], foods)
+    const menuFood = { ...convertedMenuFood, id: `general-menu:${generalMenu.id}`, sourceVersion: `一般メニュー「${generalMenu.category}」` }
+    const menuSnapshot = createGeneralMealMenuSnapshot(generalMenu, menus, foods)
     const snapshotNutrients = calculateMealMenuSnapshotNutrients(menuSnapshot)
     entries.push({
       id: createId(),
@@ -108,5 +139,5 @@ export function createMenuSetMealBatch(options: CreateMenuSetMealBatchOptions): 
     })
   }
 
-  return { entries, missingMenuIds, missingFoodIds }
+  return { entries, missingMenuIds, missingGeneralMenuIds, missingFoodIds }
 }

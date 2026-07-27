@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createMenuSetMealBatch } from '../src/services/menuSetMeals'
-import type { Food, Menu, MenuSet, Nutrients } from '../src/types'
+import type { Food, GeneralMenu, Menu, MenuSet, Nutrients } from '../src/types'
 
 const nutrients = (energyKcal: number): Nutrients => ({
   energyKcal, proteinG: 1, fatG: 1, carbohydrateG: 1, fiberG: 1, saltG: 0,
@@ -20,6 +20,10 @@ const soupIngredient: Food = {
 const soup: Menu = {
   id: 'soup', name: 'みそ汁', category: '汁物', foodIds: ['miso'],
   ingredients: [{ kind: 'food', itemId: 'miso', amount: 10, unit: 'g' }], createdAt: '', updatedAt: '',
+}
+const generalBreakfast: GeneralMenu = {
+  id: 'general-breakfast', name: '一般朝食', category: '主食', foodIds: ['rice'],
+  ingredients: [{ kind: 'food', itemId: 'rice', amount: 100, unit: 'g' }], createdAt: '', updatedAt: '',
 }
 const breakfast: MenuSet = {
   id: 'breakfast', name: '朝食セット', menuIds: ['soup'], foodIds: ['rice'], createdAt: '', updatedAt: '',
@@ -88,5 +92,19 @@ describe('menu set meal batches', () => {
     expect(batch.entries[0].foodSnapshot.name).toBe('ご飯')
     expect(batch.entries[0].foodSnapshot.officialName).toBe('水稲めし 精白米 うるち米')
     expect(batch.entries[0].calculatedNutrients.energyKcal).toBe(360)
+  })
+
+  it('セット内の一般メニューを独立した食事記録へ展開する', () => {
+    const batch = createMenuSetMealBatch({
+      menuSet: { ...breakfast, menuIds: [], generalMenuIds: [generalBreakfast.id], foodIds: [], foodItems: [] },
+      menus: [], generalMenus: [generalBreakfast], foods: [rice], mealType: '朝食',
+      eatenAt: '2026-07-23T00:00:00.000Z', createId: () => 'meal_general',
+    })
+    expect(batch.entries).toHaveLength(1)
+    expect(batch.entries[0]).toMatchObject({ foodId: 'general-menu:general-breakfast', foodSnapshot: { name: '一般朝食' } })
+    expect(batch.entries[0].menuSnapshot).toMatchObject({ sourceMenuId: 'general-breakfast', sourceKind: 'general-menu' })
+    expect(batch.entries[0].calculatedNutrients.energyKcal).toBe(160)
+    expect(batch.missingMenuIds).toEqual([])
+    expect(batch.missingGeneralMenuIds).toEqual([])
   })
 })

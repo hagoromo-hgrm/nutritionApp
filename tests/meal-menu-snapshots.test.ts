@@ -4,10 +4,12 @@ import {
   calculateMealMenuSnapshotNutrients,
   cloneMealMenuSnapshot,
   createMealFoodIngredientSnapshot,
+  createGeneralMealMenuSnapshot,
   createMealMenuSnapshot,
+  createTemporaryMealMenuSnapshot,
   isMealMenuSnapshot,
 } from '../src/services/mealMenuSnapshots'
-import type { Food, Menu, Nutrients } from '../src/types'
+import type { Food, GeneralMenu, Menu, Nutrients } from '../src/types'
 
 const nutrients = (energyKcal: number): Nutrients => ({
   energyKcal, proteinG: 1, fatG: 1, carbohydrateG: 1, fiberG: 1, saltG: 0,
@@ -33,6 +35,11 @@ const parent: Menu = {
     { kind: 'menu', itemId: 'child', amount: 0.5, unit: '食' },
   ],
   createdAt: '', updatedAt: '',
+}
+const generalMenu: GeneralMenu = {
+  id: 'general-parent', name: '一般の卵ご飯', category: '主食', foodIds: ['rice', 'egg'],
+  ingredients: [{ kind: 'food', itemId: 'rice', amount: 100, unit: 'g' }, { kind: 'food', itemId: 'egg', amount: 1, unit: 'g' }],
+  aliases: ['たまごかけご飯'], createdAt: '', updatedAt: '',
 }
 
 describe('meal menu snapshots', () => {
@@ -75,6 +82,23 @@ describe('meal menu snapshots', () => {
     expect(calculateMealMenuSnapshotNutrients(snapshot).energyKcal).toBe(340)
     expect(calculateMealMenuEntryNutrients(snapshot, 2, '食').energyKcal).toBe(680)
     expect(calculateMealMenuEntryNutrients(snapshot, 2, '個').energyKcal).toBeNull()
+  })
+
+  it('一般メニューのスナップショットは由来を区別して複製する', () => {
+    const snapshot = createGeneralMealMenuSnapshot(generalMenu, [child], [rice, egg])
+    expect(snapshot).toMatchObject({ sourceMenuId: 'general-parent', sourceMenuName: '一般の卵ご飯', sourceKind: 'general-menu' })
+    expect(calculateMealMenuSnapshotNutrients(snapshot).energyKcal).toBe(230)
+    expect(isMealMenuSnapshot(snapshot)).toBe(true)
+  })
+
+  it('一時メニューは原本を持たず、構成を複製して一意な非空IDを持つ', () => {
+    const ingredient = createMealFoodIngredientSnapshot(rice, 100, 'g')
+    const snapshot = createTemporaryMealMenuSnapshot('この食事だけ', [ingredient], 'temporary-test')
+    expect(snapshot).toMatchObject({ sourceMenuId: 'temporary-test', sourceMenuName: 'この食事だけ', sourceKind: 'temporary' })
+    expect(snapshot.ingredients).not.toBe([ingredient])
+    expect(isMealMenuSnapshot(snapshot)).toBe(true)
+    expect(() => createTemporaryMealMenuSnapshot(' ', [])).toThrow()
+    expect(() => createTemporaryMealMenuSnapshot('名前', [], ' ')).toThrow()
   })
 
   it('食事側の変更は原本と元のスナップショットを変更しない', () => {

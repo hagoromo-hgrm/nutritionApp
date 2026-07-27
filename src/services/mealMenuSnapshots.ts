@@ -3,6 +3,7 @@ import {
   NUTRIENT_KEYS,
   type Food,
   type FoodSnapshot,
+  type GeneralMenu,
   type QuantityUnit,
   type MealFoodIngredientSnapshot,
   type MealIngredientSnapshot,
@@ -11,6 +12,7 @@ import {
   type Menu,
   type Nutrients,
 } from '../types'
+import { createId } from '../utils/id'
 import { isFoodUnitConversion, isNutrients, isValidQuantityUnit, isValidUnit } from '../utils/validation'
 import { calculateNutrients, getFoodDefaultServing, sumNutrients } from './nutrition'
 import { getMenuIngredients } from './menuIngredients'
@@ -106,6 +108,42 @@ export function createMealMenuIngredientSnapshot(
 export function createMealMenuSnapshot(menu: Menu, menus: Menu[], foods: Food[]): MealMenuSnapshot {
   const root = createMealMenuIngredientSnapshot(menu, menus, foods)
   return { sourceMenuId: menu.id, sourceMenuName: menu.name, ingredients: root.ingredients }
+}
+
+/** 一般メニューを食事へ登録した時点の構成を複製する。原本とは別の食事側スナップショットになる。 */
+export function createGeneralMealMenuIngredientSnapshot(
+  menu: GeneralMenu,
+  menus: Menu[],
+  foods: Food[],
+  amount = 1,
+  unit: QuantityUnit = '食',
+): MealMenuIngredientSnapshot {
+  return createMenuIngredientSnapshot(
+    menu.id, amount, unit,
+    new Map([...menus, menu].map((item) => [item.id, item])),
+    new Map(foods.map((food) => [food.id, food])), foods, new Set(),
+  )
+}
+
+export function createGeneralMealMenuSnapshot(menu: GeneralMenu, menus: Menu[], foods: Food[]): MealMenuSnapshot {
+  const root = createGeneralMealMenuIngredientSnapshot(menu, menus, foods)
+  return { sourceMenuId: menu.id, sourceMenuName: menu.name, sourceKind: 'general-menu', ingredients: root.ingredients }
+}
+
+/** 原本を保存せず、その食事記録だけに属するメニュー構成を安全に作る。 */
+export function createTemporaryMealMenuSnapshot(
+  sourceMenuName: string,
+  ingredients: MealIngredientSnapshot[],
+  sourceMenuId = createId('temporary-menu'),
+): MealMenuSnapshot {
+  if (!sourceMenuName.trim()) throw new Error('一時メニュー名は空にできません。')
+  if (!sourceMenuId.trim()) throw new Error('一時メニューの識別子が空です。')
+  return {
+    sourceMenuId,
+    sourceMenuName: sourceMenuName.trim(),
+    sourceKind: 'temporary',
+    ingredients: ingredients.map(cloneIngredient),
+  }
 }
 
 function snapshotFoodAsFood(snapshot: FoodSnapshot, id: string): Food {
@@ -262,5 +300,6 @@ function isMealIngredientSnapshot(value: unknown): value is MealIngredientSnapsh
 export function isMealMenuSnapshot(value: unknown): value is MealMenuSnapshot {
   return isRecord(value) && typeof value.sourceMenuId === 'string' && Boolean(value.sourceMenuId)
     && typeof value.sourceMenuName === 'string' && Array.isArray(value.ingredients)
+    && (value.sourceKind === undefined || value.sourceKind === 'my-menu' || value.sourceKind === 'general-menu' || value.sourceKind === 'temporary')
     && value.ingredients.every(isMealIngredientSnapshot)
 }

@@ -3,11 +3,13 @@ import { registerSW } from 'virtual:pwa-register'
 import {
   createNewFoodId,
   createNewFoodGroupId,
+  createNewGeneralMenuId,
   createNewMealId,
   createNewMenuId,
   createNewMenuSetId,
   db,
   deleteFood,
+  deleteGeneralMenu,
   deleteMealEntry,
   deleteMenu,
   deleteMenuSet,
@@ -15,6 +17,7 @@ import {
   getEntriesBetween,
   getEntriesForDate,
   getAllFoods,
+  getAllGeneralMenus,
   getAllMenus,
   getAllMenuSets,
   getAllFoodAliases,
@@ -31,11 +34,13 @@ import {
   recordFoodSelection,
   reorderMealEntries,
   saveFoodWithMetadata,
+  saveGeneralMenu,
   saveMealEntries,
   saveMenu,
   saveMenuSet,
   saveSettings,
   searchFoodResults,
+  searchGeneralMenus,
   searchMenus,
   searchMenuSets,
   setFavorite,
@@ -66,9 +71,11 @@ import {
   calculateMealMenuEntryNutrients,
   calculateMealMenuSnapshotNutrients,
   cloneMealMenuSnapshot,
+  createGeneralMealMenuSnapshot,
   createMealFoodIngredientSnapshot,
   createMealMenuIngredientSnapshot,
   createMealMenuSnapshot,
+  createTemporaryMealMenuSnapshot,
 } from './services/mealMenuSnapshots'
 import { createMenuSetMealBatch, getMenuSetFoodItems } from './services/menuSetMeals'
 import { normalizeMealEntryOrder, sortMealEntries, sortMealEntryGroup } from './services/mealEntryOrder'
@@ -90,6 +97,7 @@ import {
   type FoodAlias,
   type FoodAliasType,
   type FoodGroup,
+  type GeneralMenu,
   type FoodRelatedTerm,
   type FoodVariantAttributes,
   type FoodUnit,
@@ -189,7 +197,7 @@ const TREND_RANGE_DAYS: Record<TrendRangeId, number> = Object.fromEntries(
 
 interface SearchResultItem {
   id: string
-  kind: 'user-food' | 'food' | 'menu' | 'set'
+  kind: 'user-food' | 'food' | 'menu' | 'general-menu' | 'set'
   title: string
   subtitle: string
   food: Food
@@ -224,6 +232,7 @@ interface MenuSetDraft {
   id: string | null
   name: string
   menuIds: string[]
+  generalMenuIds: string[]
   foodIds: string[]
   foodItems: MenuSetFoodItemDraft[]
 }
@@ -401,16 +410,46 @@ function snapshotToFood(entry: MealEntry): Food {
   }
 }
 
-function menuSetPreviewFood(menuSet: MenuSet, menus: Menu[], foods: Food[]): Food {
+function menuSetPreviewFood(menuSet: MenuSet, menus: Menu[], generalMenus: GeneralMenu[], foods: Food[]): Food {
   const menuNutrients = menuSet.menuIds.map((menuId) => menus.find((menu) => menu.id === menuId)).filter((menu): menu is Menu => Boolean(menu)).map((menu) => menuToFood(menu, menus, foods)).map((food) => food.nutrients)
+  const generalMenuNutrients = (menuSet.generalMenuIds ?? []).map((menuId) => generalMenus.find((menu) => menu.id === menuId)).filter((menu): menu is GeneralMenu => Boolean(menu)).map((menu) => generalMenuToFood(menu, menus, foods)).map((food) => food.nutrients)
   const foodNutrients = getMenuSetFoodItems(menuSet, foods).map((item) => {
     const food = foods.find((candidate) => candidate.id === item.foodId)
     return food ? calculateNutrients(food, item.amount, item.unit) : null
   }).filter((nutrients): nutrients is Nutrients => nutrients !== null)
-  const nutrients = sumNutrients([...menuNutrients, ...foodNutrients])
+  const nutrients = sumNutrients([...menuNutrients, ...generalMenuNutrients, ...foodNutrients])
   return {
-    id: `menu-set:${menuSet.id}`, name: menuSet.name, maker: '', barcode: '', source: 'user', sourceVersion: 'メニューセット',
+    id: `menu-set:${menuSet.id}`, name: menuSet.name, maker: '', barcode: '', source: 'user', sourceVersion: 'Myセット',
     baseAmount: 1, baseUnit: '食', servingAmount: 1, servingUnit: '食', nutrients, createdAt: menuSet.createdAt, updatedAt: menuSet.updatedAt,
+  }
+}
+
+function generalMenuToFood(menu: GeneralMenu, menus: Menu[], foods: Food[]): Food {
+  const converted = menuToFood(menu, [menu, ...menus], foods)
+  return {
+    ...converted,
+    id: `general-menu:${menu.id}`,
+    sourceVersion: `一般メニュー「${menu.category}」`,
+  }
+}
+
+function temporaryMenuToFood(snapshot: MealMenuSnapshot): Food {
+  const now = new Date().toISOString()
+  return {
+    id: snapshot.sourceMenuId,
+    name: snapshot.sourceMenuName,
+    displayName: snapshot.sourceMenuName,
+    maker: '',
+    barcode: '',
+    source: 'user',
+    sourceVersion: '一時メニュー',
+    baseAmount: 1,
+    baseUnit: '食',
+    servingAmount: 1,
+    servingUnit: '食',
+    nutrients: calculateMealMenuSnapshotNutrients(snapshot),
+    createdAt: now,
+    updatedAt: now,
   }
 }
 
@@ -522,6 +561,7 @@ function App() {
   const [foodAliases, setFoodAliases] = useState<FoodAlias[]>([])
   const [foodRelatedTerms, setFoodRelatedTerms] = useState<FoodRelatedTerm[]>([])
   const [menus, setMenus] = useState<Menu[]>([])
+  const [generalMenus, setGeneralMenus] = useState<GeneralMenu[]>([])
   const [menuSets, setMenuSets] = useState<MenuSet[]>([])
   const [recentFoods, setRecentFoods] = useState<Food[]>([])
   const [favoriteFoods, setFavoriteFoods] = useState<Food[]>([])
@@ -545,6 +585,8 @@ function App() {
   const [foodFormMealType, setFoodFormMealType] = useState<MealType | null>(null)
   const [foodFormSearchQuery, setFoodFormSearchQuery] = useState<string | null>(null)
   const [menuDraft, setMenuDraft] = useState<MenuDraft | null>(null)
+  const [generalMenuDraft, setGeneralMenuDraft] = useState<MenuDraft | null>(null)
+  const [temporaryMenuDraft, setTemporaryMenuDraft] = useState<MenuDraft | null>(null)
   const [menuSetDraft, setMenuSetDraft] = useState<MenuSetDraft | null>(null)
   const [externalNote, setExternalNote] = useState<string | null>(null)
   const [mealFood, setMealFood] = useState<Food | null>(null)
@@ -567,7 +609,7 @@ function App() {
   const [bodyProfileInputs, setBodyProfileInputs] = useState<BodyProfileDraft>(bodyProfileToDraft(DEFAULT_BODY_PROFILE))
   const [csvFrom, setCsvFrom] = useState(currentMonthRange().from)
   const [csvTo, setCsvTo] = useState(currentMonthRange().to)
-  const [counts, setCounts] = useState({ foods: 0, meals: 0, menus: 0, menuSets: 0 })
+  const [counts, setCounts] = useState({ foods: 0, meals: 0, menus: 0, generalMenus: 0, menuSets: 0 })
   const updateSWRef = useRef<((reloadPage?: boolean) => Promise<void>) | null>(null)
   const selectedDateRef = useRef(selectedDate)
   const loadRequestIdRef = useRef(0)
@@ -585,9 +627,9 @@ function App() {
     const requestedDate = selectedDateRef.current
     setLoadedDate(null)
     try {
-      const [dateEntries, resultFoods, resultGroups, resultAliases, resultRelatedTerms, recent, favorites, ids, currentSettings, currentEstimationSettings, foodCount, mealCount, menuCount, menuSetCount, foodKeys, resultMenus, resultMenuSets] = await Promise.all([
+      const [dateEntries, resultFoods, resultGroups, resultAliases, resultRelatedTerms, recent, favorites, ids, currentSettings, currentEstimationSettings, foodCount, mealCount, menuCount, generalMenuCount, menuSetCount, foodKeys, resultMenus, resultGeneralMenus, resultMenuSets] = await Promise.all([
         getEntriesForDate(requestedDate), getAllFoods(), getAllFoodGroups(), getAllFoodAliases(), getAllFoodRelatedTerms(), getRecentFoods(), getFavoriteFoods(), getFavoriteIds(),
-        getSettings(), getEstimationSettings(), db.foods.count(), db.mealEntries.count(), db.menus.count(), db.menuSets.count(), db.foods.toCollection().primaryKeys(), getAllMenus(), getAllMenuSets(),
+        getSettings(), getEstimationSettings(), db.foods.count(), db.mealEntries.count(), db.menus.count(), db.generalMenus.count(), db.menuSets.count(), db.foods.toCollection().primaryKeys(), getAllMenus(), getAllGeneralMenus(), getAllMenuSets(),
       ])
       if (requestId !== loadRequestIdRef.current || requestedDate !== selectedDateRef.current) return false
       setEntries(dateEntries)
@@ -596,14 +638,15 @@ function App() {
       setFoodAliases(resultAliases)
       setFoodRelatedTerms(resultRelatedTerms)
       setMenus(resultMenus)
+      setGeneralMenus(resultGeneralMenus)
       setMenuSets(resultMenuSets)
       setRecentFoods(recent)
       setFavoriteFoods(favorites)
       setFavoriteIds(ids)
-      setExistingFoodIds(new Set([...foodKeys, ...resultMenus.map((menu) => `menu:${menu.id}`), ...resultMenuSets.map((menuSet) => `menu-set:${menuSet.id}`)]))
+      setExistingFoodIds(new Set([...foodKeys, ...resultMenus.map((menu) => `menu:${menu.id}`), ...resultGeneralMenus.map((menu) => `general-menu:${menu.id}`), ...resultMenuSets.map((menuSet) => `menu-set:${menuSet.id}`)]))
       setSettings(currentSettings)
       setEstimationSettings(currentEstimationSettings)
-      setCounts({ foods: foodCount, meals: mealCount, menus: menuCount, menuSets: menuSetCount })
+      setCounts({ foods: foodCount, meals: mealCount, menus: menuCount, generalMenus: generalMenuCount, menuSets: menuSetCount })
       setGoalInputs(Object.fromEntries(nutrientKeys.map((key) => [key, currentSettings.goals[key] === null ? '' : String(currentSettings.goals[key])])) as Record<NutrientKey, string>)
       setBodyProfileInputs(bodyProfileToDraft(currentSettings.bodyProfile))
       setLoadedDate(requestedDate)
@@ -635,7 +678,7 @@ function App() {
     if (view === 'food-screen') window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
   }, [view])
 
-  const modalOpen = Boolean(mealTypePicker || mealFood || mealDetails || showTodayDetails || menuDraft || menuSetDraft || showScanner || variantPicker || mealVariantEdit)
+  const modalOpen = Boolean(mealTypePicker || mealFood || mealDetails || showTodayDetails || menuDraft || generalMenuDraft || temporaryMenuDraft || menuSetDraft || showScanner || variantPicker || mealVariantEdit)
 
   useEffect(() => {
     if (!modalOpen) return
@@ -704,12 +747,16 @@ function App() {
     setMealAmountUnit(serving.unit)
     const sourceMenuId = !entry && food.id.startsWith('menu:') ? food.id.slice('menu:'.length) : null
     const sourceMenu = sourceMenuId ? menus.find((menu) => menu.id === sourceMenuId) : undefined
+    const sourceGeneralMenuId = !entry && food.id.startsWith('general-menu:') ? food.id.slice('general-menu:'.length) : null
+    const sourceGeneralMenu = sourceGeneralMenuId ? generalMenus.find((menu) => menu.id === sourceGeneralMenuId) : undefined
     setMealMenuSnapshot(entry?.menuSnapshot
       ? cloneMealMenuSnapshot(entry.menuSnapshot)
-      : sourceMenu ? createMealMenuSnapshot(sourceMenu, menus, foods) : null)
+      : sourceMenu ? createMealMenuSnapshot(sourceMenu, menus, foods)
+        : sourceGeneralMenu ? createGeneralMealMenuSnapshot(sourceGeneralMenu, menus, foods)
+          : null)
     setMealType(forcedMealType ?? entry?.mealType ?? '朝食')
     setError(null)
-  }, [foods, menus])
+  }, [foods, generalMenus, menus])
 
   const openMealEntryEditor = useCallback((entry: MealEntry) => {
     const currentVariant = entry.menuSnapshot ? undefined : getFoodVariantBySourceId(entry.foodId)
@@ -920,7 +967,7 @@ function App() {
       const incompatibleMenus = menusWithUnsupportedIngredientUnits(menus, foodsAfterSave)
         .filter((menu) => menu.ingredients?.some((ingredient) => ingredient.kind === 'food' && ingredient.itemId === food.id))
       if (incompatibleMenus.length > 0) {
-        showError(`入力用単位を変更する前に、料理メニュー「${incompatibleMenus[0].name}」の該当食材を基準単位などへ変更してください。`)
+        showError(`入力用単位を変更する前に、Myメニュー「${incompatibleMenus[0].name}」の該当食材を基準単位などへ変更してください。`)
         return
       }
       const group: FoodGroup = {
@@ -1047,6 +1094,7 @@ function App() {
     const amount = Number(amountText)
     if (!isPositiveFinite(amount) || amount > 100000) { showError('分量は0より大きく、現実的な範囲の数値で入力してください。'); return false }
     const snapshotIngredients = menuSnapshot?.ingredients ?? []
+    if (menuSnapshot && !menuSnapshot.sourceMenuName.trim()) { showError('メニュー名を入力してください。'); return false }
     const invalidIngredientAmount = (ingredients: MealIngredientSnapshot[]): boolean => ingredients.some((ingredient) => !isPositiveFinite(ingredient.amount) || ingredient.amount > 100000 || (ingredient.kind === 'menu' && invalidIngredientAmount(ingredient.ingredients)))
     const invalidIngredientUnit = (ingredients: MealIngredientSnapshot[]): boolean => ingredients.some((ingredient) => {
       if (ingredient.kind === 'menu') return ingredient.unit !== '食' || invalidIngredientUnit(ingredient.ingredients)
@@ -1064,7 +1112,9 @@ function App() {
     const eatenAt = entryToEdit
       ? (mealType === '間食' ? entryToEdit.eatenAt : (currentMealTime ?? entryToEdit.eatenAt))
       : isoForDate(targetDate)
-    const resolvedUserFacingName = userFacingName?.trim()
+    const menuDisplayName = menuSnapshot?.sourceMenuName.trim()
+    const resolvedUserFacingName = menuDisplayName
+      || userFacingName?.trim()
       || entryToEdit?.foodSnapshot.userFacingName?.trim()
       || getMextUserFacingFoodName(food.id)
       || food.displayName?.trim()
@@ -1072,7 +1122,7 @@ function App() {
     const entry: MealEntry = {
       id: entryToEdit?.id ?? createNewMealId(), eatenAt, mealType,
       foodId: food.id, foodSnapshot: {
-        name: food.displayName ?? food.name, officialName: food.officialName, displayName: food.displayName, userFacingName: resolvedUserFacingName,
+        name: menuDisplayName || food.displayName || food.name, officialName: food.officialName, displayName: menuDisplayName || food.displayName, userFacingName: resolvedUserFacingName,
         maker: food.maker, barcode: food.barcode, baseAmount: food.baseAmount,
         baseUnit: food.baseUnit, inputUnitConversions: food.inputUnitConversions?.map((conversion) => ({ ...conversion })), nutrients: { ...snapshotNutrients },
         nutrientMetadata: food.nutrientMetadata
@@ -1150,11 +1200,11 @@ function App() {
       const currentMealTime = currentEntries.find((entry) => entry.mealType === targetMealType)?.eatenAt
       const eatenAt = targetMealType === '間食' ? isoForDate(targetDate) : (currentMealTime ?? isoForDate(targetDate))
       const batch = createMenuSetMealBatch({
-        menuSet, menus, foods, mealType: targetMealType, eatenAt, createId: createNewMealId,
+        menuSet, menus, generalMenus, foods, mealType: targetMealType, eatenAt, createId: createNewMealId,
       })
-      const missingCount = batch.missingMenuIds.length + batch.missingFoodIds.length
+      const missingCount = batch.missingMenuIds.length + batch.missingGeneralMenuIds.length + batch.missingFoodIds.length
       if (batch.entries.length === 0) {
-        showError(`「${menuSet.name}」には登録できる料理メニュー・食品がありません。セット内容を確認してください。`)
+        showError(`「${menuSet.name}」には登録できるメニュー・食品がありません。Myセットの内容を確認してください。`)
         return false
       }
       const existingGroup = sortMealEntryGroup(currentEntries.filter((entry) => entry.mealType === targetMealType))
@@ -1183,7 +1233,7 @@ function App() {
       notify(`「${menuSet.name}」の内容${batch.entries.length}件を${targetMealType}へ一括登録しました。${missingCount > 0 ? `削除済みの${missingCount}件は除外しました。` : ''}`)
       return true
     } catch {
-      showError('メニューセットを一括登録できませんでした。保存先の空き容量を確認して再試行してください。')
+      showError('Myセットを一括登録できませんでした。保存先の空き容量を確認して再試行してください。')
       return false
     } finally {
       menuSetRegistrationRef.current = false
@@ -1304,11 +1354,12 @@ function App() {
       const groups = await Promise.all(queries.map(async (query) => {
         const includeFoods = foodSearchCategoryIncludesFoods(category)
         const includeMenus = foodSearchCategoryIncludesMenus(category) && Boolean(query) && searchPurpose === 'meal'
-        const [{ page, logId }, resultMenus, resultMenuSets] = await Promise.all([
+        const [{ page, logId }, resultMenus, resultGeneralMenus, resultMenuSets] = await Promise.all([
           includeFoods
             ? searchFoodResults(query, { limit: 20, category })
             : Promise.resolve({ page: { results: [], normalizedQuery: normalizeSearchText(query), nextCursor: null }, logId: null }),
           includeMenus ? searchMenus(query) : Promise.resolve([]),
+          includeMenus ? searchGeneralMenus(query) : Promise.resolve([]),
           includeMenus ? searchMenuSets(query) : Promise.resolve([]),
         ])
         const allUserResults = (category === 'all' || category === 'general') && query ? searchUserFoodGroups(query, { expandPartShortcuts: true }) : []
@@ -1339,8 +1390,9 @@ function App() {
         const items: SearchResultItem[] = [
           ...userItems,
           ...page.results.filter((result) => !coveredFoodGroupIds.has(result.group.id)).map((result, index) => ({ id: result.group.id, kind: 'food' as const, title: displaySearchFoodName(result.group, result.food), subtitle: `${result.group.category ?? '食品'} · ${result.variants.length > 1 ? `${result.variants.length}バリエーション` : `${result.food.baseAmount}${result.food.baseUnit}`} · ${formatNutrient(result.food.nutrients.energyKcal)}kcal`, food: result.food, group: result.group, variants: result.variants, score: result.score, matchedBy: result.matchedBy, recentlyUsed: result.recentlyUsed, searchLogId: logId, searchRank: userItems.length + index + 1 })),
-          ...resultMenus.map((menu) => ({ id: menu.id, kind: 'menu' as const, title: menu.name, subtitle: `メニュー · ${menu.category} · 食材: ${menuIngredientNames(menu, menus, foods) || '未登録'}`, food: menuToFood(menu, menus, foods), group: null, variants: [] as Food[], score: null, matchedBy: null, recentlyUsed: false, searchLogId: null, searchRank: null })),
-          ...resultMenuSets.map((menuSet) => ({ id: menuSet.id, kind: 'set' as const, title: menuSet.name, subtitle: `メニューセット · 内容${menuSet.menuIds.length + getMenuSetFoodItems(menuSet, foods).length}件を一括登録`, food: menuSetPreviewFood(menuSet, menus, foods), group: null, variants: [] as Food[], score: null, matchedBy: null, recentlyUsed: false, searchLogId: null, searchRank: null })),
+          ...resultMenus.map((menu) => ({ id: menu.id, kind: 'menu' as const, title: menu.name, subtitle: `Myメニュー · ${menu.category} · 食材: ${menuIngredientNames(menu, menus, foods) || '未登録'}`, food: menuToFood(menu, menus, foods), group: null, variants: [] as Food[], score: null, matchedBy: null, recentlyUsed: false, searchLogId: null, searchRank: null })),
+          ...resultGeneralMenus.map((menu) => ({ id: menu.id, kind: 'general-menu' as const, title: menu.name, subtitle: `一般メニュー · ${menu.category} · 食材: ${menuIngredientNames(menu, [menu, ...menus], foods) || '未登録'}`, food: generalMenuToFood(menu, menus, foods), group: null, variants: [] as Food[], score: null, matchedBy: null, recentlyUsed: false, searchLogId: null, searchRank: null })),
+          ...resultMenuSets.map((menuSet) => ({ id: menuSet.id, kind: 'set' as const, title: menuSet.name, subtitle: `Myセット · 内容${menuSet.menuIds.length + (menuSet.generalMenuIds?.length ?? 0) + getMenuSetFoodItems(menuSet, foods).length}件を一括登録`, food: menuSetPreviewFood(menuSet, menus, generalMenus, foods), group: null, variants: [] as Food[], score: null, matchedBy: null, recentlyUsed: false, searchLogId: null, searchRank: null })),
         ]
         return { query: query || '最近・お気に入り', items, searchLogId: logId, nextCursor: page.nextCursor }
       }))
@@ -1420,7 +1472,7 @@ function App() {
     if (item.kind === 'set') {
       const menuSet = menuSets.find((candidate) => candidate.id === item.id)
       if (!menuSet) {
-        showError('メニューセットが見つかりません。メニュー画面で登録内容を確認してください。')
+        showError('Myセットが見つかりません。メニュー画面で登録内容を確認してください。')
         return
       }
       void registerMenuSet(menuSet, groupQuery)
@@ -1480,8 +1532,8 @@ function App() {
     const ingredients = menuDraft.ingredients.map((ingredient) => ({ ...ingredient, amount: Number(ingredient.amount) }))
     if (ingredients.some((ingredient) => !isPositiveFinite(ingredient.amount) || ingredient.amount > 100000)) { showError('食材の分量は0より大きく100000以下で入力してください。'); return }
     if (ingredients.some((ingredient) => ingredient.kind === 'food' && foods.some((food) => food.id === ingredient.itemId) && !getFoodQuantityUnits(foods.find((food) => food.id === ingredient.itemId)!).includes(ingredient.unit))) { showError('食品の入力単位が現在の換算設定と一致しません。単位を選び直してください。'); return }
-    if (ingredients.some((ingredient) => ingredient.kind === 'menu' && ingredient.unit !== '食')) { showError('料理メニューの単位は「食」を選択してください。'); return }
-    if (menuDraft.id && ingredients.some((ingredient) => ingredient.kind === 'menu' && wouldCreateMenuCycle(menuDraft.id, ingredient.itemId, menus))) { showError('料理メニューを循環して参照することはできません。'); return }
+    if (ingredients.some((ingredient) => ingredient.kind === 'menu' && ingredient.unit !== '食')) { showError('Myメニューの単位は「食」を選択してください。'); return }
+    if (menuDraft.id && ingredients.some((ingredient) => ingredient.kind === 'menu' && wouldCreateMenuCycle(menuDraft.id, ingredient.itemId, menus))) { showError('Myメニューを循環して参照することはできません。'); return }
     const now = new Date().toISOString()
     const menu: Menu = {
       id: menuDraft.id ?? createNewMenuId(), name: menuDraft.name.trim(), category: menuDraft.category,
@@ -1490,6 +1542,91 @@ function App() {
       createdAt: menuDraft.id ? (menus.find((item) => item.id === menuDraft.id)?.createdAt ?? now) : now, updatedAt: now,
     }
     try { await saveMenu(menu); setMenuDraft(null); await reloadAfterMutation(menuDraft.id ? 'メニューを更新しました。' : 'メニューを登録しました。') } catch { showError('メニューを保存できませんでした。') }
+  }
+
+  const validateMenuDraftIngredients = (draft: MenuDraft): MenuIngredient[] | null => {
+    const ingredients = draft.ingredients.map((ingredient) => ({ ...ingredient, amount: Number(ingredient.amount) }))
+    if (ingredients.some((ingredient) => !isPositiveFinite(ingredient.amount) || ingredient.amount > 100000)) {
+      showError('食材の分量は0より大きく100000以下で入力してください。')
+      return null
+    }
+    if (ingredients.some((ingredient) => {
+      if (ingredient.kind === 'menu') return ingredient.unit !== '食'
+      const food = foods.find((candidate) => candidate.id === ingredient.itemId)
+      return food !== undefined && !getFoodQuantityUnits(food).includes(ingredient.unit)
+    })) {
+      showError('食材の入力単位が現在の換算設定と一致しません。単位を選び直してください。')
+      return null
+    }
+    return ingredients
+  }
+
+  const saveGeneralMenuDraft = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!generalMenuDraft || !generalMenuDraft.name.trim()) { showError('一般メニュー名を入力してください。'); return }
+    const ingredients = validateMenuDraftIngredients(generalMenuDraft)
+    if (!ingredients) return
+    if (ingredients.length === 0) { showError('一般メニューに食材を1件以上追加してください。'); return }
+    const now = new Date().toISOString()
+    const menu: GeneralMenu = {
+      id: generalMenuDraft.id ?? createNewGeneralMenuId(),
+      name: generalMenuDraft.name.trim(),
+      category: generalMenuDraft.category,
+      foodIds: ingredients.filter((ingredient) => ingredient.kind === 'food').map((ingredient) => ingredient.itemId),
+      ingredients,
+      aliases: [...new Set(generalMenuDraft.aliases.map((alias) => alias.trim()).filter(Boolean))],
+      createdAt: generalMenuDraft.id ? (generalMenus.find((item) => item.id === generalMenuDraft.id)?.createdAt ?? now) : now,
+      updatedAt: now,
+    }
+    try {
+      await saveGeneralMenu(menu)
+      setGeneralMenuDraft(null)
+      await reloadAfterMutation(generalMenuDraft.id ? '一般メニューを更新しました。' : '一般メニューを登録しました。')
+    } catch {
+      showError('一般メニューを保存できませんでした。')
+    }
+  }
+
+  const saveTemporaryMenuDraft = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!temporaryMenuDraft || !temporaryMenuDraft.name.trim()) { showError('一時メニュー名を入力してください。'); return }
+    const ingredients = validateMenuDraftIngredients(temporaryMenuDraft)
+    if (!ingredients) return
+    if (ingredients.length === 0) { showError('一時メニューに食材を1件以上追加してください。'); return }
+    const snapshots: MealIngredientSnapshot[] = []
+    for (const ingredient of ingredients) {
+      if (ingredient.kind === 'food') {
+        const food = foods.find((candidate) => candidate.id === ingredient.itemId)
+        if (!food) { showError('削除済みの食品が含まれています。食材を選び直してください。'); return }
+        snapshots.push(createMealFoodIngredientSnapshot(food, ingredient.amount, ingredient.unit))
+      } else {
+        const menu = menus.find((candidate) => candidate.id === ingredient.itemId)
+        if (!menu) { showError('削除済みのMyメニューが含まれています。食材を選び直してください。'); return }
+        snapshots.push(createMealMenuIngredientSnapshot(menu, menus, foods, ingredient.amount, ingredient.unit))
+      }
+    }
+    const snapshot = createTemporaryMealMenuSnapshot(temporaryMenuDraft.name, snapshots)
+    const saved = await saveMealRecord(temporaryMenuToFood(snapshot), '1', '食', null, snapshot, snapshot.sourceMenuName)
+    if (saved) setTemporaryMenuDraft(null)
+  }
+
+  const cloneGeneralMenuToMyMenu = async (generalMenu: GeneralMenu) => {
+    const now = new Date().toISOString()
+    const cloned: Menu = {
+      ...generalMenu,
+      id: createNewMenuId(),
+      foodIds: [...generalMenu.foodIds],
+      ingredients: generalMenu.ingredients?.map((ingredient) => ({ ...ingredient })),
+      aliases: generalMenu.aliases ? [...generalMenu.aliases] : undefined,
+      createdAt: now,
+      updatedAt: now,
+    }
+    try {
+      await saveMenu(cloned)
+      await reloadAfterMutation(`「${generalMenu.name}」をMyメニューへ複製しました。`)
+    } catch {
+      showError('一般メニューをMyメニューへ複製できませんでした。')
+    }
   }
 
   const saveMenuSetDraft = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -1506,10 +1643,11 @@ function App() {
     const now = new Date().toISOString()
     const menuSet: MenuSet = {
       id: menuSetDraft.id ?? createNewMenuSetId(), name: menuSetDraft.name.trim(), menuIds: menuSetDraft.menuIds,
+      generalMenuIds: menuSetDraft.generalMenuIds,
       foodIds: foodItems.map((item) => item.foodId), foodItems,
       createdAt: menuSetDraft.id ? (menuSets.find((item) => item.id === menuSetDraft.id)?.createdAt ?? now) : now, updatedAt: now,
     }
-    try { await saveMenuSet(menuSet); setMenuSetDraft(null); await reloadAfterMutation(menuSetDraft.id ? 'メニューセットを更新しました。' : 'メニューセットを登録しました。') } catch { showError('メニューセットを保存できませんでした。') }
+    try { await saveMenuSet(menuSet); setMenuSetDraft(null); await reloadAfterMutation(menuSetDraft.id ? 'Myセットを更新しました。' : 'Myセットを登録しました。') } catch { showError('Myセットを保存できませんでした。') }
   }
 
   const removeMenu = async (menu: Menu) => {
@@ -1517,9 +1655,14 @@ function App() {
     try { await deleteMenu(menu.id); await reloadAfterMutation('メニューを削除しました。') } catch (error) { showError(error instanceof Error ? error.message : 'メニューを削除できませんでした。') }
   }
 
+  const removeGeneralMenu = async (menu: GeneralMenu) => {
+    if (!window.confirm(`一般メニュー「${menu.name}」を削除しますか？`)) return
+    try { await deleteGeneralMenu(menu.id); await reloadAfterMutation('一般メニューを削除しました。') } catch { showError('一般メニューを削除できませんでした。') }
+  }
+
   const removeMenuSet = async (menuSet: MenuSet) => {
     if (!window.confirm(`「${menuSet.name}」を削除しますか？`)) return
-    try { await deleteMenuSet(menuSet.id); await reloadAfterMutation('メニューセットを削除しました。') } catch { showError('メニューセットを削除できませんでした。') }
+    try { await deleteMenuSet(menuSet.id); await reloadAfterMutation('Myセットを削除しました。') } catch { showError('Myセットを削除できませんでした。') }
   }
 
   const toggleExternalApi = async (enabled: boolean) => {
@@ -1634,7 +1777,7 @@ function App() {
       downloadBlob(backupToJson(current), `nutrition-auto-backup-${formatFileTimestamp(new Date(current.exportedAt))}.json`, 'application/json')
       const result = await replaceAllData(backup)
       const refreshed = await load()
-      const summary = `食品${backup.foods.length}件、食事${backup.mealEntries.length}件、メニュー${backup.menus?.length ?? 0}件、セット${backup.menuSets?.length ?? 0}件`
+      const summary = `食品${backup.foods.length}件、食事${backup.mealEntries.length}件、Myメニュー${backup.menus?.length ?? 0}件、一般メニュー${backup.generalMenus?.length ?? 0}件、Myセット${backup.menuSets?.length ?? 0}件`
       if (!refreshed) {
         showError(`復元は完了しました（${summary}）。画面を再読み込みしてください。`)
       } else if (!result.searchMetadataReady) {
@@ -1708,10 +1851,10 @@ function App() {
           onDone={() => { setConfirmingMealType(null); setView('today') }}
         />}
         {view === 'graphs' && <GraphsView range={graphRange} onRangeChange={setGraphRange} goals={settings.goals} />}
-        {view === 'food-screen' && <FoodsView recordingMealType={recordingMealType} foods={foods} foodGroups={foodGroups} menus={menus} menuSets={menuSets} recentFoods={recentFoods} favoriteFoods={favoriteFoods} favoriteIds={favoriteIds} onSelectFood={handleFoodSelection} onSelectMenuSet={(menuSet) => void registerMenuSet(menuSet)} onToggleFavorite={toggleFavorite} onEditFood={(food) => openFoodForm(food, '', 'food-screen', null, null, '', foodScreenReturnView === 'settings' ? 'settings' : 'meal')} onDeleteFood={removeFood} onOpenSearch={() => openSearchInput(recordingMealType ? 'meal' : 'food-master')} onOpenScanner={() => setShowScanner(true)} onBack={() => { setRecordingMealType(null); setView(foodScreenReturnView) }} backLabel={foodScreenReturnView === 'settings' ? '← 設定' : '← 記録'} copyMealType={copyMealType} setCopyMealType={setCopyMealType} onCopyPrevious={copyPreviousMeals} />}
+        {view === 'food-screen' && <FoodsView recordingMealType={recordingMealType} foods={foods} foodGroups={foodGroups} menus={menus} generalMenus={generalMenus} menuSets={menuSets} recentFoods={recentFoods} favoriteFoods={favoriteFoods} favoriteIds={favoriteIds} onSelectFood={handleFoodSelection} onSelectMenuSet={(menuSet) => void registerMenuSet(menuSet)} onCreateTemporaryMenu={() => setTemporaryMenuDraft({ id: null, name: '', category: 'その他', ingredients: [], aliases: [] })} onToggleFavorite={toggleFavorite} onEditFood={(food) => openFoodForm(food, '', 'food-screen', null, null, '', foodScreenReturnView === 'settings' ? 'settings' : 'meal')} onDeleteFood={removeFood} onOpenSearch={() => openSearchInput(recordingMealType ? 'meal' : 'food-master')} onOpenScanner={() => setShowScanner(true)} onBack={() => { setRecordingMealType(null); setView(foodScreenReturnView) }} backLabel={foodScreenReturnView === 'settings' ? '← 設定' : '← 記録'} copyMealType={copyMealType} setCopyMealType={setCopyMealType} onCopyPrevious={copyPreviousMeals} />}
         {view === 'food-form' && foodDraft && <FoodFormView draft={foodDraft} returnView={foodFormReturnView} allowCommercialClassification={foodFormOrigin === 'settings'} estimationEnabled={estimationSettings?.enabled === true} setDraft={setFoodDraft} foodGroups={foodGroups} foodAliases={foodAliases} foodRelatedTerms={foodRelatedTerms} externalNote={externalNote} onRevertEstimate={(foodId, nutrientKey) => void revertFoodEstimate(foodId, nutrientKey)} onSubmit={saveFoodDraft} onClose={() => { setFoodDraft(null); setFoodFormMealType(null); setFoodFormSearchQuery(null); setView(foodFormReturnView) }} />}
         {view === 'settings' && estimationSettings && <SettingsView settings={settings} estimationSettings={estimationSettings} goalInputs={goalInputs} setGoalInputs={setGoalInputs} onSaveGoals={saveGoals} onToggleExternalApi={toggleExternalApi} onToggleNutrientEstimator={toggleNutrientEstimator} onChangeDefaultMealTimeMode={changeDefaultMealTimeMode} onExportJson={exportJson} onRestoreJson={restoreJson} onExportCsv={exportCsv} onImportCsv={importCsv} onExportUnresolvedIngredients={exportUnresolvedIngredients} csvFrom={csvFrom} csvTo={csvTo} setCsvFrom={setCsvFrom} setCsvTo={setCsvTo} counts={counts} bodyProfileInputs={bodyProfileInputs} setBodyProfileInputs={setBodyProfileInputs} onSaveBodyProfile={saveBodyProfile} onOpenNewFood={() => openFoodForm(undefined, '', 'settings', null, null, '', 'settings')} onOpenFoodMaster={() => { setRecordingMealType(null); setFoodScreenReturnView('settings'); setView('food-screen') }} estimatedGoals={estimateDailyGoals(settings.bodyProfile ?? DEFAULT_BODY_PROFILE)} bmi={calculateBmi(settings.bodyProfile ?? DEFAULT_BODY_PROFILE)} />}
-        {view === 'menus' && <MenuView menus={menus} menuSets={menuSets} foods={foods} onNewMenu={() => setMenuDraft({ id: null, name: '', category: '主菜', ingredients: [], aliases: [] })} onEditMenu={(menu) => setMenuDraft({ id: menu.id, name: menu.name, category: menu.category, ingredients: getMenuIngredients(menu, foods).map((ingredient) => ({ ...ingredient, amount: String(ingredient.amount) })), aliases: menu.aliases ?? [] })} onDeleteMenu={removeMenu} onNewMenuSet={() => setMenuSetDraft({ id: null, name: '', menuIds: [], foodIds: [], foodItems: [] })} onEditMenuSet={(menuSet) => { const foodItems = getMenuSetFoodItems(menuSet, foods); setMenuSetDraft({ id: menuSet.id, name: menuSet.name, menuIds: menuSet.menuIds, foodIds: foodItems.map((item) => item.foodId), foodItems: foodItems.map((item) => ({ ...item, amount: String(item.amount) })) }) }} onDeleteMenuSet={removeMenuSet} onBack={() => setView('today')} />}
+        {view === 'menus' && <MenuView menus={menus} generalMenus={generalMenus} menuSets={menuSets} foods={foods} onNewMenu={() => setMenuDraft({ id: null, name: '', category: '主菜', ingredients: [], aliases: [] })} onEditMenu={(menu) => setMenuDraft({ id: menu.id, name: menu.name, category: menu.category, ingredients: getMenuIngredients(menu, foods).map((ingredient) => ({ ...ingredient, amount: String(ingredient.amount) })), aliases: menu.aliases ?? [] })} onDeleteMenu={removeMenu} onNewGeneralMenu={() => setGeneralMenuDraft({ id: null, name: '', category: '主菜', ingredients: [], aliases: [] })} onEditGeneralMenu={(menu) => setGeneralMenuDraft({ id: menu.id, name: menu.name, category: menu.category, ingredients: getMenuIngredients(menu, foods).map((ingredient) => ({ ...ingredient, amount: String(ingredient.amount) })), aliases: menu.aliases ?? [] })} onDeleteGeneralMenu={removeGeneralMenu} onCloneGeneralMenu={(menu) => void cloneGeneralMenuToMyMenu(menu)} onNewMenuSet={() => setMenuSetDraft({ id: null, name: '', menuIds: [], generalMenuIds: [], foodIds: [], foodItems: [] })} onEditMenuSet={(menuSet) => { const foodItems = getMenuSetFoodItems(menuSet, foods); setMenuSetDraft({ id: menuSet.id, name: menuSet.name, menuIds: menuSet.menuIds, generalMenuIds: menuSet.generalMenuIds ?? [], foodIds: foodItems.map((item) => item.foodId), foodItems: foodItems.map((item) => ({ ...item, amount: String(item.amount) })) }) }} onDeleteMenuSet={removeMenuSet} onBack={() => setView('today')} />}
         {view === 'search-input' && <SearchInputView bars={searchBars} setBars={setSearchBars} onSearch={() => void searchFoodsAndMenus()} onBack={() => setView('food-screen')} />}
         {view === 'search-results' && <SearchResultsView groups={searchResults} purpose={searchPurpose} category={searchCategory} searching={searchingResults} onCategoryChange={changeSearchCategory} onSelect={handleSearchResultSelect} onAddFood={(query) => openFoodForm(undefined, '', 'food-screen', searchPurpose === 'meal' ? (recordingMealType ?? mealType) : null, searchPurpose === 'meal' ? (query || null) : null, query, searchPurpose === 'food-master' ? 'settings' : 'meal')} onLoadMore={(index) => void loadMoreSearchResults(index)} onBack={leaveSearchResults} />}
       </main>
@@ -1747,7 +1890,9 @@ function App() {
       {mealDetails && <MealDetailsModal details={mealDetails} goals={scaleNutritionGoals(settings.goals, 1 / 3)} onUpdateTimes={updateMealTimes} onClose={() => setMealDetails(null)} />}
       {showTodayDetails && <TodayDetailsModal total={total} goals={settings.goals} entries={entries} onClose={() => setShowTodayDetails(false)} />}
       {menuDraft && <MenuEditorModal draft={menuDraft} setDraft={setMenuDraft} menus={menus} foods={foods} foodGroups={foodGroups} recentFoods={recentFoods} favoriteFoods={favoriteFoods} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} foodAttributePreferences={settings.foodAttributePreferences} onSaveFoodAttributePreference={saveFoodAttributePreference} onSubmit={saveMenuDraft} onClose={() => setMenuDraft(null)} />}
-      {menuSetDraft && <MenuSetEditorModal draft={menuSetDraft} setDraft={setMenuSetDraft} menus={menus} foods={foods} foodGroups={foodGroups} recentFoods={recentFoods} favoriteFoods={favoriteFoods} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} foodAttributePreferences={settings.foodAttributePreferences} onSaveFoodAttributePreference={saveFoodAttributePreference} onSubmit={saveMenuSetDraft} onClose={() => setMenuSetDraft(null)} />}
+      {generalMenuDraft && <MenuEditorModal draft={generalMenuDraft} setDraft={setGeneralMenuDraft} mode="general" menus={menus} foods={foods} foodGroups={foodGroups} recentFoods={recentFoods} favoriteFoods={favoriteFoods} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} foodAttributePreferences={settings.foodAttributePreferences} onSaveFoodAttributePreference={saveFoodAttributePreference} onSubmit={saveGeneralMenuDraft} onClose={() => setGeneralMenuDraft(null)} />}
+      {temporaryMenuDraft && <MenuEditorModal draft={temporaryMenuDraft} setDraft={setTemporaryMenuDraft} mode="temporary" menus={menus} foods={foods} foodGroups={foodGroups} recentFoods={recentFoods} favoriteFoods={favoriteFoods} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} foodAttributePreferences={settings.foodAttributePreferences} onSaveFoodAttributePreference={saveFoodAttributePreference} onSubmit={saveTemporaryMenuDraft} onClose={() => setTemporaryMenuDraft(null)} />}
+      {menuSetDraft && <MenuSetEditorModal draft={menuSetDraft} setDraft={setMenuSetDraft} menus={menus} generalMenus={generalMenus} foods={foods} foodGroups={foodGroups} recentFoods={recentFoods} favoriteFoods={favoriteFoods} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} foodAttributePreferences={settings.foodAttributePreferences} onSaveFoodAttributePreference={saveFoodAttributePreference} onSubmit={saveMenuSetDraft} onClose={() => setMenuSetDraft(null)} />}
       {showScanner && <Suspense fallback={<div className="modal-backdrop"><section className="modal-card"><p>バーコード画面を準備しています…</p></section></div>}><BarcodeScanner onDetected={handleBarcodeDetected} onClose={() => setShowScanner(false)} /></Suspense>}
     </div>
   )
@@ -2201,8 +2346,8 @@ function TodayDetailsModal({ total, goals, entries, onClose }: { total: Nutrient
   return <div className="modal-backdrop nutrient-detail-backdrop" role="dialog" aria-modal="true" aria-label="今日の栄養詳細"><section className="modal-card nutrient-detail-modal today-details-modal"><div className="modal-heading"><div><span className="eyebrow">TODAY DETAILS</span><h2>今日の詳細</h2></div><button className="icon-button" type="button" onClick={onClose} aria-label="閉じる">×</button></div><NutrientGoalGraphs nutrients={total} availableNutrients={availableNutrients} goals={goals} subtotals={subtotals} availableSubtotals={availableSubtotals} colorByMeal /></section></div>
 }
 
-function QuickFoodGroup({ title, foods, favoriteIds, onSelect, onToggleFavorite }: { title: string; foods: Food[]; favoriteIds: Set<string>; onSelect?: (food: Food) => void; onToggleFavorite: (food: Food) => void }) {
-  return <div className="quick-group"><h3>{title}</h3>{foods.length > 0 ? <div className="quick-list">{foods.map((food) => <FoodRow key={food.id} food={food} favorite={favoriteIds.has(food.id)} onSelect={onSelect} onToggleFavorite={onToggleFavorite} />)}</div> : <p className="quick-empty-inline">まだお気に入りがありません。食品の☆から追加できます。</p>}</div>
+function QuickFoodGroup({ title, foods, favoriteIds, onSelect, onToggleFavorite, emptyText = 'まだお気に入りがありません。食品の☆から追加できます。' }: { title: string; foods: Food[]; favoriteIds: Set<string>; onSelect?: (food: Food) => void; onToggleFavorite: (food: Food) => void; emptyText?: string }) {
+  return <div className="quick-group"><h3>{title}</h3>{foods.length > 0 ? <div className="quick-list">{foods.map((food) => <FoodRow key={food.id} food={food} favorite={favoriteIds.has(food.id)} onSelect={onSelect} onToggleFavorite={onToggleFavorite} />)}</div> : <p className="quick-empty-inline">{emptyText}</p>}</div>
 }
 
 function FoodRow({ food, favorite, onSelect, onAdd, onToggleFavorite, onEdit, onDelete, onRemove }: { food: Food; favorite: boolean; onSelect?: (food: Food) => void; onAdd?: (food: Food) => void; onToggleFavorite: (food: Food) => void; onEdit?: (food: Food) => void; onDelete?: (food: Food) => void; onRemove?: (food: Food) => void }) {
@@ -2210,9 +2355,36 @@ function FoodRow({ food, favorite, onSelect, onAdd, onToggleFavorite, onEdit, on
   return <div className="food-row">{onSelect ? <button type="button" className="food-main" onClick={() => onSelect(food)}><strong>{name}</strong><span>{food.maker || '一般食品'} · {food.baseAmount}{food.baseUnit} · {formatNutrient(food.nutrients.energyKcal)}kcal</span></button> : <div className="food-main static"><strong>{name}</strong><span>{food.maker || '一般食品'} · {food.baseAmount}{food.baseUnit} · {formatNutrient(food.nutrients.energyKcal)}kcal</span></div>}{onAdd && <button type="button" className="small-action food-add-button" onClick={() => onAdd(food)}>追加</button>}<button type="button" className={`favorite-button${favorite ? ' is-favorite' : ''}`} onClick={() => onToggleFavorite(food)} aria-label={favorite ? 'お気に入りを解除' : 'お気に入りに追加'}>{favorite ? '★' : '☆'}</button>{onEdit && <button type="button" className="small-action" onClick={() => onEdit(food)}>編集</button>}{onDelete && <button type="button" className="small-action danger-text" onClick={() => onDelete(food)}>削除</button>}{onRemove && <button type="button" className="small-action danger-text" onClick={() => onRemove(food)}>外す</button>}</div>
 }
 
-function MenuFoodPicker({ menus, menuSets, foods, onSelect, onSelectMenuSet }: { menus: Menu[]; menuSets: MenuSet[]; foods: Food[]; onSelect: (food: Food) => void; onSelectMenuSet: (menuSet: MenuSet) => void }) {
+function MenuFoodPicker({ menus, generalMenus, menuSets, foods, onSelect, onSelectMenuSet, onCreateTemporaryMenu }: { menus: Menu[]; generalMenus: GeneralMenu[]; menuSets: MenuSet[]; foods: Food[]; onSelect: (food: Food) => void; onSelectMenuSet: (menuSet: MenuSet) => void; onCreateTemporaryMenu: () => void }) {
   const categoryGroups = MENU_CATEGORIES.map((category) => ({ category, menus: menus.filter((menu) => menu.category === category) }))
-  return <section className="section-block menu-picker-section food-section-card"><div className="section-title"><div><span className="eyebrow">MENUS</span><h2>メニューから探す</h2></div></div><div className="menu-picker-groups"><details className="menu-picker-group"><summary><span className="menu-picker-summary-label"><i aria-hidden="true" />セット</span><small>{menuSets.length > 0 ? `${menuSets.length}件` : '登録なし'}</small></summary><div className="menu-picker-list">{menuSets.length > 0 ? menuSets.map((menuSet) => { const food = menuSetPreviewFood(menuSet, menus, foods); const itemCount = menuSet.menuIds.length + (menuSet.foodIds?.length ?? 0); return <button className="menu-picker-row" type="button" key={menuSet.id} onClick={() => onSelectMenuSet(menuSet)}><span className="source-badge">セット</span><span className="menu-picker-copy"><strong>{menuSet.name}</strong><small>内容{itemCount}件を一括登録 · {formatNutrient(food.nutrients.energyKcal)}kcal</small></span><b className="batch-action">一括登録</b></button> }) : <p className="menu-picker-empty">セットはまだ登録されていません。</p>}</div></details>{categoryGroups.map(({ category, menus: categoryMenus }) => <details className="menu-picker-group" key={category}><summary><span className="menu-picker-summary-label"><i aria-hidden="true" />{category}</span><small>{categoryMenus.length > 0 ? `${categoryMenus.length}件` : '登録なし'}</small></summary><div className="menu-picker-list">{categoryMenus.length > 0 ? categoryMenus.map((menu) => { const food = menuToFood(menu, menus, foods); return <button className="menu-picker-row" type="button" key={menu.id} onClick={() => onSelect(food)}><span className="source-badge">料理</span><span className="menu-picker-copy"><strong>{menu.name}</strong><small>{getMenuIngredients(menu, foods).length}食材 · {formatNutrient(food.nutrients.energyKcal)}kcal</small></span><b>›</b></button> }) : <p className="menu-picker-empty">この区分に登録されたメニューはありません。</p>}</div></details>)}</div></section>
+  return <section className="section-block menu-picker-section food-section-card">
+    <div className="section-title"><div><span className="eyebrow">MENUS</span><h2>メニューから探す</h2></div></div>
+    <div className="menu-picker-groups">
+      <details className="menu-picker-group">
+        <summary><span className="menu-picker-summary-label"><i aria-hidden="true" />Myセット</span><small>{menuSets.length > 0 ? `${menuSets.length}件` : '登録なし'}</small></summary>
+        <div className="menu-picker-list">{menuSets.length > 0 ? menuSets.map((menuSet) => {
+          const food = menuSetPreviewFood(menuSet, menus, generalMenus, foods)
+          const itemCount = menuSet.menuIds.length + (menuSet.generalMenuIds?.length ?? 0) + getMenuSetFoodItems(menuSet, foods).length
+          return <button className="menu-picker-row" type="button" key={menuSet.id} onClick={() => onSelectMenuSet(menuSet)}><span className="source-badge">セット</span><span className="menu-picker-copy"><strong>{menuSet.name}</strong><small>内容{itemCount}件を一括登録 · {formatNutrient(food.nutrients.energyKcal)}kcal</small></span><b className="batch-action">一括登録</b></button>
+        }) : <p className="menu-picker-empty">Myセットはまだ登録されていません。</p>}</div>
+      </details>
+      <button className="menu-picker-create-temporary" type="button" onClick={onCreateTemporaryMenu}><span><span className="eyebrow">ONE-TIME</span><strong>一時メニューを作成</strong><small>この食事だけの名前と構成食材をまとめます</small></span><b>＋</b></button>
+      <details className="menu-picker-group">
+        <summary><span className="menu-picker-summary-label"><i aria-hidden="true" />一般メニュー</span><small>{generalMenus.length > 0 ? `${generalMenus.length}件` : '登録なし'}</small></summary>
+        <div className="menu-picker-list">{generalMenus.length > 0 ? generalMenus.map((menu) => {
+          const food = generalMenuToFood(menu, menus, foods)
+          return <button className="menu-picker-row" type="button" key={menu.id} onClick={() => onSelect(food)}><span className="source-badge">一般</span><span className="menu-picker-copy"><strong>{menu.name}</strong><small>{getMenuIngredients(menu, foods).length}食材 · {formatNutrient(food.nutrients.energyKcal)}kcal</small></span><b>›</b></button>
+        }) : <p className="menu-picker-empty">一般メニューはまだ登録されていません。</p>}</div>
+      </details>
+      {categoryGroups.map(({ category, menus: categoryMenus }) => <details className="menu-picker-group" key={category}>
+        <summary><span className="menu-picker-summary-label"><i aria-hidden="true" />{category}</span><small>{categoryMenus.length > 0 ? `${categoryMenus.length}件` : '登録なし'}</small></summary>
+        <div className="menu-picker-list">{categoryMenus.length > 0 ? categoryMenus.map((menu) => {
+          const food = menuToFood(menu, menus, foods)
+          return <button className="menu-picker-row" type="button" key={menu.id} onClick={() => onSelect(food)}><span className="source-badge">My</span><span className="menu-picker-copy"><strong>{menu.name}</strong><small>{getMenuIngredients(menu, foods).length}食材 · {formatNutrient(food.nutrients.energyKcal)}kcal</small></span><b>›</b></button>
+        }) : <p className="menu-picker-empty">この区分に登録されたMyメニューはありません。</p>}</div>
+      </details>)}
+    </div>
+  </section>
 }
 
 function MealGroup({ type, entries, subtotal, existingFoodIds, onShowDetails, onOpenConfirmation }: { type: MealType; entries: MealEntry[]; subtotal?: Nutrients; existingFoodIds: Set<string>; onShowDetails: (type: MealType, entries: MealEntry[], subtotal: Nutrients) => void; onOpenConfirmation: (type: MealType) => void }) {
@@ -2220,10 +2392,10 @@ function MealGroup({ type, entries, subtotal, existingFoodIds, onShowDetails, on
   return <div className="meal-group"><div className="meal-heading"><h3><img className="meal-icon" src={MEAL_ICON_ASSETS[type]} alt="" aria-hidden="true" />{type}</h3><div className="meal-heading-actions"><span>{entries.length ? `${formatNutrient(subtotal?.energyKcal ?? null)} kcal` : '記録なし'}</span>{entries.length > 0 && <button type="button" className="small-action" onClick={() => onShowDetails(type, entries, subtotal ?? EMPTY_NUTRIENTS)}>詳細</button>}<button type="button" className="meal-record-button" onClick={() => onOpenConfirmation(type)}>編集</button></div></div>{entries.length > 0 && type !== '間食' && <div className="meal-shared-time">食事時刻：{sharedTime ? formatTime(sharedTime) : '未設定'}</div>}{entries.map((entry) => <div className="meal-entry" key={entry.id}><div className="meal-entry-copy"><strong>{getMealEntryDisplayName(entry)}{entry.foodSnapshot.maker ? `（${entry.foodSnapshot.maker}）` : ''}</strong><span>{entry.amount}{entry.amountUnit}{type === '間食' ? ` · ${formatTime(entry.eatenAt)}` : ''}{existingFoodIds.has(entry.foodId) ? '' : ' · 削除済み食品'}</span></div><div className="meal-entry-actions"><b>{formatNutrient(entry.calculatedNutrients.energyKcal)} kcal</b></div></div>)}</div>
 }
 
-interface FoodsViewProps { recordingMealType: MealType | null; foods: Food[]; foodGroups: FoodGroup[]; menus: Menu[]; menuSets: MenuSet[]; recentFoods: Food[]; favoriteFoods: Food[]; favoriteIds: Set<string>; onSelectFood: (food: Food) => void; onSelectMenuSet: (menuSet: MenuSet) => void; onToggleFavorite: (food: Food) => void; onEditFood: (food: Food) => void; onDeleteFood: (food: Food) => void; onOpenSearch?: () => void; onOpenScanner: () => void; onBack: () => void; backLabel: string; copyMealType: 'すべて' | MealType; setCopyMealType: (value: 'すべて' | MealType) => void; onCopyPrevious: () => void }
-function FoodsView({ recordingMealType, foods, foodGroups, menus, menuSets, recentFoods, favoriteFoods, favoriteIds, onSelectFood, onSelectMenuSet, onToggleFavorite, onEditFood, onDeleteFood, onOpenSearch, onOpenScanner, onBack, backLabel, copyMealType, setCopyMealType, onCopyPrevious }: FoodsViewProps) {
+interface FoodsViewProps { recordingMealType: MealType | null; foods: Food[]; foodGroups: FoodGroup[]; menus: Menu[]; generalMenus: GeneralMenu[]; menuSets: MenuSet[]; recentFoods: Food[]; favoriteFoods: Food[]; favoriteIds: Set<string>; onSelectFood: (food: Food) => void; onSelectMenuSet: (menuSet: MenuSet) => void; onCreateTemporaryMenu: () => void; onToggleFavorite: (food: Food) => void; onEditFood: (food: Food) => void; onDeleteFood: (food: Food) => void; onOpenSearch?: () => void; onOpenScanner: () => void; onBack: () => void; backLabel: string; copyMealType: 'すべて' | MealType; setCopyMealType: (value: 'すべて' | MealType) => void; onCopyPrevious: () => void }
+function FoodsView({ recordingMealType, foods, foodGroups, menus, generalMenus, menuSets, recentFoods, favoriteFoods, favoriteIds, onSelectFood, onSelectMenuSet, onCreateTemporaryMenu, onToggleFavorite, onEditFood, onDeleteFood, onOpenSearch, onOpenScanner, onBack, backLabel, copyMealType, setCopyMealType, onCopyPrevious }: FoodsViewProps) {
   const selectable = Boolean(recordingMealType)
-  const [activeTab, setActiveTab] = useState<'quick' | 'foods' | 'menus'>(selectable ? 'quick' : 'foods')
+  const [activeTab, setActiveTab] = useState<'favorites' | 'history' | 'foods' | 'menus'>(selectable ? 'favorites' : 'foods')
   const [foodMasterCategory, setFoodMasterCategory] = useState<'all' | 'commercial'>('all')
   const [openFoodGroups, setOpenFoodGroups] = useState<Set<FoodIndexGroupKey>>(new Set())
   const visibleFoods = useMemo(() => selectable
@@ -2231,12 +2403,12 @@ function FoodsView({ recordingMealType, foods, foodGroups, menus, menuSets, rece
     : foods.filter((food) => foodMatchesSearchCategory(food, foodMasterCategory)), [foodMasterCategory, foods, selectable])
   const indexedFoodGroups = useMemo(() => groupFoodsByKana(visibleFoods, foodGroups), [foodGroups, visibleFoods])
   useEffect(() => {
-    setActiveTab(selectable ? 'quick' : 'foods')
+    setActiveTab(selectable ? 'favorites' : 'foods')
   }, [selectable])
-  const tabs: Array<{ id: 'quick' | 'foods' | 'menus'; label: string }> = selectable
-    ? [{ id: 'quick', label: 'すぐに記録' }, { id: 'foods', label: '食品' }, { id: 'menus', label: 'メニュー' }]
+  const tabs: Array<{ id: 'favorites' | 'history' | 'foods' | 'menus'; label: string }> = selectable
+    ? [{ id: 'favorites', label: 'お気に入り' }, { id: 'history', label: '履歴' }, { id: 'menus', label: 'メニュー' }]
     : []
-  return <><section className="page-heading food-screen-heading"><div><span className="eyebrow">{recordingMealType ? 'SELECT FOOD' : 'FOOD MASTER'}</span><h1>{recordingMealType ? `${recordingMealType}の食品を選ぶ` : '食品を登録・管理'}</h1>{!recordingMealType && <p className="muted">食品の編集・検索はこの画面で行います。新規登録は設定から行えます。</p>}</div><button className="button ghost" type="button" onClick={onBack}>{backLabel}</button></section><div className="action-row">{onOpenSearch && <button className="button primary" type="button" onClick={onOpenSearch}>⌕ 食品を検索</button>}<button className="button secondary" type="button" onClick={onOpenScanner}>▦ バーコード</button></div><div className="search-category-tabs food-screen-tabs" role="tablist" aria-label="食品登録方法">{tabs.map((tab) => <button key={tab.id} id={`food-screen-tab-${tab.id}`} className={activeTab === tab.id ? 'active' : ''} type="button" role="tab" aria-selected={activeTab === tab.id} aria-controls="food-screen-tab-panel" onClick={() => setActiveTab(tab.id)}>{tab.label}</button>)}</div><div id="food-screen-tab-panel" role="tabpanel" aria-labelledby={`food-screen-tab-${activeTab}`} className="food-screen-sections">{activeTab === 'menus' && selectable && <MenuFoodPicker menus={menus} menuSets={menuSets} foods={foods} onSelect={onSelectFood} onSelectMenuSet={onSelectMenuSet} />}{activeTab === 'quick' && selectable && <section className="section-block food-section-card food-quick-section"><div className="section-title"><div><span className="eyebrow">QUICK ADD</span><h2>すぐに記録</h2></div><span className="count-label quick-count">最近 {recentFoods.length} / お気に入り {favoriteFoods.length}</span></div><div className="quick-groups">{recentFoods.length > 0 && <QuickFoodGroup title="最近使った食品" foods={recentFoods.slice(0, 6)} favoriteIds={favoriteIds} onSelect={onSelectFood} onToggleFavorite={onToggleFavorite} />}{<QuickFoodGroup title="お気に入り" foods={favoriteFoods.slice(0, 6)} favoriteIds={favoriteIds} onSelect={onSelectFood} onToggleFavorite={onToggleFavorite} />}</div>{recordingMealType && <section className="copy-panel quick-copy-panel"><div><strong>前日の食事をコピー</strong><span>当日の現在時刻で登録します</span></div><select value={copyMealType} onChange={(event) => setCopyMealType(event.target.value as 'すべて' | MealType)}><option>すべて</option>{MEAL_TYPES.map((type) => <option key={type}>{type}</option>)}</select><button className="button ghost" type="button" onClick={onCopyPrevious}>コピー</button></section>}</section>}{activeTab === 'foods' && <section className="section-block food-section-card"><div className="section-title"><div><span className="eyebrow">FOODS</span><h2>食品</h2></div><span className="count-label">{visibleFoods.length}件</span></div>{!selectable && <div className="search-category-tabs food-master-list-tabs" role="tablist" aria-label="食品一覧の分類"><button className={foodMasterCategory === 'all' ? 'active' : ''} type="button" role="tab" aria-selected={foodMasterCategory === 'all'} onClick={() => setFoodMasterCategory('all')}>すべて</button><button className={foodMasterCategory === 'commercial' ? 'active' : ''} type="button" role="tab" aria-selected={foodMasterCategory === 'commercial'} onClick={() => setFoodMasterCategory('commercial')}>外食・市販</button></div>}{selectable ? <div className="food-results">{visibleFoods.slice(0, 50).map((food) => <FoodRow key={food.id} food={food} favorite={favoriteIds.has(food.id)} onSelect={undefined} onAdd={onSelectFood} onToggleFavorite={onToggleFavorite} />)}</div> : <div className="menu-picker-groups">{indexedFoodGroups.map((group) => { const open = openFoodGroups.has(group.key); return <details className="menu-picker-group" key={group.key} open={open} onToggle={(event) => { const isOpen = event.currentTarget.open; setOpenFoodGroups((current) => { const next = new Set(current); if (isOpen) next.add(group.key); else next.delete(group.key); return next }) }}><summary><span className="menu-picker-summary-label"><i aria-hidden="true" />{group.label}</span><small>{group.foods.length > 0 ? `${group.foods.length}件` : '登録なし'}</small></summary>{open && <div className="food-results">{group.foods.length > 0 ? group.foods.map((food) => <FoodRow key={food.id} food={food} favorite={favoriteIds.has(food.id)} onToggleFavorite={onToggleFavorite} onEdit={onEditFood} onDelete={onDeleteFood} />) : <p className="menu-picker-empty">この行に登録された食品はありません。</p>}</div>}</details> })}</div>}</section>}</div></>
+  return <><section className="page-heading food-screen-heading"><div><span className="eyebrow">{recordingMealType ? 'SELECT FOOD' : 'FOOD MASTER'}</span><h1>{recordingMealType ? `${recordingMealType}の食品を選ぶ` : '食品を登録・管理'}</h1>{!recordingMealType && <p className="muted">食品の編集・検索はこの画面で行います。新規登録は設定から行えます。</p>}</div><button className="button ghost" type="button" onClick={onBack}>{backLabel}</button></section><div className="action-row">{onOpenSearch && <button className="button primary" type="button" onClick={onOpenSearch}>⌕ 食品を検索</button>}<button className="button secondary" type="button" onClick={onOpenScanner}>▦ バーコード</button></div><div className="search-category-tabs food-screen-tabs" role="tablist" aria-label="食品登録方法">{tabs.map((tab) => <button key={tab.id} id={`food-screen-tab-${tab.id}`} className={activeTab === tab.id ? 'active' : ''} type="button" role="tab" aria-selected={activeTab === tab.id} aria-controls="food-screen-tab-panel" onClick={() => setActiveTab(tab.id)}>{tab.label}</button>)}</div><div id="food-screen-tab-panel" role="tabpanel" aria-labelledby={`food-screen-tab-${activeTab}`} className="food-screen-sections">{activeTab === 'menus' && selectable && <MenuFoodPicker menus={menus} generalMenus={generalMenus} menuSets={menuSets} foods={foods} onSelect={onSelectFood} onSelectMenuSet={onSelectMenuSet} onCreateTemporaryMenu={onCreateTemporaryMenu} />}{activeTab === 'favorites' && selectable && <section className="section-block food-section-card food-quick-section"><div className="section-title"><div><span className="eyebrow">FAVORITES</span><h2>お気に入り</h2></div><span className="count-label quick-count">{favoriteFoods.length}件</span></div><QuickFoodGroup title="お気に入りの食品" foods={favoriteFoods.slice(0, 20)} favoriteIds={favoriteIds} onSelect={onSelectFood} onToggleFavorite={onToggleFavorite} /></section>}{activeTab === 'history' && selectable && <section className="section-block food-section-card food-quick-section"><div className="section-title"><div><span className="eyebrow">HISTORY</span><h2>履歴</h2></div><span className="count-label quick-count">{recentFoods.length}件</span></div><QuickFoodGroup title="最近使った食品" foods={recentFoods.slice(0, 20)} favoriteIds={favoriteIds} onSelect={onSelectFood} onToggleFavorite={onToggleFavorite} emptyText="食事を記録すると、最近使った食品がここに表示されます。" />{recordingMealType && <section className="copy-panel quick-copy-panel"><div><strong>前日の食事をコピー</strong><span>当日の現在時刻で登録します</span></div><select value={copyMealType} onChange={(event) => setCopyMealType(event.target.value as 'すべて' | MealType)}><option>すべて</option>{MEAL_TYPES.map((type) => <option key={type}>{type}</option>)}</select><button className="button ghost" type="button" onClick={onCopyPrevious}>コピー</button></section>}</section>}{activeTab === 'foods' && <section className="section-block food-section-card"><div className="section-title"><div><span className="eyebrow">FOODS</span><h2>食品</h2></div><span className="count-label">{visibleFoods.length}件</span></div>{!selectable && <div className="search-category-tabs food-master-list-tabs" role="tablist" aria-label="食品一覧の分類"><button className={foodMasterCategory === 'all' ? 'active' : ''} type="button" role="tab" aria-selected={foodMasterCategory === 'all'} onClick={() => setFoodMasterCategory('all')}>すべて</button><button className={foodMasterCategory === 'commercial' ? 'active' : ''} type="button" role="tab" aria-selected={foodMasterCategory === 'commercial'} onClick={() => setFoodMasterCategory('commercial')}>外食・市販</button></div>}<div className="menu-picker-groups">{indexedFoodGroups.map((group) => { const open = openFoodGroups.has(group.key); return <details className="menu-picker-group" key={group.key} open={open} onToggle={(event) => { const isOpen = event.currentTarget.open; setOpenFoodGroups((current) => { const next = new Set(current); if (isOpen) next.add(group.key); else next.delete(group.key); return next }) }}><summary><span className="menu-picker-summary-label"><i aria-hidden="true" />{group.label}</span><small>{group.foods.length > 0 ? `${group.foods.length}件` : '登録なし'}</small></summary>{open && <div className="food-results">{group.foods.length > 0 ? group.foods.map((food) => <FoodRow key={food.id} food={food} favorite={favoriteIds.has(food.id)} onToggleFavorite={onToggleFavorite} onEdit={onEditFood} onDelete={onDeleteFood} />) : <p className="menu-picker-empty">この行に登録された食品はありません。</p>}</div>}</details> })}</div></section>}</div></>
 }
 
 function SearchInputView({ bars, setBars, onSearch, onBack }: { bars: string[]; setBars: React.Dispatch<React.SetStateAction<string[]>>; onSearch: () => void; onBack: () => void }) {
@@ -2259,13 +2431,13 @@ function SearchInputView({ bars, setBars, onSearch, onBack }: { bars: string[]; 
   return <><section className="page-heading"><div><span className="eyebrow">SEARCH</span><h1>食品・メニューを検索</h1></div><button className="button ghost" type="button" onClick={onBack}>← 食品画面へ</button></section><section className="settings-card search-input-card"><div className="search-bar-list">{bars.map((bar, index) => <div className="search-bar-row" key={index}><label><input ref={(element) => { inputRefs.current[index] = element }} aria-label="検索バー" maxLength={100} value={bar} onChange={(event) => setBars((current) => current.map((value, currentIndex) => currentIndex === index ? event.target.value : value))} placeholder="食品名・メーカー・メニュー名" /></label>{bars.length > 1 && <button className="small-action danger-text" type="button" onClick={() => setBars((current) => current.filter((_, currentIndex) => currentIndex !== index))}>削除</button>}</div>)}</div><div className="search-input-actions"><button className="button secondary" type="button" onClick={addSearchBar}>＋ 検索バーを追加</button><button className="button primary" type="button" onClick={onSearch}>検索する</button></div></section></>
 }
 
-const searchCategoryLabels: Record<FoodSearchCategory, string> = { all: '全て', general: '一般食材', menu: '料理メニュー', commercial: '外食・市販' }
+const searchCategoryLabels: Record<FoodSearchCategory, string> = { all: '全て', general: '一般食材', menu: 'メニュー', commercial: '外食・市販' }
 
 function SearchResultsView({ groups, purpose, category, searching, onCategoryChange, onSelect, onAddFood, onLoadMore, onBack }: { groups: SearchResultGroup[]; purpose: SearchPurpose; category: FoodSearchCategory; searching: boolean; onCategoryChange: (category: FoodSearchCategory) => void; onSelect: (query: string, item: SearchResultItem) => void; onAddFood: (query: string) => void; onLoadMore: (index: number) => void; onBack: () => void }) {
-  const helperText = purpose === 'food-master' ? '食品を選ぶと、登録内容を確認・編集できます。' : '食品・料理メニューは内容を確認して記録し、メニューセットは構成項目を一括登録します。'
+  const helperText = purpose === 'food-master' ? '食品を選ぶと、登録内容を確認・編集できます。' : '食品・メニューは内容を確認して記録し、Myセットは構成項目を一括登録します。'
   const categories = purpose === 'meal' ? MEAL_SEARCH_CATEGORIES : FOOD_MASTER_SEARCH_CATEGORIES
-  const emptyLabel = category === 'all' ? '一致する食品・メニューがありません。' : category === 'menu' ? '一致する料理メニューがありません。' : `${searchCategoryLabels[category]}に一致する食品がありません。`
-  return <><section className="page-heading"><div><span className="eyebrow">SEARCH RESULTS</span><h1>検索結果</h1><p className="muted">{helperText}</p></div><button className="button ghost" type="button" onClick={onBack}>← 検索画面へ</button></section><div className="search-category-tabs" role="tablist" aria-label="検索結果の分類">{categories.map((value) => <button key={value} id={`search-category-${value}`} role="tab" type="button" aria-selected={category === value} aria-controls="search-category-panel" className={category === value ? 'active' : ''} disabled={searching} onClick={() => onCategoryChange(value)}>{searchCategoryLabels[value]}</button>)}</div><div id="search-category-panel" role="tabpanel" aria-labelledby={`search-category-${category}`} aria-busy={searching} className="search-result-groups">{searching ? <div className="empty-state">検索中…</div> : <>{groups.map((group, groupIndex) => <section className="search-result-group" key={`${group.query}:${groupIndex}`}><div className="search-result-heading"><strong>検索結果：</strong><span>{group.query}</span></div><div className="food-results">{group.items.map((item) => <button className="search-result-row" type="button" key={`${item.kind}:${item.id}`} onClick={() => onSelect(group.query, item)}><span className="source-badge">{item.kind === 'food' || item.kind === 'user-food' ? '食品' : item.kind === 'menu' ? 'メニュー' : 'セット'}</span><span className="search-result-copy"><strong>{item.title}</strong><small>{item.subtitle}</small>{(item.kind === 'food' || item.kind === 'user-food') && <span className="search-result-meta">{item.recentlyUsed && <em>最近使った</em>}{item.kind === 'user-food' && item.userFoodResult?.targetType === 'user_food_group' && item.userFoodResult.group.memberCount !== 1 && <span>{item.userFoodResult.group.memberCount}種類から選択</span>}{item.kind === 'user-food' && item.userFoodResult?.targetType === 'user_food_variant' && item.variants.length > 1 && <span>{item.variants.length}バリエーションから選択</span>}{item.kind === 'food' && item.variants.length > 1 && <span>{item.variants.length}種類から選択</span>}</span>}</span><b className={item.kind === 'set' ? 'batch-action' : undefined}>{item.kind === 'set' ? '一括登録' : '›'}</b></button>)}{group.items.length === 0 && <div className="search-empty-state"><p>{emptyLabel}</p>{category !== 'menu' && <button className="button secondary" type="button" onClick={() => onAddFood(group.query === '最近・お気に入り' ? '' : group.query)}>食品を追加</button>}</div>}{group.nextCursor && <button className="button secondary search-load-more" type="button" onClick={() => onLoadMore(groupIndex)}>さらに表示</button>}</div></section>)}{groups.length === 0 && <div className="empty-state">検索結果はありません。検索画面へ戻って再検索してください。</div>}</>}</div></>
+  const emptyLabel = category === 'all' ? '一致する食品・メニューがありません。' : category === 'menu' ? '一致するメニューがありません。' : `${searchCategoryLabels[category]}に一致する食品がありません。`
+  return <><section className="page-heading"><div><span className="eyebrow">SEARCH RESULTS</span><h1>検索結果</h1><p className="muted">{helperText}</p></div><button className="button ghost" type="button" onClick={onBack}>← 検索画面へ</button></section><div className="search-category-tabs" role="tablist" aria-label="検索結果の分類">{categories.map((value) => <button key={value} id={`search-category-${value}`} role="tab" type="button" aria-selected={category === value} aria-controls="search-category-panel" className={category === value ? 'active' : ''} disabled={searching} onClick={() => onCategoryChange(value)}>{searchCategoryLabels[value]}</button>)}</div><div id="search-category-panel" role="tabpanel" aria-labelledby={`search-category-${category}`} aria-busy={searching} className="search-result-groups">{searching ? <div className="empty-state">検索中…</div> : <>{groups.map((group, groupIndex) => <section className="search-result-group" key={`${group.query}:${groupIndex}`}><div className="search-result-heading"><strong>検索結果：</strong><span>{group.query}</span></div><div className="food-results">{group.items.map((item) => <button className="search-result-row" type="button" key={`${item.kind}:${item.id}`} onClick={() => onSelect(group.query, item)}><span className="source-badge">{item.kind === 'food' || item.kind === 'user-food' ? '食品' : item.kind === 'menu' ? 'My' : item.kind === 'general-menu' ? '一般' : 'セット'}</span><span className="search-result-copy"><strong>{item.title}</strong><small>{item.subtitle}</small>{(item.kind === 'food' || item.kind === 'user-food') && <span className="search-result-meta">{item.recentlyUsed && <em>最近使った</em>}{item.kind === 'user-food' && item.userFoodResult?.targetType === 'user_food_group' && item.userFoodResult.group.memberCount !== 1 && <span>{item.userFoodResult.group.memberCount}種類から選択</span>}{item.kind === 'user-food' && item.userFoodResult?.targetType === 'user_food_variant' && item.variants.length > 1 && <span>{item.variants.length}バリエーションから選択</span>}{item.kind === 'food' && item.variants.length > 1 && <span>{item.variants.length}種類から選択</span>}</span>}</span><b className={item.kind === 'set' ? 'batch-action' : undefined}>{item.kind === 'set' ? '一括登録' : '›'}</b></button>)}{group.items.length === 0 && <div className="search-empty-state"><p>{emptyLabel}</p>{category !== 'menu' && <button className="button secondary" type="button" onClick={() => onAddFood(group.query === '最近・お気に入り' ? '' : group.query)}>食品を追加</button>}</div>}{group.nextCursor && <button className="button secondary search-load-more" type="button" onClick={() => onLoadMore(groupIndex)}>さらに表示</button>}</div></section>)}{groups.length === 0 && <div className="empty-state">検索結果はありません。検索画面へ戻って再検索してください。</div>}</>}</div></>
 }
 
 interface FoodVariantPickerModalProps {
@@ -2567,30 +2739,44 @@ function LegacyFoodVariantPickerModal({ result, onSelect, onClose, mealMode = fa
   return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="食品のバリエーションを選択"><section className="modal-card variant-picker-modal"><div className="modal-heading"><div><span className="eyebrow">VARIATIONS</span><h2>{result.group.displayName}</h2><p className="muted">条件ごとに選択してください</p></div><button className="icon-button" type="button" onClick={onClose} aria-label="閉じる">×</button></div><div className="variant-choice-groups">{groups.map((group) => <section className="variant-choice-group" key={group.key}><h3>{group.label}</h3><div className="variant-choice-buttons">{group.options.map((option) => { const available = group.key === 'variant' || (availableOptionValues.get(group.key)?.has(option.value) ?? false); return <button className={`variant-choice-button${isSelected(group, option.value) ? ' is-selected' : ''}`} type="button" aria-pressed={isSelected(group, option.value)} key={`${group.key}:${option.value ?? 'none'}`} disabled={!available} onClick={() => chooseOption(group, option.value)}><span>{option.label}</span>{!available && <small>該当なし</small>}</button> })}</div></section>)}</div>{constraintMessage && <p className="variant-constraint-message" role="status">{constraintMessage}</p>}{selectedFood ? <div className="variant-picker-summary"><span>選択中</span><strong>{variantOptionText(selectedFood)}</strong><small>{selectedFood.baseAmount}{selectedFood.baseUnit} · {formatNutrient(selectedFood.nutrients.energyKcal)}kcal{matchingVariants.length > 1 ? ` · ${matchingVariants.length}件が該当` : ''}</small></div> : <p className="variant-picker-no-match">必要な属性を選択してください。</p>}{mealMode && selectedFood && <label>分量<div className="amount-input-row"><div className="amount-input"><input type="number" min="0.01" max="100000" step="any" value={amount} onChange={(event) => setAmount(event.target.value)} required /><select className="field-suffix" value={amountUnit} onChange={(event) => setAmountUnit(event.target.value)} aria-label="入力単位">{getFoodQuantityUnits(selectedFood).map((unit) => <option key={unit} value={unit}>{unit}</option>)}</select></div><button className="amount-increment" type="button" onClick={() => setAmount(String(incrementByQuantityUnit(Number(amount), selectedFood, amountUnit)))} aria-label={`分量を${amountUnit}単位で1つ増やす`}>＋1</button></div></label>}{mealMode && selectedFood ? <button className="button primary variant-picker-confirm" type="button" onClick={() => { void onSubmitMeal?.(selectedFood, amount, amountUnit) }}>{submitLabel}</button> : <button className="button primary variant-picker-confirm" type="button" onClick={() => { if (selectedFood) onSelect(selectedFood) }} disabled={!selectedFood}>この食品を選択</button>}</section></div>
 }
 
-interface MenuViewProps { menus: Menu[]; menuSets: MenuSet[]; foods: Food[]; onNewMenu: () => void; onEditMenu: (menu: Menu) => void; onDeleteMenu: (menu: Menu) => void; onNewMenuSet: () => void; onEditMenuSet: (menuSet: MenuSet) => void; onDeleteMenuSet: (menuSet: MenuSet) => void; onBack: () => void }
-function MenuView({ menus, menuSets, foods, onNewMenu, onEditMenu, onDeleteMenu, onNewMenuSet, onEditMenuSet, onDeleteMenuSet }: MenuViewProps) {
-  const [activeTab, setActiveTab] = useState<'menus' | 'sets'>('menus')
+interface MenuViewProps { menus: Menu[]; generalMenus: GeneralMenu[]; menuSets: MenuSet[]; foods: Food[]; onNewMenu: () => void; onEditMenu: (menu: Menu) => void; onDeleteMenu: (menu: Menu) => void; onNewGeneralMenu: () => void; onEditGeneralMenu: (menu: GeneralMenu) => void; onDeleteGeneralMenu: (menu: GeneralMenu) => void; onCloneGeneralMenu: (menu: GeneralMenu) => void; onNewMenuSet: () => void; onEditMenuSet: (menuSet: MenuSet) => void; onDeleteMenuSet: (menuSet: MenuSet) => void; onBack: () => void }
+function MenuView({ menus, generalMenus, menuSets, foods, onNewMenu, onEditMenu, onDeleteMenu, onNewGeneralMenu, onEditGeneralMenu, onDeleteGeneralMenu, onCloneGeneralMenu, onNewMenuSet, onEditMenuSet, onDeleteMenuSet }: MenuViewProps) {
+  const [activeTab, setActiveTab] = useState<'menus' | 'sets' | 'general'>('menus')
   const foodName = (id: string) => {
     const food = foods.find((item) => item.id === id)
     return food ? displayFoodName(food) : '削除済み食品'
   }
   const menuName = (id: string) => menus.find((menu) => menu.id === id)?.name ?? '削除済みメニュー'
+  const generalMenuName = (id: string) => generalMenus.find((menu) => menu.id === id)?.name ?? '削除済み一般メニュー'
   const menuSetItems = (menuSet: MenuSet) => [
-    ...menuSet.menuIds.map((id) => ({ id: `menu:${id}`, kind: '料理メニュー', name: menuName(id) })),
+    ...menuSet.menuIds.map((id) => ({ id: `menu:${id}`, kind: 'Myメニュー', name: menuName(id) })),
+    ...(menuSet.generalMenuIds ?? []).map((id) => ({ id: `general-menu:${id}`, kind: '一般メニュー', name: generalMenuName(id) })),
     ...getMenuSetFoodItems(menuSet, foods).map((item) => ({ id: `food:${item.foodId}`, kind: '食品', name: foodName(item.foodId) })),
   ]
+  const menuList = (items: Array<Menu | GeneralMenu>, kind: 'my' | 'general') => <div className="menu-category-groups">{MENU_CATEGORIES.map((category) => {
+    const categoryMenus = items.filter((menu) => menu.category === category)
+    return <details className="menu-category-group" key={category}><summary><span className="menu-picker-summary-label"><i aria-hidden="true" />{category}</span><small>{categoryMenus.length > 0 ? `${categoryMenus.length}件` : '登録なし'}</small></summary>{categoryMenus.length > 0 ? <div className="menu-list">{categoryMenus.map((menu) => {
+      const ingredients = getMenuIngredients(menu, foods)
+      return <div className="menu-card" key={menu.id}><div><strong>{menu.name}</strong><small>{ingredients.length ? ingredients.map((ingredient) => ingredient.kind === 'food' ? foodName(ingredient.itemId) : menuName(ingredient.itemId)).join('・') : '食材未選択'}</small></div><div className="menu-card-actions">{kind === 'general' && <button type="button" className="small-action" onClick={() => onCloneGeneralMenu(menu)}>Myメニューに複製</button>}<button type="button" className="small-action" onClick={() => kind === 'general' ? onEditGeneralMenu(menu) : onEditMenu(menu)}>編集</button><button type="button" className="small-action danger-text" onClick={() => kind === 'general' ? onDeleteGeneralMenu(menu) : onDeleteMenu(menu)}>削除</button></div></div>
+    })}</div> : <p className="menu-picker-empty">この区分に登録された{kind === 'general' ? '一般メニュー' : 'Myメニュー'}はありません。</p>}</details>
+  })}</div>
   return <>
     <section className="page-heading"><div><span className="eyebrow">MENUS</span><h1>メニュー</h1></div></section>
     <div className="search-category-tabs menu-management-tabs" role="tablist" aria-label="メニュー種別">
-      <button className={activeTab === 'menus' ? 'active' : ''} type="button" role="tab" aria-selected={activeTab === 'menus'} onClick={() => setActiveTab('menus')}>料理メニュー</button>
-      <button className={activeTab === 'sets' ? 'active' : ''} type="button" role="tab" aria-selected={activeTab === 'sets'} onClick={() => setActiveTab('sets')}>メニューセット</button>
+      <button className={activeTab === 'menus' ? 'active' : ''} type="button" role="tab" aria-selected={activeTab === 'menus'} onClick={() => setActiveTab('menus')}>Myメニュー</button>
+      <button className={activeTab === 'sets' ? 'active' : ''} type="button" role="tab" aria-selected={activeTab === 'sets'} onClick={() => setActiveTab('sets')}>Myセット</button>
+      <button className={activeTab === 'general' ? 'active' : ''} type="button" role="tab" aria-selected={activeTab === 'general'} onClick={() => setActiveTab('general')}>一般メニュー</button>
     </div>
     {activeTab === 'menus' ? <section className="section-block menu-management-panel" role="tabpanel">
-      <div className="section-title"><div><span className="eyebrow">DISHES</span><h2>料理メニュー</h2></div><button className="button primary" type="button" onClick={onNewMenu}>＋ 料理メニュー</button></div>
-      <div className="menu-category-groups">{MENU_CATEGORIES.map((category) => { const categoryMenus = menus.filter((menu) => menu.category === category); return <details className="menu-category-group" key={category}><summary><span className="menu-picker-summary-label"><i aria-hidden="true" />{category}</span><small>{categoryMenus.length > 0 ? `${categoryMenus.length}件` : '登録なし'}</small></summary>{categoryMenus.length > 0 ? <div className="menu-list">{categoryMenus.map((menu) => { const ingredients = getMenuIngredients(menu, foods); return <div className="menu-card" key={menu.id}><div><strong>{menu.name}</strong><small>{ingredients.length ? ingredients.map((ingredient) => ingredient.kind === 'food' ? foodName(ingredient.itemId) : menuName(ingredient.itemId)).join('・') : '食材未選択'}</small></div><div className="menu-card-actions"><button type="button" className="small-action" onClick={() => onEditMenu(menu)}>編集</button><button type="button" className="small-action danger-text" onClick={() => onDeleteMenu(menu)}>削除</button></div></div> })}</div> : <p className="menu-picker-empty">この区分に登録された料理メニューはありません。</p>}</details> })}</div>
+      <div className="section-title"><div><span className="eyebrow">MY MENUS</span><h2>Myメニュー</h2></div><button className="button primary" type="button" onClick={onNewMenu}>＋ Myメニュー</button></div>
+      {menuList(menus, 'my')}
+    </section> : activeTab === 'sets' ? <section className="section-block menu-management-panel" role="tabpanel">
+      <div className="section-title"><div><span className="eyebrow">MY SETS</span><h2>Myセット</h2></div><button className="button primary" type="button" onClick={onNewMenuSet}>＋ Myセット</button></div>
+      {menuSets.length === 0 ? <div className="empty-state">Myセットはまだありません。</div> : <div className="menu-set-list">{menuSets.map((menuSet) => { const items = menuSetItems(menuSet); return <details className="menu-set-card" key={menuSet.id}><summary><span><span className="source-badge">セット</span><strong>{menuSet.name}</strong></span><small>{items.length > 0 ? `構成 ${items.length}件` : '構成なし'}</small></summary><div className="menu-set-card-body">{items.length > 0 ? <ul>{items.map((item) => <li key={item.id}><span>{item.kind}</span><strong>{item.name}</strong></li>)}</ul> : <p className="menu-picker-empty">メニュー・食品が選択されていません。</p>}<div className="menu-card-actions"><button type="button" className="small-action" onClick={() => onEditMenuSet(menuSet)}>編集</button><button type="button" className="small-action danger-text" onClick={() => onDeleteMenuSet(menuSet)}>削除</button></div></div></details> })}</div>}
     </section> : <section className="section-block menu-management-panel" role="tabpanel">
-      <div className="section-title"><div><span className="eyebrow">SETS</span><h2>メニューセット</h2></div><button className="button primary" type="button" onClick={onNewMenuSet}>＋ メニューセット</button></div>
-      {menuSets.length === 0 ? <div className="empty-state">メニューセットはまだありません。</div> : <div className="menu-set-list">{menuSets.map((menuSet) => { const items = menuSetItems(menuSet); return <details className="menu-set-card" key={menuSet.id}><summary><span><span className="source-badge">セット</span><strong>{menuSet.name}</strong></span><small>{items.length > 0 ? `構成 ${items.length}件` : '構成なし'}</small></summary><div className="menu-set-card-body">{items.length > 0 ? <ul>{items.map((item) => <li key={item.id}><span>{item.kind}</span><strong>{item.name}</strong></li>)}</ul> : <p className="menu-picker-empty">メニュー・食品が選択されていません。</p>}<div className="menu-card-actions"><button type="button" className="small-action" onClick={() => onEditMenuSet(menuSet)}>編集</button><button type="button" className="small-action danger-text" onClick={() => onDeleteMenuSet(menuSet)}>削除</button></div></div></details> })}</div>}
+      <div className="section-title"><div><span className="eyebrow">GENERAL MENUS</span><h2>一般メニュー</h2></div><button className="button primary" type="button" onClick={onNewGeneralMenu}>＋ 一般メニュー</button></div>
+      <p className="helper-text">汎用的な料理を登録します。食事へ追加した後の変更はその食事だけに反映されます。</p>
+      {menuList(generalMenus, 'general')}
     </section>}
   </>
 }
@@ -2599,7 +2785,9 @@ interface MenuFoodSelectionProps {
   selectedIds: string[]
   selectedIngredients?: MenuIngredientDraft[]
   selectedMenuIds?: string[]
+  selectedGeneralMenuIds?: string[]
   menus?: Menu[]
+  generalMenus?: GeneralMenu[]
   editingMenuId?: string | null
   foods: Food[]
   foodGroups: FoodGroup[]
@@ -2612,11 +2800,14 @@ interface MenuFoodSelectionProps {
   onRemove: (food: Food) => void
   onAddMenu?: (menu: Menu) => void
   onRemoveMenu?: (menu: Menu) => void
+  onAddGeneralMenu?: (menu: GeneralMenu) => void
+  onRemoveGeneralMenu?: (menu: GeneralMenu) => void
   onRemoveIngredient?: (ingredient: MenuIngredientDraft) => void
   onChangeIngredientAmount?: (ingredient: MenuIngredientDraft, amount: string) => void
   onChangeIngredientUnit?: (ingredient: MenuIngredientDraft, unit: QuantityUnit) => void
   showSelectedList?: boolean
   pickerTitle?: string
+  allowFoodCategoryFilter?: boolean
   foodAttributePreferences?: FoodAttributePreferences
   onSaveFoodAttributePreference?: (foodGroupId: string, attributeId: string, preference: FoodAttributePreference | null) => Promise<boolean>
 }
@@ -2626,7 +2817,11 @@ function MenuFoodChoiceRow({ food, selected, favorite, onAdd, onToggleFavorite }
 }
 
 function MenuIngredientChoiceRow({ menu, selected, onAdd }: { menu: Menu; selected: boolean; onAdd: (menu: Menu) => void }) {
-  return <div className="food-row"><div className="food-main static"><strong>{menu.name}</strong><span>料理メニュー · {menu.category}</span></div><button type="button" className="small-action food-add-button" onClick={() => onAdd(menu)} disabled={selected}>{selected ? '追加済み' : '追加'}</button></div>
+  return <div className="food-row"><div className="food-main static"><strong>{menu.name}</strong><span>Myメニュー · {menu.category}</span></div><button type="button" className="small-action food-add-button" onClick={() => onAdd(menu)} disabled={selected}>{selected ? '追加済み' : '追加'}</button></div>
+}
+
+function MenuGeneralChoiceRow({ menu, selected, onAdd }: { menu: GeneralMenu; selected: boolean; onAdd: (menu: GeneralMenu) => void }) {
+  return <div className="food-row"><div className="food-main static"><strong>{menu.name}</strong><span>一般メニュー · {menu.category}</span></div><button type="button" className="small-action food-add-button" onClick={() => onAdd(menu)} disabled={selected}>{selected ? '追加済み' : '追加'}</button></div>
 }
 
 function MenuIngredientRow({ ingredient, foods, menus, onChangeAmount, onChangeUnit, onRemove }: { ingredient: MenuIngredientDraft; foods: Food[]; menus: Menu[]; onChangeAmount: (amount: string) => void; onChangeUnit?: (unit: QuantityUnit) => void; onRemove: () => void }) {
@@ -2638,8 +2833,8 @@ function MenuIngredientRow({ ingredient, foods, menus, onChangeAmount, onChangeU
   return <div className="menu-ingredient-row"><div className="menu-ingredient-copy"><span className="source-badge">{ingredient.kind === 'food' ? '食品' : '料理'}</span><strong>{name}</strong></div><label className="menu-ingredient-amount"><span className="sr-only">{name}の分量</span><input type="number" min="0.01" max="100000" step="any" value={ingredient.amount} onChange={(event) => onChangeAmount(event.target.value)} required />{onChangeUnit ? <select value={ingredient.unit} onChange={(event) => onChangeUnit(event.target.value)} aria-label={`${name}の入力単位`}>{unitOptions.map((unit) => <option key={unit} value={unit}>{unit}{!availableUnits.includes(unit) ? '（未登録）' : ''}</option>)}</select> : <span>{ingredient.unit}</span>}</label><button type="button" className="small-action danger-text" onClick={onRemove} aria-label={`${name}を削除`}>削除</button></div>
 }
 
-function MenuSetSelectedItemRow({ kind, name, onRemove }: { kind: 'food' | 'menu'; name: string; onRemove: () => void }) {
-  return <div className="menu-set-selected-row"><div><span className="source-badge">{kind === 'food' ? '食品' : '料理'}</span><strong>{name}</strong></div><button type="button" className="small-action danger-text" onClick={onRemove} aria-label={`${name}を削除`}>削除</button></div>
+function MenuSetSelectedItemRow({ kind, name, onRemove }: { kind: 'food' | 'menu' | 'general-menu'; name: string; onRemove: () => void }) {
+  return <div className="menu-set-selected-row"><div><span className="source-badge">{kind === 'food' ? '食品' : kind === 'general-menu' ? '一般' : 'My'}</span><strong>{name}</strong></div><button type="button" className="small-action danger-text" onClick={onRemove} aria-label={`${name}を削除`}>削除</button></div>
 }
 
 function MenuSetSelectedFoodRow({ food, item, onChangeAmount, onChangeUnit, onRemove }: { food: Food | undefined; item: MenuSetFoodItemDraft; onChangeAmount: (amount: string) => void; onChangeUnit: (unit: QuantityUnit) => void; onRemove: () => void }) {
@@ -2649,9 +2844,10 @@ function MenuSetSelectedFoodRow({ food, item, onChangeAmount, onChangeUnit, onRe
   return <div className="menu-set-selected-row menu-set-selected-food-row"><div className="menu-set-selected-food-copy"><div><span className="source-badge">食品</span><strong>{name}</strong></div><label><span className="sr-only">{name}の分量</span><input type="number" min="0.01" max="100000" step="any" value={item.amount} onChange={(event) => onChangeAmount(event.target.value)} required /><select value={item.unit} onChange={(event) => onChangeUnit(event.target.value)} aria-label={`${name}の入力単位`}>{unitOptions.map((unit) => <option key={unit} value={unit}>{unit}{!availableUnits.includes(unit) ? '（未登録）' : ''}</option>)}</select></label></div><button type="button" className="small-action danger-text" onClick={onRemove} aria-label={`${name}を削除`}>削除</button></div>
 }
 
-function MenuFoodSelection({ selectedIds, selectedIngredients, selectedMenuIds = [], menus = [], editingMenuId = null, foods, foodGroups, recentFoods, favoriteFoods, favoriteIds, onToggleFavorite, onAdd, onAddWithAmount, onRemove, onAddMenu, onRemoveMenu, onRemoveIngredient, onChangeIngredientAmount, onChangeIngredientUnit, showSelectedList = true, pickerTitle = '食材を追加', foodAttributePreferences, onSaveFoodAttributePreference }: MenuFoodSelectionProps) {
+function MenuFoodSelection({ selectedIds, selectedIngredients, selectedMenuIds = [], selectedGeneralMenuIds = [], menus = [], generalMenus = [], editingMenuId = null, foods, foodGroups, recentFoods, favoriteFoods, favoriteIds, onToggleFavorite, onAdd, onAddWithAmount, onRemove, onAddMenu, onRemoveMenu, onAddGeneralMenu, onRemoveGeneralMenu, onRemoveIngredient, onChangeIngredientAmount, onChangeIngredientUnit, showSelectedList = true, pickerTitle = '食材を追加', allowFoodCategoryFilter = false, foodAttributePreferences, onSaveFoodAttributePreference }: MenuFoodSelectionProps) {
   const [foodQuery, setFoodQuery] = useState('')
   const [searchedQuery, setSearchedQuery] = useState('')
+  const [foodCategory, setFoodCategory] = useState<'all' | 'commercial'>('all')
   const [userSearchResults, setUserSearchResults] = useState<UserFoodSearchResult[]>([])
   const [searchResults, setSearchResults] = useState<FoodSearchResult[]>([])
   const [searching, setSearching] = useState(false)
@@ -2659,15 +2855,30 @@ function MenuFoodSelection({ selectedIds, selectedIngredients, selectedMenuIds =
   const normalizedQuery = normalizeSearchText(foodQuery)
   const selectedFoods = selectedIds.map((id) => foods.find((food) => food.id === id)).filter((food): food is Food => Boolean(food))
   const selectedMenus = selectedMenuIds.map((id) => menus.find((menu) => menu.id === id)).filter((menu): menu is Menu => Boolean(menu))
-  const selectedCount = selectedIngredients?.length ?? selectedFoods.length + selectedMenuIds.length
+  const selectedGeneralMenus = selectedGeneralMenuIds.map((id) => generalMenus.find((menu) => menu.id === id)).filter((menu): menu is GeneralMenu => Boolean(menu))
+  const selectedCount = selectedIngredients?.length ?? selectedFoods.length + selectedMenuIds.length + selectedGeneralMenuIds.length
   const selectedIngredientKeys = new Set([
     ...(selectedIngredients?.map((ingredient) => `${ingredient.kind}:${ingredient.itemId}`) ?? []),
     ...selectedIds.map((id) => `food:${id}`),
     ...selectedMenuIds.map((id) => `menu:${id}`),
+    ...selectedGeneralMenuIds.map((id) => `general-menu:${id}`),
   ])
   const selectableMenus = menus.filter((menu) => menu.id !== editingMenuId && !wouldCreateMenuCycle(editingMenuId, menu.id, menus))
   const matchingMenus = selectableMenus.filter((menu) => [menu.name, menu.category, ...(menu.aliases ?? [])].some((value) => normalizeSearchText(value).includes(normalizedQuery)))
-  const quickFoods = [...recentFoods, ...favoriteFoods].filter((food, index, all) => all.findIndex((item) => item.id === food.id) === index).slice(0, 8)
+  const matchingGeneralMenus = generalMenus.filter((menu) => [menu.name, menu.category, ...(menu.aliases ?? [])].some((value) => normalizeSearchText(value).includes(normalizedQuery)))
+  const candidateFoods = allowFoodCategoryFilter && foodCategory === 'commercial'
+    ? foods.filter((food) => foodMatchesSearchCategory(food, 'commercial'))
+    : foods
+  const quickFoods = [...recentFoods, ...favoriteFoods]
+    .filter((food) => !allowFoodCategoryFilter || foodMatchesSearchCategory(food, foodCategory))
+    .filter((food, index, all) => all.findIndex((item) => item.id === food.id) === index)
+    .slice(0, 8)
+
+  useEffect(() => {
+    setSearchedQuery('')
+    setUserSearchResults([])
+    setSearchResults([])
+  }, [foodCategory])
 
   const startFoodAdd = (food: Food) => {
     if (!onAddWithAmount) {
@@ -2690,11 +2901,12 @@ function MenuFoodSelection({ selectedIds, selectedIngredients, selectedMenuIds =
     if (!query) { setSearchedQuery(''); setUserSearchResults([]); setSearchResults([]); return }
     setSearching(true)
     try {
-      const allUserResults = searchUserFoodGroups(query, { expandPartShortcuts: true })
+      const requestedCategory = allowFoodCategoryFilter ? foodCategory : 'all'
+      const allUserResults = requestedCategory === 'all' ? searchUserFoodGroups(query, { expandPartShortcuts: true }) : []
       const coveredFoodGroupIds = new Set(allUserResults.flatMap((result) => result.group.memberFoodGroupIds))
-      const { page } = await searchFoodResults(query, { limit: 20 })
+      const { page } = await searchFoodResults(query, { limit: 20, category: requestedCategory })
       setUserSearchResults(allUserResults.slice(0, 20))
-      setSearchResults(page.results.filter((result) => !coveredFoodGroupIds.has(result.group.id)))
+      setSearchResults(requestedCategory === 'commercial' ? page.results : page.results.filter((result) => !coveredFoodGroupIds.has(result.group.id)))
       setSearchedQuery(normalizeSearchText(query))
     } catch {
       setUserSearchResults([])
@@ -2738,14 +2950,15 @@ function MenuFoodSelection({ selectedIds, selectedIngredients, selectedMenuIds =
         {selectedCount > 0
             ? <div className="menu-selected-foods">{selectedIngredients
             ? selectedIngredients.map((ingredient) => <MenuIngredientRow key={`${ingredient.kind}:${ingredient.itemId}`} ingredient={ingredient} foods={foods} menus={menus} onChangeAmount={(amount) => onChangeIngredientAmount?.(ingredient, amount)} onChangeUnit={onChangeIngredientUnit ? (unit) => onChangeIngredientUnit(ingredient, unit) : undefined} onRemove={() => onRemoveIngredient?.(ingredient)} />)
-            : <>{selectedMenus.map((menu) => <MenuSetSelectedItemRow key={`menu:${menu.id}`} kind="menu" name={menu.name} onRemove={() => onRemoveMenu?.(menu)} />)}{selectedFoods.map((food) => <FoodRow key={food.id} food={food} favorite={favoriteIds.has(food.id)} onToggleFavorite={onToggleFavorite} onRemove={onRemove} />)}</>}</div>
+            : <>{selectedMenus.map((menu) => <MenuSetSelectedItemRow key={`menu:${menu.id}`} kind="menu" name={menu.name} onRemove={() => onRemoveMenu?.(menu)} />)}{selectedGeneralMenus.map((menu) => <MenuSetSelectedItemRow key={`general-menu:${menu.id}`} kind="general-menu" name={menu.name} onRemove={() => onRemoveGeneralMenu?.(menu)} />)}{selectedFoods.map((food) => <FoodRow key={food.id} food={food} favorite={favoriteIds.has(food.id)} onToggleFavorite={onToggleFavorite} onRemove={onRemove} />)}</>}</div>
           : <p className="menu-food-empty">まだ食材がありません。下の「食材を追加」から選択してください。</p>}</>}
       <details className="food-collapsible menu-food-picker">
         <summary className="section-title collapsible-summary"><div><span className="eyebrow">ADD ITEMS</span><h3>{pickerTitle}</h3></div></summary>
         <div className="menu-food-picker-body">
+          {allowFoodCategoryFilter && <div className="search-category-tabs menu-food-category-tabs" role="tablist" aria-label="追加する食品の分類"><button className={foodCategory === 'all' ? 'active' : ''} type="button" role="tab" aria-selected={foodCategory === 'all'} onClick={() => setFoodCategory('all')}>すべて</button><button className={foodCategory === 'commercial' ? 'active' : ''} type="button" role="tab" aria-selected={foodCategory === 'commercial'} onClick={() => setFoodCategory('commercial')}>外食・市販</button></div>}
           <div className="menu-food-search-row">
             <label className="menu-food-search">食材を検索
-              <input value={foodQuery} onChange={(event) => { setFoodQuery(event.target.value); setSearchedQuery('') }} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); void runSearch() } }} placeholder={onAddMenu ? '食品名・メーカー・料理メニュー名' : '食品名・メーカー'} />
+              <input value={foodQuery} onChange={(event) => { setFoodQuery(event.target.value); setSearchedQuery('') }} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); void runSearch() } }} placeholder={onAddMenu ? '食品名・メーカー・メニュー名' : '食品名・メーカー'} />
             </label>
             <button className="button secondary menu-food-search-button" type="button" onClick={() => void runSearch()} disabled={searching}>{searching ? '検索中…' : '検索する'}</button>
           </div>
@@ -2753,9 +2966,9 @@ function MenuFoodSelection({ selectedIds, selectedIngredients, selectedMenuIds =
             <>
               <div className="menu-food-section-heading"><span className="eyebrow">SEARCH RESULTS</span><h4>検索結果：{foodQuery.trim()}</h4></div>
               <div className="menu-food-search-results">
-                {userSearchResults.length > 0 || searchResults.length > 0 || (onAddMenu && matchingMenus.length > 0)
-                  ? <>{onAddMenu && matchingMenus.map((menu) => <button className="menu-food-search-result" type="button" key={`menu:${menu.id}`} disabled={selectedIngredientKeys.has(`menu:${menu.id}`)} onClick={() => onAddMenu(menu)}><span className="source-badge">料理</span><span><strong>{menu.name}</strong><small>{menu.category} · 1食単位</small></span><b>{selectedIngredientKeys.has(`menu:${menu.id}`) ? '追加済み' : '›'}</b></button>)}{userSearchResults.map((result) => { const label = selectedUserFoodLabel(result); return <button className="menu-food-search-result" type="button" key={`user:${result.group.id}:${result.foodGroupId ?? 'group'}`} onClick={() => chooseUserSearchResult(result)}><span className="source-badge">食品</span><span><strong>{label ?? result.group.displayName}</strong><small>{label ? `${result.group.displayName} > ${selectedUserFoodDimensionLabel(result) ?? '種類'}` : `${result.group.category} · ${result.group.memberCount > 1 ? `${result.group.memberCount}種類` : '直接選択'}`}</small></span><b>›</b></button> })}{searchResults.map((result) => { const selected = result.variants.length === 1 && selectedIngredientKeys.has(`food:${result.food.id}`); return <button className="menu-food-search-result" type="button" key={result.group.id} disabled={selected} onClick={() => chooseSearchResult(result)}><span className="source-badge">食品</span><span><strong>{displaySearchFoodName(result.group, result.food)}</strong><small>{result.group.category ?? '食品'} · {result.variants.length > 1 ? `${result.variants.length}バリエーション` : `${result.food.baseAmount}${result.food.baseUnit}`} · {formatNutrient(result.food.nutrients.energyKcal)}kcal</small></span><b>{selected ? '追加済み' : '›'}</b></button> })}</>
-                  : <p className="menu-food-empty">検索に一致する食品・料理メニューがありません。</p>}
+                {userSearchResults.length > 0 || searchResults.length > 0 || (onAddMenu && matchingMenus.length > 0) || (onAddGeneralMenu && matchingGeneralMenus.length > 0)
+                  ? <>{onAddMenu && matchingMenus.map((menu) => <button className="menu-food-search-result" type="button" key={`menu:${menu.id}`} disabled={selectedIngredientKeys.has(`menu:${menu.id}`)} onClick={() => onAddMenu(menu)}><span className="source-badge">My</span><span><strong>{menu.name}</strong><small>{menu.category} · 1食単位</small></span><b>{selectedIngredientKeys.has(`menu:${menu.id}`) ? '追加済み' : '›'}</b></button>)}{onAddGeneralMenu && matchingGeneralMenus.map((menu) => <button className="menu-food-search-result" type="button" key={`general-menu:${menu.id}`} disabled={selectedIngredientKeys.has(`general-menu:${menu.id}`)} onClick={() => onAddGeneralMenu(menu)}><span className="source-badge">一般</span><span><strong>{menu.name}</strong><small>{menu.category} · 1食単位</small></span><b>{selectedIngredientKeys.has(`general-menu:${menu.id}`) ? '追加済み' : '›'}</b></button>)}{userSearchResults.map((result) => { const label = selectedUserFoodLabel(result); return <button className="menu-food-search-result" type="button" key={`user:${result.group.id}:${result.foodGroupId ?? 'group'}`} onClick={() => chooseUserSearchResult(result)}><span className="source-badge">食品</span><span><strong>{label ?? result.group.displayName}</strong><small>{label ? `${result.group.displayName} > ${selectedUserFoodDimensionLabel(result) ?? '種類'}` : `${result.group.category} · ${result.group.memberCount > 1 ? `${result.group.memberCount}種類` : '直接選択'}`}</small></span><b>›</b></button> })}{searchResults.map((result) => { const selected = result.variants.length === 1 && selectedIngredientKeys.has(`food:${result.food.id}`); return <button className="menu-food-search-result" type="button" key={result.group.id} disabled={selected} onClick={() => chooseSearchResult(result)}><span className="source-badge">食品</span><span><strong>{displaySearchFoodName(result.group, result.food)}</strong><small>{result.group.category ?? '食品'} · {result.variants.length > 1 ? `${result.variants.length}バリエーション` : `${result.food.baseAmount}${result.food.baseUnit}`} · {formatNutrient(result.food.nutrients.energyKcal)}kcal</small></span><b>{selected ? '追加済み' : '›'}</b></button> })}</>
+                  : <p className="menu-food-empty">検索に一致する食品・メニューがありません。</p>}
               </div>
             </>
           ) : (
@@ -2766,10 +2979,11 @@ function MenuFoodSelection({ selectedIds, selectedIngredients, selectedMenuIds =
                   ? <div className="menu-food-list">{quickFoods.map((food) => <MenuFoodChoiceRow key={food.id} food={food} selected={selectedIngredientKeys.has(`food:${food.id}`)} favorite={favoriteIds.has(food.id)} onAdd={startFoodAdd} onToggleFavorite={onToggleFavorite} />)}</div>
                   : <p className="menu-food-empty">最近使った食品やお気に入りはありません。</p>}
               </div>
-              {onAddMenu && <><div className="menu-food-section-heading"><span className="eyebrow">MENUS</span><h4>料理メニュー</h4></div>{selectableMenus.length > 0 ? <div className="menu-food-list">{selectableMenus.map((menu) => <MenuIngredientChoiceRow key={menu.id} menu={menu} selected={selectedIngredientKeys.has(`menu:${menu.id}`)} onAdd={onAddMenu} />)}</div> : <p className="menu-food-empty">追加できる料理メニューがありません。</p>}</>}
+              {onAddMenu && <><div className="menu-food-section-heading"><span className="eyebrow">MY MENUS</span><h4>Myメニュー</h4></div>{selectableMenus.length > 0 ? <div className="menu-food-list">{selectableMenus.map((menu) => <MenuIngredientChoiceRow key={menu.id} menu={menu} selected={selectedIngredientKeys.has(`menu:${menu.id}`)} onAdd={onAddMenu} />)}</div> : <p className="menu-food-empty">追加できるMyメニューがありません。</p>}</>}
+              {onAddGeneralMenu && <><div className="menu-food-section-heading"><span className="eyebrow">GENERAL MENUS</span><h4>一般メニュー</h4></div>{generalMenus.length > 0 ? <div className="menu-food-list">{generalMenus.map((menu) => <MenuGeneralChoiceRow key={menu.id} menu={menu} selected={selectedIngredientKeys.has(`general-menu:${menu.id}`)} onAdd={onAddGeneralMenu} />)}</div> : <p className="menu-food-empty">追加できる一般メニューがありません。</p>}</>}
               <div className="menu-food-section-heading"><span className="eyebrow">FOODS</span><h4>食品</h4></div>
-              <div className="menu-food-list">{foods.slice(0, 60).map((food) => <MenuFoodChoiceRow key={food.id} food={food} selected={selectedIngredientKeys.has(`food:${food.id}`)} favorite={favoriteIds.has(food.id)} onAdd={startFoodAdd} onToggleFavorite={onToggleFavorite} />)}</div>
-              {foods.length > 60 && <p className="menu-food-more">食品名を検索すると、続きの食品を表示できます。</p>}
+              <div className="menu-food-list">{candidateFoods.slice(0, 60).map((food) => <MenuFoodChoiceRow key={food.id} food={food} selected={selectedIngredientKeys.has(`food:${food.id}`)} favorite={favoriteIds.has(food.id)} onAdd={startFoodAdd} onToggleFavorite={onToggleFavorite} />)}</div>
+              {candidateFoods.length > 60 && <p className="menu-food-more">食品名を検索すると、続きの食品を表示できます。</p>}
             </>
           )}
         </div>
@@ -2780,7 +2994,8 @@ function MenuFoodSelection({ selectedIds, selectedIngredients, selectedMenuIds =
   )
 }
 
-function MenuEditorModal({ draft, setDraft, menus, foods, foodGroups, recentFoods, favoriteFoods, favoriteIds, onToggleFavorite, foodAttributePreferences, onSaveFoodAttributePreference, onSubmit, onClose }: { draft: MenuDraft; setDraft: React.Dispatch<React.SetStateAction<MenuDraft | null>>; menus: Menu[]; foods: Food[]; foodGroups: FoodGroup[]; recentFoods: Food[]; favoriteFoods: Food[]; favoriteIds: Set<string>; onToggleFavorite: (food: Food) => void; foodAttributePreferences?: FoodAttributePreferences; onSaveFoodAttributePreference?: (foodGroupId: string, attributeId: string, preference: FoodAttributePreference | null) => Promise<boolean>; onSubmit: (event: React.FormEvent<HTMLFormElement>) => void; onClose: () => void }) {
+function MenuEditorModal({ draft, setDraft, menus, foods, foodGroups, recentFoods, favoriteFoods, favoriteIds, onToggleFavorite, foodAttributePreferences, onSaveFoodAttributePreference, onSubmit, onClose, mode = 'my' }: { draft: MenuDraft; setDraft: React.Dispatch<React.SetStateAction<MenuDraft | null>>; menus: Menu[]; foods: Food[]; foodGroups: FoodGroup[]; recentFoods: Food[]; favoriteFoods: Food[]; favoriteIds: Set<string>; onToggleFavorite: (food: Food) => void; foodAttributePreferences?: FoodAttributePreferences; onSaveFoodAttributePreference?: (foodGroupId: string, attributeId: string, preference: FoodAttributePreference | null) => Promise<boolean>; onSubmit: (event: React.FormEvent<HTMLFormElement>) => void; onClose: () => void; mode?: 'my' | 'general' | 'temporary' }) {
+  const menuTypeLabel = mode === 'general' ? '一般メニュー' : mode === 'temporary' ? '一時メニュー' : 'Myメニュー'
   const addFood = (food: Food) => setDraft((current) => {
     if (!current || current.ingredients.some((ingredient) => ingredient.kind === 'food' && ingredient.itemId === food.id)) return current
     const serving = getFoodDefaultServing(food)
@@ -2793,10 +3008,10 @@ function MenuEditorModal({ draft, setDraft, menus, foods, foodGroups, recentFood
   const changeIngredientUnit = (target: MenuIngredientDraft, unit: QuantityUnit) => setDraft((current) => current ? { ...current, ingredients: current.ingredients.map((ingredient) => ingredient.kind === target.kind && ingredient.itemId === target.itemId ? { ...ingredient, unit } : ingredient) } : current)
   const selectedFoodIds = draft.ingredients.filter((ingredient) => ingredient.kind === 'food').map((ingredient) => ingredient.itemId)
   return (
-    <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="料理メニューを設定">
+    <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label={`${menuTypeLabel}を設定`}>
       <section className="modal-card menu-editor-modal">
         <div className="modal-heading">
-          <div><span className="eyebrow">MENU</span><h2>{draft.id ? '料理メニューを編集' : '料理メニューを設定'}</h2></div>
+          <div><span className="eyebrow">{mode === 'temporary' ? 'ONE-TIME MENU' : mode === 'general' ? 'GENERAL MENU' : 'MY MENU'}</span><h2>{draft.id ? `${menuTypeLabel}を編集` : `${menuTypeLabel}を設定`}</h2>{mode === 'temporary' && <p className="muted">この食事にだけ保存され、メニュー一覧には追加されません。</p>}</div>
           <button className="icon-button" type="button" onClick={onClose} aria-label="閉じる">×</button>
         </div>
         <form className="menu-editor-form" onSubmit={onSubmit}>
@@ -2806,8 +3021,8 @@ function MenuEditorModal({ draft, setDraft, menus, foods, foodGroups, recentFood
             </div>
             <div className="menu-editor-basic-fields">
               <label className="menu-editor-name-field">メニュー名*<input value={draft.name} onChange={(event) => setDraft((current) => current ? { ...current, name: event.target.value } : current)} required /></label>
-              <label>区分<select value={draft.category} onChange={(event) => setDraft((current) => current ? { ...current, category: event.target.value as MenuCategory } : current)}>{MENU_CATEGORIES.map((category) => <option key={category}>{category}</option>)}</select></label>
-              <label className="menu-editor-alias-field">検索用エイリアス（任意）<input value={draft.aliases.join('、')} onChange={(event) => setDraft((current) => current ? { ...current, aliases: event.target.value.split(/[、,，]/).map((alias) => alias.trim()).filter(Boolean) } : current)} placeholder="例：おにぎり、朝ごはん" /></label>
+              {mode !== 'temporary' && <label>区分<select value={draft.category} onChange={(event) => setDraft((current) => current ? { ...current, category: event.target.value as MenuCategory } : current)}>{MENU_CATEGORIES.map((category) => <option key={category}>{category}</option>)}</select></label>}
+              {mode !== 'temporary' && <label className="menu-editor-alias-field">検索用エイリアス（任意）<input value={draft.aliases.join('、')} onChange={(event) => setDraft((current) => current ? { ...current, aliases: event.target.value.split(/[、,，]/).map((alias) => alias.trim()).filter(Boolean) } : current)} placeholder="例：おにぎり、朝ごはん" /></label>}
             </div>
           </section>
           <section className="menu-editor-section">
@@ -2823,7 +3038,7 @@ function MenuEditorModal({ draft, setDraft, menus, foods, foodGroups, recentFood
             <MenuFoodSelection selectedIds={selectedFoodIds} selectedIngredients={draft.ingredients} menus={menus} editingMenuId={draft.id} foods={foods} foodGroups={foodGroups} recentFoods={recentFoods} favoriteFoods={favoriteFoods} favoriteIds={favoriteIds} onToggleFavorite={onToggleFavorite} foodAttributePreferences={foodAttributePreferences} onSaveFoodAttributePreference={onSaveFoodAttributePreference} onAdd={addFood} onRemove={removeFood} onAddMenu={addMenu} showSelectedList={false} pickerTitle="食材を追加" />
           </section>
           <div className="menu-editor-actions">
-            <button className="button primary full-width" type="submit">保存する</button>
+            <button className="button primary full-width" type="submit">{mode === 'temporary' ? 'この食事に追加' : '保存する'}</button>
             <button className="button ghost full-width" type="button" onClick={onClose}>キャンセル</button>
           </div>
         </form>
@@ -2832,7 +3047,7 @@ function MenuEditorModal({ draft, setDraft, menus, foods, foodGroups, recentFood
   )
 }
 
-function MenuSetEditorModal({ draft, setDraft, menus, foods, foodGroups, recentFoods, favoriteFoods, favoriteIds, onToggleFavorite, foodAttributePreferences, onSaveFoodAttributePreference, onSubmit, onClose }: { draft: MenuSetDraft; setDraft: React.Dispatch<React.SetStateAction<MenuSetDraft | null>>; menus: Menu[]; foods: Food[]; foodGroups: FoodGroup[]; recentFoods: Food[]; favoriteFoods: Food[]; favoriteIds: Set<string>; onToggleFavorite: (food: Food) => void; foodAttributePreferences?: FoodAttributePreferences; onSaveFoodAttributePreference?: (foodGroupId: string, attributeId: string, preference: FoodAttributePreference | null) => Promise<boolean>; onSubmit: (event: React.FormEvent<HTMLFormElement>) => void; onClose: () => void }) {
+function MenuSetEditorModal({ draft, setDraft, menus, generalMenus, foods, foodGroups, recentFoods, favoriteFoods, favoriteIds, onToggleFavorite, foodAttributePreferences, onSaveFoodAttributePreference, onSubmit, onClose }: { draft: MenuSetDraft; setDraft: React.Dispatch<React.SetStateAction<MenuSetDraft | null>>; menus: Menu[]; generalMenus: GeneralMenu[]; foods: Food[]; foodGroups: FoodGroup[]; recentFoods: Food[]; favoriteFoods: Food[]; favoriteIds: Set<string>; onToggleFavorite: (food: Food) => void; foodAttributePreferences?: FoodAttributePreferences; onSaveFoodAttributePreference?: (foodGroupId: string, attributeId: string, preference: FoodAttributePreference | null) => Promise<boolean>; onSubmit: (event: React.FormEvent<HTMLFormElement>) => void; onClose: () => void }) {
   const addFood = (food: Food) => setDraft((current) => current && !current.foodIds.includes(food.id) ? { ...current, foodIds: [...current.foodIds, food.id] } : current)
   const addFoodWithAmount = (food: Food, amount: string, unit: QuantityUnit) => setDraft((current) => {
     if (!current || current.foodItems.some((item) => item.foodId === food.id)) return current
@@ -2842,15 +3057,17 @@ function MenuSetEditorModal({ draft, setDraft, menus, foods, foodGroups, recentF
   const removeFood = (food: Food) => setDraft((current) => current ? { ...current, foodIds: current.foodIds.filter((id) => id !== food.id) } : current)
   const addMenu = (menu: Menu) => setDraft((current) => current && !current.menuIds.includes(menu.id) ? { ...current, menuIds: [...current.menuIds, menu.id] } : current)
   const removeMenu = (menuId: string) => setDraft((current) => current ? { ...current, menuIds: current.menuIds.filter((id) => id !== menuId) } : current)
+  const addGeneralMenu = (menu: GeneralMenu) => setDraft((current) => current && !current.generalMenuIds.includes(menu.id) ? { ...current, generalMenuIds: [...current.generalMenuIds, menu.id] } : current)
+  const removeGeneralMenu = (menuId: string) => setDraft((current) => current ? { ...current, generalMenuIds: current.generalMenuIds.filter((id) => id !== menuId) } : current)
   const removeFoodItem = (foodId: string) => setDraft((current) => current ? { ...current, foodIds: current.foodIds.filter((id) => id !== foodId), foodItems: current.foodItems.filter((item) => item.foodId !== foodId) } : current)
   const changeFoodAmount = (foodId: string, amount: string) => setDraft((current) => current ? { ...current, foodItems: current.foodItems.map((item) => item.foodId === foodId ? { ...item, amount } : item) } : current)
   const changeFoodUnit = (foodId: string, unit: QuantityUnit) => setDraft((current) => current ? { ...current, foodItems: current.foodItems.map((item) => item.foodId === foodId ? { ...item, unit } : item) } : current)
-  const selectedCount = draft.foodItems.length + draft.menuIds.length
+  const selectedCount = draft.foodItems.length + draft.menuIds.length + draft.generalMenuIds.length
   return (
-    <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="メニューセットを設定">
+    <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="Myセットを設定">
       <section className="modal-card menu-editor-modal menu-set-editor-modal">
         <div className="modal-heading">
-          <div><span className="eyebrow">MENU SET</span><h2>{draft.id ? 'メニューセットを編集' : 'メニューセットを設定'}</h2></div>
+          <div><span className="eyebrow">MY SET</span><h2>{draft.id ? 'Myセットを編集' : 'Myセットを設定'}</h2></div>
           <button className="icon-button" type="button" onClick={onClose} aria-label="閉じる">×</button>
         </div>
         <form className="menu-editor-form" onSubmit={onSubmit}>
@@ -2862,21 +3079,25 @@ function MenuSetEditorModal({ draft, setDraft, menus, foods, foodGroups, recentF
           </section>
           <section className="menu-editor-section">
             <div className="menu-editor-section-heading">
-              <div><span className="eyebrow">SELECTED</span><h3>追加済み食品</h3><p>食品と料理メニューを、セット登録時にまとめて食事へ追加します。</p></div>
+              <div><span className="eyebrow">SELECTED</span><h3>追加済み食品・メニュー</h3><p>食品、Myメニュー、一般メニューを、セット登録時にまとめて食事へ追加します。</p></div>
               <span className="menu-editor-count">{selectedCount}件</span>
             </div>
             {selectedCount > 0
               ? <div className="menu-set-selected-list">
                 {draft.menuIds.map((menuId) => {
                   const menu = menus.find((item) => item.id === menuId)
-                  return <MenuSetSelectedItemRow key={`menu:${menuId}`} kind="menu" name={menu?.name ?? '削除済み料理メニュー'} onRemove={() => removeMenu(menuId)} />
+                  return <MenuSetSelectedItemRow key={`menu:${menuId}`} kind="menu" name={menu?.name ?? '削除済みMyメニュー'} onRemove={() => removeMenu(menuId)} />
+                })}
+                {draft.generalMenuIds.map((menuId) => {
+                  const menu = generalMenus.find((item) => item.id === menuId)
+                  return <MenuSetSelectedItemRow key={`general-menu:${menuId}`} kind="general-menu" name={menu?.name ?? '削除済み一般メニュー'} onRemove={() => removeGeneralMenu(menuId)} />
                 })}
                 {draft.foodItems.map((item) => <MenuSetSelectedFoodRow key={`food:${item.foodId}`} food={foods.find((food) => food.id === item.foodId)} item={item} onChangeAmount={(amount) => changeFoodAmount(item.foodId, amount)} onChangeUnit={(unit) => changeFoodUnit(item.foodId, unit)} onRemove={() => removeFoodItem(item.foodId)} />)}
               </div>
-              : <p className="menu-editor-empty">まだ食品や料理メニューがありません。下の追加欄から選択してください。</p>}
+              : <p className="menu-editor-empty">まだ食品やメニューがありません。下の追加欄から選択してください。</p>}
           </section>
           <section className="menu-editor-section menu-editor-add-section">
-            <MenuFoodSelection selectedIds={draft.foodIds} selectedMenuIds={draft.menuIds} menus={menus} foods={foods} foodGroups={foodGroups} recentFoods={recentFoods} favoriteFoods={favoriteFoods} favoriteIds={favoriteIds} onToggleFavorite={onToggleFavorite} foodAttributePreferences={foodAttributePreferences} onSaveFoodAttributePreference={onSaveFoodAttributePreference} onAdd={addFood} onAddWithAmount={addFoodWithAmount} onRemove={removeFood} onAddMenu={addMenu} showSelectedList={false} pickerTitle="食品・料理メニューを追加" />
+            <MenuFoodSelection selectedIds={draft.foodIds} selectedMenuIds={draft.menuIds} selectedGeneralMenuIds={draft.generalMenuIds} menus={menus} generalMenus={generalMenus} foods={foods} foodGroups={foodGroups} recentFoods={recentFoods} favoriteFoods={favoriteFoods} favoriteIds={favoriteIds} onToggleFavorite={onToggleFavorite} foodAttributePreferences={foodAttributePreferences} onSaveFoodAttributePreference={onSaveFoodAttributePreference} onAdd={addFood} onAddWithAmount={addFoodWithAmount} onRemove={removeFood} onAddMenu={addMenu} onAddGeneralMenu={addGeneralMenu} showSelectedList={false} pickerTitle="食品・メニューを追加" allowFoodCategoryFilter />
           </section>
           <div className="menu-editor-actions">
             <button className="button primary full-width" type="submit">保存する</button>
@@ -2906,7 +3127,7 @@ interface SettingsViewProps {
   csvTo: string
   setCsvFrom: (value: string) => void
   setCsvTo: (value: string) => void
-  counts: { foods: number; meals: number; menus: number; menuSets: number }
+  counts: { foods: number; meals: number; menus: number; generalMenus: number; menuSets: number }
   bodyProfileInputs: BodyProfileDraft
   setBodyProfileInputs: React.Dispatch<React.SetStateAction<BodyProfileDraft>>
   onSaveBodyProfile: (event: React.FormEvent<HTMLFormElement>) => void
@@ -2952,8 +3173,9 @@ function SettingsView({ settings, estimationSettings, goalInputs, setGoalInputs,
         <div><strong>{counts.foods}</strong><span>食品</span></div>
         <div><strong>{counts.meals}</strong><span>食事記録</span></div>
         <div><strong>{settings.dataFormatVersion}</strong><span>データ形式</span></div>
-        <div><strong>{counts.menus}</strong><span>料理メニュー</span></div>
-        <div><strong>{counts.menuSets}</strong><span>メニューセット</span></div>
+        <div><strong>{counts.menus}</strong><span>Myメニュー</span></div>
+        <div><strong>{counts.generalMenus}</strong><span>一般メニュー</span></div>
+        <div><strong>{counts.menuSets}</strong><span>Myセット</span></div>
       </div>
       <p className="helper-text">最終バックアップ: {settings.lastBackupAt ? formatDateTime(settings.lastBackupAt) : '未作成'}</p>
       <div className="settings-info-row settings-inline-row">
@@ -2965,7 +3187,7 @@ function SettingsView({ settings, estimationSettings, goalInputs, setGoalInputs,
           <button className="button primary" type="button" onClick={onExportJson}>JSONを出力</button>
           <label className="button secondary file-button">JSONを復元<input type="file" accept="application/json,.json" onChange={onRestoreJson} /></label>
         </div>
-        <InfoPopover className="settings-info" label="JSONバックアップについて" text="JSONには食品、食事記録、お気に入り、料理メニュー、メニューセット、設定を含めます。復元前には現在データを自動退避します。" />
+        <InfoPopover className="settings-info" label="JSONバックアップについて" text="JSONには食品、食事記録、お気に入り、Myメニュー、一般メニュー、Myセット、設定を含めます。復元前には現在データを自動退避します。" />
       </div>
     </section>
     <section className="settings-card">
@@ -3028,7 +3250,7 @@ function MealModal({ food, amount, setAmount, amountUnit, setAmountUnit, menuSna
   }
   const selectedIngredients: MenuIngredientDraft[] = menuSnapshot?.ingredients.map((ingredient) => ({ kind: ingredient.kind, itemId: ingredient.itemId, amount: String(ingredient.amount), unit: ingredient.unit })) ?? []
   const selectedFoodIds = selectedIngredients.filter((ingredient) => ingredient.kind === 'food').map((ingredient) => ingredient.itemId)
-  return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="食事を記録"><section className={`modal-card${menuSnapshot ? ' meal-menu-modal' : ''}`}><div className="modal-heading"><div><span className="eyebrow">ADD MEAL</span><h2>{editing ? '食事を編集' : '食事を記録'}</h2></div><button className="icon-button" type="button" onClick={onClose} aria-label="閉じる">×</button></div><div className="selected-food"><strong>{food.displayName ?? food.name}</strong><span>{menuSnapshot ? '料理メニュー' : (food.maker || '一般食品')} · 基準量 {food.baseAmount}{food.baseUnit}{food.inputUnitConversions?.length ? ` · 入力用単位 ${food.inputUnitConversions.map((conversion) => `1${conversion.unit}=${conversion.baseAmount}${food.baseUnit}`).join('、')}` : ''}</span></div><form onSubmit={onSubmit}><label>分量<div className="amount-input-row"><div className="amount-input"><input type="number" min="0.01" max="100000" step="any" value={amount} onChange={(event) => setAmount(event.target.value)} required /><select className="field-suffix" value={amountUnit} onChange={(event) => setAmountUnit(event.target.value)} aria-label="入力用単位">{getFoodQuantityUnits(food).map((unit) => <option key={unit} value={unit}>{unit}</option>)}</select></div><button className="amount-increment" type="button" onClick={incrementAmount} disabled={!canIncrement} aria-label={`分量を${amountUnit}単位で1つ増やす`}>＋1</button></div></label>{menuSnapshot && <section className="meal-menu-snapshot-editor"><div className="menu-editor-section-heading"><div><span className="eyebrow">SELECTED</span><h3>追加済み食材</h3><p>表示中の分量は1食分です。ここでの変更はこの食事だけに保存され、料理メニュー原本には反映されません。</p></div><span className="menu-editor-count">{menuSnapshot.ingredients.length}件</span></div><div className="meal-snapshot-ingredients menu-editor-selected-list">{menuSnapshot.ingredients.length > 0 ? menuSnapshot.ingredients.map((ingredient, index) => <MealSnapshotIngredientRow key={`${ingredient.kind}:${ingredient.itemId}:${index}`} ingredient={ingredient} onChange={(next) => changeIngredient(index, next)} onRemove={() => removeIngredient(index)} />) : <p className="menu-editor-empty">構成食材がありません。下から追加できます。</p>}</div><div className="menu-editor-add-section"><MenuFoodSelection selectedIds={selectedFoodIds} selectedIngredients={selectedIngredients} menus={menus} editingMenuId={menuSnapshot.sourceMenuId} foods={foods} foodGroups={foodGroups} recentFoods={recentFoods} favoriteFoods={favoriteFoods} favoriteIds={favoriteIds} onToggleFavorite={onToggleFavorite} foodAttributePreferences={foodAttributePreferences} onSaveFoodAttributePreference={onSaveFoodAttributePreference} onAdd={addFood} onRemove={() => undefined} onAddMenu={addMenu} showSelectedList={false} pickerTitle="食材を追加" /></div></section>}<div className="preview-box calorie-preview"><div className="section-kicker">今回のカロリー</div><strong>{formatNutrient(preview.energyKcal)}<small> kcal</small></strong></div><button className="button primary full-width" type="submit">{editing ? '変更を保存' : '食事として登録'}</button><button className="button ghost full-width" type="button" onClick={onClose}>キャンセル</button></form></section></div>
+  return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="食事を記録"><section className={`modal-card${menuSnapshot ? ' meal-menu-modal' : ''}`}><div className="modal-heading"><div><span className="eyebrow">ADD MEAL</span><h2>{editing ? '食事を編集' : '食事を記録'}</h2></div><button className="icon-button" type="button" onClick={onClose} aria-label="閉じる">×</button></div><div className="selected-food"><strong>{menuSnapshot?.sourceMenuName ?? food.displayName ?? food.name}</strong><span>{menuSnapshot ? (menuSnapshot.sourceKind === 'temporary' ? '一時メニュー' : menuSnapshot.sourceKind === 'general-menu' ? '一般メニュー' : 'Myメニュー') : (food.maker || '一般食品')} · 基準量 {food.baseAmount}{food.baseUnit}{food.inputUnitConversions?.length ? ` · 入力用単位 ${food.inputUnitConversions.map((conversion) => `1${conversion.unit}=${conversion.baseAmount}${food.baseUnit}`).join('、')}` : ''}</span></div><form onSubmit={onSubmit}>{menuSnapshot?.sourceKind === 'temporary' && <label>一時メニュー名<input value={menuSnapshot.sourceMenuName} onChange={(event) => setMenuSnapshot({ ...menuSnapshot, sourceMenuName: event.target.value })} required /></label>}<label>分量<div className="amount-input-row"><div className="amount-input"><input type="number" min="0.01" max="100000" step="any" value={amount} onChange={(event) => setAmount(event.target.value)} required /><select className="field-suffix" value={amountUnit} onChange={(event) => setAmountUnit(event.target.value)} aria-label="入力用単位">{getFoodQuantityUnits(food).map((unit) => <option key={unit} value={unit}>{unit}</option>)}</select></div><button className="amount-increment" type="button" onClick={incrementAmount} disabled={!canIncrement} aria-label={`分量を${amountUnit}単位で1つ増やす`}>＋1</button></div></label>{menuSnapshot && <section className="meal-menu-snapshot-editor"><div className="menu-editor-section-heading"><div><span className="eyebrow">SELECTED</span><h3>追加済み食材</h3><p>表示中の分量は1食分です。ここでの変更はこの食事だけに保存され、メニュー原本には反映されません。</p></div><span className="menu-editor-count">{menuSnapshot.ingredients.length}件</span></div><div className="meal-snapshot-ingredients menu-editor-selected-list">{menuSnapshot.ingredients.length > 0 ? menuSnapshot.ingredients.map((ingredient, index) => <MealSnapshotIngredientRow key={`${ingredient.kind}:${ingredient.itemId}:${index}`} ingredient={ingredient} onChange={(next) => changeIngredient(index, next)} onRemove={() => removeIngredient(index)} />) : <p className="menu-editor-empty">構成食材がありません。下から追加できます。</p>}</div><div className="menu-editor-add-section"><MenuFoodSelection selectedIds={selectedFoodIds} selectedIngredients={selectedIngredients} menus={menus} editingMenuId={menuSnapshot.sourceMenuId} foods={foods} foodGroups={foodGroups} recentFoods={recentFoods} favoriteFoods={favoriteFoods} favoriteIds={favoriteIds} onToggleFavorite={onToggleFavorite} foodAttributePreferences={foodAttributePreferences} onSaveFoodAttributePreference={onSaveFoodAttributePreference} onAdd={addFood} onRemove={() => undefined} onAddMenu={addMenu} showSelectedList={false} pickerTitle="食材を追加" /></div></section>}<div className="preview-box calorie-preview"><div className="section-kicker">今回のカロリー</div><strong>{formatNutrient(preview.energyKcal)}<small> kcal</small></strong></div><button className="button primary full-width" type="submit">{editing ? '変更を保存' : '食事として登録'}</button><button className="button ghost full-width" type="button" onClick={onClose}>キャンセル</button></form></section></div>
 }
 
 function MealDetailsModal({ details, goals, onUpdateTimes, onClose }: { details: { type: MealType; entries: MealEntry[]; subtotal: Nutrients }; goals: NutritionGoals; onUpdateTimes: (entryIds: string[], time: string) => void; onClose: () => void }) {
@@ -3236,8 +3458,8 @@ function FoodFormView({ draft, returnView, allowCommercialClassification, estima
           <label>所属するfamily<select value={draft.foodGroupId} onChange={(event) => selectFamily(event.target.value)}><option value="">新しいfamilyを作成</option>{foodGroups.map((group) => <option key={group.id} value={group.id}>{group.displayName}{group.needsReview ? '（要確認）' : ''}</option>)}</select></label>
           <label>表示名<input value={draft.groupDisplayName} onChange={(event) => update('groupDisplayName', event.target.value)} placeholder="未入力時は食品名を使用" /></label>
           <div className="two-fields"><label>読み仮名<input value={draft.groupReading} onChange={(event) => update('groupReading', event.target.value)} placeholder="ひらがな" /></label><label>食品区分<input value={draft.groupCategory} onChange={(event) => update('groupCategory', event.target.value)} placeholder="例：主菜" /></label></div>
-          <div className="metadata-editor"><div className="metadata-editor-heading"><strong>別名</strong><button className="small-action" type="button" onClick={addAlias}>＋追加</button></div>{draft.aliases.map((alias, index) => <div className="metadata-input-row" key={`${index}:${alias.value}`}><input value={alias.value} onChange={(event) => update('aliases', draft.aliases.map((item, itemIndex) => itemIndex === index ? { ...item, value: event.target.value } : item))} placeholder="例：とりむね" /><select value={alias.type} onChange={(event) => update('aliases', draft.aliases.map((item, itemIndex) => itemIndex === index ? { ...item, type: event.target.value as FoodAliasType } : item))}><option value="synonym">通称</option><option value="reading">読み</option><option value="abbreviation">略称</option></select><button className="small-action danger-text" type="button" onClick={() => update('aliases', draft.aliases.filter((_, itemIndex) => itemIndex !== index))}>削除</button></div>)}</div>
-          <div className="metadata-editor"><div className="metadata-editor-heading"><strong>関連語</strong><button className="small-action" type="button" onClick={addRelatedTerm}>＋追加</button></div>{draft.relatedTerms.map((term, index) => <div className="metadata-input-row" key={`${index}:${term}`}><input value={term} onChange={(event) => update('relatedTerms', draft.relatedTerms.map((item, itemIndex) => itemIndex === index ? event.target.value : item))} placeholder="同じ食品ではないが関連する語" /><button className="small-action danger-text" type="button" onClick={() => update('relatedTerms', draft.relatedTerms.filter((_, itemIndex) => itemIndex !== index))}>削除</button></div>)}</div>
+          <div className="metadata-editor"><div className="metadata-editor-heading"><strong>別名</strong><button className="small-action" type="button" onClick={addAlias}>＋追加</button></div>{draft.aliases.map((alias, index) => <div className="metadata-input-row" key={`alias-${index}`}><input value={alias.value} onChange={(event) => update('aliases', draft.aliases.map((item, itemIndex) => itemIndex === index ? { ...item, value: event.target.value } : item))} placeholder="例：とりむね" /><select value={alias.type} onChange={(event) => update('aliases', draft.aliases.map((item, itemIndex) => itemIndex === index ? { ...item, type: event.target.value as FoodAliasType } : item))}><option value="synonym">通称</option><option value="reading">読み</option><option value="abbreviation">略称</option></select><button className="small-action danger-text" type="button" onClick={() => update('aliases', draft.aliases.filter((_, itemIndex) => itemIndex !== index))}>削除</button></div>)}</div>
+          <div className="metadata-editor"><div className="metadata-editor-heading"><strong>関連語</strong><button className="small-action" type="button" onClick={addRelatedTerm}>＋追加</button></div>{draft.relatedTerms.map((term, index) => <div className="metadata-input-row" key={`related-term-${index}`}><input value={term} onChange={(event) => update('relatedTerms', draft.relatedTerms.map((item, itemIndex) => itemIndex === index ? event.target.value : item))} placeholder="同じ食品ではないが関連する語" /><button className="small-action danger-text" type="button" onClick={() => update('relatedTerms', draft.relatedTerms.filter((_, itemIndex) => itemIndex !== index))}>削除</button></div>)}</div>
           <div className="food-form-subsection"><h3>バリエーション属性</h3><p className="helper-text">食品の状態・分量の選択肢として表示する属性です。空欄は指定なしで保存します。</p><div className="two-fields variant-attribute-inputs">{variantAttributeKeys.map((key) => <label key={key}>{variantAttributeLabels[key]}<input value={draft.variantAttributes[key]} onChange={(event) => update('variantAttributes', { ...draft.variantAttributes, [key]: event.target.value })} placeholder="任意" /></label>)}</div></div>
         </div>}
 

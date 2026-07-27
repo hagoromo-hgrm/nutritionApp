@@ -16,6 +16,7 @@ import {
   type FoodGroup,
   type FoodRelatedTerm,
   type FoodUsageStat,
+  type GeneralMenu,
   type MealEntry,
   type MealType,
   type MetadataRecord,
@@ -64,6 +65,7 @@ export class NutritionDatabase extends Dexie {
   settings!: Table<AppSettings, string>
   metadata!: Table<MetadataRecord, string>
   menus!: Table<Menu, string>
+  generalMenus!: Table<GeneralMenu, string>
   menuSets!: Table<MenuSet, string>
   foodGroups!: Table<FoodGroup, string>
   foodAliases!: Table<FoodAlias, string>
@@ -177,8 +179,29 @@ export class NutritionDatabase extends Dexie {
       estimation_settings: 'id, updatedAt',
       unresolved_ingredient_stats: 'id, estimatorGenreId, count, lastSeenAt, [estimatorGenreId+lastSeenAt]',
     })
+    this.version(8).stores({
+      foods: 'id, name, maker, barcode, source, foodGroupId, estimatorGenreId, updatedAt',
+      meal_entries: 'id, eatenAt, mealType, foodId',
+      favorites: 'foodId, createdAt',
+      settings: 'id',
+      metadata: 'key',
+      menus: 'id, name, category, updatedAt',
+      general_menus: 'id, name, category, updatedAt',
+      menu_sets: 'id, name, updatedAt',
+      food_groups: 'id, displayName, category, updatedAt',
+      food_aliases: 'id, foodGroupId, foodVariantId, normalizedAlias, isActive',
+      food_related_terms: 'id, foodGroupId, normalizedTerm, isActive',
+      food_usage_stats: 'foodId, selectionCount, lastSelectedAt, updatedAt',
+      search_logs: 'id, createdAt, normalizedQuery, selectedFoodGroupId, selectedFoodVariantId, unselected',
+      estimation_requests: 'requestId, foodId, status, createdAt, updatedAt, [foodId+createdAt], [foodId+status]',
+      estimation_results: 'requestId, foodId, status, estimatedAt, [foodId+estimatedAt]',
+      estimation_decisions: 'decisionId, requestId, foodId, nutrientKey, decision, decidedAt, [foodId+decidedAt], [requestId+decidedAt]',
+      estimation_settings: 'id, updatedAt',
+      unresolved_ingredient_stats: 'id, estimatorGenreId, count, lastSeenAt, [estimatorGenreId+lastSeenAt]',
+    })
     this.mealEntries = this.table('meal_entries')
     this.menus = this.table('menus')
+    this.generalMenus = this.table('general_menus')
     this.menuSets = this.table('menu_sets')
     this.foodGroups = this.table('food_groups')
     this.foodAliases = this.table('food_aliases')
@@ -310,7 +333,7 @@ export async function initializeDatabase(): Promise<void> {
       if (existing === 0) await db.foods.bulkAdd(initialFoods.map(enrichFoodForSearch))
       await db.metadata.put({ key: 'initial-foods-seeded', value: true })
       await db.metadata.put({ key: 'initial-foods-version', value: INITIAL_FOODS_VERSION })
-      await db.metadata.put({ key: 'schema-version', value: 7 })
+      await db.metadata.put({ key: 'schema-version', value: 8 })
     })
   } else if (seedVersion?.value !== INITIAL_FOODS_VERSION) {
     await db.transaction('rw', [db.foods, db.metadata], async () => {
@@ -350,7 +373,7 @@ export async function initializeDatabase(): Promise<void> {
         .map((food) => food.id)
       if (legacyIdsToDelete.length > 0) await db.foods.bulkDelete(legacyIdsToDelete)
       await db.metadata.put({ key: 'initial-foods-version', value: INITIAL_FOODS_VERSION })
-      await db.metadata.put({ key: 'schema-version', value: 7 })
+      await db.metadata.put({ key: 'schema-version', value: 8 })
     })
   }
   await ensureSearchMetadata()
@@ -541,7 +564,14 @@ export async function searchMenuSets(query: string): Promise<MenuSet[]> {
   if (!normalized) return sets
   const menus = await db.menus.toArray()
   const menuById = new Map(menus.map((menu) => [menu.id, menu]))
-  const foodIds = [...new Set([...sets.flatMap((set) => set.foodIds ?? []), ...menus.flatMap(getMenuFoodIds)])]
+  const generalMenus = await db.generalMenus.toArray()
+  const generalMenuById = new Map(generalMenus.map((menu) => [menu.id, menu]))
+  const foodIds = [...new Set([
+    ...sets.flatMap((set) => set.foodIds ?? []),
+    ...sets.flatMap((set) => (set.foodItems ?? []).map((item) => item.foodId)),
+    ...menus.flatMap(getMenuFoodIds),
+    ...generalMenus.flatMap(getMenuFoodIds),
+  ])]
   const ingredientFoods = await db.foods.bulkGet(foodIds)
   const foodsById = new Map(ingredientFoods.filter((food): food is Food => Boolean(food)).map((food) => [food.id, food]))
   const aliases = await db.foodAliases.toArray()
@@ -560,11 +590,64 @@ export async function searchMenuSets(query: string): Promise<MenuSet[]> {
       || getMenuFoodIds(menu).some(foodMatches)
       || getNestedMenuIds(menu).some((nestedMenuId) => menuMatches(nestedMenuId, nextVisited))
   }
-  return sets.filter((set) => textMatches(set.name) || (set.foodIds ?? []).some(foodMatches) || set.menuIds.some((menuId) => menuMatches(menuId)))
+  const generalMenuMatches = (menuId: string, visited = new Set<string>()): boolean => {
+    const menu = generalMenuById.get(menuId)
+    if (!menu || visited.has(menuId)) return false
+    const nextVisited = new Set(visited).add(menuId)
+    return [menu.name, menu.category, ...(menu.aliases ?? [])].some(textMatches)
+      || getMenuFoodIds(menu).some(foodMatches)
+      || getNestedMenuIds(menu).some((nestedMenuId) => menuMatches(nestedMenuId, nextVisited))
+  }
+  return sets.filter((set) => textMatches(set.name) || (set.foodIds ?? []).some(foodMatches)
+    || (set.foodItems ?? []).some((item) => foodMatches(item.foodId))
+    || set.menuIds.some((menuId) => menuMatches(menuId))
+    || (set.generalMenuIds ?? []).some((menuId) => generalMenuMatches(menuId)))
 }
 
 export async function getAllMenus(): Promise<Menu[]> {
   return db.menus.orderBy('name').toArray()
+}
+
+export async function getGeneralMenu(id: string): Promise<GeneralMenu | undefined> {
+  return db.generalMenus.get(id)
+}
+
+export async function searchGeneralMenus(query: string): Promise<GeneralMenu[]> {
+  const normalized = normalizeSearchText(query)
+  const menus = await db.generalMenus.orderBy('name').toArray()
+  if (!normalized) return menus
+  const myMenus = await db.menus.toArray()
+  const menusById = new Map(myMenus.map((menu) => [menu.id, menu]))
+  const ingredientFoods = await db.foods.bulkGet([...new Set([...menus.flatMap(getMenuFoodIds), ...myMenus.flatMap(getMenuFoodIds)])])
+  const foodsById = new Map(ingredientFoods.filter((food): food is Food => Boolean(food)).map((food) => [food.id, food]))
+  const aliases = await db.foodAliases.toArray()
+  const aliasesByGroup = new Map<string, string[]>()
+  for (const alias of aliases) aliasesByGroup.set(alias.foodGroupId, [...(aliasesByGroup.get(alias.foodGroupId) ?? []), alias.alias])
+  const foodMatches = (food: Food) => [food.displayName ?? food.name, food.officialName ?? food.name, food.maker, food.reading ?? '', ...(food.foodGroupId ? aliasesByGroup.get(food.foodGroupId) ?? [] : [])]
+    .some((field) => normalizeSearchText(field).includes(normalized))
+  const textMatches = (field: string) => normalizeSearchText(field).includes(normalized)
+  const myMenuMatches = (menuId: string, visited = new Set<string>()): boolean => {
+    const menu = menusById.get(menuId)
+    if (!menu || visited.has(menuId)) return false
+    const nextVisited = new Set(visited).add(menuId)
+    return [menu.name, menu.category, ...(menu.aliases ?? [])].some(textMatches)
+      || getMenuFoodIds(menu).some((foodId) => {
+        const food = foodsById.get(foodId)
+        return food ? foodMatches(food) : false
+      })
+      || getNestedMenuIds(menu).some((nestedMenuId) => myMenuMatches(nestedMenuId, nextVisited))
+  }
+  const menuMatches = (menu: GeneralMenu) => [menu.name, menu.category, ...(menu.aliases ?? [])].some(textMatches)
+    || getMenuFoodIds(menu).some((foodId) => {
+      const food = foodsById.get(foodId)
+      return food ? foodMatches(food) : false
+    })
+    || getNestedMenuIds(menu).some((menuId) => myMenuMatches(menuId))
+  return menus.filter(menuMatches)
+}
+
+export async function getAllGeneralMenus(): Promise<GeneralMenu[]> {
+  return db.generalMenus.orderBy('name').toArray()
 }
 
 export async function getAllMenuSets(): Promise<MenuSet[]> {
@@ -581,10 +664,29 @@ export async function saveMenu(menu: Menu): Promise<void> {
   })
 }
 
+export async function saveGeneralMenu(menu: GeneralMenu): Promise<void> {
+  await db.generalMenus.put(menu)
+}
+
+export async function deleteGeneralMenu(id: string): Promise<void> {
+  await db.transaction('rw', [db.generalMenus, db.menuSets], async () => {
+    await db.generalMenus.delete(id)
+    const sets = await db.menuSets.toArray()
+    const updatedAt = new Date().toISOString()
+    await Promise.all(sets.filter((set) => (set.generalMenuIds ?? []).includes(id)).map((set) => db.menuSets.put({
+      ...set,
+      generalMenuIds: (set.generalMenuIds ?? []).filter((menuId) => menuId !== id),
+      updatedAt,
+    })))
+  })
+}
+
 export async function deleteMenu(id: string): Promise<void> {
-  await db.transaction('rw', [db.menus, db.menuSets], async () => {
+  await db.transaction('rw', [db.menus, db.generalMenus, db.menuSets], async () => {
     const referencedBy = (await db.menus.toArray()).filter((menu) => menu.id !== id && getNestedMenuIds(menu).includes(id))
     if (referencedBy.length > 0) throw new Error(`「${referencedBy[0].name}」の食材として使用されているため削除できません。`)
+    const referencedByGeneralMenu = (await db.generalMenus.toArray()).find((menu) => getNestedMenuIds(menu).includes(id))
+    if (referencedByGeneralMenu) throw new Error(`一般メニュー「${referencedByGeneralMenu.name}」の食材として使用されているため削除できません。`)
     await db.menus.delete(id)
     const sets = await db.menuSets.toArray()
     await Promise.all(sets.filter((set) => set.menuIds.includes(id)).map((set) => db.menuSets.put({ ...set, menuIds: set.menuIds.filter((menuId) => menuId !== id), updatedAt: new Date().toISOString() })))
@@ -708,12 +810,12 @@ export async function getRecentFoods(limit = 20): Promise<Food[]> {
 
 export async function exportBackup(): Promise<BackupData> {
   await getSettings()
-  return db.transaction('r', [db.foods, db.mealEntries, db.favorites, db.settings, db.menus, db.menuSets, db.foodGroups, db.foodAliases, db.foodRelatedTerms, db.foodUsageStats, db.searchLogs, db.estimationSettings, db.estimationRequests, db.estimationResults, db.estimationDecisions], async () => {
+  return db.transaction('r', [db.foods, db.mealEntries, db.favorites, db.settings, db.menus, db.generalMenus, db.menuSets, db.foodGroups, db.foodAliases, db.foodRelatedTerms, db.foodUsageStats, db.searchLogs, db.estimationSettings, db.estimationRequests, db.estimationResults, db.estimationDecisions], async () => {
     const settings = await db.settings.get('app')
     if (!settings) throw new Error('設定を読み込めませんでした。')
-    const [foods, mealEntries, favorites, foodGroups, foodAliases, foodRelatedTerms, foodUsageStats, searchLogs, menus, menuSets, estimationSettings, estimationRequests, estimationResults, estimationDecisions] = await Promise.all([
+    const [foods, mealEntries, favorites, foodGroups, foodAliases, foodRelatedTerms, foodUsageStats, searchLogs, menus, generalMenus, menuSets, estimationSettings, estimationRequests, estimationResults, estimationDecisions] = await Promise.all([
       db.foods.toArray(), db.mealEntries.toArray(), db.favorites.toArray(), db.foodGroups.toArray(), db.foodAliases.toArray(),
-      db.foodRelatedTerms.toArray(), db.foodUsageStats.toArray(), db.searchLogs.toArray(), db.menus.toArray(), db.menuSets.toArray(),
+      db.foodRelatedTerms.toArray(), db.foodUsageStats.toArray(), db.searchLogs.toArray(), db.menus.toArray(), db.generalMenus.toArray(), db.menuSets.toArray(),
       db.estimationSettings.get('default'), db.estimationRequests.toArray(), db.estimationResults.toArray(), db.estimationDecisions.toArray(),
     ])
     return {
@@ -729,6 +831,7 @@ export async function exportBackup(): Promise<BackupData> {
       foodUsageStats,
       searchLogs,
       menus,
+      generalMenus,
       menuSets,
       settings,
       estimationDataFormatVersion: 1,
@@ -748,13 +851,14 @@ export interface ReplaceAllDataResult {
 export async function replaceAllData(backup: BackupData): Promise<ReplaceAllDataResult> {
   // UI以外の呼び出しでも、不正なバックアップで既存データを消さない。
   const validatedBackup = validateBackup(backup)
-  await db.transaction('rw', [db.foods, db.mealEntries, db.favorites, db.settings, db.metadata, db.menus, db.menuSets, db.foodGroups, db.foodAliases, db.foodRelatedTerms, db.foodUsageStats, db.searchLogs, db.estimationSettings, db.estimationRequests, db.estimationResults, db.estimationDecisions], async () => {
+  await db.transaction('rw', [db.foods, db.mealEntries, db.favorites, db.settings, db.metadata, db.menus, db.generalMenus, db.menuSets, db.foodGroups, db.foodAliases, db.foodRelatedTerms, db.foodUsageStats, db.searchLogs, db.estimationSettings, db.estimationRequests, db.estimationResults, db.estimationDecisions], async () => {
     await db.foods.clear()
     await db.mealEntries.clear()
     await db.favorites.clear()
     await db.settings.clear()
     await db.metadata.clear()
     await db.menus.clear()
+    await db.generalMenus.clear()
     await db.menuSets.clear()
     await db.foodGroups.clear()
     await db.foodAliases.clear()
@@ -769,6 +873,7 @@ export async function replaceAllData(backup: BackupData): Promise<ReplaceAllData
     if (validatedBackup.mealEntries.length) await db.mealEntries.bulkAdd(normalizeMealEntryGroups(validatedBackup.mealEntries))
     if (validatedBackup.favorites.length) await db.favorites.bulkAdd(validatedBackup.favorites)
     if (validatedBackup.menus?.length) await db.menus.bulkAdd(validatedBackup.menus)
+    if (validatedBackup.generalMenus?.length) await db.generalMenus.bulkAdd(validatedBackup.generalMenus)
     if (validatedBackup.menuSets?.length) await db.menuSets.bulkAdd(validatedBackup.menuSets)
     if (validatedBackup.foodGroups?.length) await db.foodGroups.bulkAdd(validatedBackup.foodGroups)
     if (validatedBackup.foodAliases?.length) await db.foodAliases.bulkAdd(validatedBackup.foodAliases)
@@ -780,7 +885,7 @@ export async function replaceAllData(backup: BackupData): Promise<ReplaceAllData
     if (validatedBackup.estimationResults?.length) await db.estimationResults.bulkAdd(validatedBackup.estimationResults)
     if (validatedBackup.estimationDecisions?.length) await db.estimationDecisions.bulkAdd(validatedBackup.estimationDecisions)
     await db.settings.put(validatedBackup.settings)
-    await db.metadata.put({ key: 'schema-version', value: 7 })
+    await db.metadata.put({ key: 'schema-version', value: 8 })
     await db.metadata.put({ key: 'initial-foods-seeded', value: true })
     await db.metadata.put({ key: 'initial-foods-version', value: INITIAL_FOODS_VERSION })
     if (validatedBackup.foodAliases !== undefined && validatedBackup.foodRelatedTerms !== undefined) {
@@ -805,6 +910,10 @@ export function createNewMealId(): string {
 
 export function createNewMenuId(): string {
   return createId('menu')
+}
+
+export function createNewGeneralMenuId(): string {
+  return createId('general-menu')
 }
 
 export function createNewMenuSetId(): string {

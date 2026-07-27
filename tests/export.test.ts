@@ -58,6 +58,14 @@ describe('export formats', () => {
     expect(restored).toEqual([orderedEntry])
   })
 
+  it('CSVのメニュースナップショットで一般・一時メニューの由来を保持する', () => {
+    for (const sourceKind of ['general-menu', 'temporary'] as const) {
+      const sourceEntry: MealEntry = { ...menuEntry, menuSnapshot: { ...menuEntry.menuSnapshot!, sourceKind } }
+      expect(parseMealsCsv(mealsToCsv([sourceEntry]))[0].menuSnapshot?.sourceKind).toBe(sourceKind)
+    }
+    expect(parseMealsCsv(mealsToCsv([menuEntry]))[0].menuSnapshot?.sourceKind).toBeUndefined()
+  })
+
   it('推計由来メタデータを既定列の後ろに追加してCSVで移送する', () => {
     const estimatedEntry: MealEntry = {
       ...entry,
@@ -219,14 +227,17 @@ describe('export formats', () => {
         { id: 'menu_1', name: '朝ごはん', category: '主食', foodIds: ['food_1'], ingredients: [{ kind: 'food', itemId: 'food_1', amount: 150, unit: 'g' }], aliases: ['朝食'], createdAt: '2026-07-15T00:00:00.000Z', updatedAt: '2026-07-15T00:00:00.000Z' },
         { id: 'menu_2', name: 'おやつ', category: 'お菓子・スイーツ', foodIds: [], ingredients: [{ kind: 'menu', itemId: 'menu_1', amount: 0.5, unit: '食' }], createdAt: '2026-07-15T00:00:00.000Z', updatedAt: '2026-07-15T00:00:00.000Z' },
       ],
-      menuSets: [{ id: 'set_1', name: '平日セット', menuIds: ['menu_1'], foodIds: ['food_1'], foodItems: [{ foodId: 'food_1', amount: 150, unit: 'g' }], createdAt: '2026-07-15T00:00:00.000Z', updatedAt: '2026-07-15T00:00:00.000Z' }],
+      generalMenus: [{ id: 'general_1', name: '一般朝食', category: '主食', foodIds: ['food_1'], ingredients: [{ kind: 'food', itemId: 'food_1', amount: 120, unit: 'g' }], aliases: ['簡単朝食'], createdAt: '2026-07-15T00:00:00.000Z', updatedAt: '2026-07-15T00:00:00.000Z' }],
+      menuSets: [{ id: 'set_1', name: '平日セット', menuIds: ['menu_1'], generalMenuIds: ['general_1'], foodIds: ['food_1'], foodItems: [{ foodId: 'food_1', amount: 150, unit: 'g' }], createdAt: '2026-07-15T00:00:00.000Z', updatedAt: '2026-07-15T00:00:00.000Z' }],
     }
     expect(validateBackup(withMenu).menus?.[0].name).toBe('朝ごはん')
     expect(validateBackup(withMenu).menus?.[0].aliases).toEqual(['朝食'])
     expect(validateBackup(withMenu).menus?.[0].ingredients?.[0].amount).toBe(150)
     expect(validateBackup(withMenu).menus?.[1].ingredients?.[0].kind).toBe('menu')
     expect(validateBackup(withMenu).menus?.[1].category).toBe('お菓子・スイーツ')
+    expect(validateBackup(withMenu).generalMenus?.[0].aliases).toEqual(['簡単朝食'])
     expect(validateBackup(withMenu).menuSets?.[0].menuIds).toEqual(['menu_1'])
+    expect(validateBackup(withMenu).menuSets?.[0].generalMenuIds).toEqual(['general_1'])
     expect(validateBackup(withMenu).menuSets?.[0].foodIds).toEqual(['food_1'])
     expect(validateBackup(withMenu).menuSets?.[0].foodItems?.[0]).toMatchObject({ foodId: 'food_1', amount: 150, unit: 'g' })
     expect(() => validateBackup({ ...withMenu, menuSets: [{ ...withMenu.menuSets[0], foodItems: [{ foodId: 'food_1', amount: 1, unit: '食' }] }] })).toThrow('換算設定')
