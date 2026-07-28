@@ -2763,7 +2763,186 @@ function LegacyFoodVariantPickerModal({ result, onSelect, onClose, mealMode = fa
 interface MenuViewProps { menus: Menu[]; generalMenus: GeneralMenu[]; menuSets: MenuSet[]; foods: Food[]; onNewMenu: () => void; onShowMenuNutrition: (menu: Menu) => void; onEditMenu: (menu: Menu) => void; onDeleteMenu: (menu: Menu) => void; onNewGeneralMenu: () => void; onEditGeneralMenu: (menu: GeneralMenu) => void; onDeleteGeneralMenu: (menu: GeneralMenu) => void; onCloneGeneralMenu: (menu: GeneralMenu) => void; onNewMenuSet: () => void; onEditMenuSet: (menuSet: MenuSet) => void; onDeleteMenuSet: (menuSet: MenuSet) => void; onReorderMenuSets: (orderedMenuSetIds: string[]) => Promise<void>; onBack: () => void }
 function MenuView({ menus, generalMenus, menuSets, foods, onNewMenu, onShowMenuNutrition, onEditMenu, onDeleteMenu, onNewGeneralMenu, onEditGeneralMenu, onDeleteGeneralMenu, onCloneGeneralMenu, onNewMenuSet, onEditMenuSet, onDeleteMenuSet, onReorderMenuSets }: MenuViewProps) {
   const [activeTab, setActiveTab] = useState<'menus' | 'sets' | 'general'>('menus')
+  const [orderedMenuSets, setOrderedMenuSets] = useState(menuSets)
+  const orderedMenuSetsRef = useRef(menuSets)
+  const menuSetsRef = useRef(menuSets)
+  const [draggedMenuSetId, setDraggedMenuSetId] = useState<string | null>(null)
+  const draggedMenuSetIdRef = useRef<string | null>(null)
+  const dragStartOrderRef = useRef<MenuSet[]>(menuSets)
+  const dragOffsetYRef = useRef(0)
+  const dragPointerIdRef = useRef<number | null>(null)
+  const dragHandleRef = useRef<HTMLButtonElement | null>(null)
+  const dragFrameRef = useRef<number | null>(null)
+  const latestDragYRef = useRef(0)
+  const updateDragPositionRef = useRef<(clientY: number) => void>(() => undefined)
+  const finishDragRef = useRef<(pointerId: number | null, commit: boolean) => void>(() => undefined)
+  const [dragPreview, setDragPreview] = useState<{ top: number; left: number; width: number; height: number } | null>(null)
   const [savingMenuSetOrder, setSavingMenuSetOrder] = useState(false)
+  const savingMenuSetOrderRef = useRef(false)
+  const listRef = useRef<HTMLDivElement>(null)
+
+  const updateLocalMenuSetOrder = (next: MenuSet[]) => {
+    orderedMenuSetsRef.current = next
+    setOrderedMenuSets(next)
+  }
+
+  useEffect(() => {
+    menuSetsRef.current = menuSets
+    if (!draggedMenuSetIdRef.current && !savingMenuSetOrderRef.current) {
+      orderedMenuSetsRef.current = menuSets
+      setOrderedMenuSets(menuSets)
+    }
+  }, [menuSets])
+
+  const commitMenuSetOrder = async (next: MenuSet[]) => {
+    const nextIds = next.map((menuSet) => menuSet.id)
+    const persistedMenuSets = menuSetsRef.current
+    if (nextIds.every((id, index) => id === persistedMenuSets[index]?.id)) return
+    if (savingMenuSetOrderRef.current) return
+    savingMenuSetOrderRef.current = true
+    setSavingMenuSetOrder(true)
+    try {
+      await onReorderMenuSets(nextIds)
+    } catch {
+      updateLocalMenuSetOrder(persistedMenuSets)
+    } finally {
+      savingMenuSetOrderRef.current = false
+      setSavingMenuSetOrder(false)
+    }
+  }
+
+  const moveMenuSet = async (menuSetId: string, offset: -1 | 1) => {
+    if (savingMenuSetOrderRef.current) return
+    const currentIndex = orderedMenuSetsRef.current.findIndex((menuSet) => menuSet.id === menuSetId)
+    const destination = currentIndex + offset
+    if (currentIndex < 0 || destination < 0 || destination >= orderedMenuSetsRef.current.length) return
+    const ordered = [...orderedMenuSetsRef.current]
+    ;[ordered[currentIndex], ordered[destination]] = [ordered[destination], ordered[currentIndex]]
+    updateLocalMenuSetOrder(ordered)
+    await commitMenuSetOrder(ordered)
+  }
+
+  const startMenuSetDrag = (event: React.PointerEvent<HTMLButtonElement>, menuSetId: string) => {
+    if (savingMenuSetOrderRef.current || orderedMenuSetsRef.current.length < 2) return
+    event.preventDefault()
+    const row = event.currentTarget.closest<HTMLElement>('[data-menu-set-id]')
+    if (!row) return
+    const rect = row.getBoundingClientRect()
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId)
+    } catch {
+      // Global listeners below keep the drag usable when pointer capture is unavailable.
+    }
+    dragStartOrderRef.current = orderedMenuSetsRef.current
+    dragOffsetYRef.current = event.clientY - rect.top
+    dragPointerIdRef.current = event.pointerId
+    dragHandleRef.current = event.currentTarget
+    latestDragYRef.current = event.clientY
+    draggedMenuSetIdRef.current = menuSetId
+    setDraggedMenuSetId(menuSetId)
+    setDragPreview({ top: rect.top, left: rect.left, width: rect.width, height: rect.height })
+  }
+
+  const updateMenuSetDragPosition = (clientY: number) => {
+    const sourceId = draggedMenuSetIdRef.current
+    if (!sourceId) return
+    setDragPreview((current) => current ? { ...current, top: clientY - dragOffsetYRef.current } : current)
+    const source = orderedMenuSetsRef.current.find((menuSet) => menuSet.id === sourceId)
+    if (!source || !listRef.current) return
+    const remaining = orderedMenuSetsRef.current.filter((menuSet) => menuSet.id !== sourceId)
+    const rowById = new Map(
+      Array.from(listRef.current.querySelectorAll<HTMLElement>('[data-menu-set-id]'))
+        .map((row) => [row.dataset.menuSetId, row] as const),
+    )
+    let destination = remaining.length
+    for (let index = 0; index < remaining.length; index += 1) {
+      const rect = rowById.get(remaining[index].id)?.getBoundingClientRect()
+      if (rect && clientY < rect.top + rect.height / 2) {
+        destination = index
+        break
+      }
+    }
+    const next = [...remaining]
+    next.splice(destination, 0, source)
+    if (!next.every((menuSet, index) => menuSet.id === orderedMenuSetsRef.current[index]?.id)) updateLocalMenuSetOrder(next)
+  }
+
+  updateDragPositionRef.current = updateMenuSetDragPosition
+
+  const finalizeMenuSetDrag = (pointerId: number | null, commit: boolean) => {
+    if (!draggedMenuSetIdRef.current || dragPointerIdRef.current === null || (pointerId !== null && dragPointerIdRef.current !== pointerId)) return
+    const activePointerId = dragPointerIdRef.current
+    const handle = dragHandleRef.current
+    if (dragFrameRef.current !== null) {
+      window.cancelAnimationFrame(dragFrameRef.current)
+      dragFrameRef.current = null
+      if (commit) updateDragPositionRef.current(latestDragYRef.current)
+    }
+    const finalOrder = orderedMenuSetsRef.current
+    dragPointerIdRef.current = null
+    draggedMenuSetIdRef.current = null
+    dragHandleRef.current = null
+    setDraggedMenuSetId(null)
+    setDragPreview(null)
+    try {
+      if (handle?.hasPointerCapture(activePointerId)) handle.releasePointerCapture(activePointerId)
+    } catch {
+      // The browser may already have released capture after the row moved.
+    }
+    if (commit) void commitMenuSetOrder(finalOrder)
+    else updateLocalMenuSetOrder(dragStartOrderRef.current)
+  }
+
+  finishDragRef.current = finalizeMenuSetDrag
+
+  useEffect(() => {
+    if (!draggedMenuSetId) return
+
+    const queueMove = (event: PointerEvent) => {
+      if (dragPointerIdRef.current !== event.pointerId) return
+      event.preventDefault()
+      latestDragYRef.current = event.clientY
+      if (dragFrameRef.current !== null) return
+      dragFrameRef.current = window.requestAnimationFrame(() => {
+        dragFrameRef.current = null
+        updateDragPositionRef.current(latestDragYRef.current)
+      })
+    }
+    const commit = (event: PointerEvent) => {
+      if (dragPointerIdRef.current !== event.pointerId) return
+      event.preventDefault()
+      finishDragRef.current(event.pointerId, true)
+    }
+    const cancel = (event: PointerEvent) => {
+      if (dragPointerIdRef.current !== event.pointerId) return
+      finishDragRef.current(event.pointerId, false)
+    }
+    const cancelWithoutPointer = () => finishDragRef.current(null, false)
+    const cancelWhenHidden = () => {
+      if (document.visibilityState === 'hidden') cancelWithoutPointer()
+    }
+
+    document.addEventListener('pointermove', queueMove, { capture: true, passive: false })
+    window.addEventListener('pointerup', commit, true)
+    window.addEventListener('pointercancel', cancel, true)
+    window.addEventListener('blur', cancelWithoutPointer)
+    window.addEventListener('pagehide', cancelWithoutPointer)
+    document.addEventListener('visibilitychange', cancelWhenHidden)
+    return () => {
+      document.removeEventListener('pointermove', queueMove, true)
+      window.removeEventListener('pointerup', commit, true)
+      window.removeEventListener('pointercancel', cancel, true)
+      window.removeEventListener('blur', cancelWithoutPointer)
+      window.removeEventListener('pagehide', cancelWithoutPointer)
+      document.removeEventListener('visibilitychange', cancelWhenHidden)
+      if (dragFrameRef.current !== null) {
+        window.cancelAnimationFrame(dragFrameRef.current)
+        dragFrameRef.current = null
+      }
+    }
+  }, [draggedMenuSetId])
+
+  const draggedMenuSet = draggedMenuSetId ? orderedMenuSets.find((menuSet) => menuSet.id === draggedMenuSetId) : null
   const foodName = (id: string) => {
     const food = foods.find((item) => item.id === id)
     return food ? displayFoodName(food) : '削除済み食品'
@@ -2775,22 +2954,6 @@ function MenuView({ menus, generalMenus, menuSets, foods, onNewMenu, onShowMenuN
     ...(menuSet.generalMenuIds ?? []).map((id) => ({ id: `general-menu:${id}`, kind: '一般メニュー', name: generalMenuName(id) })),
     ...getMenuSetFoodItems(menuSet, foods).map((item) => ({ id: `food:${item.foodId}`, kind: '食品', name: foodName(item.foodId) })),
   ]
-  const moveMenuSet = async (menuSetId: string, offset: -1 | 1) => {
-    if (savingMenuSetOrder) return
-    const currentIndex = menuSets.findIndex((menuSet) => menuSet.id === menuSetId)
-    const destination = currentIndex + offset
-    if (currentIndex < 0 || destination < 0 || destination >= menuSets.length) return
-    const ordered = [...menuSets]
-    ;[ordered[currentIndex], ordered[destination]] = [ordered[destination], ordered[currentIndex]]
-    setSavingMenuSetOrder(true)
-    try {
-      await onReorderMenuSets(ordered.map((menuSet) => menuSet.id))
-    } catch {
-      // App側で理由を通知し、現在のprops順を維持する。
-    } finally {
-      setSavingMenuSetOrder(false)
-    }
-  }
   const menuList = (items: Array<Menu | GeneralMenu>, kind: 'my' | 'general') => <div className="menu-category-groups">{MENU_CATEGORIES.map((category) => {
     const categoryMenus = items.filter((menu) => menu.category === category)
     return <details className="menu-category-group" key={category}><summary><span className="menu-picker-summary-label"><i aria-hidden="true" />{category}</span><small>{categoryMenus.length > 0 ? `${categoryMenus.length}件` : '登録なし'}</small></summary>{categoryMenus.length > 0 ? <div className="menu-list">{categoryMenus.map((menu) => {
@@ -2810,12 +2973,13 @@ function MenuView({ menus, generalMenus, menuSets, foods, onNewMenu, onShowMenuN
       {menuList(menus, 'my')}
     </section> : activeTab === 'sets' ? <section className="section-block menu-management-panel" role="tabpanel">
       <div className="section-title"><div><span className="eyebrow">MY SETS</span><h2>Myセット</h2></div><button className="button primary" type="button" onClick={onNewMenuSet}>＋ Myセット</button></div>
-      {menuSets.length === 0 ? <div className="empty-state">Myセットはまだありません。</div> : <><p className="helper-text menu-set-order-helper">↑↓で食事登録画面に表示する順番を変更できます。</p><div className="menu-set-list">{menuSets.map((menuSet, index) => { const items = menuSetItems(menuSet); return <div className="menu-set-order-row" key={menuSet.id}><div className="menu-set-order-buttons"><button type="button" aria-label={`${menuSet.name}を上へ移動`} disabled={savingMenuSetOrder || index === 0} onClick={() => void moveMenuSet(menuSet.id, -1)}>↑</button><button type="button" aria-label={`${menuSet.name}を下へ移動`} disabled={savingMenuSetOrder || index === menuSets.length - 1} onClick={() => void moveMenuSet(menuSet.id, 1)}>↓</button></div><details className="menu-set-card"><summary><span><span className="source-badge">セット</span><strong>{menuSet.name}</strong></span><small>{items.length > 0 ? `構成 ${items.length}件` : '構成なし'}</small></summary><div className="menu-set-card-body">{items.length > 0 ? <ul>{items.map((item) => <li key={item.id}><span>{item.kind}</span><strong>{item.name}</strong></li>)}</ul> : <p className="menu-picker-empty">メニュー・食品が選択されていません。</p>}<div className="menu-card-actions"><button type="button" className="small-action" onClick={() => onEditMenuSet(menuSet)}>編集</button><button type="button" className="small-action danger-text" onClick={() => onDeleteMenuSet(menuSet)}>削除</button></div></div></details></div> })}</div></>}
+      {orderedMenuSets.length === 0 ? <div className="empty-state">Myセットはまだありません。</div> : <><p className="helper-text menu-set-order-helper">≡をドラッグして、食事登録画面に表示する順番を変更できます。上下ボタンでも操作できます。</p><div ref={listRef} className={`menu-set-list${draggedMenuSetId ? ' is-reordering' : ''}`}>{orderedMenuSets.map((menuSet, index) => { const items = menuSetItems(menuSet); return <div className="menu-set-order-row" key={menuSet.id}><div className="menu-set-order-buttons"><button type="button" aria-label={`${menuSet.name}を上へ移動`} disabled={savingMenuSetOrder || index === 0} onClick={() => void moveMenuSet(menuSet.id, -1)}>↑</button><button type="button" aria-label={`${menuSet.name}を下へ移動`} disabled={savingMenuSetOrder || index === orderedMenuSets.length - 1} onClick={() => void moveMenuSet(menuSet.id, 1)}>↓</button></div><div className={`menu-set-card-shell${draggedMenuSetId === menuSet.id ? ' is-drag-placeholder' : ''}`} data-menu-set-id={menuSet.id}><button className="meal-order-handle menu-set-order-handle" type="button" aria-label={`${menuSet.name}をドラッグして並び替え`} disabled={savingMenuSetOrder || orderedMenuSets.length < 2} onPointerDown={(event) => startMenuSetDrag(event, menuSet.id)} onPointerUp={(event) => finishDragRef.current(event.pointerId, true)} onPointerCancel={(event) => finishDragRef.current(event.pointerId, false)}>≡</button><details className="menu-set-card"><summary><span><span className="source-badge">セット</span><strong>{menuSet.name}</strong></span><small>{items.length > 0 ? `構成 ${items.length}件` : '構成なし'}</small></summary><div className="menu-set-card-body">{items.length > 0 ? <ul>{items.map((item) => <li key={item.id}><span>{item.kind}</span><strong>{item.name}</strong></li>)}</ul> : <p className="menu-picker-empty">メニュー・食品が選択されていません。</p>}<div className="menu-card-actions"><button type="button" className="small-action" onClick={() => onEditMenuSet(menuSet)}>編集</button><button type="button" className="small-action danger-text" onClick={() => onDeleteMenuSet(menuSet)}>削除</button></div></div></details></div></div> })}</div></>}
     </section> : <section className="section-block menu-management-panel" role="tabpanel">
       <div className="section-title"><div><span className="eyebrow">GENERAL MENUS</span><h2>一般メニュー</h2></div><button className="button primary" type="button" onClick={onNewGeneralMenu}>＋ 一般メニュー</button></div>
       <p className="helper-text">汎用的な料理を登録します。食事へ追加した後の変更はその食事だけに反映されます。</p>
       {menuList(generalMenus, 'general')}
     </section>}
+    {draggedMenuSet && dragPreview && <div className="menu-set-drag-overlay" style={dragPreview} aria-hidden="true"><span className="meal-order-handle">≡</span><div className="menu-set-drag-copy"><span><span className="source-badge">セット</span><strong>{draggedMenuSet.name}</strong></span><small>{menuSetItems(draggedMenuSet).length > 0 ? `構成 ${menuSetItems(draggedMenuSet).length}件` : '構成なし'}</small></div></div>}
   </>
 }
 

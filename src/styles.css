@@ -525,6 +525,15 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .menu-set-order-buttons { display: grid; align-content: center; gap: .3rem; }
 .menu-set-order-buttons button { display: grid; width: 2rem; height: 2rem; place-items: center; border: 1px solid var(--line); border-radius: .55rem; color: var(--accent-deep); background: #f7fbff; font-size: .8rem; font-weight: 900; }
 .menu-set-order-buttons button:disabled { color: #aab7c5; background: #f1f4f7; opacity: .55; }
+.menu-set-card-shell { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: stretch; gap: .45rem; min-width: 0; }
+.menu-set-card-shell.is-drag-placeholder { border-radius: 1rem; opacity: .18; background: #dfeefa; }
+.menu-set-order-handle { align-self: center; }
+.menu-set-drag-overlay { position: fixed; z-index: 30; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: .55rem; box-sizing: border-box; border: 1px solid #b9d5ef; border-radius: 1rem; padding: .35rem; pointer-events: none; color: var(--ink); background: #f7fbff; box-shadow: 0 .7rem 1.7rem rgba(67, 112, 158, .24); transform: scale(1.015); }
+.menu-set-drag-overlay .meal-order-handle { cursor: grabbing; }
+.menu-set-drag-copy { display: grid; min-width: 0; gap: .35rem; border: 1px solid var(--line); border-radius: .8rem; padding: .85rem .95rem; background: white; }
+.menu-set-drag-copy > span { display: flex; min-width: 0; align-items: center; gap: .5rem; }
+.menu-set-drag-copy strong { overflow: hidden; color: var(--ink); text-overflow: ellipsis; white-space: nowrap; font-size: .86rem; }
+.menu-set-drag-copy small { color: var(--muted); font-size: .68rem; }
 .menu-category-group, .menu-set-card { overflow: hidden; border: 1px solid var(--line); border-radius: 1rem; background: white; }
 .menu-category-group > summary, .menu-set-card > summary { display: flex; align-items: center; justify-content: space-between; gap: .7rem; padding: .85rem .95rem; color: var(--accent-deep); cursor: pointer; list-style: none; }
 .menu-category-group > summary::-webkit-details-marker, .menu-set-card > summary::-webkit-details-marker { display: none; }
