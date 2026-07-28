@@ -3273,8 +3273,7 @@ function MealModal({ food, amount, setAmount, amountUnit, setAmountUnit, menuSna
   const preview = menuSnapshot
     ? calculateMealMenuEntryNutrients(menuSnapshot, Number(amount), amountUnit)
     : calculateNutrients(food, Number(amount), amountUnit)
-  const isMyMenu = menuSnapshot !== null && (menuSnapshot.sourceKind === undefined || menuSnapshot.sourceKind === 'my-menu')
-  const [selectedIngredientsOpen, setSelectedIngredientsOpen] = useState(() => editing || !isMyMenu)
+  const [selectedIngredientsOpen, setSelectedIngredientsOpen] = useState(() => editing)
   const numericAmount = Number(amount)
   const canIncrement = !Number.isFinite(numericAmount) || numericAmount < 100000
   const incrementAmount = () => setAmount(String(incrementByQuantityUnit(numericAmount, food, amountUnit)))
