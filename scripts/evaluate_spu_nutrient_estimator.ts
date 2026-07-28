@@ -3,7 +3,9 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises'
 import { dirname } from 'node:path'
 import {
   ESTIMATABLE_NUTRIENT_KEYS,
+  ESTIMATION_LIMITATION_LABELS,
   ESTIMATE_FIT_NUTRIENT_KEYS,
+  GENRE_PRIOR_PARTIAL_METHOD,
   estimateNutrients,
   NUTRIENT_ESTIMATOR_MODEL_VERSION,
   type EstimatableNutrientKey,
@@ -14,10 +16,11 @@ import {
   nutrientLabelReferenceInterval,
   type NutrientLabelReference,
 } from '../src/services/nutrientLabelInterval'
-import type { EstimatorGenreId, NutrientKey } from '../src/types'
+import type { EstimationLimitationReason, EstimatorGenreId, NutrientKey } from '../src/types'
 
 type SplitId = 'train' | 'calibration' | 'test'
 type ValueKind = 'fixed' | 'declared_range' | 'estimated'
+type EstimateKind = 'full' | 'known_only' | 'genre_prior'
 
 interface TrainingNutrient {
   displayText: string
@@ -69,6 +72,8 @@ interface Observation {
   genreId: EstimatorGenreId
   nutrientKey: EstimatableNutrientKey
   available: boolean
+  estimateKind: EstimateKind | null
+  limitationReasons: EstimationLimitationReason[]
   pointError: number | null
   percentageError: number | null
   pointInsideReference: boolean | null
@@ -85,9 +90,20 @@ interface MetricSummary {
   availableCount: number
   availabilityPercent: number
   pointInsideReferencePercent: number | null
+  pointAtOrBelowReferenceMinPercent: number | null
+  pointAtOrBelowReferenceMaxPercent: number | null
   rangeCoveragePercent: number | null
   maeOutsideReference: number | null
   mapeOutsideReferencePercent: number | null
+}
+
+interface LimitationReasonSummary {
+  code: EstimationLimitationReason
+  label: string
+  count: number
+  partialAvailableCount: number
+  genrePriorAvailableCount: number
+  unavailableCount: number
 }
 
 function parseArgs(args: string[]): {
@@ -161,6 +177,12 @@ function percent(numerator: number, denominator: number): number | null {
 function summarize(observations: readonly Observation[]): MetricSummary {
   const available = observations.filter((item) => item.available)
   const pointInside = available.filter((item) => item.pointInsideReference === true).length
+  const pointAtOrBelowReferenceMin = available.filter((item) => (
+    item.predictedValue !== null && item.predictedValue <= item.referenceMin
+  )).length
+  const pointAtOrBelowReferenceMax = available.filter((item) => (
+    item.predictedValue !== null && item.predictedValue <= item.referenceMax
+  )).length
   const rangeCovered = available.filter((item) => item.rangeOverlapsReference === true).length
   const pointErrors = available.flatMap((item) => item.pointError === null ? [] : [item.pointError])
   const percentageErrors = available.flatMap((item) => item.percentageError === null ? [] : [item.percentageError])
@@ -169,6 +191,8 @@ function summarize(observations: readonly Observation[]): MetricSummary {
     availableCount: available.length,
     availabilityPercent: percent(available.length, observations.length) ?? 0,
     pointInsideReferencePercent: percent(pointInside, available.length),
+    pointAtOrBelowReferenceMinPercent: percent(pointAtOrBelowReferenceMin, available.length),
+    pointAtOrBelowReferenceMaxPercent: percent(pointAtOrBelowReferenceMax, available.length),
     rangeCoveragePercent: percent(rangeCovered, available.length),
     maeOutsideReference: pointErrors.length === 0 ? null : round(pointErrors.reduce((sum, value) => sum + value, 0) / pointErrors.length),
     mapeOutsideReferencePercent: percentageErrors.length === 0
@@ -191,6 +215,83 @@ function groupedSummaries(
       .sort(([left], [right]) => left.localeCompare(right))
       .map(([groupKey, values]) => [groupKey, summarize(values)]),
   )
+}
+
+function summarizeLimitationReasons(
+  observations: readonly Observation[],
+): LimitationReasonSummary[] {
+  const counts = new Map<EstimationLimitationReason, {
+    count: number
+    partialAvailableCount: number
+    genrePriorAvailableCount: number
+    unavailableCount: number
+  }>()
+  for (const observation of observations) {
+    for (const code of new Set(observation.limitationReasons)) {
+      const current = counts.get(code) ?? {
+        count: 0,
+        partialAvailableCount: 0,
+        genrePriorAvailableCount: 0,
+        unavailableCount: 0,
+      }
+      current.count += 1
+      if (observation.available && observation.estimateKind === 'known_only') current.partialAvailableCount += 1
+      if (observation.available && observation.estimateKind === 'genre_prior') current.genrePriorAvailableCount += 1
+      if (!observation.available) current.unavailableCount += 1
+      counts.set(code, current)
+    }
+  }
+  return [...counts.entries()]
+    .map(([code, count]) => ({
+      code,
+      label: ESTIMATION_LIMITATION_LABELS[code],
+      ...count,
+    }))
+    .sort((left, right) => right.count - left.count || left.code.localeCompare(right.code))
+}
+
+function groupedLimitationReasons(
+  observations: readonly Observation[],
+  key: (observation: Observation) => string,
+): Record<string, LimitationReasonSummary[]> {
+  const groups = new Map<string, Observation[]>()
+  for (const observation of observations) {
+    const groupKey = key(observation)
+    groups.set(groupKey, [...(groups.get(groupKey) ?? []), observation])
+  }
+  return Object.fromEntries(
+    [...groups.entries()]
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([groupKey, values]) => [groupKey, summarizeLimitationReasons(values)]),
+  )
+}
+
+function observationsForEstimateKind(
+  observations: readonly Observation[],
+  estimateKind: EstimateKind,
+): Observation[] {
+  return observations.map((observation) => (
+    observation.available && observation.estimateKind !== estimateKind
+      ? {
+          ...observation,
+          available: false,
+          pointError: null,
+          percentageError: null,
+          pointInsideReference: null,
+          rangeOverlapsReference: null,
+          predictedValue: null,
+          predictedMin: null,
+          predictedMax: null,
+        }
+      : observation
+  ))
+}
+
+function summarizeEstimateKind(
+  observations: readonly Observation[],
+  estimateKind: EstimateKind,
+): MetricSummary {
+  return summarize(observationsForEstimateKind(observations, estimateKind))
 }
 
 async function main(): Promise<void> {
@@ -251,6 +352,8 @@ async function main(): Promise<void> {
           genreId: record.genreId,
           nutrientKey,
           available: false,
+          estimateKind: null,
+          limitationReasons: [...estimate.limitationReasons],
           pointError: null,
           percentageError: null,
           pointInsideReference: null,
@@ -271,6 +374,12 @@ async function main(): Promise<void> {
         genreId: record.genreId,
         nutrientKey,
         available: true,
+        estimateKind: estimate.method === GENRE_PRIOR_PARTIAL_METHOD
+          ? 'genre_prior'
+          : estimate.method === 'browser_ingredient_partial_rule'
+            ? 'known_only'
+            : 'full',
+        limitationReasons: [...estimate.limitationReasons],
         pointError,
         percentageError: center <= 0 ? null : pointError / center,
         pointInsideReference: pointError === 0,
@@ -300,6 +409,21 @@ async function main(): Promise<void> {
       .sort((left, right) => right.count - left.count || left.name.localeCompare(right.name, 'ja'))
       .slice(0, 500),
     overall: summarize(observations),
+    byEstimateKind: {
+      full: summarizeEstimateKind(observations, 'full'),
+      knownOnly: summarizeEstimateKind(observations, 'known_only'),
+      genrePrior: summarizeEstimateKind(observations, 'genre_prior'),
+    },
+    limitationReasons: {
+      overall: summarizeLimitationReasons(observations),
+      byNutrient: groupedLimitationReasons(observations, (item) => item.nutrientKey),
+      byGenre: groupedLimitationReasons(observations, (item) => item.genreId),
+    },
+    bySplitEstimateKind: {
+      full: groupedSummaries(observationsForEstimateKind(observations, 'full'), (item) => item.split),
+      knownOnly: groupedSummaries(observationsForEstimateKind(observations, 'known_only'), (item) => item.split),
+      genrePrior: groupedSummaries(observationsForEstimateKind(observations, 'genre_prior'), (item) => item.split),
+    },
     bySplit: groupedSummaries(observations, (item) => item.split),
     byNutrient: groupedSummaries(observations, (item) => item.nutrientKey),
     byGenre: groupedSummaries(observations, (item) => item.genreId),
@@ -308,8 +432,9 @@ async function main(): Promise<void> {
   }
   await mkdir(dirname(args.output), { recursive: true })
   await writeFile(args.output, `${JSON.stringify(output, null, 2)}\n`, 'utf8')
+  const fullEstimateObservations = observationsForEstimateKind(observations, 'full')
   const calibrationMetrics = Object.fromEntries(
-    Object.entries(output.bySplitNutrient)
+    Object.entries(groupedSummaries(fullEstimateObservations, (item) => `${item.split}:${item.nutrientKey}`))
       .filter(([key]) => key.startsWith('calibration:'))
       .map(([key, value]) => [key.replace('calibration:', ''), value]),
   )
@@ -333,6 +458,16 @@ async function main(): Promise<void> {
       labelValuesEvaluatedAsIntervals: true,
       unavailableValuesExcludedFromErrorAndCoverage: true,
       availabilityReportedSeparately: true,
+      knownOnlyPartialValuesReportedSeparately: true,
+      knownOnlyPartialValuesExcludedFromCalibration: true,
+      genrePriorValuesReportedSeparately: true,
+      genrePriorBuiltFromTrainingSplitOnly: true,
+      genrePriorValuesExcludedFromCalibration: true,
+    },
+    numericAvailabilityGate: {
+      targetPercent: 80,
+      actualPercent: output.overall.availabilityPercent,
+      passed: output.overall.availabilityPercent >= 80,
     },
     calibrationDecision: {
       minimumSampleSizePerNutrient: minimumCalibrationSampleSize,
@@ -344,6 +479,9 @@ async function main(): Promise<void> {
     },
     dataWarnings: manifest.warnings ?? [],
     overall: output.overall,
+    byEstimateKind: output.byEstimateKind,
+    limitationReasons: output.limitationReasons,
+    bySplitEstimateKind: output.bySplitEstimateKind,
     bySplit: output.bySplit,
     byNutrient: output.byNutrient,
     byGenre: output.byGenre,
@@ -357,6 +495,9 @@ async function main(): Promise<void> {
     evaluatedRecords: output.evaluatedRecords,
     failedRecords: output.failedRecords,
     overall: output.overall,
+    byEstimateKind: output.byEstimateKind,
+    limitationReasons: output.limitationReasons,
+    bySplitEstimateKind: output.bySplitEstimateKind,
     bySplit: output.bySplit,
     byNutrient: output.byNutrient,
     topUnresolvedIngredients: output.unresolvedIngredients.slice(0, 30),

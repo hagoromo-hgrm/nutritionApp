@@ -1,6 +1,9 @@
 import { useId, useState } from 'react'
 import {
   ESTIMATABLE_NUTRIENT_KEYS,
+  ESTIMATION_LIMITATION_LABELS,
+  GENRE_PRIOR_PARTIAL_METHOD,
+  PARTIAL_METHOD,
   estimateNutrients,
   isEstimateAdoptable,
   type AvailableNutrientEstimate,
@@ -167,7 +170,7 @@ export function NutrientEstimatePanel(props: NutrientEstimatePanelProps) {
         <span className="nutrient-estimate-badge">端末内</span>
       </div>
       <p className="nutrient-estimate-intro" id={`${id}-intro`}>
-        原材料表示、商品名、確認済み重量から、飽和脂肪酸、食物繊維、カルシウム、鉄、ビタミンA・E・B1・B2・Cのうち、未入力の栄養素だけを参考推計します。商品名は曖昧な参照候補を選ぶ弱い手掛かりに限り、入力済みの主要栄養値と原材料の明示語を優先します。外部へ情報を送信せず、現在値は上書きしません。
+        原材料表示、商品名、確認済み重量から、飽和脂肪酸、食物繊維、カルシウム、鉄、ビタミンA・E・B1・B2・Cのうち、未入力の栄養素だけを参考推計します。未対応原材料や参照値欠損がある場合は、重量枠を残したまま、学習区分のメーカー公式表示から作ったジャンル事前分布で低信頼度の参考値を補います。栄養添加物の配合量が不明な分は加算しません。商品名は曖昧な参照候補を選ぶ弱い手掛かりに限り、入力済みの主要栄養値と原材料の明示語を優先します。外部へ情報を送信せず、現在値は上書きしません。
       </p>
       <dl className="nutrient-estimate-basis">
         <div><dt>表示基準</dt><dd>{props.basis.baseAmount}{props.basis.baseUnit}当たり</dd></div>
@@ -214,6 +217,7 @@ export function NutrientEstimatePanel(props: NutrientEstimatePanelProps) {
                     <div className="nutrient-estimate-unavailable" role="status">
                       <strong>推計不可</strong>
                       <p>{estimate.reason}</p>
+                      {estimate.limitationReasons.length > 0 && <small>理由分類: {estimate.limitationReasons.map((reason) => ESTIMATION_LIMITATION_LABELS[reason]).join('・')}</small>}
                       <small>{estimate.nextAction}</small>
                     </div>
                   )}
@@ -245,15 +249,22 @@ export function NutrientEstimatePanel(props: NutrientEstimatePanelProps) {
 }
 
 function AvailableEstimateDetails({ estimate, unit }: { estimate: AvailableNutrientEstimate; unit: string }) {
+  const isPartial = estimate.method === PARTIAL_METHOD
+  const isGenrePriorPartial = estimate.method === GENRE_PRIOR_PARTIAL_METHOD
   return (
     <div className="nutrient-estimate-values">
-      <div><span>参考推計</span><strong>{format(estimate.value)}<small>{unit}</small></strong></div>
+      <div><span>{isGenrePriorPartial ? 'ジャンル補完参考値' : isPartial ? '既知分の部分参考値' : '参考推計'}</span><strong>{format(estimate.value)}<small>{unit}</small></strong></div>
       <dl>
-        <div><dt>範囲</dt><dd>{format(estimate.range.min)}〜{format(estimate.range.max)}{unit}</dd></div>
+        <div><dt>{isPartial ? '既知分の推定範囲' : '範囲'}</dt><dd>{format(estimate.range.min)}〜{format(estimate.range.max)}{unit}</dd></div>
         <div><dt>信頼度</dt><dd>{CONFIDENCE_LABELS[estimate.confidence]}</dd></div>
-        <div><dt>方法</dt><dd>{estimate.method === 'browser_ingredient_macro_fit'
-          ? '原材料表示順と主要栄養値による端末内推計'
-          : '原材料表示順による端末内推計'}</dd></div>
+        {estimate.limitationReasons.length > 0 && <div><dt>部分推計の理由</dt><dd>{estimate.limitationReasons.map((reason) => ESTIMATION_LIMITATION_LABELS[reason]).join('・')}</dd></div>}
+        <div><dt>方法</dt><dd>{isGenrePriorPartial
+          ? '既知原材料とジャンル階層型事前分布による端末内推計'
+          : isPartial
+          ? '数値を確認できる原材料分だけの端末内推計'
+          : estimate.method === 'browser_ingredient_macro_fit'
+            ? '原材料表示順と主要栄養値による端末内推計'
+            : '原材料表示順による端末内推計'}</dd></div>
         <div><dt>出典</dt><dd>{estimate.source}</dd></div>
       </dl>
       {estimate.warnings.length > 0 && (

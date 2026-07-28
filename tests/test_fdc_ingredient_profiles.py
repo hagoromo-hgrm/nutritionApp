@@ -5,6 +5,7 @@ from pathlib import Path
 
 from scripts.build_fdc_ingredient_profiles import (
     build_profile,
+    extract_bulk_foods,
     nutrient_amounts,
     validate_allowlist,
 )
@@ -80,6 +81,24 @@ class FdcIngredientProfileTests(unittest.TestCase):
         valid["profiles"].append(dict(valid["profiles"][0]))
         with self.assertRaises(ValueError):
             validate_allowlist(valid)
+
+    def test_extracts_only_reviewed_ids_from_official_bulk_json(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            bulk = Path(directory) / "sr.json"
+            bulk.write_text(json.dumps({
+                "SRLegacyFoods": [
+                    {"fdcId": 10, "description": "A"},
+                    {"fdcId": 20, "description": "B"},
+                    {"fdcId": 30, "description": "C"},
+                ],
+            }), encoding="utf-8")
+
+            selected = extract_bulk_foods(bulk, {10, 30})
+
+            self.assertEqual(selected, {
+                10: {"fdcId": 10, "description": "A"},
+                30: {"fdcId": 30, "description": "C"},
+            })
 
 
 if __name__ == "__main__":

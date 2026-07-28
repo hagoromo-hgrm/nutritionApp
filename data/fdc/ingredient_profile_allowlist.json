@@ -1,7 +1,7 @@
 {
   "format": "nutrition-estimator-fdc-allowlist",
   "formatVersion": 1,
-  "reviewedAt": "2026-07-26",
+  "reviewedAt": "2026-07-28",
   "profiles": [
     {
       "profileId": "fdc_cocoa_butter",
@@ -10,8 +10,58 @@
       "descriptionIncludes": "Oil, cocoa butter",
       "replaceProfileId": "proxy_cocoa_butter_mext_14030",
       "datasetRelease": "SR Legacy 04/2018",
-      "retrievedAt": "2026-07-26T14:48:00Z",
+      "retrievedAt": "2026-07-28T07:34:25Z",
       "reviewedAt": "2026-07-26"
+    },
+    {
+      "profileId": "fdc_wheat_bran",
+      "canonicalName": "小麦ふすま",
+      "fdcId": 169722,
+      "descriptionIncludes": "Wheat bran, crude",
+      "replaceProfileId": "unresolved:wheat_bran",
+      "datasetRelease": "SR Legacy 04/2018",
+      "retrievedAt": "2026-07-28T07:34:25Z",
+      "reviewedAt": "2026-07-28"
+    },
+    {
+      "profileId": "fdc_coconut_oil",
+      "canonicalName": "ココナッツオイル",
+      "fdcId": 171412,
+      "descriptionIncludes": "Oil, coconut",
+      "replaceProfileId": "unresolved:coconut_oil",
+      "datasetRelease": "SR Legacy 04/2018",
+      "retrievedAt": "2026-07-28T07:34:25Z",
+      "reviewedAt": "2026-07-28"
+    },
+    {
+      "profileId": "fdc_chicken_fat",
+      "canonicalName": "鶏脂",
+      "fdcId": 173564,
+      "descriptionIncludes": "Fat, chicken",
+      "replaceProfileId": "unresolved:chicken_fat",
+      "datasetRelease": "SR Legacy 04/2018",
+      "retrievedAt": "2026-07-28T07:34:25Z",
+      "reviewedAt": "2026-07-28"
+    },
+    {
+      "profileId": "fdc_yeast_extract_spread",
+      "canonicalName": "酵母エキス（ペースト候補）",
+      "fdcId": 167717,
+      "descriptionIncludes": "Yeast extract spread",
+      "replaceProfileId": "unresolved:yeast_extract",
+      "datasetRelease": "SR Legacy 04/2018",
+      "retrievedAt": "2026-07-28T07:34:25Z",
+      "reviewedAt": "2026-07-28"
+    },
+    {
+      "profileId": "fdc_seed_gum",
+      "canonicalName": "種子ガム",
+      "fdcId": 169045,
+      "descriptionIncludes": "Gums, seed gums",
+      "replaceProfileId": "unresolved:guar_gum",
+      "datasetRelease": "SR Legacy 04/2018",
+      "retrievedAt": "2026-07-28T07:34:25Z",
+      "reviewedAt": "2026-07-28"
     }
   ],
   "reviewQueue": [

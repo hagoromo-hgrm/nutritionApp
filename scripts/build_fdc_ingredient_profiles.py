@@ -52,6 +52,23 @@ def fetch_food(fdc_id: int, api_key: str, raw_path: Path) -> None:
         raw_path.write_bytes(response.read())
 
 
+def extract_bulk_foods(bulk_path: Path, fdc_ids: set[int]) -> dict[int, dict[str, Any]]:
+    """Extract reviewed IDs from USDA's official SR Legacy JSON distribution."""
+    payload = load_json(bulk_path)
+    foods = payload.get("SRLegacyFoods") if isinstance(payload, dict) else None
+    if not isinstance(foods, list):
+        raise ValueError("bulk JSON must contain an SRLegacyFoods array")
+    selected = {
+        food["fdcId"]: food
+        for food in foods
+        if isinstance(food, dict) and food.get("fdcId") in fdc_ids
+    }
+    missing = fdc_ids - selected.keys()
+    if missing:
+        raise ValueError(f"reviewed FDC IDs are missing from bulk JSON: {sorted(missing)}")
+    return selected
+
+
 def nutrient_amounts(food: dict[str, Any]) -> dict[str, float | None]:
     values: list[tuple[str, float, str]] = []
     for item in food.get("foodNutrients", []):
@@ -162,6 +179,11 @@ def main() -> int:
     parser.add_argument("--raw-dir", type=Path, default=Path("data/fdc/raw"))
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--fetch", action="store_true")
+    parser.add_argument(
+        "--bulk-json",
+        type=Path,
+        help="USDA SR Legacy JSON distribution; extracts only reviewed IDs into raw-dir",
+    )
     args = parser.parse_args()
     entries = validate_allowlist(load_json(args.allowlist))
     if not entries:
@@ -169,15 +191,32 @@ def main() -> int:
     api_key = os.environ.get("FDC_API_KEY")
     if args.fetch and not api_key:
         raise SystemExit("FDC_API_KEY is required with --fetch")
+    if args.fetch and args.bulk_json:
+        raise SystemExit("--fetch and --bulk-json cannot be used together")
     generated_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    bulk_foods = (
+        extract_bulk_foods(args.bulk_json, {entry["fdcId"] for entry in entries})
+        if args.bulk_json
+        else None
+    )
     profiles: list[dict[str, Any]] = []
     for entry in entries:
         raw_path = args.raw_dir / f"{entry['fdcId']}.json"
         if args.fetch:
             fetch_food(entry["fdcId"], api_key or "", raw_path)
+        elif bulk_foods is not None:
+            raw_path.parent.mkdir(parents=True, exist_ok=True)
+            raw_path.write_text(
+                json.dumps(bulk_foods[entry["fdcId"]], ensure_ascii=False) + "\n",
+                encoding="utf-8",
+            )
         if not raw_path.exists():
             raise SystemExit(f"Missing raw FDC response: {raw_path}")
-        profiles.append(build_profile(entry, raw_path, generated_at if args.fetch else entry["retrievedAt"]))
+        profiles.append(build_profile(
+            entry,
+            raw_path,
+            generated_at if args.fetch or bulk_foods is not None else entry["retrievedAt"],
+        ))
     output = {
         "format": "nutrition-estimator-fdc-profiles",
         "formatVersion": 1,

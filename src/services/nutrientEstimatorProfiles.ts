@@ -1,6 +1,7 @@
 import { genreProfileMultiplier } from '../data/nutrientEstimatorGenrePriors'
-import type { EstimatorGenreId, Nutrients } from '../types'
+import { NUTRIENT_KEYS, type EstimatorGenreId, type Nutrients } from '../types'
 import fdcProfilesArtifact from '../../data/fdc/app/ingredient_profiles.json'
+import generalProfilesArtifact from '../../data/estimator/general_ingredient_profiles.json'
 
 export interface IngredientProfile {
   profileId: string
@@ -11,6 +12,7 @@ export interface IngredientProfile {
   ambiguous?: boolean
   derivationWarnings?: readonly string[]
   requiredProductTerms?: readonly string[]
+  requiredGenreIds?: readonly EstimatorGenreId[]
   priorSignals?: readonly {
     terms: readonly string[]
     multiplier: number
@@ -54,6 +56,26 @@ function reviewedFdcProfile(profileId: string): IngredientProfile {
   })
 }
 
+function scaledProfile(
+  base: IngredientProfile,
+  profileId: string,
+  canonicalName: string,
+  factor: number,
+  options: Pick<IngredientProfile, 'priorProbability' | 'ambiguous' | 'derivationWarnings'>,
+): IngredientProfile {
+  const nutrients = Object.fromEntries(NUTRIENT_KEYS.map((key) => [
+    key,
+    base.nutrients[key] === null ? null : base.nutrients[key] * factor,
+  ])) as Nutrients
+  return {
+    ...base,
+    ...options,
+    profileId,
+    canonicalName,
+    nutrients,
+  }
+}
+
 const wheatWeak = profile('mext_01015', '小麦薄力粉', {
   energyKcal: 349, proteinG: 8.3, fatG: 1.5, carbohydrateG: 75.8, fiberG: 2.5, saltG: 0,
   calciumMg: 20, ironMg: 0.5, vitaminAMcg: 0, vitaminEMg: 0.3, vitaminB1Mg: 0.11,
@@ -89,6 +111,11 @@ const wholeWheat = profile('mext_01023', '小麦全粒粉', {
   calciumMg: 26, ironMg: 3.1, vitaminAMcg: 0, vitaminEMg: 1, vitaminB1Mg: 0.34,
   vitaminB2Mg: 0.09, vitaminCMg: 0, saturatedFatG: 0.53,
 })
+const wheatProtein = profile('mext_01071', '小麦たんぱく（粉末状）', {
+  energyKcal: 398, proteinG: 72, fatG: 9.7, carbohydrateG: 10.6, fiberG: 2.4, saltG: 0.2,
+  calciumMg: 75, ironMg: 6.6, vitaminAMcg: 1, vitaminEMg: 1.1, vitaminB1Mg: 0.03,
+  vitaminB2Mg: 0.12, vitaminCMg: 0, saturatedFatG: 1.43,
+}, { ambiguous: true })
 const oatmeal = profile('mext_01004', 'オートミール', {
   energyKcal: 350, proteinG: 13.7, fatG: 5.7, carbohydrateG: 69.1, fiberG: 9.4, saltG: 0,
   calciumMg: 47, ironMg: 3.9, vitaminAMcg: 0, vitaminEMg: 0.6, vitaminB1Mg: 0.2,
@@ -162,6 +189,87 @@ const reducedMaltose = profile('mext_03031', '還元麦芽糖', {
   calciumMg: null, ironMg: null, vitaminAMcg: null, vitaminEMg: null, vitaminB1Mg: 0,
   vitaminB2Mg: 0, vitaminCMg: null, saturatedFatG: null,
 })
+const maltose = profile('spec_nagase_sunmalt_maltose', '麦芽糖', {
+  energyKcal: 379, proteinG: 0, fatG: 0, carbohydrateG: 94.7, fiberG: 0, saltG: 0,
+  calciumMg: 0, ironMg: 0, vitaminAMcg: 0, vitaminEMg: 0, vitaminB1Mg: 0,
+  vitaminB2Mg: 0, vitaminCMg: 0, saturatedFatG: 0,
+}, {
+  sourceFoodIds: ['spec:nagase-foods:sunmalt-s'],
+  derivationWarnings: [
+    '長瀬産業サンマルトSの公式仕様（麦芽糖89%以上、100g当たり379kcal・炭水化物94.7g）を使用しています。',
+    '精製糖質の化学組成から対象微量栄養素を0と扱っています。糖液や他原料を含む「麦芽糖製品」には適用していません。',
+  ],
+})
+const erythritol = profile('spec_mcc_erythritol', 'エリスリトール', {
+  energyKcal: 0, proteinG: 0, fatG: 0, carbohydrateG: 100, fiberG: 0, saltG: 0,
+  calciumMg: 0, ironMg: 0, vitaminAMcg: 0, vitaminEMg: 0, vitaminB1Mg: 0,
+  vitaminB2Mg: 0, vitaminCMg: 0, saturatedFatG: 0,
+}, {
+  sourceFoodIds: ['spec:mitsubishi-chemical:erythritol'],
+  derivationWarnings: [
+    '三菱ケミカルの公式仕様にある、ぶどう糖発酵由来のエリスリトール（0kcal/g）を使用しています。',
+    '精製単一糖アルコールの化学組成から対象微量栄養素を0と扱っています。キャリアを含む製剤には適用していません。',
+  ],
+})
+const palatinose = profile('spec_beneo_palatinose', 'パラチノース（イソマルツロース）', {
+  energyKcal: 400, proteinG: 0, fatG: 0, carbohydrateG: 100, fiberG: 0, saltG: 0,
+  calciumMg: 0, ironMg: 0, vitaminAMcg: 0, vitaminEMg: 0, vitaminB1Mg: 0,
+  vitaminB2Mg: 0, vitaminCMg: 0, saturatedFatG: 0,
+}, {
+  sourceFoodIds: ['spec:beneo:palatinose'],
+  derivationWarnings: [
+    'BENEOの公式仕様にあるショ糖由来イソマルツロース（完全消化性糖質、4kcal/g）を使用しています。',
+    '精製単一糖質の化学組成から対象微量栄養素を0と扱っています。混合甘味料には適用していません。',
+  ],
+})
+const lCarnitine = profile('spec_lonza_carnipure_l_carnitine', 'L-カルニチン', {
+  energyKcal: null, proteinG: null, fatG: null, carbohydrateG: null, fiberG: 0, saltG: null,
+  calciumMg: 0, ironMg: 0, vitaminAMcg: 0, vitaminEMg: 0, vitaminB1Mg: 0,
+  vitaminB2Mg: 0, vitaminCMg: 0, saturatedFatG: 0,
+}, {
+  sourceFoodIds: ['spec:lonza:carnipure'],
+  ambiguous: true,
+  derivationWarnings: [
+    'Lonzaの公式仕様で食品用途の結晶・酒石酸塩として確認できるL-カルニチンを、対象9栄養素には寄与しない機能性成分として扱っています。',
+    '主要栄養値と塩分は製剤形態で変わるため推計に使用していません。キャリアを含む粉末製剤には適用していません。',
+  ],
+})
+const galactooligosaccharideLiquid = profile(
+  'spec_yakult_oligomate_55n',
+  'ガラクトオリゴ糖液糖',
+  {
+    energyKcal: null, proteinG: 0, fatG: 0, carbohydrateG: 75, fiberG: 0, saltG: 0,
+    calciumMg: 0, ironMg: 0, vitaminAMcg: 0, vitaminEMg: 0, vitaminB1Mg: 0,
+    vitaminB2Mg: 0, vitaminCMg: 0, saturatedFatG: 0,
+  },
+  {
+    sourceFoodIds: ['spec:yakult:oligomate-55n'],
+    priorProbability: 0.45,
+    ambiguous: true,
+    derivationWarnings: [
+      'ヤクルト薬品工業の公式規格（液体、Brix 75.0〜76.0、固形分中ガラクトオリゴ糖55%以上）を液状候補に使用しています。',
+      '精製糖質原料として対象微量栄養素を0と扱い、エネルギーは規格から確定できないため推計に使用していません。',
+    ],
+  },
+)
+const galactooligosaccharidePowder = profile(
+  'spec_yakult_oligomate_55np',
+  'ガラクトオリゴ糖粉末',
+  {
+    energyKcal: null, proteinG: 0, fatG: 0, carbohydrateG: 97, fiberG: 0, saltG: 0,
+    calciumMg: 0, ironMg: 0, vitaminAMcg: 0, vitaminEMg: 0, vitaminB1Mg: 0,
+    vitaminB2Mg: 0, vitaminCMg: 0, saturatedFatG: 0,
+  },
+  {
+    sourceFoodIds: ['spec:yakult:oligomate-55np'],
+    priorProbability: 0.55,
+    ambiguous: true,
+    derivationWarnings: [
+      'ヤクルト薬品工業の公式規格（粉末、水分3%以下、ガラクトオリゴ糖55%以上）を粉末候補に使用しています。',
+      '精製糖質原料として対象微量栄養素を0と扱い、エネルギーは規格から確定できないため推計に使用していません。',
+    ],
+  },
+)
 const honey = profile('mext_03022', 'はちみつ', {
   energyKcal: 329, proteinG: 0.3, fatG: null, carbohydrateG: 81.9, fiberG: 0, saltG: 0,
   calciumMg: 4, ironMg: 0.2, vitaminAMcg: 0, vitaminEMg: 0, vitaminB1Mg: null,
@@ -243,6 +351,48 @@ const shortening = profile('mext_14030', 'ショートニング', {
   vitaminB2Mg: 0, vitaminCMg: 0, saturatedFatG: 51.13,
 }, { priorProbability: 0.15, ambiguous: true })
 const cocoaButterFdc = reviewedFdcProfile('fdc_cocoa_butter')
+const wheatBranFdc = reviewedFdcProfile('fdc_wheat_bran')
+const coconutOilFdc = reviewedFdcProfile('fdc_coconut_oil')
+const chickenFatFdc = reviewedFdcProfile('fdc_chicken_fat')
+const yeastExtractSpreadFdc: IngredientProfile = {
+  ...reviewedFdcProfile('fdc_yeast_extract_spread'),
+  priorProbability: 0.4,
+  ambiguous: true,
+  derivationWarnings: [
+    'USDA FoodData Central SR Legacyの酵母エキススプレッドを、液状・ペースト状候補として使用しています。',
+  ],
+}
+const yeastExtractDryFdc = scaledProfile(
+  yeastExtractSpreadFdc,
+  'derived_fdc_yeast_extract_dry',
+  '酵母エキス（乾燥候補）',
+  1.69,
+  {
+    priorProbability: 0.6,
+    ambiguous: true,
+    derivationWarnings: [
+      'USDA FoodData Centralの酵母エキススプレッド（水分40.9g/100g）を乾物換算した候補です。',
+      '酵母エキスは製品ごとに塩分と濃縮度が大きく異なるため、低信頼度の候補分布として使用しています。',
+    ],
+  },
+)
+const seedGumFdc = reviewedFdcProfile('fdc_seed_gum')
+const hydrolyzedGuarGumFdc: IngredientProfile = {
+  ...seedGumFdc,
+  profileId: 'proxy_hydrolyzed_guar_gum_fdc_169045',
+  ambiguous: true,
+  derivationWarnings: [
+    'グァーガム分解物の直接項目がないため、USDA FoodData Centralの種子ガムを食物繊維原料の代理候補に使用しています。',
+  ],
+}
+const psylliumHuskFdc: IngredientProfile = {
+  ...seedGumFdc,
+  profileId: 'proxy_psyllium_husk_fdc_169045',
+  ambiguous: true,
+  derivationWarnings: [
+    'サイリウム種皮粉末の直接項目がないため、USDA FoodData Centralの種子ガムを高食物繊維原料の代理候補に使用しています。',
+  ],
+}
 const palmOil = profile('mext_14009', 'パーム油', {
   energyKcal: 887, proteinG: 0, fatG: 100, carbohydrateG: 0, fiberG: 0, saltG: 0,
   calciumMg: null, ironMg: 0, vitaminAMcg: 0, vitaminEMg: 8.6, vitaminB1Mg: 0,
@@ -331,6 +481,21 @@ const egg = profile('mext_12004', '鶏卵', {
   calciumMg: 46, ironMg: 1.5, vitaminAMcg: 210, vitaminEMg: 1.3, vitaminB1Mg: 0.06,
   vitaminB2Mg: 0.37, vitaminCMg: 0, saturatedFatG: 3.12,
 }, { ambiguous: true })
+const driedWholeEgg = profile('mext_12009', '乾燥全卵', {
+  energyKcal: 542, proteinG: 49.1, fatG: 42, carbohydrateG: 0.2, fiberG: 0, saltG: 1.2,
+  calciumMg: 210, ironMg: 3, vitaminAMcg: 420, vitaminEMg: 6.6, vitaminB1Mg: 0.29,
+  vitaminB2Mg: 1.24, vitaminCMg: 0, saturatedFatG: 12.29,
+})
+const driedEggYolk = profile('mext_12013', '乾燥卵黄', {
+  energyKcal: 638, proteinG: 30.3, fatG: 62.9, carbohydrateG: 0.2, fiberG: 0, saltG: 0.2,
+  calciumMg: 280, ironMg: 4.4, vitaminAMcg: 630, vitaminEMg: 9.9, vitaminB1Mg: 0.42,
+  vitaminB2Mg: 0.82, vitaminCMg: 0, saturatedFatG: 18.41,
+})
+const driedEggWhite = profile('mext_12016', '乾燥卵白', {
+  energyKcal: 350, proteinG: 86.5, fatG: 0.4, carbohydrateG: 0.2, fiberG: 0, saltG: 3.3,
+  calciumMg: 60, ironMg: 0.1, vitaminAMcg: 0, vitaminEMg: 0.1, vitaminB1Mg: 0.03,
+  vitaminB2Mg: 2.09, vitaminCMg: 0, saturatedFatG: 0.1,
+})
 const milk = profile('mext_13003', '普通牛乳', {
   energyKcal: 61, proteinG: 3.3, fatG: 3.8, carbohydrateG: 4.8, fiberG: 0, saltG: 0.1,
   calciumMg: 110, ironMg: 0.02, vitaminAMcg: 38, vitaminEMg: 0.1, vitaminB1Mg: 0.04,
@@ -352,6 +517,18 @@ const skimMilkPowder = profile('mext_13010', '脱脂粉乳', {
 }, {
   priorProbability: 0.35,
   priorSignals: [{ terms: ['脱脂', '低脂肪', '高たんぱく'], multiplier: 5 }],
+})
+const milkMinerals = profile('spec_adpi_milk_minerals', 'ミルクカルシウム・乳清ミネラル', {
+  energyKcal: null, proteinG: null, fatG: null, carbohydrateG: null, fiberG: null, saltG: null,
+  calciumMg: 22000, ironMg: null, vitaminAMcg: null, vitaminEMg: null, vitaminB1Mg: null,
+  vitaminB2Mg: null, vitaminCMg: null, saturatedFatG: null,
+}, {
+  sourceFoodIds: ['spec:adpi:milk-minerals'],
+  ambiguous: true,
+  derivationWarnings: [
+    'American Dairy Products Instituteのミルクミネラル規格（カルシウム22%以上）を、カルシウムの保守的な下限候補として使用しています。',
+    '製品ごとの成分表がないため、カルシウム以外の栄養素は欠損のまま維持しています。',
+  ],
 })
 const dairyCream = profile('mext_13014', '乳脂肪クリーム', {
   energyKcal: 404, proteinG: 1.9, fatG: 43, carbohydrateG: 6.5, fiberG: 0, saltG: 0.1,
@@ -463,6 +640,16 @@ const rawRice = profile('mext_01083', '精白米（うるち米）', {
   calciumMg: 5, ironMg: 0.8, vitaminAMcg: 0, vitaminEMg: 0.1, vitaminB1Mg: 0.08,
   vitaminB2Mg: 0.02, vitaminCMg: 0, saturatedFatG: 0.29,
 })
+const cornGrits = profile('mext_01133', 'コーングリッツ（黄色種）', {
+  energyKcal: 352, proteinG: 8.2, fatG: 1, carbohydrateG: 76.4, fiberG: 2.4, saltG: 0,
+  calciumMg: 2, ironMg: 0.3, vitaminAMcg: 15, vitaminEMg: 0.2, vitaminB1Mg: 0.06,
+  vitaminB2Mg: 0.05, vitaminCMg: 0, saturatedFatG: 0.2,
+})
+const riceBran = profile('mext_01161', '米ぬか', {
+  energyKcal: 374, proteinG: 13.4, fatG: 19.6, carbohydrateG: 48.8, fiberG: 20.5, saltG: 0,
+  calciumMg: 35, ironMg: 7.6, vitaminAMcg: 0, vitaminEMg: 10, vitaminB1Mg: 3.12,
+  vitaminB2Mg: 0.21, vitaminCMg: 0, saturatedFatG: 3.45,
+})
 const dryPasta = profile('mext_01063', 'マカロニ・スパゲッティ（乾）', {
   energyKcal: 347, proteinG: 12.9, fatG: 1.8, carbohydrateG: 73.1, fiberG: 5.4, saltG: 0,
   calciumMg: 18, ironMg: 1.4, vitaminAMcg: 1, vitaminEMg: 0.3, vitaminB1Mg: 0.19,
@@ -472,6 +659,65 @@ const onion = profile('mext_06153', 'たまねぎ', {
   energyKcal: 33, proteinG: 1, fatG: 0.1, carbohydrateG: 8.4, fiberG: 1.5, saltG: 0,
   calciumMg: 17, ironMg: 0.3, vitaminAMcg: 0, vitaminEMg: null, vitaminB1Mg: 0.04,
   vitaminB2Mg: 0.01, vitaminCMg: 7, saturatedFatG: 0.01,
+})
+const cabbage = profile('mext_06061', 'キャベツ', {
+  energyKcal: 23, proteinG: 1.2, fatG: 0.1, carbohydrateG: 5.2, fiberG: 1.8, saltG: 0,
+  calciumMg: 42, ironMg: 0.3, vitaminAMcg: 2, vitaminEMg: 0.1, vitaminB1Mg: 0.04,
+  vitaminB2Mg: 0.03, vitaminCMg: 38, saturatedFatG: 0.02,
+})
+const carrot = profile('mext_06214', 'にんじん', {
+  energyKcal: 32, proteinG: 0.7, fatG: 0.2, carbohydrateG: 8.8, fiberG: 2.8, saltG: 0.1,
+  calciumMg: 24, ironMg: 0.2, vitaminAMcg: 630, vitaminEMg: 0.5, vitaminB1Mg: 0.04,
+  vitaminB2Mg: 0.03, vitaminCMg: 4, saturatedFatG: 0.03,
+})
+const onionExtractProxy: IngredientProfile = {
+  ...onion,
+  profileId: 'proxy_onion_extract_mext_06153',
+  ambiguous: true,
+  derivationWarnings: [
+    'オニオンエキスの濃縮度が不明なため、MEXTのたまねぎ（生）を低濃度候補として使用しています。',
+  ],
+}
+const cabbageExtractProxy: IngredientProfile = {
+  ...cabbage,
+  profileId: 'proxy_cabbage_extract_mext_06061',
+  priorProbability: 0.3,
+  ambiguous: true,
+  derivationWarnings: [
+    '野菜エキスの野菜種と濃縮度が不明なため、MEXTのキャベツ（生）を候補の一つとして使用しています。',
+  ],
+}
+const carrotExtractProxy: IngredientProfile = {
+  ...carrot,
+  profileId: 'proxy_carrot_extract_mext_06214',
+  priorProbability: 0.3,
+  ambiguous: true,
+  derivationWarnings: [
+    '野菜エキスの野菜種と濃縮度が不明なため、MEXTのにんじん（生）を候補の一つとして使用しています。',
+  ],
+}
+const genericOnionExtractProxy: IngredientProfile = {
+  ...onionExtractProxy,
+  profileId: 'proxy_vegetable_extract_onion_mext_06153',
+  priorProbability: 0.4,
+  derivationWarnings: [
+    '野菜エキスの野菜種と濃縮度が不明なため、MEXTのたまねぎ（生）を候補の一つとして使用しています。',
+  ],
+}
+const leek = profile('mext_06226', '根深ねぎ', {
+  energyKcal: 35, proteinG: 1.4, fatG: 0.1, carbohydrateG: 8.3, fiberG: 2.5, saltG: 0,
+  calciumMg: 36, ironMg: 0.3, vitaminAMcg: 7, vitaminEMg: 0.2, vitaminB1Mg: 0.05,
+  vitaminB2Mg: 0.04, vitaminCMg: 14, saturatedFatG: 0.02,
+})
+const garlic = profile('mext_06223', 'にんにく', {
+  energyKcal: 129, proteinG: 6.4, fatG: 0.9, carbohydrateG: 27.5, fiberG: 6.2, saltG: 0,
+  calciumMg: 14, ironMg: 0.8, vitaminAMcg: 0, vitaminEMg: 0.5, vitaminB1Mg: 0.19,
+  vitaminB2Mg: 0.07, vitaminCMg: 12, saturatedFatG: 0.13,
+})
+const ginger = profile('mext_06103', 'しょうが', {
+  energyKcal: 28, proteinG: 0.9, fatG: 0.3, carbohydrateG: 6.6, fiberG: 2.1, saltG: 0,
+  calciumMg: 12, ironMg: 0.5, vitaminAMcg: null, vitaminEMg: 0.1, vitaminB1Mg: 0.03,
+  vitaminB2Mg: 0.02, vitaminCMg: 2, saturatedFatG: 0.08,
 })
 const tomatoPaste = profile('mext_17035', 'トマトペースト', {
   energyKcal: 94, proteinG: 3.8, fatG: 0.1, carbohydrateG: 22, fiberG: 4.7, saltG: 0.1,
@@ -629,6 +875,117 @@ const apple = profile('mext_07176', 'りんご', {
   calciumMg: 4, ironMg: 0.1, vitaminAMcg: 2, vitaminEMg: 0.4, vitaminB1Mg: 0.02,
   vitaminB2Mg: 0.01, vitaminCMg: 6, saturatedFatG: 0.04,
 }, { ambiguous: true })
+const chiaSeed = profile('mext_05046', 'チアシード（乾）', {
+  energyKcal: 446, proteinG: 19.4, fatG: 33.9, carbohydrateG: 34.5, fiberG: 36.9, saltG: 0,
+  calciumMg: 570, ironMg: 7.6, vitaminAMcg: 0, vitaminEMg: 0.3, vitaminB1Mg: 0.97,
+  vitaminB2Mg: 0.25, vitaminCMg: 1, saturatedFatG: 3.51,
+})
+const matcha = profile('mext_16035', '抹茶', {
+  energyKcal: 237, proteinG: 29.6, fatG: 5.3, carbohydrateG: 39.5, fiberG: 38.5, saltG: 0,
+  calciumMg: 420, ironMg: 17, vitaminAMcg: 2400, vitaminEMg: 28, vitaminB1Mg: 0.6,
+  vitaminB2Mg: 1.35, vitaminCMg: 60, saturatedFatG: 0.68,
+})
+const soyMilk = profile('mext_04052', '豆乳', {
+  energyKcal: 43, proteinG: 3.6, fatG: 2.8, carbohydrateG: 2.3, fiberG: 0.9, saltG: 0,
+  calciumMg: 15, ironMg: 1.2, vitaminAMcg: 0, vitaminEMg: 0.1, vitaminB1Mg: 0.03,
+  vitaminB2Mg: 0.02, vitaminCMg: null, saturatedFatG: 0.39,
+})
+const shiitake = profile('mext_08039', 'しいたけ（生）', {
+  energyKcal: 25, proteinG: 3.1, fatG: 0.3, carbohydrateG: 6.4, fiberG: 4.9, saltG: 0,
+  calciumMg: 1, ironMg: 0.4, vitaminAMcg: 0, vitaminEMg: 0, vitaminB1Mg: 0.13,
+  vitaminB2Mg: 0.21, vitaminCMg: 0, saturatedFatG: 0.04,
+}, { ambiguous: true })
+const shiitakeExtractProxy: IngredientProfile = {
+  ...shiitake,
+  profileId: 'proxy_shiitake_extract_mext_08039',
+  ambiguous: true,
+  derivationWarnings: [
+    'しいたけエキスの濃縮度が不明なため、MEXTのしいたけ（生）を低濃度候補として使用しています。',
+  ],
+}
+const chicken = profile('mext_11221', '若どりもも（皮つき・生）', {
+  energyKcal: 190, proteinG: 16.6, fatG: 14.2, carbohydrateG: 0, fiberG: 0, saltG: 0.2,
+  calciumMg: 5, ironMg: 0.6, vitaminAMcg: 40, vitaminEMg: 0.7, vitaminB1Mg: 0.1,
+  vitaminB2Mg: 0.15, vitaminCMg: 3, saturatedFatG: 4.37,
+}, {
+  ambiguous: true,
+  derivationWarnings: ['鶏肉の部位・皮の有無が不明なため、MEXTの若どりもも皮つき（生）を代表参照として使用しています。'],
+})
+const porkLeg = profile('mext_11130', '豚もも（脂身つき・生）', {
+  energyKcal: 171, proteinG: 20.5, fatG: 10.2, carbohydrateG: 0.2, fiberG: 0, saltG: 0.1,
+  calciumMg: 4, ironMg: 0.7, vitaminAMcg: 4, vitaminEMg: 0.3, vitaminB1Mg: 0.9,
+  vitaminB2Mg: 0.21, vitaminCMg: 1, saturatedFatG: 3.59,
+}, {
+  priorProbability: 0.65,
+  ambiguous: true,
+  priorSignals: [{ terms: ['もも', 'モモ', 'ロース'], multiplier: 3 }],
+  derivationWarnings: ['豚肉の部位が不明な場合は、MEXTの大型種豚もも脂身つき（生）を代表参照として使用しています。'],
+})
+const porkBelly = profile('mext_11129', '豚ばら（脂身つき・生）', {
+  energyKcal: 366, proteinG: 14.4, fatG: 35.4, carbohydrateG: 0.1, fiberG: 0, saltG: 0.1,
+  calciumMg: 3, ironMg: 0.6, vitaminAMcg: 11, vitaminEMg: 0.5, vitaminB1Mg: 0.51,
+  vitaminB2Mg: 0.13, vitaminCMg: 1, saturatedFatG: 14.6,
+}, {
+  priorProbability: 0.35,
+  ambiguous: true,
+  priorSignals: [{ terms: ['ばら', 'バラ', 'ベーコン'], multiplier: 6 }],
+})
+const lard = profile('mext_14016', 'ラード', {
+  energyKcal: 885, proteinG: 0, fatG: 100, carbohydrateG: 0, fiberG: 0, saltG: 0,
+  calciumMg: 0, ironMg: 0, vitaminAMcg: 0, vitaminEMg: 0.3, vitaminB1Mg: 0,
+  vitaminB2Mg: 0, vitaminCMg: 0, saturatedFatG: 39.29,
+})
+const beefTallow = profile('mext_14015', '牛脂', {
+  energyKcal: 869, proteinG: 0.2, fatG: 99.8, carbohydrateG: 0, fiberG: 0, saltG: 0,
+  calciumMg: null, ironMg: 0.1, vitaminAMcg: 85, vitaminEMg: 0.6, vitaminB1Mg: 0,
+  vitaminB2Mg: 0, vitaminCMg: 0, saturatedFatG: 41.05,
+})
+const soySauce = profile('mext_17007', 'こいくちしょうゆ', {
+  energyKcal: 76, proteinG: 7.7, fatG: 0, carbohydrateG: 7.9, fiberG: null, saltG: 14.5,
+  calciumMg: 29, ironMg: 1.7, vitaminAMcg: 0, vitaminEMg: 0, vitaminB1Mg: 0.05,
+  vitaminB2Mg: 0.17, vitaminCMg: 0, saturatedFatG: null,
+}, { ambiguous: true })
+const miso = profile('mext_17045', '米みそ（淡色辛みそ）', {
+  energyKcal: 182, proteinG: 12.5, fatG: 6, carbohydrateG: 21.9, fiberG: 4.9, saltG: 12.4,
+  calciumMg: 100, ironMg: 4, vitaminAMcg: 0, vitaminEMg: 0.6, vitaminB1Mg: 0.03,
+  vitaminB2Mg: 0.1, vitaminCMg: 0, saturatedFatG: 0.97,
+}, { ambiguous: true })
+const grainVinegar = profile('mext_17015', '穀物酢', {
+  energyKcal: 25, proteinG: 0.1, fatG: 0, carbohydrateG: 2.4, fiberG: 0, saltG: 0,
+  calciumMg: 2, ironMg: null, vitaminAMcg: 0, vitaminEMg: null, vitaminB1Mg: 0.01,
+  vitaminB2Mg: 0.01, vitaminCMg: 0, saturatedFatG: null,
+}, { ambiguous: true })
+const tomatoKetchup = profile('mext_17036', 'トマトケチャップ', {
+  energyKcal: 116, proteinG: 1.6, fatG: 0.2, carbohydrateG: 27.6, fiberG: 1.7, saltG: 3.1,
+  calciumMg: 16, ironMg: 0.5, vitaminAMcg: 43, vitaminEMg: 2, vitaminB1Mg: 0.06,
+  vitaminB2Mg: 0.04, vitaminCMg: 8, saturatedFatG: 0.03,
+})
+const mirin = profile('mext_16025', '本みりん', {
+  energyKcal: 241, proteinG: 0.3, fatG: null, carbohydrateG: 43.2, fiberG: null, saltG: 0,
+  calciumMg: 2, ironMg: 0, vitaminAMcg: 0, vitaminEMg: null, vitaminB1Mg: null,
+  vitaminB2Mg: 0, vitaminCMg: 0, saturatedFatG: null,
+}, { ambiguous: true })
+const chickenExtractProxy: IngredientProfile = {
+  ...chicken,
+  profileId: 'proxy_chicken_extract_mext_11221',
+  derivationWarnings: [
+    'チキンエキスの濃縮度が不明なため、MEXTの若どりもも皮つき（生）を代理参照として使用しています。',
+  ],
+}
+const porkExtractProxy: IngredientProfile = {
+  ...porkLeg,
+  profileId: 'proxy_pork_extract_mext_11130',
+  derivationWarnings: [
+    'ポークエキスの濃縮度が不明なため、MEXTの大型種豚もも脂身つき（生）を代理参照として使用しています。',
+  ],
+}
+const beefExtractProxy: IngredientProfile = {
+  ...leanBeef,
+  profileId: 'proxy_beef_extract_mext_11006',
+  derivationWarnings: [
+    'ビーフエキスの濃縮度が不明なため、MEXTの和牛かた赤肉（生）を代理参照として使用しています。',
+  ],
+}
 const compressedYeast = profile('mext_17082', 'パン酵母（圧搾）', {
   energyKcal: 105, proteinG: 16.5, fatG: 1.5, carbohydrateG: 12.1, fiberG: 10.3, saltG: 0.1,
   calciumMg: 16, ironMg: 2.2, vitaminAMcg: null, vitaminEMg: null, vitaminB1Mg: 2.21,
@@ -639,6 +996,24 @@ const dryYeast = profile('mext_17083', 'パン酵母（乾燥）', {
   calciumMg: 19, ironMg: 13, vitaminAMcg: 0, vitaminEMg: null, vitaminB1Mg: 8.81,
   vitaminB2Mg: 3.72, vitaminCMg: 1, saturatedFatG: 0.79,
 }, { priorProbability: 0.85, ambiguous: true })
+const panettoneStarterDryProxy: IngredientProfile = {
+  ...dryYeast,
+  profileId: 'proxy_panettone_starter_dry_mext_17083',
+  priorProbability: 0.75,
+  derivationWarnings: [
+    'コモ公式情報でパネトーネ種が酵母と乳酸菌の共生するパン種であることを確認し、MEXTの乾燥パン酵母を候補参照に使用しています。',
+    '種生地の水分と培養基材が不明なため、低信頼度の候補分布として使用しています。',
+  ],
+}
+const panettoneStarterCompressedProxy: IngredientProfile = {
+  ...compressedYeast,
+  profileId: 'proxy_panettone_starter_compressed_mext_17082',
+  priorProbability: 0.25,
+  derivationWarnings: [
+    'コモ公式情報でパネトーネ種が酵母と乳酸菌の共生するパン種であることを確認し、MEXTの圧搾パン酵母を候補参照に使用しています。',
+    '種生地の水分と培養基材が不明なため、低信頼度の候補分布として使用しています。',
+  ],
+}
 const salt = profile('mext_17012', '食塩', {
   energyKcal: 0, proteinG: 0, fatG: 0, carbohydrateG: 0, fiberG: 0, saltG: 99.5,
   calciumMg: 22, ironMg: null, vitaminAMcg: 0, vitaminEMg: null, vitaminB1Mg: 0,
@@ -647,18 +1022,22 @@ const salt = profile('mext_17012', '食塩', {
 
 const GROUPS: readonly IngredientProfileGroup[] = [
   { aliases: ['小麦全粒粉', '全粒粉'], candidates: [wholeWheat] },
+  { aliases: ['小麦ふすま', '小麦外皮', '小麦ブラン', 'ブラン'], candidates: [wheatBranFdc] },
   { aliases: ['オートミール', 'オーツ麦', 'オート麦', 'オーツ麦フレーク'], candidates: [oatmeal] },
   { aliases: ['薄力粉'], candidates: [wheatWeak] },
   { aliases: ['中力粉'], candidates: [wheatMedium] },
   { aliases: ['強力粉'], candidates: [wheatStrong] },
   { aliases: ['小麦粉', '小麦'], candidates: [wheatWeak, wheatMedium, wheatStrong] },
+  { aliases: ['小麦たんぱく', '小麦たん白', '粉末小麦たんぱく'], candidates: [wheatProtein] },
   { aliases: ['米粉', '上新粉'], candidates: [riceFlour] },
   { aliases: ['小麦でん粉'], candidates: [wheatStarch] },
   { aliases: ['じゃがいもでん粉', '馬鈴薯でん粉', '片栗粉'], candidates: [potatoStarch] },
   { aliases: ['とうもろこしでん粉', 'コーンスターチ'], candidates: [cornStarch] },
-  { aliases: ['でん粉', '澱粉', '加工でん粉'], candidates: [cornStarch, potatoStarch, wheatStarch] },
+  { aliases: ['タピオカでん粉'], candidates: [cornStarch, potatoStarch] },
+  { aliases: ['でん粉', '澱粉', 'でんぷん', '加工でん粉'], candidates: [cornStarch, potatoStarch, wheatStarch] },
   { aliases: ['黒砂糖', '黒糖'], candidates: [blackSugar] },
   { aliases: ['砂糖', '上白糖', 'グラニュー糖', 'ショ糖'], candidates: [whiteSugar] },
+  { aliases: ['粗糖', '黒みつ'], candidates: [whiteSugar, blackSugar] },
   { aliases: ['ぶどう糖', 'ブドウ糖', 'グルコース'], candidates: [glucose] },
   { aliases: ['水あめ', '水飴'], candidates: [starchSyrup] },
   { aliases: ['果糖'], candidates: [fructose] },
@@ -666,7 +1045,10 @@ const GROUPS: readonly IngredientProfileGroup[] = [
   { aliases: ['果糖ぶどう糖液糖'], candidates: [fructoseGlucoseSyrup] },
   { aliases: ['異性化液糖'], candidates: [glucoseFructoseSyrup, fructoseGlucoseSyrup] },
   { aliases: ['還元麦芽糖', '還元麦芽糖水あめ'], candidates: [reducedMaltose] },
-  { aliases: ['還元水あめ', '粉あめ', 'でん粉糖化物'], candidates: [starchSyrup] },
+  { aliases: ['麦芽糖', 'マルトース'], candidates: [maltose] },
+  { aliases: ['エリスリトール'], candidates: [erythritol] },
+  { aliases: ['パラチノース', 'イソマルツロース'], candidates: [palatinose] },
+  { aliases: ['還元水あめ', '還元水飴', '粉あめ', 'でん粉糖化物'], candidates: [starchSyrup] },
   { aliases: ['はちみつ', '蜂蜜'], candidates: [honey] },
   { aliases: ['乳糖', 'ラクトース'], candidates: [lactoseProxy] },
   {
@@ -674,10 +1056,21 @@ const GROUPS: readonly IngredientProfileGroup[] = [
     candidates: [declaredSolubleFiberProxy],
   },
   { aliases: ['フラクトオリゴ糖', 'オリゴ糖'], candidates: [fructooligosaccharideProxy] },
+  { aliases: ['ガラクトオリゴ糖液糖'], candidates: [galactooligosaccharideLiquid] },
+  { aliases: ['ガラクトオリゴ糖粉末'], candidates: [galactooligosaccharidePowder] },
+  {
+    aliases: ['ガラクトオリゴ糖'],
+    candidates: [galactooligosaccharidePowder, galactooligosaccharideLiquid],
+  },
+  {
+    aliases: ['L-カルニチン', 'Lカルニチン', 'エルカルニチン', 'L-カルニチン酒石酸塩'],
+    candidates: [lCarnitine],
+  },
   { aliases: ['デキストリン'], candidates: [dextrinProxy, solubleFiberProxy] },
   { aliases: ['液状デキストリン', 'マルトデキストリン'], candidates: [dextrinProxy] },
   { aliases: ['ショートニング'], candidates: [shortening] },
   { aliases: ['ココアバター', 'カカオバター'], candidates: [cocoaButterFdc] },
+  { aliases: ['ココナッツオイル', 'やし油', 'ヤシ油'], candidates: [coconutOilFdc] },
   { aliases: ['マーガリン', 'ファットスプレッド'], candidates: [margarine] },
   { aliases: ['バター', '発酵バター', 'バターオイル', 'バター加工品'], candidates: [butter] },
   { aliases: ['パーム油'], candidates: [palmOil] },
@@ -686,35 +1079,57 @@ const GROUPS: readonly IngredientProfileGroup[] = [
   {
     aliases: [
       '植物油脂', '植物油', '食用植物油脂', '食用油脂', '調整食用油脂',
-      '食用加工油脂', '粉末植物油脂',
+      '食用加工油脂', '食用精製加工油脂', '粉末植物油脂', '粉末油脂',
+      '加工油脂', '油脂加工食品', '植物油脂加工食品', '乳化油脂',
+      '揚げ油', '香味油', '香味食用油', 'いため油', '野菜調味油', 'ガーリック調味油',
+      'ポーク調味油', '納豆菌エキス入り食用油脂',
     ],
     candidates: [palmOil, canolaOil, soyOil, shortening],
   },
-  { aliases: ['チョコレート', 'チョコ', 'チョコチップ', '準チョコレート'], candidates: [chocolate] },
+  {
+    aliases: ['チキン調味油', '鶏油', '鶏脂', 'チーユ'],
+    candidates: [chickenFatFdc, canolaOil, soyOil],
+  },
+  {
+    aliases: [
+      'チョコレート', 'チョコ', 'チョコチップ', '準チョコレート',
+      'チョコレートコーチング', 'チョココーチング',
+    ],
+    candidates: [chocolate],
+  },
   { aliases: ['ココアパウダー', 'ココア', 'カカオエキス', 'カカオエキスパウダー'], candidates: [cocoa] },
   { aliases: ['カカオマス', 'ココアマス', 'カカオペースト'], candidates: [cacaoMassProxy] },
-  { aliases: ['アーモンド', 'アーモンドパウダー', 'アーモンドプードル'], candidates: [almond] },
-  { aliases: ['ごま', 'ゴマ', '胡麻'], candidates: [sesame] },
+  {
+    aliases: ['アーモンド', 'ローストアーモンド', 'アーモンドパウダー', 'アーモンドプードル'],
+    candidates: [almond],
+  },
+  { aliases: ['アーモンドペースト'], candidates: [almond] },
+  { aliases: ['ごま', 'ゴマ', '胡麻', 'ねりごま', '練りごま'], candidates: [sesame] },
   { aliases: ['大豆粉', 'きな粉', 'きなこ'], candidates: [kinako] },
   { aliases: ['くるみ', 'クルミ', '胡桃'], candidates: [walnut] },
   { aliases: ['落花生', 'ピーナッツ'], candidates: [peanut] },
   { aliases: ['ココナッツ', 'ココナッツパウダー'], candidates: [coconut] },
+  { aliases: ['チアシード'], candidates: [chiaSeed] },
   { aliases: ['脱脂粉乳', '脱脂乳粉'], candidates: [skimMilkPowder] },
+  { aliases: ['ミルクカルシウム', '乳清ミネラル', 'ミルクミネラル'], candidates: [milkMinerals] },
   { aliases: ['全粉乳'], candidates: [wholeMilkPowder] },
-  { aliases: ['普通牛乳', '牛乳', '生乳'], candidates: [milk] },
+  { aliases: ['普通牛乳', '牛乳', '生乳', '生乳100%', '乳'], candidates: [milk] },
   {
     aliases: [
       '乳清たんぱく', '乳清たんぱく質', 'ホエイたんぱく', 'ホエイパウダー',
       'たんぱく質濃縮ホエイパウダー', '乳清たんぱく質分解物', '乳たんぱく',
-      '乳たんぱく質', 'カルシウムカゼイネート', 'カゼインカルシウム',
+      '乳たんぱく質', '乳たん白', '乳たん白質', 'カルシウムカゼイネート', 'カゼインカルシウム',
     ],
     candidates: [milkProteinProxy],
   },
   { aliases: ['バターミルク', 'バターミルクパウダー'], candidates: [skimMilkPowder, wholeMilkPowder] },
   { aliases: ['脱脂濃縮乳'], candidates: [concentratedMilkProxy] },
-  { aliases: ['加糖練乳', '加糖脱脂練乳', '調製練乳'], candidates: [sweetenedCondensedMilk] },
+  { aliases: ['加糖練乳', '加糖脱脂練乳', '調製練乳', '練乳パウダー'], candidates: [sweetenedCondensedMilk] },
   { aliases: ['発酵乳'], candidates: [yogurt] },
-  { aliases: ['乳製品', '乳等を主要原料とする食品'], candidates: [wholeMilkPowder, skimMilkPowder, dairyCream] },
+  {
+    aliases: ['乳製品', '乳等を主要原料とする食品', '乳又は乳製品を主要原料とする食品'],
+    candidates: [wholeMilkPowder, skimMilkPowder, dairyCream],
+  },
   { aliases: ['クリーミングパウダー'], candidates: [wholeMilkPowder, skimMilkPowder, plantCream] },
   { aliases: ['乳脂肪クリーム', '生クリーム'], candidates: [dairyCream] },
   { aliases: ['植物性クリーム'], candidates: [plantCream] },
@@ -725,53 +1140,179 @@ const GROUPS: readonly IngredientProfileGroup[] = [
   { aliases: ['プロセスチーズ'], candidates: [processedCheese] },
   { aliases: ['ナチュラルチーズ', 'チーズ'], candidates: [creamCheese, goudaCheese, mozzarellaCheese] },
   { aliases: ['卵', '鶏卵', '全卵', '液卵'], candidates: [egg] },
-  { aliases: ['大豆たんぱく', '脱脂大豆たんぱく'], candidates: [concentratedSoyProtein, isolatedSoyProtein] },
+  { aliases: ['卵粉', '全卵粉', '乾燥全卵', '鶏卵加工品'], candidates: [driedWholeEgg, egg] },
+  { aliases: ['卵たん白加水分解物', '卵白加水分解物'], candidates: [driedEggWhite] },
+  { aliases: ['卵黄粉末', '卵黄粉', '乾燥卵黄', '卵黄'], candidates: [driedEggYolk, egg] },
+  { aliases: ['粉末卵白', '卵白粉末', '乾燥卵白', '卵たん白', '卵白'], candidates: [driedEggWhite] },
+  {
+    aliases: [
+      '大豆たんぱく', '大豆たん白', '脱脂大豆たんぱく', '脱脂大豆たん白',
+      '粉末状大豆たんぱく', '粉末状大豆たん白',
+    ],
+    candidates: [concentratedSoyProtein, isolatedSoyProtein],
+  },
+  {
+    aliases: [
+      '植物性たん白', '粒状植物性たん白', '粉末状植物性たん白',
+      '粒状大豆たん白',
+    ],
+    candidates: [concentratedSoyProtein, isolatedSoyProtein, wheatProtein],
+  },
   { aliases: ['大豆パフ'], candidates: [kinako, concentratedSoyProtein] },
   { aliases: ['濃縮大豆たんぱく'], candidates: [concentratedSoyProtein] },
   { aliases: ['分離大豆たんぱく'], candidates: [isolatedSoyProtein] },
   { aliases: ['寒天', '粉寒天'], candidates: [powderedAgar] },
-  { aliases: ['ゼラチン'], candidates: [gelatin] },
+  { aliases: ['ゼラチン', '粗ゼラチン'], candidates: [gelatin] },
   { aliases: ['魚コラーゲンペプチド', 'コラーゲンペプチド'], candidates: [gelatin] },
-  { aliases: ['精白米', 'うるち米'], candidates: [rawRice] },
+  { aliases: ['精白米', 'うるち米', '米', 'ライス'], candidates: [rawRice] },
+  { aliases: ['コーングリッツ', 'コーンフラワー'], candidates: [cornGrits] },
+  { aliases: ['米ぬか', '米ぬか粉'], candidates: [riceBran] },
   { aliases: ['ペンネマカロニ', 'マカロニ', 'スパゲッティ'], candidates: [dryPasta] },
-  { aliases: ['たまねぎ', '玉ねぎ', 'ソテーオニオン'], candidates: [onion] },
+  { aliases: ['たまねぎ', '玉ねぎ', 'ソテーオニオン', '炒めたまねぎ'], candidates: [onion] },
+  { aliases: ['オニオンエキス', 'たまねぎエキス', 'オニオンエキスパウダー'], candidates: [onionExtractProxy] },
+  { aliases: ['キャベツ'], candidates: [cabbage] },
+  { aliases: ['にんじん', '人参'], candidates: [carrot] },
+  { aliases: ['ねぎ', 'ネギ', '長ねぎ'], candidates: [leek] },
+  {
+    aliases: [
+      'にんにく', 'にんにくペースト', 'ガーリックペースト', 'きざみにんにく',
+      'ローストガーリック', 'ソテーガーリックペースト', 'フライドガーリック',
+    ],
+    candidates: [garlic],
+  },
+  { aliases: ['しょうが', 'しょうがペースト', '生姜'], candidates: [ginger] },
+  { aliases: ['野菜'], candidates: [cabbage, carrot, onion] },
+  {
+    aliases: ['野菜エキス', '野菜エキス粉末', '野菜エキスパウダー', '野菜ペースト'],
+    candidates: [genericOnionExtractProxy, cabbageExtractProxy, carrotExtractProxy],
+  },
   { aliases: ['トマトペースト'], candidates: [tomatoPaste] },
-  { aliases: ['乾燥じゃがいも', '乾燥マッシュポテト'], candidates: [driedMashedPotato] },
-  { aliases: ['こんぶパウダー', '昆布パウダー'], candidates: [driedKombu] },
+  { aliases: ['トマトケチャップ', 'ケチャップ'], candidates: [tomatoKetchup] },
+  { aliases: ['乾燥じゃがいも', '乾燥マッシュポテト', '乾燥ポテト'], candidates: [driedMashedPotato] },
+  { aliases: ['こんぶパウダー', '昆布パウダー', '昆布粉末'], candidates: [driedKombu] },
   { aliases: ['えび'], candidates: [shrimp] },
   { aliases: ['えびエキス'], candidates: [shrimp] },
   { aliases: ['ホワイトルウ'], candidates: [whiteSauce] },
   { aliases: ['カレールウ'], candidates: [curryRoux] },
   { aliases: ['デミグラスソース'], candidates: [demiGlaceSauce] },
   { aliases: ['牛肉'], candidates: [leanBeef] },
+  {
+    aliases: ['鶏肉', 'チキン', '鶏肉加工品', '味付鶏肉', '調味鶏肉', '鶏もも肉'],
+    candidates: [chicken],
+  },
+  { aliases: ['豚肉', '豚ロース肉', '豚ばら肉', '豚もも肉'], candidates: [porkLeg, porkBelly] },
+  { aliases: ['食肉', '食肉等'], candidates: [porkLeg, chicken, leanBeef] },
+  { aliases: ['豚脂肪', '豚脂', 'ラード'], candidates: [lard] },
+  { aliases: ['牛脂'], candidates: [beefTallow] },
+  {
+    aliases: [
+      'チキンエキス', '鶏肉エキス', 'チキンエキスパウダー',
+      'チキンエキス粉末', 'チキンパウダー', 'チキン調味料',
+    ],
+    candidates: [chickenExtractProxy],
+  },
+  {
+    aliases: [
+      'ポークエキス', '豚肉エキス', 'ポークエキスパウダー',
+      'ポークエキス粉末', 'ポークブイヨン',
+    ],
+    candidates: [porkExtractProxy],
+  },
+  { aliases: ['ビーフエキス', '牛肉エキス'], candidates: [beefExtractProxy] },
   { aliases: ['パン粉'], candidates: [dryBreadcrumbs] },
   { aliases: ['こしょう', '黒こしょう', 'ブラックペッパー'], candidates: [blackPepper] },
   { aliases: ['カレー粉'], candidates: [curryPowder] },
   { aliases: ['香辛料'], candidates: [blackPepper, curryPowder] },
   { aliases: ['インスタントコーヒー', 'コーヒー', 'コーヒーエキス'], candidates: [instantCoffee] },
-  { aliases: ['紅茶エキスパウダー'], candidates: [blackTeaLeaf] },
+  { aliases: ['紅茶', '紅茶パウダー', '紅茶エキスパウダー'], candidates: [blackTeaLeaf] },
+  { aliases: ['まっ茶', '抹茶'], candidates: [matcha] },
   { aliases: ['ゆず果皮'], candidates: [yuzuPeel] },
   { aliases: ['ゆず果汁'], candidates: [yuzuJuice] },
   { aliases: ['ゆず', '柚子'], candidates: [yuzuPeel, yuzuJuice] },
   { aliases: ['干しぶどう', 'レーズン'], candidates: [raisin] },
   { aliases: ['いちご', '苺', 'いちご果肉'], candidates: [strawberry] },
-  { aliases: ['いちごパウダー'], candidates: [driedStrawberry] },
-  { aliases: ['バナナ'], candidates: [banana] },
-  { aliases: ['もも', '桃'], candidates: [peach] },
-  { aliases: ['りんご', 'リンゴ'], candidates: [apple] },
+  { aliases: ['いちごパウダー', 'いちご粉末'], candidates: [driedStrawberry] },
+  { aliases: ['バナナ', 'バナナピューレ'], candidates: [banana] },
+  { aliases: ['もも', '桃', 'もも果汁'], candidates: [peach] },
+  { aliases: ['りんご', 'リンゴ', 'りんごペースト'], candidates: [apple] },
   { aliases: ['ぶどう果汁', 'グレープ果汁'], candidates: [grapeJuice] },
-  { aliases: ['レモン果汁', '濃縮レモン果汁'], candidates: [lemonJuice] },
+  { aliases: ['レモン果汁', '濃縮レモン果汁', 'レモンジュース'], candidates: [lemonJuice] },
   { aliases: ['果汁'], candidates: [grapeJuice, lemonJuice, yuzuJuice] },
   { aliases: ['果肉'], candidates: [strawberry, peach, banana, apple] },
+  { aliases: ['豆乳'], candidates: [soyMilk] },
+  { aliases: ['しいたけ', '椎茸'], candidates: [shiitake] },
+  { aliases: ['しいたけエキス', '椎茸エキス', 'しいたけエキスパウダー'], candidates: [shiitakeExtractProxy] },
+  { aliases: ['しょうゆ', '醤油', '粉末しょうゆ'], candidates: [soySauce] },
+  { aliases: ['みそ', '味噌', '粉末みそ'], candidates: [miso] },
+  { aliases: ['醸造酢', '穀物酢', '酢'], candidates: [grainVinegar] },
+  { aliases: ['みりん', '本みりん'], candidates: [mirin] },
+  { aliases: ['食物繊維', '水溶性食物繊維', '大豆食物繊維'], candidates: [declaredSolubleFiberProxy] },
+  { aliases: ['グァーガム', 'グアーガム', '種子ガム'], candidates: [seedGumFdc] },
+  { aliases: ['グァーガム分解物', 'グアーガム分解物'], candidates: [hydrolyzedGuarGumFdc] },
+  { aliases: ['サイリウム種皮粉末', 'サイリウムハスク', 'オオバコ種皮粉末'], candidates: [psylliumHuskFdc] },
+  {
+    aliases: ['乳酸菌粉末', '殺菌乳酸菌粉末', '乳酸菌末', 'プロバイオティクス粉末'],
+    candidates: [dextrinProxy, skimMilkPowder],
+  },
+  {
+    aliases: ['酵母エキス粉末', '酵母エキスパウダー', '酵母エキス末', '粉末酵母エキス'],
+    candidates: [yeastExtractDryFdc],
+  },
+  {
+    aliases: ['酵母エキス', 'イーストエキス'],
+    candidates: [yeastExtractDryFdc, yeastExtractSpreadFdc],
+  },
+  { aliases: ['パネトーネ種'], candidates: [panettoneStarterDryProxy, panettoneStarterCompressedProxy] },
   { aliases: ['ドライイースト', '乾燥酵母'], candidates: [dryYeast] },
   { aliases: ['生イースト', '圧搾酵母'], candidates: [compressedYeast] },
   { aliases: ['イースト', 'パン酵母', '酵母'], candidates: [dryYeast, compressedYeast] },
   { aliases: ['食塩', '塩'], candidates: [salt] },
 ] as const
 
+const GENERAL_PROFILE_ENTRIES = generalProfilesArtifact.profiles.map((item) => ({
+  aliases: item.aliases,
+  profile: profile(item.profileId, item.canonicalName, item.nutrients as Nutrients, {
+    sourceFoodIds: item.sourceFoodIds,
+    priorProbability: item.priorProbability,
+    ...(item.ambiguous ? { ambiguous: true } : {}),
+    ...('derivationWarnings' in item
+      ? { derivationWarnings: item.derivationWarnings }
+      : {}),
+    ...('priorSignals' in item
+      ? { priorSignals: item.priorSignals }
+      : {}),
+    ...('requiredGenreIds' in item
+      ? { requiredGenreIds: item.requiredGenreIds as EstimatorGenreId[] }
+      : {}),
+  }),
+}))
+
 function normalize(value: string): string {
   return value.normalize('NFKC').replace(/\s+/gu, '').toLocaleLowerCase('ja-JP')
 }
+
+function ingredientLookupKeys(value: string): string[] {
+  const exact = normalize(value)
+  // 有機・国産は栄養組成を決める加工状態ではないため、完全一致がない場合だけ除いて再検索する。
+  const withoutOriginQualifier = exact.replace(/^(?:有機|国産)/u, '')
+  return withoutOriginQualifier && withoutOriginQualifier !== exact
+    ? [exact, withoutOriginQualifier]
+    : [exact]
+}
+
+const GENERAL_GROUPS: readonly IngredientProfileGroup[] = (() => {
+  const aliases = new Map<string, { aliases: string[]; candidates: IngredientProfile[] }>()
+  for (const entry of GENERAL_PROFILE_ENTRIES) {
+    for (const alias of entry.aliases) {
+      const key = normalize(alias)
+      const group = aliases.get(key) ?? { aliases: [], candidates: [] }
+      group.aliases.push(alias)
+      group.candidates.push(entry.profile)
+      aliases.set(key, group)
+    }
+  }
+  return [...aliases.values()]
+})()
 
 function adjustedPrior(profileItem: IngredientProfile, productName: string, genreId?: EstimatorGenreId | null): number {
   const normalizedProductName = normalize(productName)
@@ -788,14 +1329,21 @@ export function resolveIngredientCandidates(
   productName: string | null | undefined,
   genreId?: EstimatorGenreId | null,
 ): IngredientProfile[] {
-  const normalizedIngredient = normalize(ingredientName)
-  const group = GROUPS.find((item) => item.aliases.some((alias) => normalize(alias) === normalizedIngredient))
+  const lookupKeys = ingredientLookupKeys(ingredientName)
+  const group = GROUPS.find((item) => item.aliases.some((alias) => lookupKeys.includes(normalize(alias))))
+    ?? GENERAL_GROUPS.find((item) => item.aliases.some((alias) => lookupKeys.includes(normalize(alias))))
   if (!group) return []
 
   const normalizedProductName = normalize(productName ?? '')
   const eligible = group.candidates.filter((candidate) => (
-    !candidate.requiredProductTerms
-    || candidate.requiredProductTerms.some((term) => normalizedProductName.includes(normalize(term)))
+    (
+      !candidate.requiredProductTerms
+      || candidate.requiredProductTerms.some((term) => normalizedProductName.includes(normalize(term)))
+    )
+    && (
+      !candidate.requiredGenreIds
+      || (genreId !== null && genreId !== undefined && candidate.requiredGenreIds.includes(genreId))
+    )
   ))
   const adjusted = eligible.map((candidate) => ({
     ...candidate,

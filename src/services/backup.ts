@@ -1,4 +1,4 @@
-import { ESTIMATOR_GENRE_IDS, NUTRIENT_KEYS, type AppSettings, type BackupData, type EstimationDecision, type EstimationRequest, type EstimationResult, type EstimationSettings, type Food, type FoodAlias, type FoodGroup, type FoodRelatedTerm, type FoodSnapshot, type FoodUsageStat, type GeneralMenu, type MealEntry, type Menu, type MenuIngredient, type MenuSet, type NutrientKey, type NutrientMetadataMap, type Nutrients, type SearchLog } from '../types'
+import { ESTIMATION_LIMITATION_REASONS, ESTIMATOR_GENRE_IDS, NUTRIENT_KEYS, type AppSettings, type BackupData, type EstimationDecision, type EstimationRequest, type EstimationResult, type EstimationSettings, type Food, type FoodAlias, type FoodGroup, type FoodRelatedTerm, type FoodSnapshot, type FoodUsageStat, type GeneralMenu, type MealEntry, type Menu, type MenuIngredient, type MenuSet, type NutrientKey, type NutrientMetadataMap, type Nutrients, type SearchLog } from '../types'
 import { isFoodAttributePreference } from './foodAttributePreferences'
 import { hasMenuCycles, menusWithUnsupportedIngredientUnits } from './menuIngredients'
 import { isMealMenuSnapshot } from './mealMenuSnapshots'
@@ -317,6 +317,8 @@ function isNutrientEstimate(value: unknown): boolean {
     && (value.source === undefined || isNonEmptyString(value.source))
     && (value.sourceFoodIds === undefined || (Array.isArray(value.sourceFoodIds) && value.sourceFoodIds.every(isNonEmptyString)))
     && Array.isArray(value.warnings) && value.warnings.every(isString)
+    && (value.limitationReasons === undefined || (Array.isArray(value.limitationReasons)
+      && value.limitationReasons.every((reason) => (ESTIMATION_LIMITATION_REASONS as readonly unknown[]).includes(reason))))
     && (value.calibration === undefined || isCalibrationMetadata(value.calibration))
 }
 
@@ -326,6 +328,8 @@ function isEstimationResult(value: unknown): value is EstimationResult {
   if (value.basis !== undefined && (!isRecord(value.basis) || typeof value.basis.baseAmount !== 'number' || !Number.isFinite(value.basis.baseAmount) || value.basis.baseAmount <= 0 || !isValidUnit(String(value.basis.baseUnit)))) return false
   if (!Array.isArray(value.globalWarnings) || !value.globalWarnings.every(isString)
     || (value.unresolvedIngredients !== undefined && (!Array.isArray(value.unresolvedIngredients) || !value.unresolvedIngredients.every(isNonEmptyString)))
+    || (value.limitationReasons !== undefined && (!Array.isArray(value.limitationReasons)
+      || !value.limitationReasons.every((reason) => (ESTIMATION_LIMITATION_REASONS as readonly unknown[]).includes(reason))))
     || !isNonEmptyString(value.modelVersion) || !isIsoDateTime(value.estimatedAt)) return false
   const optimization = value.optimization
   if (optimization !== undefined && (!isRecord(optimization) || typeof optimization.converged !== 'boolean' || (optimization.objectiveError !== undefined && (typeof optimization.objectiveError !== 'number' || !Number.isFinite(optimization.objectiveError) || optimization.objectiveError < 0)) || (optimization.scenarioCount !== undefined && (typeof optimization.scenarioCount !== 'number' || !Number.isInteger(optimization.scenarioCount) || optimization.scenarioCount < 0)))) return false

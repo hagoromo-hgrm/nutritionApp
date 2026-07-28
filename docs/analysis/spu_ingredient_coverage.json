@@ -1,0 +1,346 @@
+{
+  "format": "nutrition-estimator-ingredient-coverage-summary",
+  "formatVersion": 1,
+  "modelVersion": "browser-rule-0.12.0",
+  "recordCount": 2577,
+  "fullyResolvedRecords": 1498,
+  "fullyResolvedPercent": 58.13,
+  "unresolvedOccurrenceCount": 1777,
+  "unresolvedUniqueCount": 901,
+  "byMaker": {
+    "アサヒ飲料": {
+      "records": 32,
+      "fullyResolved": 18,
+      "fullyResolvedPercent": 56.25
+    },
+    "キユーピー": {
+      "records": 329,
+      "fullyResolved": 139,
+      "fullyResolvedPercent": 42.249
+    },
+    "コモ": {
+      "records": 20,
+      "fullyResolved": 8,
+      "fullyResolvedPercent": 40
+    },
+    "ニチレイフーズ": {
+      "records": 160,
+      "fullyResolved": 70,
+      "fullyResolvedPercent": 43.75
+    },
+    "フジッコ": {
+      "records": 117,
+      "fullyResolved": 62,
+      "fullyResolvedPercent": 52.991
+    },
+    "ブルボン": {
+      "records": 203,
+      "fullyResolved": 99,
+      "fullyResolvedPercent": 48.768
+    },
+    "ベースフード": {
+      "records": 22,
+      "fullyResolved": 5,
+      "fullyResolvedPercent": 22.727
+    },
+    "伊藤ハム": {
+      "records": 205,
+      "fullyResolved": 127,
+      "fullyResolvedPercent": 61.951
+    },
+    "丸大食品": {
+      "records": 40,
+      "fullyResolved": 36,
+      "fullyResolvedPercent": 90
+    },
+    "森永製菓": {
+      "records": 240,
+      "fullyResolved": 123,
+      "fullyResolvedPercent": 51.25
+    },
+    "日清食品": {
+      "records": 553,
+      "fullyResolved": 331,
+      "fullyResolvedPercent": 59.855
+    },
+    "明治": {
+      "records": 656,
+      "fullyResolved": 480,
+      "fullyResolvedPercent": 73.171
+    }
+  },
+  "byGenre": {
+    "baked_sweets": {
+      "records": 124,
+      "fullyResolved": 61,
+      "fullyResolvedPercent": 49.194
+    },
+    "bread": {
+      "records": 47,
+      "fullyResolved": 20,
+      "fullyResolvedPercent": 42.553
+    },
+    "cake_pastry": {
+      "records": 54,
+      "fullyResolved": 26,
+      "fullyResolvedPercent": 48.148
+    },
+    "chocolate": {
+      "records": 272,
+      "fullyResolved": 186,
+      "fullyResolvedPercent": 68.382
+    },
+    "dairy": {
+      "records": 282,
+      "fullyResolved": 198,
+      "fullyResolvedPercent": 70.213
+    },
+    "drink_jelly_pudding": {
+      "records": 190,
+      "fullyResolved": 141,
+      "fullyResolvedPercent": 74.211
+    },
+    "fried_food": {
+      "records": 23,
+      "fullyResolved": 11,
+      "fullyResolvedPercent": 47.826
+    },
+    "frozen_dessert": {
+      "records": 37,
+      "fullyResolved": 20,
+      "fullyResolvedPercent": 54.054
+    },
+    "noodle_flour_dish": {
+      "records": 421,
+      "fullyResolved": 285,
+      "fullyResolvedPercent": 67.696
+    },
+    "other_unknown": {
+      "records": 419,
+      "fullyResolved": 216,
+      "fullyResolvedPercent": 51.551
+    },
+    "prepared_meal": {
+      "records": 337,
+      "fullyResolved": 151,
+      "fullyResolvedPercent": 44.807
+    },
+    "sauce_spread": {
+      "records": 261,
+      "fullyResolved": 135,
+      "fullyResolvedPercent": 51.724
+    },
+    "snack_rice_cracker": {
+      "records": 32,
+      "fullyResolved": 10,
+      "fullyResolvedPercent": 31.25
+    },
+    "sugar_confectionery": {
+      "records": 78,
+      "fullyResolved": 38,
+      "fullyResolvedPercent": 48.718
+    }
+  },
+  "topUnresolvedIngredients": [
+    {
+      "name": "ビフィズス菌液",
+      "count": 12
+    },
+    {
+      "name": "具",
+      "count": 12
+    },
+    {
+      "name": "濃縮りんご果汁",
+      "count": 12
+    },
+    {
+      "name": "牛そぼろ",
+      "count": 11
+    },
+    {
+      "name": "濃縮ぶどう果汁",
+      "count": 11
+    },
+    {
+      "name": "たまねぎ酢漬",
+      "count": 10
+    },
+    {
+      "name": "衣",
+      "count": 10
+    },
+    {
+      "name": "濃縮いちご果汁",
+      "count": 10
+    },
+    {
+      "name": "カラメルソース",
+      "count": 9
+    },
+    {
+      "name": "バターオニオンペースト",
+      "count": 9
+    },
+    {
+      "name": "小麦パフ",
+      "count": 9
+    },
+    {
+      "name": "アンチョビーソース",
+      "count": 8
+    },
+    {
+      "name": "えび粉",
+      "count": 8
+    },
+    {
+      "name": "りんご清澄濃縮果汁",
+      "count": 8
+    },
+    {
+      "name": "レモン濃縮果汁",
+      "count": 8
+    },
+    {
+      "name": "粉末ソース",
+      "count": 8
+    },
+    {
+      "name": "粉末麦芽",
+      "count": 8
+    },
+    {
+      "name": "キャラメル粉末",
+      "count": 7
+    },
+    {
+      "name": "ソテーオニオンペースト",
+      "count": 7
+    },
+    {
+      "name": "たれ",
+      "count": 7
+    },
+    {
+      "name": "ふりかけ",
+      "count": 7
+    },
+    {
+      "name": "乾燥ピーマン",
+      "count": 7
+    },
+    {
+      "name": "小麦粉加工品",
+      "count": 7
+    },
+    {
+      "name": "糖蜜",
+      "count": 7
+    },
+    {
+      "name": "乳酸菌",
+      "count": 7
+    },
+    {
+      "name": "皮",
+      "count": 7
+    },
+    {
+      "name": "揚げなす",
+      "count": 7
+    },
+    {
+      "name": "アメリケーヌソース",
+      "count": 6
+    },
+    {
+      "name": "うるちひえパフ",
+      "count": 6
+    },
+    {
+      "name": "キャラメルペースト",
+      "count": 6
+    },
+    {
+      "name": "コチュジャン",
+      "count": 6
+    },
+    {
+      "name": "すけとうだら",
+      "count": 6
+    },
+    {
+      "name": "たいだし",
+      "count": 6
+    },
+    {
+      "name": "チョコレートフラワーペースト",
+      "count": 6
+    },
+    {
+      "name": "バニラビーンズ",
+      "count": 6
+    },
+    {
+      "name": "ビートジュース",
+      "count": 6
+    },
+    {
+      "name": "ぶどう清澄濃縮果汁",
+      "count": 6
+    },
+    {
+      "name": "ぶどう濃縮果汁",
+      "count": 6
+    },
+    {
+      "name": "マッシュルームエキス",
+      "count": 6
+    },
+    {
+      "name": "モルトフラワー",
+      "count": 6
+    },
+    {
+      "name": "レモン果汁パウダー",
+      "count": 6
+    },
+    {
+      "name": "鶏レバーそぼろ",
+      "count": 6
+    },
+    {
+      "name": "香辛料加工品",
+      "count": 6
+    },
+    {
+      "name": "昆布エキス粉末",
+      "count": 6
+    },
+    {
+      "name": "砂糖しょうゆだれ",
+      "count": 6
+    },
+    {
+      "name": "小麦シリアルパフ",
+      "count": 6
+    },
+    {
+      "name": "大豆たん白加工品",
+      "count": 6
+    },
+    {
+      "name": "脱脂大豆粉",
+      "count": 6
+    },
+    {
+      "name": "濃縮オレンジ果汁",
+      "count": 6
+    },
+    {
+      "name": "米パフ",
+      "count": 6
+    }
+  ]
+}

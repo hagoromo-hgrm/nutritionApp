@@ -49,7 +49,7 @@ const ANNOTATION_PATTERNS = [
 ] as const
 
 interface DeclarationToken {
-  kind: 'item' | 'additive-boundary'
+  kind: 'item' | 'additive-boundary' | 'section-heading'
   value?: string
 }
 
@@ -64,13 +64,38 @@ function tokenizeDeclaration(text: string): DeclarationToken[] {
     current = ''
   }
 
-  for (const character of text) {
-    if (character === '(' || character === '（' || character === '[' || character === '［') {
+  for (let index = 0; index < text.length; index += 1) {
+    const character = text[index]
+    if (depth === 0 && character === '「') {
+      const closingIndex = text.indexOf('」', index + 1)
+      if (closingIndex >= 0) {
+        pushCurrent()
+        tokens.push({ kind: 'section-heading', value: text.slice(index + 1, closingIndex).trim() })
+        index = closingIndex
+        continue
+      }
+    }
+    if (depth === 0 && character === '【') {
+      const closingIndex = text.indexOf('】', index + 1)
+      if (closingIndex >= 0) {
+        pushCurrent()
+        tokens.push({ kind: 'section-heading', value: text.slice(index + 1, closingIndex).trim() })
+        index = closingIndex
+        continue
+      }
+    }
+    if (
+      character === '(' || character === '（' || character === '[' || character === '［'
+      || character === '〔'
+    ) {
       depth += 1
       current += character
       continue
     }
-    if (character === ')' || character === '）' || character === ']' || character === '］') {
+    if (
+      character === ')' || character === '）' || character === ']' || character === '］'
+      || character === '〕'
+    ) {
       depth = Math.max(0, depth - 1)
       current += character
       continue
@@ -97,8 +122,14 @@ function extractParentheticalGroups(value: string): { name: string; groups: stri
   let depth = 0
 
   for (const character of value) {
-    const isOpening = character === '(' || character === '（'
-    const isClosing = character === ')' || character === '）'
+    const isOpening = (
+      character === '(' || character === '（' || character === '[' || character === '［'
+      || character === '〔'
+    )
+    const isClosing = (
+      character === ')' || character === '）' || character === ']' || character === '］'
+      || character === '〕'
+    )
     if (isOpening) {
       if (depth > 0) group += character
       depth += 1
@@ -205,6 +236,10 @@ export function parseIngredientDeclaration(text: string): ParsedIngredientDeclar
   let inferredAdditiveBoundary = false
 
   for (const token of tokenizeDeclaration(normalizedText)) {
+    if (token.kind === 'section-heading') {
+      additiveSection = false
+      continue
+    }
     if (token.kind === 'additive-boundary') {
       additiveSection = true
       usedExplicitAdditiveBoundary = true
@@ -212,6 +247,15 @@ export function parseIngredientDeclaration(text: string): ParsedIngredientDeclar
     }
     const rawName = token.value?.trim()
     if (!rawName) continue
+    const parenthetical = extractParentheticalGroups(rawName)
+    // 原材料と独立して末尾へ置かれる「（一部に小麦を含む）」は食品ではなく表示注記。
+    if (
+      !parenthetical.name
+      && parenthetical.groups.length > 0
+      && parenthetical.groups.every((group) => isAnnotationGroup(group))
+    ) {
+      continue
+    }
     const normalizedName = normalizeName(rawName)
     if (normalizedName === '添加物') {
       additiveSection = true

@@ -1,7 +1,7 @@
 {
   "format": "nutrition-estimator-fdc-profiles",
   "formatVersion": 1,
-  "generatedAt": "2026-07-26T14:52:17.646323Z",
+  "generatedAt": "2026-07-28T07:40:08.708350Z",
   "transformVersion": "fdc-ingredient-profile-0.1.0",
   "datasetReleases": [
     "SR Legacy 04/2018"
@@ -40,10 +40,205 @@
         "publicationDate": "4/1/2019",
         "datasetRelease": "SR Legacy 04/2018",
         "sourceUrl": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/171421/nutrients",
-        "retrievedAt": "2026-07-26T14:48:00Z",
+        "retrievedAt": "2026-07-28T07:34:25Z",
         "reviewedAt": "2026-07-26",
         "license": "CC0 1.0 / U.S. public domain",
-        "rawSha256": "294a0b6b699d1947cd7148df26f2da44877fa8c0570be8d52f9ad32761423dfe",
+        "rawSha256": "56a456c2a3c133253406fe5299e07f22d4012af41d8aa9826a3b2ac93e0a3fd2",
+        "transformVersion": "fdc-ingredient-profile-0.1.0"
+      }
+    },
+    {
+      "profileId": "fdc_wheat_bran",
+      "canonicalName": "小麦ふすま",
+      "replaceProfileId": "unresolved:wheat_bran",
+      "basis": {
+        "amount": 100,
+        "unit": "g"
+      },
+      "nutrients": {
+        "energyKcal": 216.0,
+        "proteinG": 15.6,
+        "fatG": 4.25,
+        "carbohydrateG": 64.5,
+        "fiberG": 42.8,
+        "calciumMg": 73.0,
+        "ironMg": 10.6,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 1.49,
+        "vitaminB1Mg": 0.523,
+        "vitaminB2Mg": 0.577,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 0.63,
+        "saltG": 0.00508
+      },
+      "source": {
+        "provider": "USDA FoodData Central",
+        "fdcId": 169722,
+        "description": "Wheat bran, crude",
+        "dataType": "SR Legacy",
+        "publicationDate": "4/1/2019",
+        "datasetRelease": "SR Legacy 04/2018",
+        "sourceUrl": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/169722/nutrients",
+        "retrievedAt": "2026-07-28T07:34:25Z",
+        "reviewedAt": "2026-07-28",
+        "license": "CC0 1.0 / U.S. public domain",
+        "rawSha256": "a9a968cd97c7b0288219e30e786511f98b46fc915d270e7bdec0de08a112d235",
+        "transformVersion": "fdc-ingredient-profile-0.1.0"
+      }
+    },
+    {
+      "profileId": "fdc_coconut_oil",
+      "canonicalName": "ココナッツオイル",
+      "replaceProfileId": "unresolved:coconut_oil",
+      "basis": {
+        "amount": 100,
+        "unit": "g"
+      },
+      "nutrients": {
+        "energyKcal": 892.0,
+        "proteinG": 0.0,
+        "fatG": 99.1,
+        "carbohydrateG": 0.0,
+        "fiberG": 0.0,
+        "calciumMg": 1.0,
+        "ironMg": 0.05,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.11,
+        "vitaminB1Mg": 0.0,
+        "vitaminB2Mg": 0.0,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 82.5,
+        "saltG": 0.0
+      },
+      "source": {
+        "provider": "USDA FoodData Central",
+        "fdcId": 171412,
+        "description": "Oil, coconut",
+        "dataType": "SR Legacy",
+        "publicationDate": "4/1/2019",
+        "datasetRelease": "SR Legacy 04/2018",
+        "sourceUrl": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/171412/nutrients",
+        "retrievedAt": "2026-07-28T07:34:25Z",
+        "reviewedAt": "2026-07-28",
+        "license": "CC0 1.0 / U.S. public domain",
+        "rawSha256": "eefbc29187e9f40be33ffd234ae742b0940f92f42ca9ffe0f1c5fd13ae2ae63f",
+        "transformVersion": "fdc-ingredient-profile-0.1.0"
+      }
+    },
+    {
+      "profileId": "fdc_chicken_fat",
+      "canonicalName": "鶏脂",
+      "replaceProfileId": "unresolved:chicken_fat",
+      "basis": {
+        "amount": 100,
+        "unit": "g"
+      },
+      "nutrients": {
+        "energyKcal": 900.0,
+        "proteinG": 0.0,
+        "fatG": 99.8,
+        "carbohydrateG": 0.0,
+        "fiberG": 0.0,
+        "calciumMg": 0.0,
+        "ironMg": 0.0,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 2.7,
+        "vitaminB1Mg": 0.0,
+        "vitaminB2Mg": 0.0,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 29.8,
+        "saltG": 0.0
+      },
+      "source": {
+        "provider": "USDA FoodData Central",
+        "fdcId": 173564,
+        "description": "Fat, chicken",
+        "dataType": "SR Legacy",
+        "publicationDate": "4/1/2019",
+        "datasetRelease": "SR Legacy 04/2018",
+        "sourceUrl": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/173564/nutrients",
+        "retrievedAt": "2026-07-28T07:34:25Z",
+        "reviewedAt": "2026-07-28",
+        "license": "CC0 1.0 / U.S. public domain",
+        "rawSha256": "2e4e62a9f0d500891387ac7c28e9a19ba5eaa1c9ae1c56a1762910611d3be399",
+        "transformVersion": "fdc-ingredient-profile-0.1.0"
+      }
+    },
+    {
+      "profileId": "fdc_yeast_extract_spread",
+      "canonicalName": "酵母エキス（ペースト候補）",
+      "replaceProfileId": "unresolved:yeast_extract",
+      "basis": {
+        "amount": 100,
+        "unit": "g"
+      },
+      "nutrients": {
+        "energyKcal": 185.0,
+        "proteinG": 23.9,
+        "fatG": 0.9,
+        "carbohydrateG": 20.4,
+        "fiberG": 6.5,
+        "calciumMg": 67.0,
+        "ironMg": 4.04,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.0,
+        "vitaminB1Mg": 23.4,
+        "vitaminB2Mg": 17.5,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 0.0,
+        "saltG": 8.5852
+      },
+      "source": {
+        "provider": "USDA FoodData Central",
+        "fdcId": 167717,
+        "description": "Yeast extract spread",
+        "dataType": "SR Legacy",
+        "publicationDate": "4/1/2019",
+        "datasetRelease": "SR Legacy 04/2018",
+        "sourceUrl": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/167717/nutrients",
+        "retrievedAt": "2026-07-28T07:34:25Z",
+        "reviewedAt": "2026-07-28",
+        "license": "CC0 1.0 / U.S. public domain",
+        "rawSha256": "315fa891ee4b33014e8490d9c915bd4a6adb3545ec3cc6539c73904530da32e7",
+        "transformVersion": "fdc-ingredient-profile-0.1.0"
+      }
+    },
+    {
+      "profileId": "fdc_seed_gum",
+      "canonicalName": "種子ガム",
+      "replaceProfileId": "unresolved:guar_gum",
+      "basis": {
+        "amount": 100,
+        "unit": "g"
+      },
+      "nutrients": {
+        "energyKcal": 332.0,
+        "proteinG": 4.6,
+        "fatG": 0.5,
+        "carbohydrateG": 77.3,
+        "fiberG": 77.3,
+        "calciumMg": 294.0,
+        "ironMg": 0.0,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.0,
+        "vitaminB1Mg": 0.0,
+        "vitaminB2Mg": 0.0,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 0.06,
+        "saltG": 0.3175
+      },
+      "source": {
+        "provider": "USDA FoodData Central",
+        "fdcId": 169045,
+        "description": "Gums, seed gums (includes locust bean, guar)",
+        "dataType": "SR Legacy",
+        "publicationDate": "4/1/2019",
+        "datasetRelease": "SR Legacy 04/2018",
+        "sourceUrl": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/169045/nutrients",
+        "retrievedAt": "2026-07-28T07:34:25Z",
+        "reviewedAt": "2026-07-28",
+        "license": "CC0 1.0 / U.S. public domain",
+        "rawSha256": "4ac3a9f9bb434f13d33c2fc693bf9e7f7280502efa3c3d7033797010c062acad",
         "transformVersion": "fdc-ingredient-profile-0.1.0"
       }
     }

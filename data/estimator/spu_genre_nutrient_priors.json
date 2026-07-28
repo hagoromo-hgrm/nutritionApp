@@ -1,0 +1,1162 @@
+{
+  "format": "nutrition-estimator-spu-genre-nutrient-priors",
+  "formatVersion": 1,
+  "transformVersion": "spu-genre-nutrient-prior-0.1.0",
+  "source": {
+    "provider": "メーカー公式栄養成分表示の集計",
+    "datasetSha256": "bd2b3230343b917e4fa8c542043519f8c532b9f967f8feb44056b4c273e246e3",
+    "manifestSha256": "79adc1258b0e0aa5a2f115bff9ada6de499c196b6912d3cd95ba334fa2eed8d2",
+    "split": "train",
+    "containsProductRecords": false
+  },
+  "methodology": {
+    "basis": "per_100g",
+    "quantiles": [
+      0.05,
+      0.5,
+      0.95
+    ],
+    "priorStrength": 30.0,
+    "minimumGenreSamples": 10,
+    "minimumGenreMakers": 2,
+    "makerDominanceShrinkageStartsAt": 0.5,
+    "otherUnknownUsesPooledDistribution": true,
+    "estimatedLabelsExcluded": true,
+    "separatedIngredientWeightsUsed": false
+  },
+  "trainingRecordCount": 545,
+  "global": {
+    "nutrients": {
+      "saturatedFatG": {
+        "sampleSize": 113,
+        "scope": "pooled_nutrient",
+        "genreObservationWeight": 0.0,
+        "p05": 2.0,
+        "median": 14.583333,
+        "p95": 20.666667
+      },
+      "fiberG": {
+        "sampleSize": 321,
+        "scope": "pooled_nutrient",
+        "genreObservationWeight": 0.0,
+        "p05": 0.555556,
+        "median": 2.765957,
+        "p95": 19.756098
+      },
+      "calciumMg": {
+        "sampleSize": 238,
+        "scope": "pooled_nutrient",
+        "genreObservationWeight": 0.0,
+        "p05": 41.0,
+        "median": 163.0,
+        "p95": 1333.333333
+      },
+      "ironMg": {
+        "sampleSize": 76,
+        "scope": "pooled_nutrient",
+        "genreObservationWeight": 0.0,
+        "p05": 0.897959,
+        "median": 6.0,
+        "p95": 60.0
+      },
+      "vitaminAMcg": {
+        "sampleSize": 34,
+        "scope": "pooled_nutrient",
+        "genreObservationWeight": 0.0,
+        "p05": 45.833333,
+        "median": 500.0,
+        "p95": 1314.285714
+      },
+      "vitaminEMg": {
+        "sampleSize": 34,
+        "scope": "pooled_nutrient",
+        "genreObservationWeight": 0.0,
+        "p05": 0.538889,
+        "median": 4.535714,
+        "p95": 11.818182
+      },
+      "vitaminB1Mg": {
+        "sampleSize": 95,
+        "scope": "pooled_nutrient",
+        "genreObservationWeight": 0.0,
+        "p05": 0.222222,
+        "median": 2.380952,
+        "p95": 3.255814
+      },
+      "vitaminB2Mg": {
+        "sampleSize": 95,
+        "scope": "pooled_nutrient",
+        "genreObservationWeight": 0.0,
+        "p05": 0.261111,
+        "median": 2.714286,
+        "p95": 3.846154
+      },
+      "vitaminCMg": {
+        "sampleSize": 96,
+        "scope": "pooled_nutrient",
+        "genreObservationWeight": 0.0,
+        "p05": 35.833333,
+        "median": 153.571429,
+        "p95": 625.0
+      }
+    }
+  },
+  "genres": {
+    "baked_sweets": {
+      "trainingProductCount": 56,
+      "makerCount": 2,
+      "maximumMakerShare": 0.839286,
+      "nutrients": {
+        "saturatedFatG": {
+          "sampleSize": 47,
+          "pooledSampleSize": 113,
+          "scope": "genre_nutrient",
+          "genreObservationWeight": 0.334917,
+          "p05": 3.265306,
+          "median": 14.363636,
+          "p95": 19.583333
+        },
+        "fiberG": {
+          "sampleSize": 52,
+          "pooledSampleSize": 321,
+          "scope": "genre_nutrient",
+          "genreObservationWeight": 0.357798,
+          "p05": 0.666667,
+          "median": 2.142857,
+          "p95": 16.0
+        },
+        "calciumMg": {
+          "sampleSize": 6,
+          "pooledSampleSize": 238,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 41.0,
+          "median": 163.0,
+          "p95": 1333.333333
+        },
+        "ironMg": {
+          "sampleSize": 5,
+          "pooledSampleSize": 76,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.897959,
+          "median": 6.0,
+          "p95": 60.0
+        },
+        "vitaminAMcg": {
+          "sampleSize": 0,
+          "pooledSampleSize": 34,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 45.833333,
+          "median": 500.0,
+          "p95": 1314.285714
+        },
+        "vitaminEMg": {
+          "sampleSize": 1,
+          "pooledSampleSize": 34,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.538889,
+          "median": 4.535714,
+          "p95": 11.818182
+        },
+        "vitaminB1Mg": {
+          "sampleSize": 6,
+          "pooledSampleSize": 95,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.222222,
+          "median": 2.380952,
+          "p95": 3.255814
+        },
+        "vitaminB2Mg": {
+          "sampleSize": 6,
+          "pooledSampleSize": 95,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.261111,
+          "median": 2.714286,
+          "p95": 3.846154
+        },
+        "vitaminCMg": {
+          "sampleSize": 0,
+          "pooledSampleSize": 96,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 35.833333,
+          "median": 153.571429,
+          "p95": 625.0
+        }
+      }
+    },
+    "cake_pastry": {
+      "trainingProductCount": 8,
+      "makerCount": 3,
+      "maximumMakerShare": 0.5,
+      "nutrients": {
+        "saturatedFatG": {
+          "sampleSize": 4,
+          "pooledSampleSize": 113,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 2.0,
+          "median": 14.583333,
+          "p95": 20.666667
+        },
+        "fiberG": {
+          "sampleSize": 4,
+          "pooledSampleSize": 321,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.555556,
+          "median": 2.765957,
+          "p95": 19.756098
+        },
+        "calciumMg": {
+          "sampleSize": 3,
+          "pooledSampleSize": 238,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 41.0,
+          "median": 163.0,
+          "p95": 1333.333333
+        },
+        "ironMg": {
+          "sampleSize": 1,
+          "pooledSampleSize": 76,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.897959,
+          "median": 6.0,
+          "p95": 60.0
+        },
+        "vitaminAMcg": {
+          "sampleSize": 0,
+          "pooledSampleSize": 34,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 45.833333,
+          "median": 500.0,
+          "p95": 1314.285714
+        },
+        "vitaminEMg": {
+          "sampleSize": 0,
+          "pooledSampleSize": 34,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.538889,
+          "median": 4.535714,
+          "p95": 11.818182
+        },
+        "vitaminB1Mg": {
+          "sampleSize": 0,
+          "pooledSampleSize": 95,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.222222,
+          "median": 2.380952,
+          "p95": 3.255814
+        },
+        "vitaminB2Mg": {
+          "sampleSize": 1,
+          "pooledSampleSize": 95,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.261111,
+          "median": 2.714286,
+          "p95": 3.846154
+        },
+        "vitaminCMg": {
+          "sampleSize": 2,
+          "pooledSampleSize": 96,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 35.833333,
+          "median": 153.571429,
+          "p95": 625.0
+        }
+      }
+    },
+    "chocolate": {
+      "trainingProductCount": 67,
+      "makerCount": 4,
+      "maximumMakerShare": 0.41791,
+      "nutrients": {
+        "saturatedFatG": {
+          "sampleSize": 28,
+          "pooledSampleSize": 113,
+          "scope": "genre_nutrient",
+          "genreObservationWeight": 0.482759,
+          "p05": 3.529412,
+          "median": 15.636364,
+          "p95": 21.126761
+        },
+        "fiberG": {
+          "sampleSize": 57,
+          "pooledSampleSize": 321,
+          "scope": "genre_nutrient",
+          "genreObservationWeight": 0.655172,
+          "p05": 0.930233,
+          "median": 3.125,
+          "p95": 16.0
+        },
+        "calciumMg": {
+          "sampleSize": 13,
+          "pooledSampleSize": 238,
+          "scope": "genre_nutrient",
+          "genreObservationWeight": 0.302326,
+          "p05": 45.0,
+          "median": 331.707317,
+          "p95": 1333.333333
+        },
+        "ironMg": {
+          "sampleSize": 6,
+          "pooledSampleSize": 76,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.897959,
+          "median": 6.0,
+          "p95": 60.0
+        },
+        "vitaminAMcg": {
+          "sampleSize": 3,
+          "pooledSampleSize": 34,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 45.833333,
+          "median": 500.0,
+          "p95": 1314.285714
+        },
+        "vitaminEMg": {
+          "sampleSize": 2,
+          "pooledSampleSize": 34,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.538889,
+          "median": 4.535714,
+          "p95": 11.818182
+        },
+        "vitaminB1Mg": {
+          "sampleSize": 11,
+          "pooledSampleSize": 95,
+          "scope": "genre_nutrient",
+          "genreObservationWeight": 0.268293,
+          "p05": 0.233333,
+          "median": 2.392857,
+          "p95": 3.583333
+        },
+        "vitaminB2Mg": {
+          "sampleSize": 11,
+          "pooledSampleSize": 95,
+          "scope": "genre_nutrient",
+          "genreObservationWeight": 0.268293,
+          "p05": 0.388889,
+          "median": 2.714286,
+          "p95": 3.837209
+        },
+        "vitaminCMg": {
+          "sampleSize": 7,
+          "pooledSampleSize": 96,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 35.833333,
+          "median": 153.571429,
+          "p95": 625.0
+        }
+      }
+    },
+    "dairy": {
+      "trainingProductCount": 93,
+      "makerCount": 6,
+      "maximumMakerShare": 0.860215,
+      "nutrients": {
+        "saturatedFatG": {
+          "sampleSize": 2,
+          "pooledSampleSize": 113,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 2.0,
+          "median": 14.583333,
+          "p95": 20.666667
+        },
+        "fiberG": {
+          "sampleSize": 9,
+          "pooledSampleSize": 321,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.555556,
+          "median": 2.765957,
+          "p95": 19.756098
+        },
+        "calciumMg": {
+          "sampleSize": 82,
+          "pooledSampleSize": 238,
+          "scope": "genre_nutrient",
+          "genreObservationWeight": 0.433157,
+          "p05": 46.0,
+          "median": 197.6,
+          "p95": 1057.142857
+        },
+        "ironMg": {
+          "sampleSize": 18,
+          "pooledSampleSize": 76,
+          "scope": "genre_nutrient",
+          "genreObservationWeight": 0.143646,
+          "p05": 0.897959,
+          "median": 6.0,
+          "p95": 56.0
+        },
+        "vitaminAMcg": {
+          "sampleSize": 15,
+          "pooledSampleSize": 34,
+          "scope": "genre_nutrient",
+          "genreObservationWeight": 0.122642,
+          "p05": 45.833333,
+          "median": 500.0,
+          "p95": 1314.285714
+        },
+        "vitaminEMg": {
+          "sampleSize": 15,
+          "pooledSampleSize": 34,
+          "scope": "genre_nutrient",
+          "genreObservationWeight": 0.122642,
+          "p05": 0.538889,
+          "median": 4.571429,
+          "p95": 11.818182
+        },
+        "vitaminB1Mg": {
+          "sampleSize": 17,
+          "pooledSampleSize": 95,
+          "scope": "genre_nutrient",
+          "genreObservationWeight": 0.136757,
+          "p05": 0.222222,
+          "median": 2.380952,
+          "p95": 3.0
+        },
+        "vitaminB2Mg": {
+          "sampleSize": 17,
+          "pooledSampleSize": 95,
+          "scope": "genre_nutrient",
+          "genreObservationWeight": 0.136757,
+          "p05": 0.277778,
+          "median": 2.714286,
+          "p95": 3.837209
+        },
+        "vitaminCMg": {
+          "sampleSize": 18,
+          "pooledSampleSize": 96,
+          "scope": "genre_nutrient",
+          "genreObservationWeight": 0.143646,
+          "p05": 35.833333,
+          "median": 153.571429,
+          "p95": 555.555556
+        }
+      }
+    },
+    "drink_jelly_pudding": {
+      "trainingProductCount": 38,
+      "makerCount": 3,
+      "maximumMakerShare": 0.526316,
+      "nutrients": {
+        "saturatedFatG": {
+          "sampleSize": 0,
+          "pooledSampleSize": 113,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 2.0,
+          "median": 14.583333,
+          "p95": 20.666667
+        },
+        "fiberG": {
+          "sampleSize": 21,
+          "pooledSampleSize": 321,
+          "scope": "genre_nutrient",
+          "genreObservationWeight": 0.398734,
+          "p05": 0.266667,
+          "median": 2.933333,
+          "p95": 35.0
+        },
+        "calciumMg": {
+          "sampleSize": 7,
+          "pooledSampleSize": 238,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 41.0,
+          "median": 163.0,
+          "p95": 1333.333333
+        },
+        "ironMg": {
+          "sampleSize": 6,
+          "pooledSampleSize": 76,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.897959,
+          "median": 6.0,
+          "p95": 60.0
+        },
+        "vitaminAMcg": {
+          "sampleSize": 6,
+          "pooledSampleSize": 34,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 45.833333,
+          "median": 500.0,
+          "p95": 1314.285714
+        },
+        "vitaminEMg": {
+          "sampleSize": 6,
+          "pooledSampleSize": 34,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.538889,
+          "median": 4.535714,
+          "p95": 11.818182
+        },
+        "vitaminB1Mg": {
+          "sampleSize": 12,
+          "pooledSampleSize": 95,
+          "scope": "genre_nutrient",
+          "genreObservationWeight": 0.274809,
+          "p05": 0.094444,
+          "median": 2.135135,
+          "p95": 3.0
+        },
+        "vitaminB2Mg": {
+          "sampleSize": 11,
+          "pooledSampleSize": 95,
+          "scope": "genre_nutrient",
+          "genreObservationWeight": 0.257813,
+          "p05": 0.088889,
+          "median": 2.714286,
+          "p95": 3.333333
+        },
+        "vitaminCMg": {
+          "sampleSize": 10,
+          "pooledSampleSize": 96,
+          "scope": "genre_nutrient",
+          "genreObservationWeight": 0.24,
+          "p05": 55.0,
+          "median": 153.571429,
+          "p95": 555.555556
+        }
+      }
+    },
+    "frozen_dessert": {
+      "trainingProductCount": 1,
+      "makerCount": 1,
+      "maximumMakerShare": 1.0,
+      "nutrients": {
+        "saturatedFatG": {
+          "sampleSize": 1,
+          "pooledSampleSize": 113,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 2.0,
+          "median": 14.583333,
+          "p95": 20.666667
+        },
+        "fiberG": {
+          "sampleSize": 1,
+          "pooledSampleSize": 321,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.555556,
+          "median": 2.765957,
+          "p95": 19.756098
+        },
+        "calciumMg": {
+          "sampleSize": 0,
+          "pooledSampleSize": 238,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 41.0,
+          "median": 163.0,
+          "p95": 1333.333333
+        },
+        "ironMg": {
+          "sampleSize": 0,
+          "pooledSampleSize": 76,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.897959,
+          "median": 6.0,
+          "p95": 60.0
+        },
+        "vitaminAMcg": {
+          "sampleSize": 0,
+          "pooledSampleSize": 34,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 45.833333,
+          "median": 500.0,
+          "p95": 1314.285714
+        },
+        "vitaminEMg": {
+          "sampleSize": 0,
+          "pooledSampleSize": 34,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.538889,
+          "median": 4.535714,
+          "p95": 11.818182
+        },
+        "vitaminB1Mg": {
+          "sampleSize": 0,
+          "pooledSampleSize": 95,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.222222,
+          "median": 2.380952,
+          "p95": 3.255814
+        },
+        "vitaminB2Mg": {
+          "sampleSize": 0,
+          "pooledSampleSize": 95,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.261111,
+          "median": 2.714286,
+          "p95": 3.846154
+        },
+        "vitaminCMg": {
+          "sampleSize": 0,
+          "pooledSampleSize": 96,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 35.833333,
+          "median": 153.571429,
+          "p95": 625.0
+        }
+      }
+    },
+    "noodle_flour_dish": {
+      "trainingProductCount": 1,
+      "makerCount": 1,
+      "maximumMakerShare": 1.0,
+      "nutrients": {
+        "saturatedFatG": {
+          "sampleSize": 0,
+          "pooledSampleSize": 113,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 2.0,
+          "median": 14.583333,
+          "p95": 20.666667
+        },
+        "fiberG": {
+          "sampleSize": 0,
+          "pooledSampleSize": 321,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.555556,
+          "median": 2.765957,
+          "p95": 19.756098
+        },
+        "calciumMg": {
+          "sampleSize": 1,
+          "pooledSampleSize": 238,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 41.0,
+          "median": 163.0,
+          "p95": 1333.333333
+        },
+        "ironMg": {
+          "sampleSize": 0,
+          "pooledSampleSize": 76,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.897959,
+          "median": 6.0,
+          "p95": 60.0
+        },
+        "vitaminAMcg": {
+          "sampleSize": 0,
+          "pooledSampleSize": 34,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 45.833333,
+          "median": 500.0,
+          "p95": 1314.285714
+        },
+        "vitaminEMg": {
+          "sampleSize": 0,
+          "pooledSampleSize": 34,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.538889,
+          "median": 4.535714,
+          "p95": 11.818182
+        },
+        "vitaminB1Mg": {
+          "sampleSize": 0,
+          "pooledSampleSize": 95,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.222222,
+          "median": 2.380952,
+          "p95": 3.255814
+        },
+        "vitaminB2Mg": {
+          "sampleSize": 0,
+          "pooledSampleSize": 95,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.261111,
+          "median": 2.714286,
+          "p95": 3.846154
+        },
+        "vitaminCMg": {
+          "sampleSize": 0,
+          "pooledSampleSize": 96,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 35.833333,
+          "median": 153.571429,
+          "p95": 625.0
+        }
+      }
+    },
+    "other_unknown": {
+      "trainingProductCount": 119,
+      "makerCount": 6,
+      "maximumMakerShare": 0.403361,
+      "nutrients": {
+        "saturatedFatG": {
+          "sampleSize": 6,
+          "pooledSampleSize": 113,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 2.0,
+          "median": 14.583333,
+          "p95": 20.666667
+        },
+        "fiberG": {
+          "sampleSize": 69,
+          "pooledSampleSize": 321,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.555556,
+          "median": 2.765957,
+          "p95": 19.756098
+        },
+        "calciumMg": {
+          "sampleSize": 45,
+          "pooledSampleSize": 238,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 41.0,
+          "median": 163.0,
+          "p95": 1333.333333
+        },
+        "ironMg": {
+          "sampleSize": 22,
+          "pooledSampleSize": 76,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.897959,
+          "median": 6.0,
+          "p95": 60.0
+        },
+        "vitaminAMcg": {
+          "sampleSize": 8,
+          "pooledSampleSize": 34,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 45.833333,
+          "median": 500.0,
+          "p95": 1314.285714
+        },
+        "vitaminEMg": {
+          "sampleSize": 10,
+          "pooledSampleSize": 34,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.538889,
+          "median": 4.535714,
+          "p95": 11.818182
+        },
+        "vitaminB1Mg": {
+          "sampleSize": 41,
+          "pooledSampleSize": 95,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.222222,
+          "median": 2.380952,
+          "p95": 3.255814
+        },
+        "vitaminB2Mg": {
+          "sampleSize": 41,
+          "pooledSampleSize": 95,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.261111,
+          "median": 2.714286,
+          "p95": 3.846154
+        },
+        "vitaminCMg": {
+          "sampleSize": 47,
+          "pooledSampleSize": 96,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 35.833333,
+          "median": 153.571429,
+          "p95": 625.0
+        }
+      }
+    },
+    "prepared_meal": {
+      "trainingProductCount": 25,
+      "makerCount": 4,
+      "maximumMakerShare": 0.44,
+      "nutrients": {
+        "saturatedFatG": {
+          "sampleSize": 0,
+          "pooledSampleSize": 113,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 2.0,
+          "median": 14.583333,
+          "p95": 20.666667
+        },
+        "fiberG": {
+          "sampleSize": 7,
+          "pooledSampleSize": 321,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.555556,
+          "median": 2.765957,
+          "p95": 19.756098
+        },
+        "calciumMg": {
+          "sampleSize": 13,
+          "pooledSampleSize": 238,
+          "scope": "genre_nutrient",
+          "genreObservationWeight": 0.302326,
+          "p05": 32.222222,
+          "median": 125.0,
+          "p95": 1057.142857
+        },
+        "ironMg": {
+          "sampleSize": 5,
+          "pooledSampleSize": 76,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.897959,
+          "median": 6.0,
+          "p95": 60.0
+        },
+        "vitaminAMcg": {
+          "sampleSize": 0,
+          "pooledSampleSize": 34,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 45.833333,
+          "median": 500.0,
+          "p95": 1314.285714
+        },
+        "vitaminEMg": {
+          "sampleSize": 0,
+          "pooledSampleSize": 34,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.538889,
+          "median": 4.535714,
+          "p95": 11.818182
+        },
+        "vitaminB1Mg": {
+          "sampleSize": 0,
+          "pooledSampleSize": 95,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.222222,
+          "median": 2.380952,
+          "p95": 3.255814
+        },
+        "vitaminB2Mg": {
+          "sampleSize": 0,
+          "pooledSampleSize": 95,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.261111,
+          "median": 2.714286,
+          "p95": 3.846154
+        },
+        "vitaminCMg": {
+          "sampleSize": 0,
+          "pooledSampleSize": 96,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 35.833333,
+          "median": 153.571429,
+          "p95": 625.0
+        }
+      }
+    },
+    "sauce_spread": {
+      "trainingProductCount": 92,
+      "makerCount": 3,
+      "maximumMakerShare": 0.576087,
+      "nutrients": {
+        "saturatedFatG": {
+          "sampleSize": 6,
+          "pooledSampleSize": 113,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 2.0,
+          "median": 14.583333,
+          "p95": 20.666667
+        },
+        "fiberG": {
+          "sampleSize": 77,
+          "pooledSampleSize": 321,
+          "scope": "genre_nutrient",
+          "genreObservationWeight": 0.685147,
+          "p05": 0.555556,
+          "median": 3.777778,
+          "p95": 15.47619
+        },
+        "calciumMg": {
+          "sampleSize": 53,
+          "pooledSampleSize": 238,
+          "scope": "genre_nutrient",
+          "genreObservationWeight": 0.599652,
+          "p05": 45.0,
+          "median": 132.777778,
+          "p95": 840.0
+        },
+        "ironMg": {
+          "sampleSize": 6,
+          "pooledSampleSize": 76,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.897959,
+          "median": 6.0,
+          "p95": 60.0
+        },
+        "vitaminAMcg": {
+          "sampleSize": 0,
+          "pooledSampleSize": 34,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 45.833333,
+          "median": 500.0,
+          "p95": 1314.285714
+        },
+        "vitaminEMg": {
+          "sampleSize": 0,
+          "pooledSampleSize": 34,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.538889,
+          "median": 4.535714,
+          "p95": 11.818182
+        },
+        "vitaminB1Mg": {
+          "sampleSize": 0,
+          "pooledSampleSize": 95,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.222222,
+          "median": 2.380952,
+          "p95": 3.255814
+        },
+        "vitaminB2Mg": {
+          "sampleSize": 0,
+          "pooledSampleSize": 95,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.261111,
+          "median": 2.714286,
+          "p95": 3.846154
+        },
+        "vitaminCMg": {
+          "sampleSize": 0,
+          "pooledSampleSize": 96,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 35.833333,
+          "median": 153.571429,
+          "p95": 625.0
+        }
+      }
+    },
+    "snack_rice_cracker": {
+      "trainingProductCount": 24,
+      "makerCount": 2,
+      "maximumMakerShare": 0.75,
+      "nutrients": {
+        "saturatedFatG": {
+          "sampleSize": 18,
+          "pooledSampleSize": 113,
+          "scope": "genre_nutrient",
+          "genreObservationWeight": 0.230769,
+          "p05": 1.764706,
+          "median": 13.26087,
+          "p95": 19.583333
+        },
+        "fiberG": {
+          "sampleSize": 18,
+          "pooledSampleSize": 321,
+          "scope": "genre_nutrient",
+          "genreObservationWeight": 0.230769,
+          "p05": 0.5,
+          "median": 2.7,
+          "p95": 16.0
+        },
+        "calciumMg": {
+          "sampleSize": 8,
+          "pooledSampleSize": 238,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 41.0,
+          "median": 163.0,
+          "p95": 1333.333333
+        },
+        "ironMg": {
+          "sampleSize": 2,
+          "pooledSampleSize": 76,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.897959,
+          "median": 6.0,
+          "p95": 60.0
+        },
+        "vitaminAMcg": {
+          "sampleSize": 0,
+          "pooledSampleSize": 34,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 45.833333,
+          "median": 500.0,
+          "p95": 1314.285714
+        },
+        "vitaminEMg": {
+          "sampleSize": 0,
+          "pooledSampleSize": 34,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.538889,
+          "median": 4.535714,
+          "p95": 11.818182
+        },
+        "vitaminB1Mg": {
+          "sampleSize": 0,
+          "pooledSampleSize": 95,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.222222,
+          "median": 2.380952,
+          "p95": 3.255814
+        },
+        "vitaminB2Mg": {
+          "sampleSize": 0,
+          "pooledSampleSize": 95,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.261111,
+          "median": 2.714286,
+          "p95": 3.846154
+        },
+        "vitaminCMg": {
+          "sampleSize": 0,
+          "pooledSampleSize": 96,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 35.833333,
+          "median": 153.571429,
+          "p95": 625.0
+        }
+      }
+    },
+    "sugar_confectionery": {
+      "trainingProductCount": 21,
+      "makerCount": 3,
+      "maximumMakerShare": 0.428571,
+      "nutrients": {
+        "saturatedFatG": {
+          "sampleSize": 1,
+          "pooledSampleSize": 113,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 2.0,
+          "median": 14.583333,
+          "p95": 20.666667
+        },
+        "fiberG": {
+          "sampleSize": 6,
+          "pooledSampleSize": 321,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.555556,
+          "median": 2.765957,
+          "p95": 19.756098
+        },
+        "calciumMg": {
+          "sampleSize": 7,
+          "pooledSampleSize": 238,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 41.0,
+          "median": 163.0,
+          "p95": 1333.333333
+        },
+        "ironMg": {
+          "sampleSize": 5,
+          "pooledSampleSize": 76,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.897959,
+          "median": 6.0,
+          "p95": 60.0
+        },
+        "vitaminAMcg": {
+          "sampleSize": 2,
+          "pooledSampleSize": 34,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 45.833333,
+          "median": 500.0,
+          "p95": 1314.285714
+        },
+        "vitaminEMg": {
+          "sampleSize": 0,
+          "pooledSampleSize": 34,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.538889,
+          "median": 4.535714,
+          "p95": 11.818182
+        },
+        "vitaminB1Mg": {
+          "sampleSize": 8,
+          "pooledSampleSize": 95,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.222222,
+          "median": 2.380952,
+          "p95": 3.255814
+        },
+        "vitaminB2Mg": {
+          "sampleSize": 8,
+          "pooledSampleSize": 95,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.261111,
+          "median": 2.714286,
+          "p95": 3.846154
+        },
+        "vitaminCMg": {
+          "sampleSize": 12,
+          "pooledSampleSize": 96,
+          "scope": "genre_nutrient",
+          "genreObservationWeight": 0.285714,
+          "p05": 33.333333,
+          "median": 153.571429,
+          "p95": 625.0
+        }
+      }
+    }
+  }
+}

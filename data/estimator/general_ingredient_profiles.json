@@ -1,0 +1,6687 @@
+{
+  "format": "nutrition-estimator-general-ingredient-profiles",
+  "formatVersion": 1,
+  "source": {
+    "name": "文部科学省 日本食品標準成分表",
+    "version": "日本食品標準成分表（八訂）増補2023年（2026年3月27日正誤表対応）",
+    "url": "https://www.mext.go.jp/a_menu/syokuhinseibun/mext_00001.html",
+    "sourceDataSha256": "af5d1e9c623c3a23bdf29f471df65d2e324988dce3f9c8cf62e9795f15c819ea",
+    "profileSourcesSha256": "61169481f06e8fb35032c2feda5f5d045df768436c40f9a1351796b7dfc664d7"
+  },
+  "profiles": [
+    {
+      "profileId": "distributed_biscuit_hard",
+      "canonicalName": "ハードビスケット",
+      "aliases": [
+        "ビスケット"
+      ],
+      "category": "菓子",
+      "nutrients": {
+        "energyKcal": 422.0,
+        "proteinG": 7.6,
+        "fatG": 10.0,
+        "carbohydrateG": 77.8,
+        "fiberG": 2.3,
+        "saltG": 0.8,
+        "calciumMg": 330.0,
+        "ironMg": 0.9,
+        "vitaminAMcg": 18.0,
+        "vitaminEMg": 0.9,
+        "vitaminB1Mg": 0.13,
+        "vitaminB2Mg": 0.22,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 3.98
+      },
+      "sourceFoodIds": [
+        "mext_15097"
+      ],
+      "priorProbability": 0.55,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "原材料として使われるビスケットの配合が不明なため、MEXTのハード・ソフトビスケットを候補分布として使用しています。"
+      ]
+    },
+    {
+      "profileId": "distributed_biscuit_soft",
+      "canonicalName": "ソフトビスケット",
+      "aliases": [
+        "ビスケット"
+      ],
+      "category": "菓子",
+      "nutrients": {
+        "energyKcal": 512.0,
+        "proteinG": 5.7,
+        "fatG": 27.6,
+        "carbohydrateG": 62.6,
+        "fiberG": 1.4,
+        "saltG": 0.6,
+        "calciumMg": 20.0,
+        "ironMg": 0.5,
+        "vitaminAMcg": 150.0,
+        "vitaminEMg": 2.2,
+        "vitaminB1Mg": 0.06,
+        "vitaminB2Mg": 0.05,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 12.42
+      },
+      "sourceFoodIds": [
+        "mext_15098"
+      ],
+      "priorProbability": 0.45,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "原材料として使われるビスケットの配合が不明なため、MEXTのハード・ソフトビスケットを候補分布として使用しています。"
+      ]
+    },
+    {
+      "profileId": "distributed_combined_dashi",
+      "canonicalName": "かつお・昆布だし",
+      "aliases": [
+        "かつお節合せだし",
+        "合わせだし",
+        "だし"
+      ],
+      "category": "調味料",
+      "nutrients": {
+        "energyKcal": 2.0,
+        "proteinG": 0.3,
+        "fatG": null,
+        "carbohydrateG": 0.3,
+        "fiberG": null,
+        "saltG": 0.1,
+        "calciumMg": 3.0,
+        "ironMg": null,
+        "vitaminAMcg": null,
+        "vitaminEMg": 0.0,
+        "vitaminB1Mg": 0.01,
+        "vitaminB2Mg": 0.01,
+        "vitaminCMg": null,
+        "saturatedFatG": null
+      },
+      "sourceFoodIds": [
+        "mext_17021"
+      ],
+      "priorProbability": 0.2,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "だしの原料と抽出条件が不明なため、MEXTの昆布・かつお・合わせだしを候補分布として使用しています。"
+      ]
+    },
+    {
+      "profileId": "distributed_cooking_liquor_brandy",
+      "canonicalName": "洋酒（ブランデー候補）",
+      "aliases": [
+        "洋酒"
+      ],
+      "category": "調味料",
+      "nutrients": {
+        "energyKcal": 234.0,
+        "proteinG": 0.0,
+        "fatG": 0.0,
+        "carbohydrateG": 0.0,
+        "fiberG": 0.0,
+        "saltG": 0.0,
+        "calciumMg": 0.0,
+        "ironMg": 0.0,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": null,
+        "vitaminB1Mg": 0.0,
+        "vitaminB2Mg": 0.0,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": null
+      },
+      "sourceFoodIds": [
+        "mext_16017"
+      ],
+      "priorProbability": 0.3,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "洋酒の種類が不明なため、MEXTの赤ワイン・ブランデー・ラムを候補分布として使用しています。"
+      ]
+    },
+    {
+      "profileId": "distributed_cooking_liquor_rum",
+      "canonicalName": "洋酒（ラム候補）",
+      "aliases": [
+        "洋酒"
+      ],
+      "category": "調味料",
+      "nutrients": {
+        "energyKcal": 237.0,
+        "proteinG": 0.0,
+        "fatG": null,
+        "carbohydrateG": 0.1,
+        "fiberG": 0.0,
+        "saltG": 0.0,
+        "calciumMg": 0.0,
+        "ironMg": 0.0,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": null,
+        "vitaminB1Mg": 0.0,
+        "vitaminB2Mg": 0.0,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": null
+      },
+      "sourceFoodIds": [
+        "mext_16020"
+      ],
+      "priorProbability": 0.2,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "洋酒の種類が不明なため、MEXTの赤ワイン・ブランデー・ラムを候補分布として使用しています。"
+      ]
+    },
+    {
+      "profileId": "distributed_cooking_liquor_wine",
+      "canonicalName": "洋酒（ワイン候補）",
+      "aliases": [
+        "洋酒"
+      ],
+      "category": "調味料",
+      "nutrients": {
+        "energyKcal": 68.0,
+        "proteinG": 0.2,
+        "fatG": null,
+        "carbohydrateG": 1.5,
+        "fiberG": null,
+        "saltG": 0.0,
+        "calciumMg": 7.0,
+        "ironMg": 0.4,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": null,
+        "vitaminB1Mg": 0.0,
+        "vitaminB2Mg": 0.01,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": null
+      },
+      "sourceFoodIds": [
+        "mext_16011"
+      ],
+      "priorProbability": 0.5,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "洋酒の種類が不明なため、MEXTの赤ワイン・ブランデー・ラムを候補分布として使用しています。"
+      ]
+    },
+    {
+      "profileId": "distributed_instant_addon_salt_q65",
+      "canonicalName": "即席麺スープ・かやく集合（塩・麺65%）",
+      "aliases": [
+        "スープ",
+        "かやく",
+        "かやく入りスープ"
+      ],
+      "category": "複合原材料",
+      "nutrients": {
+        "vitaminCMg": 5.714286,
+        "saturatedFatG": 7.801429,
+        "vitaminAMcg": 74.285714,
+        "energyKcal": 364.428571,
+        "fatG": 16.457143,
+        "vitaminB2Mg": 1.39,
+        "proteinG": 14.614286,
+        "vitaminEMg": 4.771429,
+        "fiberG": 6.357143,
+        "ironMg": 0.885714,
+        "calciumMg": 134.285714,
+        "carbohydrateG": 45.785714,
+        "vitaminB1Mg": 2.274286,
+        "saltG": 13.785714
+      },
+      "sourceFoodIds": [
+        "mext_01193",
+        "mext_01144"
+      ],
+      "priorProbability": 0.1,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "MEXTの添付調味料込み食品から添付調味料なし食品を差し引き、麺重量比65%のスープ・かやく集合として導出しています。",
+        "公式商品の内容量と麺量から確認した麺重量比の分布を離散候補化しており、スープとかやくを個別には分離していません。"
+      ],
+      "priorSignals": [
+        {
+          "terms": [
+            "塩",
+            "しお",
+            "シーフード",
+            "海鮮"
+          ],
+          "multiplier": 4
+        }
+      ],
+      "requiredGenreIds": [
+        "noodle_flour_dish"
+      ]
+    },
+    {
+      "profileId": "distributed_instant_addon_salt_q75",
+      "canonicalName": "即席麺スープ・かやく集合（塩・麺75%）",
+      "aliases": [
+        "スープ",
+        "かやく",
+        "かやく入りスープ"
+      ],
+      "category": "複合原材料",
+      "nutrients": {
+        "vitaminCMg": 8.0,
+        "saturatedFatG": 7.55,
+        "vitaminAMcg": 104.0,
+        "energyKcal": 329.0,
+        "fatG": 15.2,
+        "vitaminB2Mg": 1.87,
+        "proteinG": 16.9,
+        "vitaminEMg": 5.8,
+        "fiberG": 6.7,
+        "ironMg": 1.0,
+        "calciumMg": 100.0,
+        "carbohydrateG": 37.9,
+        "vitaminB1Mg": 3.12,
+        "saltG": 18.7
+      },
+      "sourceFoodIds": [
+        "mext_01193",
+        "mext_01144"
+      ],
+      "priorProbability": 0.25,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "MEXTの添付調味料込み食品から添付調味料なし食品を差し引き、麺重量比75%のスープ・かやく集合として導出しています。",
+        "公式商品の内容量と麺量から確認した麺重量比の分布を離散候補化しており、スープとかやくを個別には分離していません。"
+      ],
+      "priorSignals": [
+        {
+          "terms": [
+            "塩",
+            "しお",
+            "シーフード",
+            "海鮮"
+          ],
+          "multiplier": 4
+        }
+      ],
+      "requiredGenreIds": [
+        "noodle_flour_dish"
+      ]
+    },
+    {
+      "profileId": "distributed_instant_addon_salt_q80",
+      "canonicalName": "即席麺スープ・かやく集合（塩・麺80%）",
+      "aliases": [
+        "スープ",
+        "かやく",
+        "かやく入りスープ"
+      ],
+      "category": "複合原材料",
+      "nutrients": {
+        "vitaminCMg": 10.0,
+        "saturatedFatG": 7.33,
+        "vitaminAMcg": 130.0,
+        "energyKcal": 298.0,
+        "fatG": 14.1,
+        "vitaminB2Mg": 2.29,
+        "proteinG": 18.9,
+        "vitaminEMg": 6.7,
+        "fiberG": 7.0,
+        "ironMg": 1.1,
+        "calciumMg": 70.0,
+        "carbohydrateG": 31.0,
+        "vitaminB1Mg": 3.86,
+        "saltG": 23.0
+      },
+      "sourceFoodIds": [
+        "mext_01193",
+        "mext_01144"
+      ],
+      "priorProbability": 0.15,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "MEXTの添付調味料込み食品から添付調味料なし食品を差し引き、麺重量比80%のスープ・かやく集合として導出しています。",
+        "公式商品の内容量と麺量から確認した麺重量比の分布を離散候補化しており、スープとかやくを個別には分離していません。"
+      ],
+      "priorSignals": [
+        {
+          "terms": [
+            "塩",
+            "しお",
+            "シーフード",
+            "海鮮"
+          ],
+          "multiplier": 4
+        }
+      ],
+      "requiredGenreIds": [
+        "noodle_flour_dish"
+      ]
+    },
+    {
+      "profileId": "distributed_instant_addon_soy_q65",
+      "canonicalName": "即席麺スープ・かやく集合（しょうゆ・麺65%）",
+      "aliases": [
+        "スープ",
+        "かやく",
+        "かやく入りスープ"
+      ],
+      "category": "複合原材料",
+      "nutrients": {
+        "vitaminCMg": 5.714286,
+        "saturatedFatG": 7.972857,
+        "vitaminAMcg": 34.285714,
+        "energyKcal": 350.142857,
+        "fatG": 18.171429,
+        "vitaminB2Mg": 1.132857,
+        "proteinG": 12.042857,
+        "vitaminEMg": 3.628571,
+        "fiberG": 7.214286,
+        "ironMg": 1.171429,
+        "calciumMg": 162.857143,
+        "carbohydrateG": 34.357143,
+        "vitaminB1Mg": 1.445714,
+        "saltG": 15.214286
+      },
+      "sourceFoodIds": [
+        "mext_01191",
+        "mext_01144"
+      ],
+      "priorProbability": 0.1,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "MEXTの添付調味料込み食品から添付調味料なし食品を差し引き、麺重量比65%のスープ・かやく集合として導出しています。",
+        "公式商品の内容量と麺量から確認した麺重量比の分布を離散候補化しており、スープとかやくを個別には分離していません。"
+      ],
+      "priorSignals": [
+        {
+          "terms": [
+            "しょうゆ",
+            "醤油"
+          ],
+          "multiplier": 4
+        }
+      ],
+      "requiredGenreIds": [
+        "noodle_flour_dish"
+      ]
+    },
+    {
+      "profileId": "distributed_instant_addon_soy_q75",
+      "canonicalName": "即席麺スープ・かやく集合（しょうゆ・麺75%）",
+      "aliases": [
+        "スープ",
+        "かやく",
+        "かやく入りスープ"
+      ],
+      "category": "複合原材料",
+      "nutrients": {
+        "vitaminCMg": 8.0,
+        "saturatedFatG": 7.79,
+        "vitaminAMcg": 48.0,
+        "energyKcal": 309.0,
+        "fatG": 17.6,
+        "vitaminB2Mg": 1.51,
+        "proteinG": 13.3,
+        "vitaminEMg": 4.2,
+        "fiberG": 7.9,
+        "ironMg": 1.4,
+        "calciumMg": 140.0,
+        "carbohydrateG": 21.9,
+        "vitaminB1Mg": 1.96,
+        "saltG": 20.7
+      },
+      "sourceFoodIds": [
+        "mext_01191",
+        "mext_01144"
+      ],
+      "priorProbability": 0.25,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "MEXTの添付調味料込み食品から添付調味料なし食品を差し引き、麺重量比75%のスープ・かやく集合として導出しています。",
+        "公式商品の内容量と麺量から確認した麺重量比の分布を離散候補化しており、スープとかやくを個別には分離していません。"
+      ],
+      "priorSignals": [
+        {
+          "terms": [
+            "しょうゆ",
+            "醤油"
+          ],
+          "multiplier": 4
+        }
+      ],
+      "requiredGenreIds": [
+        "noodle_flour_dish"
+      ]
+    },
+    {
+      "profileId": "distributed_instant_addon_soy_q80",
+      "canonicalName": "即席麺スープ・かやく集合（しょうゆ・麺80%）",
+      "aliases": [
+        "スープ",
+        "かやく",
+        "かやく入りスープ"
+      ],
+      "category": "複合原材料",
+      "nutrients": {
+        "vitaminCMg": 10.0,
+        "saturatedFatG": 7.63,
+        "vitaminAMcg": 60.0,
+        "energyKcal": 273.0,
+        "fatG": 17.1,
+        "vitaminB2Mg": 1.84,
+        "proteinG": 14.4,
+        "vitaminEMg": 4.7,
+        "fiberG": 8.5,
+        "ironMg": 1.6,
+        "calciumMg": 120.0,
+        "carbohydrateG": 11.0,
+        "vitaminB1Mg": 2.41,
+        "saltG": 25.5
+      },
+      "sourceFoodIds": [
+        "mext_01191",
+        "mext_01144"
+      ],
+      "priorProbability": 0.15,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "MEXTの添付調味料込み食品から添付調味料なし食品を差し引き、麺重量比80%のスープ・かやく集合として導出しています。",
+        "公式商品の内容量と麺量から確認した麺重量比の分布を離散候補化しており、スープとかやくを個別には分離していません。"
+      ],
+      "priorSignals": [
+        {
+          "terms": [
+            "しょうゆ",
+            "醤油"
+          ],
+          "multiplier": 4
+        }
+      ],
+      "requiredGenreIds": [
+        "noodle_flour_dish"
+      ]
+    },
+    {
+      "profileId": "distributed_katsuo_dashi",
+      "canonicalName": "かつおだし",
+      "aliases": [
+        "かつお節だし",
+        "かつおだし",
+        "だし",
+        "かつおぶしエキス",
+        "かつお節エキス",
+        "かつおエキス"
+      ],
+      "category": "調味料",
+      "nutrients": {
+        "energyKcal": 2.0,
+        "proteinG": 0.4,
+        "fatG": null,
+        "carbohydrateG": 0.0,
+        "fiberG": 0.0,
+        "saltG": 0.1,
+        "calciumMg": 2.0,
+        "ironMg": null,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.0,
+        "vitaminB1Mg": null,
+        "vitaminB2Mg": 0.01,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": null
+      },
+      "sourceFoodIds": [
+        "mext_17019"
+      ],
+      "priorProbability": 0.2,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "だしの原料と抽出条件が不明なため、MEXTの昆布・かつお・合わせだしを候補分布として使用しています。エキス表記の濃縮度は補正していません。"
+      ]
+    },
+    {
+      "profileId": "distributed_kombu_dashi_cold",
+      "canonicalName": "昆布だし（水出し）",
+      "aliases": [
+        "こんぶだし",
+        "昆布だし",
+        "だし"
+      ],
+      "category": "調味料",
+      "nutrients": {
+        "energyKcal": 4.0,
+        "proteinG": 0.1,
+        "fatG": null,
+        "carbohydrateG": 0.9,
+        "fiberG": null,
+        "saltG": 0.2,
+        "calciumMg": 3.0,
+        "ironMg": null,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.0,
+        "vitaminB1Mg": null,
+        "vitaminB2Mg": null,
+        "vitaminCMg": null,
+        "saturatedFatG": null
+      },
+      "sourceFoodIds": [
+        "mext_17020"
+      ],
+      "priorProbability": 0.35,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "だしの原料と抽出条件が不明なため、MEXTの昆布・かつお・合わせだしを候補分布として使用しています。"
+      ]
+    },
+    {
+      "profileId": "distributed_kombu_dashi_hot",
+      "canonicalName": "昆布だし（煮出し）",
+      "aliases": [
+        "こんぶだし",
+        "昆布だし",
+        "だし"
+      ],
+      "category": "調味料",
+      "nutrients": {
+        "energyKcal": 5.0,
+        "proteinG": 0.1,
+        "fatG": 0.0,
+        "carbohydrateG": 1.3,
+        "fiberG": 0.1,
+        "saltG": 0.2,
+        "calciumMg": 5.0,
+        "ironMg": null,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.0,
+        "vitaminB1Mg": null,
+        "vitaminB2Mg": 0.01,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": null
+      },
+      "sourceFoodIds": [
+        "mext_17132"
+      ],
+      "priorProbability": 0.25,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "だしの原料と抽出条件が不明なため、MEXTの昆布・かつお・合わせだしを候補分布として使用しています。"
+      ]
+    },
+    {
+      "profileId": "distributed_lactic_drink_dairy",
+      "canonicalName": "乳酸菌飲料（乳製品）",
+      "aliases": [
+        "乳酸菌飲料"
+      ],
+      "category": "卵・乳",
+      "nutrients": {
+        "energyKcal": 64.0,
+        "proteinG": 1.1,
+        "fatG": 0.1,
+        "carbohydrateG": 16.4,
+        "fiberG": 0.0,
+        "saltG": 0.0,
+        "calciumMg": 43.0,
+        "ironMg": null,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": null,
+        "vitaminB1Mg": 0.01,
+        "vitaminB2Mg": 0.05,
+        "vitaminCMg": null,
+        "saturatedFatG": 0.03
+      },
+      "sourceFoodIds": [
+        "mext_13028"
+      ],
+      "priorProbability": 0.5,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "乳固形分と殺菌状態が不明なため、MEXTの乳製品・殺菌乳製品・非乳製品を候補分布として使用しています。"
+      ]
+    },
+    {
+      "profileId": "distributed_lactic_drink_non_dairy",
+      "canonicalName": "乳酸菌飲料（非乳製品）",
+      "aliases": [
+        "乳酸菌飲料"
+      ],
+      "category": "卵・乳",
+      "nutrients": {
+        "energyKcal": 39.0,
+        "proteinG": 0.4,
+        "fatG": 0.1,
+        "carbohydrateG": 10.0,
+        "fiberG": 0.2,
+        "saltG": 0.0,
+        "calciumMg": 16.0,
+        "ironMg": null,
+        "vitaminAMcg": 1.0,
+        "vitaminEMg": null,
+        "vitaminB1Mg": 0.01,
+        "vitaminB2Mg": 0.01,
+        "vitaminCMg": 5.0,
+        "saturatedFatG": 0.04
+      },
+      "sourceFoodIds": [
+        "mext_13030"
+      ],
+      "priorProbability": 0.2,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "乳固形分と殺菌状態が不明なため、MEXTの乳製品・殺菌乳製品・非乳製品を候補分布として使用しています。"
+      ]
+    },
+    {
+      "profileId": "distributed_lactic_drink_sterilized",
+      "canonicalName": "乳酸菌飲料（殺菌乳製品）",
+      "aliases": [
+        "乳酸菌飲料"
+      ],
+      "category": "卵・乳",
+      "nutrients": {
+        "energyKcal": 217.0,
+        "proteinG": 1.5,
+        "fatG": 0.1,
+        "carbohydrateG": 52.6,
+        "fiberG": 0.0,
+        "saltG": 0.0,
+        "calciumMg": 55.0,
+        "ironMg": 0.1,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": null,
+        "vitaminB1Mg": 0.02,
+        "vitaminB2Mg": 0.08,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 0.06
+      },
+      "sourceFoodIds": [
+        "mext_13029"
+      ],
+      "priorProbability": 0.3,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "乳固形分と殺菌状態が不明なため、MEXTの乳製品・殺菌乳製品・非乳製品を候補分布として使用しています。"
+      ]
+    },
+    {
+      "profileId": "distributed_seafood_extract_fish_sauce",
+      "canonicalName": "魚介エキス（魚醤候補）",
+      "aliases": [
+        "魚介エキス",
+        "魚介類エキス",
+        "シーフードエキス",
+        "魚介エキスパウダー",
+        "ほたてエキス",
+        "ほたて貝エキス",
+        "ほたてエキスパウダー",
+        "アサリエキス",
+        "かにエキス"
+      ],
+      "category": "調味料",
+      "nutrients": {
+        "energyKcal": 47.0,
+        "proteinG": 9.1,
+        "fatG": 0.1,
+        "carbohydrateG": 2.7,
+        "fiberG": 0.0,
+        "saltG": 22.9,
+        "calciumMg": 20.0,
+        "ironMg": 1.2,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.0,
+        "vitaminB1Mg": 0.01,
+        "vitaminB2Mg": 0.1,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": null
+      },
+      "sourceFoodIds": [
+        "mext_17107"
+      ],
+      "priorProbability": 0.55,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "魚介の種類と濃縮度が不明なため、MEXTの魚醤とオイスターソースを候補分布として使用しています。粉末表記の水分差は補正していません。"
+      ]
+    },
+    {
+      "profileId": "distributed_seafood_extract_oyster",
+      "canonicalName": "魚介エキス（オイスターソース候補）",
+      "aliases": [
+        "魚介エキス",
+        "魚介類エキス",
+        "シーフードエキス",
+        "魚介エキスパウダー",
+        "ほたてエキス",
+        "ほたて貝エキス",
+        "ほたてエキスパウダー",
+        "アサリエキス",
+        "かにエキス"
+      ],
+      "category": "調味料",
+      "nutrients": {
+        "energyKcal": 105.0,
+        "proteinG": 7.7,
+        "fatG": 0.3,
+        "carbohydrateG": 18.3,
+        "fiberG": 0.2,
+        "saltG": 11.4,
+        "calciumMg": 25.0,
+        "ironMg": 1.2,
+        "vitaminAMcg": null,
+        "vitaminEMg": 0.1,
+        "vitaminB1Mg": 0.01,
+        "vitaminB2Mg": 0.07,
+        "vitaminCMg": null,
+        "saturatedFatG": 0.03
+      },
+      "sourceFoodIds": [
+        "mext_17031"
+      ],
+      "priorProbability": 0.45,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "魚介の種類と濃縮度が不明なため、MEXTのオイスターソースと魚醤を候補分布として使用しています。粉末表記の水分差は補正していません。"
+      ]
+    },
+    {
+      "profileId": "general_mext_01006",
+      "canonicalName": "押麦（乾）",
+      "aliases": [
+        "大麦",
+        "押麦",
+        "もち麦"
+      ],
+      "category": "穀類・麺",
+      "nutrients": {
+        "energyKcal": 329.0,
+        "proteinG": 6.7,
+        "fatG": 1.5,
+        "carbohydrateG": 78.3,
+        "fiberG": 12.2,
+        "saltG": 0.0,
+        "calciumMg": 21.0,
+        "ironMg": 1.1,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.1,
+        "vitaminB1Mg": 0.11,
+        "vitaminB2Mg": 0.03,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 0.43
+      },
+      "sourceFoodIds": [
+        "mext_01006"
+      ],
+      "priorProbability": 1,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "大麦の品種・加工状態が不明な場合は、MEXTの押麦（乾）を代表参照として使用しています。"
+      ]
+    },
+    {
+      "profileId": "general_mext_01026",
+      "canonicalName": "食パン",
+      "aliases": [
+        "食パン",
+        "パン"
+      ],
+      "category": "穀類・麺",
+      "nutrients": {
+        "energyKcal": 248.0,
+        "proteinG": 8.9,
+        "fatG": 4.1,
+        "carbohydrateG": 46.4,
+        "fiberG": 4.2,
+        "saltG": 1.2,
+        "calciumMg": 22.0,
+        "ironMg": 0.5,
+        "vitaminAMcg": null,
+        "vitaminEMg": 0.4,
+        "vitaminB1Mg": 0.07,
+        "vitaminB2Mg": 0.05,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 1.5
+      },
+      "sourceFoodIds": [
+        "mext_01026"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_01038",
+      "canonicalName": "うどん（生）",
+      "aliases": [
+        "うどん",
+        "うどん麺",
+        "めん"
+      ],
+      "category": "穀類・麺",
+      "nutrients": {
+        "energyKcal": 249.0,
+        "proteinG": 6.1,
+        "fatG": 0.6,
+        "carbohydrateG": 56.8,
+        "fiberG": 3.6,
+        "saltG": 2.5,
+        "calciumMg": 18.0,
+        "ironMg": 0.3,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.2,
+        "vitaminB1Mg": 0.09,
+        "vitaminB2Mg": 0.03,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 0.14
+      },
+      "sourceFoodIds": [
+        "mext_01038"
+      ],
+      "priorProbability": 0.2,
+      "ambiguous": true,
+      "priorSignals": [
+        {
+          "terms": [
+            "うどん"
+          ],
+          "multiplier": 10
+        }
+      ]
+    },
+    {
+      "profileId": "general_mext_01047",
+      "canonicalName": "中華めん（生）",
+      "aliases": [
+        "中華麺",
+        "中華めん",
+        "ラーメン麺",
+        "めん"
+      ],
+      "category": "穀類・麺",
+      "nutrients": {
+        "energyKcal": 249.0,
+        "proteinG": 8.6,
+        "fatG": 1.2,
+        "carbohydrateG": 55.7,
+        "fiberG": 5.4,
+        "saltG": 1.0,
+        "calciumMg": 21.0,
+        "ironMg": 0.5,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.2,
+        "vitaminB1Mg": 0.02,
+        "vitaminB2Mg": 0.02,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 0.28
+      },
+      "sourceFoodIds": [
+        "mext_01047"
+      ],
+      "priorProbability": 0.45,
+      "ambiguous": true,
+      "priorSignals": [
+        {
+          "terms": [
+            "ラーメン",
+            "中華麺",
+            "中華めん"
+          ],
+          "multiplier": 8
+        }
+      ]
+    },
+    {
+      "profileId": "general_mext_01063",
+      "canonicalName": "マカロニ・スパゲッティ（乾）",
+      "aliases": [
+        "パスタ",
+        "パスタ麺",
+        "めん"
+      ],
+      "category": "穀類・麺",
+      "nutrients": {
+        "energyKcal": 347.0,
+        "proteinG": 12.9,
+        "fatG": 1.8,
+        "carbohydrateG": 73.1,
+        "fiberG": 5.4,
+        "saltG": 0.0,
+        "calciumMg": 18.0,
+        "ironMg": 1.4,
+        "vitaminAMcg": 1.0,
+        "vitaminEMg": 0.3,
+        "vitaminB1Mg": 0.19,
+        "vitaminB2Mg": 0.06,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 0.39
+      },
+      "sourceFoodIds": [
+        "mext_01063"
+      ],
+      "priorProbability": 0.2,
+      "ambiguous": true,
+      "priorSignals": [
+        {
+          "terms": [
+            "パスタ",
+            "スパゲッティ"
+          ],
+          "multiplier": 10
+        }
+      ]
+    },
+    {
+      "profileId": "general_mext_01070",
+      "canonicalName": "小麦胚芽",
+      "aliases": [
+        "小麦胚芽",
+        "脱脂小麦胚芽"
+      ],
+      "category": "穀類・麺",
+      "nutrients": {
+        "energyKcal": 391.0,
+        "proteinG": 32.0,
+        "fatG": 11.6,
+        "carbohydrateG": 48.3,
+        "fiberG": 14.3,
+        "saltG": 0.0,
+        "calciumMg": 42.0,
+        "ironMg": 9.4,
+        "vitaminAMcg": 5.0,
+        "vitaminEMg": 28.0,
+        "vitaminB1Mg": 1.82,
+        "vitaminB2Mg": 0.71,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 1.84
+      },
+      "sourceFoodIds": [
+        "mext_01070"
+      ],
+      "priorProbability": 1,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "脱脂処理後の成分差が公表されていない表記では、MEXTの小麦胚芽を代表参照として使用しています。"
+      ]
+    },
+    {
+      "profileId": "general_mext_01076",
+      "canonicalName": "ピザ生地",
+      "aliases": [
+        "ピザクラスト",
+        "ピザ生地"
+      ],
+      "category": "穀類・麺",
+      "nutrients": {
+        "energyKcal": 265.0,
+        "proteinG": 9.1,
+        "fatG": 3.0,
+        "carbohydrateG": 51.1,
+        "fiberG": 2.3,
+        "saltG": 1.3,
+        "calciumMg": 13.0,
+        "ironMg": 0.8,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.3,
+        "vitaminB1Mg": 0.15,
+        "vitaminB2Mg": 0.11,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 0.49
+      },
+      "sourceFoodIds": [
+        "mext_01076"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_01080",
+      "canonicalName": "玄米（穀粒）",
+      "aliases": [
+        "玄米"
+      ],
+      "category": "穀類・麺",
+      "nutrients": {
+        "energyKcal": 346.0,
+        "proteinG": 6.8,
+        "fatG": 2.7,
+        "carbohydrateG": 74.3,
+        "fiberG": 3.0,
+        "saltG": 0.0,
+        "calciumMg": 9.0,
+        "ironMg": 2.1,
+        "vitaminAMcg": null,
+        "vitaminEMg": 1.2,
+        "vitaminB1Mg": 0.41,
+        "vitaminB2Mg": 0.04,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 0.62
+      },
+      "sourceFoodIds": [
+        "mext_01080"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_01116",
+      "canonicalName": "米こうじ",
+      "aliases": [
+        "米麹",
+        "米こうじ"
+      ],
+      "category": "調味料",
+      "nutrients": {
+        "energyKcal": 260.0,
+        "proteinG": 5.8,
+        "fatG": 1.7,
+        "carbohydrateG": 59.2,
+        "fiberG": 1.4,
+        "saltG": 0.0,
+        "calciumMg": 5.0,
+        "ironMg": 0.3,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.2,
+        "vitaminB1Mg": 0.11,
+        "vitaminB2Mg": 0.13,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 0.49
+      },
+      "sourceFoodIds": [
+        "mext_01116"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_01120",
+      "canonicalName": "白玉粉",
+      "aliases": [
+        "もち米粉",
+        "寒梅粉"
+      ],
+      "category": "穀類・麺",
+      "nutrients": {
+        "energyKcal": 347.0,
+        "proteinG": 6.3,
+        "fatG": 1.0,
+        "carbohydrateG": 80.0,
+        "fiberG": 0.5,
+        "saltG": 0.0,
+        "calciumMg": 5.0,
+        "ironMg": 1.1,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.0,
+        "vitaminB1Mg": 0.03,
+        "vitaminB2Mg": 0.01,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 0.25
+      },
+      "sourceFoodIds": [
+        "mext_01120"
+      ],
+      "priorProbability": 1,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "もち米粉・寒梅粉の加熱や加工状態が不明なため、MEXTの白玉粉を代表参照として使用しています。"
+      ]
+    },
+    {
+      "profileId": "general_mext_01127",
+      "canonicalName": "そば（生）",
+      "aliases": [
+        "そば",
+        "蕎麦",
+        "そば麺",
+        "めん"
+      ],
+      "category": "穀類・麺",
+      "nutrients": {
+        "energyKcal": 271.0,
+        "proteinG": 9.8,
+        "fatG": 1.9,
+        "carbohydrateG": 54.5,
+        "fiberG": 6.0,
+        "saltG": 0.0,
+        "calciumMg": 18.0,
+        "ironMg": 1.4,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.2,
+        "vitaminB1Mg": 0.19,
+        "vitaminB2Mg": 0.09,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 0.4
+      },
+      "sourceFoodIds": [
+        "mext_01127"
+      ],
+      "priorProbability": 0.15,
+      "ambiguous": true,
+      "priorSignals": [
+        {
+          "terms": [
+            "そば",
+            "蕎麦"
+          ],
+          "multiplier": 10
+        }
+      ]
+    },
+    {
+      "profileId": "general_mext_01134",
+      "canonicalName": "コーンフラワー（黄色種）",
+      "aliases": [
+        "コーンフラワー",
+        "とうもろこし粉"
+      ],
+      "category": "穀類・麺",
+      "nutrients": {
+        "energyKcal": 347.0,
+        "proteinG": 6.6,
+        "fatG": 2.8,
+        "carbohydrateG": 76.1,
+        "fiberG": 1.7,
+        "saltG": 0.0,
+        "calciumMg": 3.0,
+        "ironMg": 0.6,
+        "vitaminAMcg": 11.0,
+        "vitaminEMg": 0.2,
+        "vitaminB1Mg": 0.14,
+        "vitaminB2Mg": 0.06,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 0.56
+      },
+      "sourceFoodIds": [
+        "mext_01134"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_01137",
+      "canonicalName": "コーンフレーク",
+      "aliases": [
+        "コーンフレーク"
+      ],
+      "category": "穀類・麺",
+      "nutrients": {
+        "energyKcal": 380.0,
+        "proteinG": 7.8,
+        "fatG": 1.7,
+        "carbohydrateG": 83.6,
+        "fiberG": 2.4,
+        "saltG": 2.1,
+        "calciumMg": 1.0,
+        "ironMg": 0.9,
+        "vitaminAMcg": 10.0,
+        "vitaminEMg": 0.3,
+        "vitaminB1Mg": 0.03,
+        "vitaminB2Mg": 0.02,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 0.42
+      },
+      "sourceFoodIds": [
+        "mext_01137"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_01143",
+      "canonicalName": "ライ麦粉",
+      "aliases": [
+        "ライ麦粉",
+        "ライ麦",
+        "ライむぎ粉"
+      ],
+      "category": "穀類・麺",
+      "nutrients": {
+        "energyKcal": 324.0,
+        "proteinG": 8.5,
+        "fatG": 1.6,
+        "carbohydrateG": 75.8,
+        "fiberG": 12.9,
+        "saltG": 0.0,
+        "calciumMg": 25.0,
+        "ironMg": 1.5,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.7,
+        "vitaminB1Mg": 0.15,
+        "vitaminB2Mg": 0.07,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 0.24
+      },
+      "sourceFoodIds": [
+        "mext_01143"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_01144",
+      "canonicalName": "油揚げ即席中華めん（乾・添付調味料なし）",
+      "aliases": [
+        "油揚げめん"
+      ],
+      "category": "穀類・麺",
+      "nutrients": {
+        "energyKcal": 453.0,
+        "proteinG": 8.9,
+        "fatG": 19.6,
+        "carbohydrateG": 65.5,
+        "fiberG": 5.5,
+        "saltG": 1.5,
+        "calciumMg": 220.0,
+        "ironMg": 0.6,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 2.2,
+        "vitaminB1Mg": 0.16,
+        "vitaminB2Mg": 0.19,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 8.43
+      },
+      "sourceFoodIds": [
+        "mext_01144"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_01146",
+      "canonicalName": "お好み焼き用プレミックス粉",
+      "aliases": [
+        "お好み焼",
+        "お好み焼き",
+        "お好み焼きミックス"
+      ],
+      "category": "穀類・麺",
+      "nutrients": {
+        "energyKcal": 335.0,
+        "proteinG": 10.1,
+        "fatG": 1.9,
+        "carbohydrateG": 73.6,
+        "fiberG": 2.8,
+        "saltG": 3.7,
+        "calciumMg": 64.0,
+        "ironMg": 1.0,
+        "vitaminAMcg": 1.0,
+        "vitaminEMg": 0.6,
+        "vitaminB1Mg": 0.21,
+        "vitaminB2Mg": 0.03,
+        "vitaminCMg": null,
+        "saturatedFatG": 0.42
+      },
+      "sourceFoodIds": [
+        "mext_01146"
+      ],
+      "priorProbability": 1,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "完成品か生地か不明な原材料表記では、MEXTのお好み焼き用プレミックス粉を代表参照として使用しています。"
+      ]
+    },
+    {
+      "profileId": "general_mext_01151",
+      "canonicalName": "もち米（穀粒）",
+      "aliases": [
+        "もち米"
+      ],
+      "category": "穀類・麺",
+      "nutrients": {
+        "energyKcal": 343.0,
+        "proteinG": 6.4,
+        "fatG": 1.2,
+        "carbohydrateG": 77.2,
+        "fiberG": 0.5,
+        "saltG": 0.0,
+        "calciumMg": 5.0,
+        "ironMg": 0.2,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.2,
+        "vitaminB1Mg": 0.12,
+        "vitaminB2Mg": 0.02,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 0.29
+      },
+      "sourceFoodIds": [
+        "mext_01151"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_01158",
+      "canonicalName": "米粉",
+      "aliases": [
+        "米粉",
+        "うるち米粉"
+      ],
+      "category": "穀類・麺",
+      "nutrients": {
+        "energyKcal": 356.0,
+        "proteinG": 6.0,
+        "fatG": 0.7,
+        "carbohydrateG": 81.9,
+        "fiberG": 0.6,
+        "saltG": 0.0,
+        "calciumMg": 6.0,
+        "ironMg": 0.1,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.0,
+        "vitaminB1Mg": 0.03,
+        "vitaminB2Mg": 0.01,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 0.25
+      },
+      "sourceFoodIds": [
+        "mext_01158"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_02002",
+      "canonicalName": "こんにゃく精粉",
+      "aliases": [
+        "こんにゃく粉",
+        "こんにゃく精粉"
+      ],
+      "category": "いも・でん粉",
+      "nutrients": {
+        "energyKcal": 194.0,
+        "proteinG": 3.0,
+        "fatG": 0.1,
+        "carbohydrateG": 85.3,
+        "fiberG": 79.9,
+        "saltG": 0.0,
+        "calciumMg": 57.0,
+        "ironMg": 2.1,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.2,
+        "vitaminB1Mg": 0.0,
+        "vitaminB2Mg": 0.0,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": null
+      },
+      "sourceFoodIds": [
+        "mext_02002"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_02003",
+      "canonicalName": "板こんにゃく",
+      "aliases": [
+        "こんにゃく",
+        "板こんにゃく"
+      ],
+      "category": "いも・でん粉",
+      "nutrients": {
+        "energyKcal": 5.0,
+        "proteinG": 0.1,
+        "fatG": null,
+        "carbohydrateG": 2.3,
+        "fiberG": 2.2,
+        "saltG": 0.0,
+        "calciumMg": 43.0,
+        "ironMg": 0.4,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.0,
+        "vitaminB1Mg": 0.0,
+        "vitaminB2Mg": 0.0,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": null
+      },
+      "sourceFoodIds": [
+        "mext_02003"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_02006",
+      "canonicalName": "さつまいも（皮なし・生）",
+      "aliases": [
+        "さつまいも",
+        "さつま芋"
+      ],
+      "category": "いも・でん粉",
+      "nutrients": {
+        "energyKcal": 126.0,
+        "proteinG": 1.2,
+        "fatG": 0.2,
+        "carbohydrateG": 31.9,
+        "fiberG": 2.2,
+        "saltG": 0.0,
+        "calciumMg": 36.0,
+        "ironMg": 0.6,
+        "vitaminAMcg": 2.0,
+        "vitaminEMg": 1.5,
+        "vitaminB1Mg": 0.11,
+        "vitaminB2Mg": 0.04,
+        "vitaminCMg": 29.0,
+        "saturatedFatG": 0.03
+      },
+      "sourceFoodIds": [
+        "mext_02006"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_02010",
+      "canonicalName": "さといも（生）",
+      "aliases": [
+        "さといも",
+        "里芋"
+      ],
+      "category": "いも・でん粉",
+      "nutrients": {
+        "energyKcal": 53.0,
+        "proteinG": 1.5,
+        "fatG": 0.1,
+        "carbohydrateG": 13.1,
+        "fiberG": 2.3,
+        "saltG": 0.0,
+        "calciumMg": 10.0,
+        "ironMg": 0.5,
+        "vitaminAMcg": null,
+        "vitaminEMg": 0.6,
+        "vitaminB1Mg": 0.07,
+        "vitaminB2Mg": 0.02,
+        "vitaminCMg": 6.0,
+        "saturatedFatG": 0.01
+      },
+      "sourceFoodIds": [
+        "mext_02010"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_02017",
+      "canonicalName": "じゃがいも（皮なし・生）",
+      "aliases": [
+        "じゃがいも",
+        "ばれいしょ",
+        "馬鈴薯",
+        "ゆでじゃがいも"
+      ],
+      "category": "いも・でん粉",
+      "nutrients": {
+        "energyKcal": 59.0,
+        "proteinG": 1.8,
+        "fatG": 0.1,
+        "carbohydrateG": 17.3,
+        "fiberG": 8.9,
+        "saltG": 0.0,
+        "calciumMg": 4.0,
+        "ironMg": 0.4,
+        "vitaminAMcg": null,
+        "vitaminEMg": null,
+        "vitaminB1Mg": 0.09,
+        "vitaminB2Mg": 0.03,
+        "vitaminCMg": 28.0,
+        "saturatedFatG": 0.02
+      },
+      "sourceFoodIds": [
+        "mext_02017"
+      ],
+      "priorProbability": 1,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "じゃがいもの加熱・水分状態が不明な場合は、MEXTの皮なし生を代表参照として使用しています。"
+      ]
+    },
+    {
+      "profileId": "general_mext_02030",
+      "canonicalName": "米でん粉",
+      "aliases": [
+        "米でん粉",
+        "米澱粉"
+      ],
+      "category": "いも・でん粉",
+      "nutrients": {
+        "energyKcal": 375.0,
+        "proteinG": 0.2,
+        "fatG": 0.7,
+        "carbohydrateG": 89.3,
+        "fiberG": 0.0,
+        "saltG": 0.0,
+        "calciumMg": 29.0,
+        "ironMg": 1.5,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": null,
+        "vitaminB1Mg": 0.0,
+        "vitaminB2Mg": 0.0,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": null
+      },
+      "sourceFoodIds": [
+        "mext_02030"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_02039",
+      "canonicalName": "緑豆はるさめ（乾）",
+      "aliases": [
+        "はるさめ",
+        "春雨",
+        "緑豆はるさめ"
+      ],
+      "category": "いも・でん粉",
+      "nutrients": {
+        "energyKcal": 344.0,
+        "proteinG": 0.2,
+        "fatG": 0.4,
+        "carbohydrateG": 87.5,
+        "fiberG": 4.1,
+        "saltG": 0.0,
+        "calciumMg": 20.0,
+        "ironMg": 0.5,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.0,
+        "vitaminB1Mg": 0.0,
+        "vitaminB2Mg": 0.0,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": null
+      },
+      "sourceFoodIds": [
+        "mext_02039"
+      ],
+      "priorProbability": 1,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "はるさめの原料と調理状態が不明な場合は、MEXTの緑豆はるさめ（乾）を代表参照として使用しています。"
+      ]
+    },
+    {
+      "profileId": "general_mext_02067",
+      "canonicalName": "フライドポテト",
+      "aliases": [
+        "フライドポテト"
+      ],
+      "category": "いも・でん粉",
+      "nutrients": {
+        "energyKcal": 159.0,
+        "proteinG": 2.7,
+        "fatG": 5.9,
+        "carbohydrateG": 26.2,
+        "fiberG": 3.9,
+        "saltG": 0.0,
+        "calciumMg": 5.0,
+        "ironMg": 0.5,
+        "vitaminAMcg": 1.0,
+        "vitaminEMg": 1.2,
+        "vitaminB1Mg": 0.1,
+        "vitaminB2Mg": 0.02,
+        "vitaminCMg": 16.0,
+        "saturatedFatG": 0.41
+      },
+      "sourceFoodIds": [
+        "mext_02067"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_03011",
+      "canonicalName": "粉糖",
+      "aliases": [
+        "粉糖"
+      ],
+      "category": "糖類",
+      "nutrients": {
+        "energyKcal": 393.0,
+        "proteinG": 0.0,
+        "fatG": 0.0,
+        "carbohydrateG": 99.7,
+        "fiberG": 0.0,
+        "saltG": 0.0,
+        "calciumMg": null,
+        "ironMg": 0.2,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.0,
+        "vitaminB1Mg": 0.0,
+        "vitaminB2Mg": 0.0,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": null
+      },
+      "sourceFoodIds": [
+        "mext_03011"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_03023",
+      "canonicalName": "メープルシロップ",
+      "aliases": [
+        "メープルシロップ"
+      ],
+      "category": "糖類",
+      "nutrients": {
+        "energyKcal": 266.0,
+        "proteinG": 0.1,
+        "fatG": 0.0,
+        "carbohydrateG": 66.3,
+        "fiberG": 0.0,
+        "saltG": 0.0,
+        "calciumMg": 75.0,
+        "ironMg": 0.4,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.0,
+        "vitaminB1Mg": null,
+        "vitaminB2Mg": 0.02,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": null
+      },
+      "sourceFoodIds": [
+        "mext_03023"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_04001",
+      "canonicalName": "あずき（乾）",
+      "aliases": [
+        "あずき",
+        "小豆"
+      ],
+      "category": "豆・大豆製品",
+      "nutrients": {
+        "energyKcal": 304.0,
+        "proteinG": 20.8,
+        "fatG": 2.0,
+        "carbohydrateG": 59.6,
+        "fiberG": 24.8,
+        "saltG": 0.0,
+        "calciumMg": 70.0,
+        "ironMg": 5.5,
+        "vitaminAMcg": 1.0,
+        "vitaminEMg": 0.1,
+        "vitaminB1Mg": 0.46,
+        "vitaminB2Mg": 0.16,
+        "vitaminCMg": 2.0,
+        "saturatedFatG": 0.24
+      },
+      "sourceFoodIds": [
+        "mext_04001"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_04006",
+      "canonicalName": "つぶし練りあん",
+      "aliases": [
+        "つぶあん",
+        "粒あん",
+        "つぶしあん"
+      ],
+      "category": "豆・大豆製品",
+      "nutrients": {
+        "energyKcal": 239.0,
+        "proteinG": 5.6,
+        "fatG": 0.6,
+        "carbohydrateG": 54.0,
+        "fiberG": 5.7,
+        "saltG": 0.1,
+        "calciumMg": 19.0,
+        "ironMg": 1.5,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.1,
+        "vitaminB1Mg": 0.02,
+        "vitaminB2Mg": 0.03,
+        "vitaminCMg": null,
+        "saturatedFatG": 0.09
+      },
+      "sourceFoodIds": [
+        "mext_04006"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_04007",
+      "canonicalName": "いんげんまめ（乾）",
+      "aliases": [
+        "いんげんまめ",
+        "白いんげん豆",
+        "レッドキドニー",
+        "赤いんげん豆"
+      ],
+      "category": "豆・大豆製品",
+      "nutrients": {
+        "energyKcal": 280.0,
+        "proteinG": 22.1,
+        "fatG": 2.5,
+        "carbohydrateG": 56.4,
+        "fiberG": 19.6,
+        "saltG": 0.0,
+        "calciumMg": 140.0,
+        "ironMg": 5.9,
+        "vitaminAMcg": null,
+        "vitaminEMg": 0.1,
+        "vitaminB1Mg": 0.64,
+        "vitaminB2Mg": 0.16,
+        "vitaminCMg": null,
+        "saturatedFatG": 0.28
+      },
+      "sourceFoodIds": [
+        "mext_04007"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_04019",
+      "canonicalName": "そらまめ（乾）",
+      "aliases": [
+        "そらまめ",
+        "そら豆"
+      ],
+      "category": "豆・大豆製品",
+      "nutrients": {
+        "energyKcal": 323.0,
+        "proteinG": 26.0,
+        "fatG": 2.0,
+        "carbohydrateG": 55.9,
+        "fiberG": 9.3,
+        "saltG": 0.0,
+        "calciumMg": 100.0,
+        "ironMg": 5.7,
+        "vitaminAMcg": null,
+        "vitaminEMg": 0.7,
+        "vitaminB1Mg": 0.5,
+        "vitaminB2Mg": 0.2,
+        "vitaminCMg": null,
+        "saturatedFatG": 0.24
+      },
+      "sourceFoodIds": [
+        "mext_04019"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_04023",
+      "canonicalName": "黄大豆（国産・乾）",
+      "aliases": [
+        "大豆",
+        "黄大豆"
+      ],
+      "category": "豆・大豆製品",
+      "nutrients": {
+        "energyKcal": 372.0,
+        "proteinG": 33.8,
+        "fatG": 19.7,
+        "carbohydrateG": 29.5,
+        "fiberG": 21.5,
+        "saltG": 0.0,
+        "calciumMg": 180.0,
+        "ironMg": 6.8,
+        "vitaminAMcg": 1.0,
+        "vitaminEMg": 2.3,
+        "vitaminB1Mg": 0.71,
+        "vitaminB2Mg": 0.26,
+        "vitaminCMg": 3.0,
+        "saturatedFatG": 2.59
+      },
+      "sourceFoodIds": [
+        "mext_04023"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_04032",
+      "canonicalName": "木綿豆腐",
+      "aliases": [
+        "豆腐",
+        "木綿豆腐"
+      ],
+      "category": "豆・大豆製品",
+      "nutrients": {
+        "energyKcal": 73.0,
+        "proteinG": 7.0,
+        "fatG": 4.9,
+        "carbohydrateG": 1.5,
+        "fiberG": 1.1,
+        "saltG": 0.0,
+        "calciumMg": 93.0,
+        "ironMg": 1.5,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.2,
+        "vitaminB1Mg": 0.09,
+        "vitaminB2Mg": 0.04,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 0.79
+      },
+      "sourceFoodIds": [
+        "mext_04032"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_04039",
+      "canonicalName": "生揚げ",
+      "aliases": [
+        "厚揚げ",
+        "生揚げ"
+      ],
+      "category": "豆・大豆製品",
+      "nutrients": {
+        "energyKcal": 143.0,
+        "proteinG": 10.7,
+        "fatG": 11.3,
+        "carbohydrateG": 0.9,
+        "fiberG": 0.8,
+        "saltG": 0.0,
+        "calciumMg": 240.0,
+        "ironMg": 2.6,
+        "vitaminAMcg": null,
+        "vitaminEMg": 0.8,
+        "vitaminB1Mg": 0.07,
+        "vitaminB2Mg": 0.03,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 1.61
+      },
+      "sourceFoodIds": [
+        "mext_04039"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_04040",
+      "canonicalName": "油揚げ（生）",
+      "aliases": [
+        "油揚げ",
+        "あぶらあげ"
+      ],
+      "category": "豆・大豆製品",
+      "nutrients": {
+        "energyKcal": 377.0,
+        "proteinG": 23.4,
+        "fatG": 34.4,
+        "carbohydrateG": 0.4,
+        "fiberG": 1.3,
+        "saltG": 0.0,
+        "calciumMg": 310.0,
+        "ironMg": 3.2,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 1.3,
+        "vitaminB1Mg": 0.06,
+        "vitaminB2Mg": 0.04,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 3.89
+      },
+      "sourceFoodIds": [
+        "mext_04040"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_04046",
+      "canonicalName": "糸引き納豆",
+      "aliases": [
+        "納豆",
+        "糸引き納豆"
+      ],
+      "category": "豆・大豆製品",
+      "nutrients": {
+        "energyKcal": 184.0,
+        "proteinG": 16.5,
+        "fatG": 10.0,
+        "carbohydrateG": 12.1,
+        "fiberG": 9.5,
+        "saltG": 0.0,
+        "calciumMg": 90.0,
+        "ironMg": 3.3,
+        "vitaminAMcg": null,
+        "vitaminEMg": 0.5,
+        "vitaminB1Mg": 0.07,
+        "vitaminB2Mg": 0.56,
+        "vitaminCMg": null,
+        "saturatedFatG": 1.45
+      },
+      "sourceFoodIds": [
+        "mext_04046"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_04051",
+      "canonicalName": "おから（生）",
+      "aliases": [
+        "おから"
+      ],
+      "category": "豆・大豆製品",
+      "nutrients": {
+        "energyKcal": 88.0,
+        "proteinG": 6.1,
+        "fatG": 3.6,
+        "carbohydrateG": 13.8,
+        "fiberG": 11.5,
+        "saltG": 0.0,
+        "calciumMg": 81.0,
+        "ironMg": 1.3,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.4,
+        "vitaminB1Mg": 0.11,
+        "vitaminB2Mg": 0.03,
+        "vitaminCMg": null,
+        "saturatedFatG": 0.51
+      },
+      "sourceFoodIds": [
+        "mext_04051"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_04065",
+      "canonicalName": "ひよこまめ（乾）",
+      "aliases": [
+        "ひよこまめ",
+        "ひよこ豆",
+        "ガルバンゾー"
+      ],
+      "category": "豆・大豆製品",
+      "nutrients": {
+        "energyKcal": 336.0,
+        "proteinG": 20.0,
+        "fatG": 5.2,
+        "carbohydrateG": 61.5,
+        "fiberG": 16.3,
+        "saltG": 0.0,
+        "calciumMg": 100.0,
+        "ironMg": 2.6,
+        "vitaminAMcg": 2.0,
+        "vitaminEMg": 2.5,
+        "vitaminB1Mg": 0.37,
+        "vitaminB2Mg": 0.15,
+        "vitaminCMg": null,
+        "saturatedFatG": 0.56
+      },
+      "sourceFoodIds": [
+        "mext_04065"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_04073",
+      "canonicalName": "レンズまめ（乾）",
+      "aliases": [
+        "レンズまめ",
+        "レンズ豆"
+      ],
+      "category": "豆・大豆製品",
+      "nutrients": {
+        "energyKcal": 313.0,
+        "proteinG": 23.2,
+        "fatG": 1.5,
+        "carbohydrateG": 60.7,
+        "fiberG": 16.7,
+        "saltG": 0.0,
+        "calciumMg": 57.0,
+        "ironMg": 9.0,
+        "vitaminAMcg": 3.0,
+        "vitaminEMg": 0.8,
+        "vitaminB1Mg": 0.52,
+        "vitaminB2Mg": 0.17,
+        "vitaminCMg": 1.0,
+        "saturatedFatG": 0.17
+      },
+      "sourceFoodIds": [
+        "mext_04073"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_04077",
+      "canonicalName": "黒大豆（国産・乾）",
+      "aliases": [
+        "黒大豆",
+        "黒豆"
+      ],
+      "category": "豆・大豆製品",
+      "nutrients": {
+        "energyKcal": 349.0,
+        "proteinG": 33.9,
+        "fatG": 18.8,
+        "carbohydrateG": 28.9,
+        "fiberG": 20.6,
+        "saltG": 0.0,
+        "calciumMg": 140.0,
+        "ironMg": 6.8,
+        "vitaminAMcg": 2.0,
+        "vitaminEMg": 3.1,
+        "vitaminB1Mg": 0.73,
+        "vitaminB2Mg": 0.23,
+        "vitaminCMg": 3.0,
+        "saturatedFatG": 2.42
+      },
+      "sourceFoodIds": [
+        "mext_04077"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_04089",
+      "canonicalName": "おから（乾燥）",
+      "aliases": [
+        "おからパウダー",
+        "乾燥おから"
+      ],
+      "category": "豆・大豆製品",
+      "nutrients": {
+        "energyKcal": 333.0,
+        "proteinG": 23.1,
+        "fatG": 13.6,
+        "carbohydrateG": 52.3,
+        "fiberG": 43.6,
+        "saltG": 0.0,
+        "calciumMg": 310.0,
+        "ironMg": 4.9,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 1.5,
+        "vitaminB1Mg": 0.42,
+        "vitaminB2Mg": 0.11,
+        "vitaminCMg": null,
+        "saturatedFatG": 1.94
+      },
+      "sourceFoodIds": [
+        "mext_04089"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_04101",
+      "canonicalName": "こし練りあん",
+      "aliases": [
+        "こしあん",
+        "あんこ"
+      ],
+      "category": "豆・大豆製品",
+      "nutrients": {
+        "energyKcal": 255.0,
+        "proteinG": 5.6,
+        "fatG": 0.3,
+        "carbohydrateG": 58.8,
+        "fiberG": 3.9,
+        "saltG": 0.0,
+        "calciumMg": 42.0,
+        "ironMg": 1.6,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.0,
+        "vitaminB1Mg": 0.01,
+        "vitaminB2Mg": 0.03,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": null
+      },
+      "sourceFoodIds": [
+        "mext_04101"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_05005",
+      "canonicalName": "カシューナッツ（フライ・味付け）",
+      "aliases": [
+        "カシューナッツ"
+      ],
+      "category": "種実",
+      "nutrients": {
+        "energyKcal": 591.0,
+        "proteinG": 19.8,
+        "fatG": 47.6,
+        "carbohydrateG": 26.7,
+        "fiberG": 6.7,
+        "saltG": 0.6,
+        "calciumMg": 38.0,
+        "ironMg": 4.8,
+        "vitaminAMcg": 1.0,
+        "vitaminEMg": 0.6,
+        "vitaminB1Mg": 0.54,
+        "vitaminB2Mg": 0.18,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 9.97
+      },
+      "sourceFoodIds": [
+        "mext_05005"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_05006",
+      "canonicalName": "かぼちゃ種子（いり・味付け）",
+      "aliases": [
+        "かぼちゃ種子",
+        "かぼちゃの種"
+      ],
+      "category": "種実",
+      "nutrients": {
+        "energyKcal": 590.0,
+        "proteinG": 26.5,
+        "fatG": 51.8,
+        "carbohydrateG": 12.0,
+        "fiberG": 7.3,
+        "saltG": 0.1,
+        "calciumMg": 44.0,
+        "ironMg": 6.5,
+        "vitaminAMcg": 3.0,
+        "vitaminEMg": 0.6,
+        "vitaminB1Mg": 0.21,
+        "vitaminB2Mg": 0.19,
+        "vitaminCMg": null,
+        "saturatedFatG": 9.03
+      },
+      "sourceFoodIds": [
+        "mext_05006"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_05018",
+      "canonicalName": "ごま（いり）",
+      "aliases": [
+        "いりごま",
+        "煎りごま"
+      ],
+      "category": "種実",
+      "nutrients": {
+        "energyKcal": 605.0,
+        "proteinG": 20.3,
+        "fatG": 54.2,
+        "carbohydrateG": 18.5,
+        "fiberG": 12.6,
+        "saltG": 0.0,
+        "calciumMg": 1200.0,
+        "ironMg": 9.9,
+        "vitaminAMcg": 1.0,
+        "vitaminEMg": 0.1,
+        "vitaminB1Mg": 0.49,
+        "vitaminB2Mg": 0.23,
+        "vitaminCMg": null,
+        "saturatedFatG": 7.58
+      },
+      "sourceFoodIds": [
+        "mext_05018"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_05026",
+      "canonicalName": "ピスタチオ（いり・味付け）",
+      "aliases": [
+        "ピスタチオ"
+      ],
+      "category": "種実",
+      "nutrients": {
+        "energyKcal": 617.0,
+        "proteinG": 17.4,
+        "fatG": 56.1,
+        "carbohydrateG": 20.9,
+        "fiberG": 9.2,
+        "saltG": 0.7,
+        "calciumMg": 120.0,
+        "ironMg": 3.0,
+        "vitaminAMcg": 10.0,
+        "vitaminEMg": 1.4,
+        "vitaminB1Mg": 0.43,
+        "vitaminB2Mg": 0.24,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 6.15
+      },
+      "sourceFoodIds": [
+        "mext_05026"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_05027",
+      "canonicalName": "ひまわり種子（フライ・味付け）",
+      "aliases": [
+        "ひまわり種子",
+        "ひまわりの種"
+      ],
+      "category": "種実",
+      "nutrients": {
+        "energyKcal": 603.0,
+        "proteinG": 20.1,
+        "fatG": 56.3,
+        "carbohydrateG": 17.2,
+        "fiberG": 7.9,
+        "saltG": 0.6,
+        "calciumMg": 81.0,
+        "ironMg": 3.6,
+        "vitaminAMcg": 1.0,
+        "vitaminEMg": 12.0,
+        "vitaminB1Mg": 1.72,
+        "vitaminB2Mg": 0.25,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 5.68
+      },
+      "sourceFoodIds": [
+        "mext_05027"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_05029",
+      "canonicalName": "ヘーゼルナッツ（フライ・味付け）",
+      "aliases": [
+        "ヘーゼルナッツ",
+        "ヘーゼルナッツペースト"
+      ],
+      "category": "種実",
+      "nutrients": {
+        "energyKcal": 701.0,
+        "proteinG": 13.6,
+        "fatG": 69.3,
+        "carbohydrateG": 13.9,
+        "fiberG": 7.4,
+        "saltG": 0.1,
+        "calciumMg": 130.0,
+        "ironMg": 3.0,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 18.0,
+        "vitaminB1Mg": 0.26,
+        "vitaminB2Mg": 0.28,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 6.21
+      },
+      "sourceFoodIds": [
+        "mext_05029"
+      ],
+      "priorProbability": 1,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "ペーストの副原料・加工状態が不明な場合は、MEXTのヘーゼルナッツを代表参照として使用しています。"
+      ]
+    },
+    {
+      "profileId": "general_mext_05031",
+      "canonicalName": "マカダミアナッツ（いり・味付け）",
+      "aliases": [
+        "マカダミアナッツ"
+      ],
+      "category": "種実",
+      "nutrients": {
+        "energyKcal": 751.0,
+        "proteinG": 8.3,
+        "fatG": 76.7,
+        "carbohydrateG": 12.2,
+        "fiberG": 6.2,
+        "saltG": 0.5,
+        "calciumMg": 47.0,
+        "ironMg": 1.3,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": null,
+        "vitaminB1Mg": 0.21,
+        "vitaminB2Mg": 0.09,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 12.46
+      },
+      "sourceFoodIds": [
+        "mext_05031"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_05037",
+      "canonicalName": "ピーナッツバター",
+      "aliases": [
+        "ピーナッツバター"
+      ],
+      "category": "調味料",
+      "nutrients": {
+        "energyKcal": 599.0,
+        "proteinG": 20.6,
+        "fatG": 50.4,
+        "carbohydrateG": 24.9,
+        "fiberG": 7.6,
+        "saltG": 0.9,
+        "calciumMg": 47.0,
+        "ironMg": 1.6,
+        "vitaminAMcg": null,
+        "vitaminEMg": 4.8,
+        "vitaminB1Mg": 0.1,
+        "vitaminB2Mg": 0.09,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 11.28
+      },
+      "sourceFoodIds": [
+        "mext_05037"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_06007",
+      "canonicalName": "アスパラガス（生）",
+      "aliases": [
+        "アスパラガス",
+        "アスパラ"
+      ],
+      "category": "野菜",
+      "nutrients": {
+        "energyKcal": 21.0,
+        "proteinG": 2.6,
+        "fatG": 0.2,
+        "carbohydrateG": 3.9,
+        "fiberG": 1.8,
+        "saltG": 0.0,
+        "calciumMg": 19.0,
+        "ironMg": 0.7,
+        "vitaminAMcg": 31.0,
+        "vitaminEMg": 1.5,
+        "vitaminB1Mg": 0.14,
+        "vitaminB2Mg": 0.15,
+        "vitaminCMg": 15.0,
+        "saturatedFatG": 0.07
+      },
+      "sourceFoodIds": [
+        "mext_06007"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_06015",
+      "canonicalName": "えだまめ（生）",
+      "aliases": [
+        "えだまめ",
+        "枝豆"
+      ],
+      "category": "豆・大豆製品",
+      "nutrients": {
+        "energyKcal": 125.0,
+        "proteinG": 11.7,
+        "fatG": 6.2,
+        "carbohydrateG": 8.8,
+        "fiberG": 5.0,
+        "saltG": 0.0,
+        "calciumMg": 58.0,
+        "ironMg": 2.7,
+        "vitaminAMcg": 22.0,
+        "vitaminEMg": 0.8,
+        "vitaminB1Mg": 0.31,
+        "vitaminB2Mg": 0.15,
+        "vitaminCMg": 27.0,
+        "saturatedFatG": 0.84
+      },
+      "sourceFoodIds": [
+        "mext_06015"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_06023",
+      "canonicalName": "グリンピース（生）",
+      "aliases": [
+        "グリンピース"
+      ],
+      "category": "豆・大豆製品",
+      "nutrients": {
+        "energyKcal": 76.0,
+        "proteinG": 6.9,
+        "fatG": 0.4,
+        "carbohydrateG": 15.3,
+        "fiberG": 7.7,
+        "saltG": 0.0,
+        "calciumMg": 23.0,
+        "ironMg": 1.7,
+        "vitaminAMcg": 35.0,
+        "vitaminEMg": 0.1,
+        "vitaminB1Mg": 0.39,
+        "vitaminB2Mg": 0.16,
+        "vitaminCMg": 19.0,
+        "saturatedFatG": 0.05
+      },
+      "sourceFoodIds": [
+        "mext_06023"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_06032",
+      "canonicalName": "オクラ（生）",
+      "aliases": [
+        "オクラ"
+      ],
+      "category": "野菜",
+      "nutrients": {
+        "energyKcal": 26.0,
+        "proteinG": 2.1,
+        "fatG": 0.2,
+        "carbohydrateG": 6.6,
+        "fiberG": 5.0,
+        "saltG": 0.0,
+        "calciumMg": 92.0,
+        "ironMg": 0.5,
+        "vitaminAMcg": 44.0,
+        "vitaminEMg": 1.2,
+        "vitaminB1Mg": 0.09,
+        "vitaminB2Mg": 0.09,
+        "vitaminCMg": 11.0,
+        "saturatedFatG": 0.03
+      },
+      "sourceFoodIds": [
+        "mext_06032"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_06046",
+      "canonicalName": "日本かぼちゃ（生）",
+      "aliases": [
+        "かぼちゃ",
+        "南瓜"
+      ],
+      "category": "野菜",
+      "nutrients": {
+        "energyKcal": 41.0,
+        "proteinG": 1.6,
+        "fatG": 0.1,
+        "carbohydrateG": 10.9,
+        "fiberG": 2.8,
+        "saltG": 0.0,
+        "calciumMg": 20.0,
+        "ironMg": 0.5,
+        "vitaminAMcg": 120.0,
+        "vitaminEMg": 2.2,
+        "vitaminB1Mg": 0.08,
+        "vitaminB2Mg": 0.05,
+        "vitaminCMg": 16.0,
+        "saturatedFatG": 0.01
+      },
+      "sourceFoodIds": [
+        "mext_06046"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_06054",
+      "canonicalName": "カリフラワー（生）",
+      "aliases": [
+        "カリフラワー"
+      ],
+      "category": "野菜",
+      "nutrients": {
+        "energyKcal": 28.0,
+        "proteinG": 3.0,
+        "fatG": 0.1,
+        "carbohydrateG": 5.2,
+        "fiberG": 2.9,
+        "saltG": 0.0,
+        "calciumMg": 24.0,
+        "ironMg": 0.6,
+        "vitaminAMcg": 2.0,
+        "vitaminEMg": 0.2,
+        "vitaminB1Mg": 0.06,
+        "vitaminB2Mg": 0.11,
+        "vitaminCMg": 81.0,
+        "saturatedFatG": 0.05
+      },
+      "sourceFoodIds": [
+        "mext_06054"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_06065",
+      "canonicalName": "きゅうり（生）",
+      "aliases": [
+        "きゅうり",
+        "胡瓜"
+      ],
+      "category": "野菜",
+      "nutrients": {
+        "energyKcal": 13.0,
+        "proteinG": 1.0,
+        "fatG": 0.1,
+        "carbohydrateG": 3.0,
+        "fiberG": 1.1,
+        "saltG": 0.0,
+        "calciumMg": 26.0,
+        "ironMg": 0.3,
+        "vitaminAMcg": 28.0,
+        "vitaminEMg": 0.3,
+        "vitaminB1Mg": 0.03,
+        "vitaminB2Mg": 0.03,
+        "vitaminCMg": 14.0,
+        "saturatedFatG": 0.01
+      },
+      "sourceFoodIds": [
+        "mext_06065"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_06084",
+      "canonicalName": "ごぼう（生）",
+      "aliases": [
+        "ごぼう",
+        "牛蒡"
+      ],
+      "category": "野菜",
+      "nutrients": {
+        "energyKcal": 58.0,
+        "proteinG": 1.8,
+        "fatG": 0.1,
+        "carbohydrateG": 15.4,
+        "fiberG": 5.7,
+        "saltG": 0.0,
+        "calciumMg": 46.0,
+        "ironMg": 0.7,
+        "vitaminAMcg": null,
+        "vitaminEMg": 0.6,
+        "vitaminB1Mg": 0.05,
+        "vitaminB2Mg": 0.04,
+        "vitaminCMg": 3.0,
+        "saturatedFatG": 0.02
+      },
+      "sourceFoodIds": [
+        "mext_06084"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_06086",
+      "canonicalName": "こまつな（生）",
+      "aliases": [
+        "こまつな",
+        "小松菜"
+      ],
+      "category": "野菜",
+      "nutrients": {
+        "energyKcal": 13.0,
+        "proteinG": 1.5,
+        "fatG": 0.2,
+        "carbohydrateG": 2.4,
+        "fiberG": 1.9,
+        "saltG": 0.0,
+        "calciumMg": 170.0,
+        "ironMg": 2.8,
+        "vitaminAMcg": 260.0,
+        "vitaminEMg": 0.9,
+        "vitaminB1Mg": 0.09,
+        "vitaminB2Mg": 0.13,
+        "vitaminCMg": 39.0,
+        "saturatedFatG": 0.02
+      },
+      "sourceFoodIds": [
+        "mext_06086"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_06088",
+      "canonicalName": "ザーサイ（漬物）",
+      "aliases": [
+        "ザーサイ",
+        "ザーサイ漬け"
+      ],
+      "category": "野菜",
+      "nutrients": {
+        "energyKcal": 20.0,
+        "proteinG": 2.5,
+        "fatG": 0.1,
+        "carbohydrateG": 4.6,
+        "fiberG": 4.6,
+        "saltG": 13.7,
+        "calciumMg": 140.0,
+        "ironMg": 2.9,
+        "vitaminAMcg": 1.0,
+        "vitaminEMg": 0.2,
+        "vitaminB1Mg": 0.04,
+        "vitaminB2Mg": 0.07,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": null
+      },
+      "sourceFoodIds": [
+        "mext_06088"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_06095",
+      "canonicalName": "しそ（葉・生）",
+      "aliases": [
+        "しそ",
+        "青じそ",
+        "大葉"
+      ],
+      "category": "野菜",
+      "nutrients": {
+        "energyKcal": 32.0,
+        "proteinG": 3.9,
+        "fatG": 0.1,
+        "carbohydrateG": 7.5,
+        "fiberG": 7.3,
+        "saltG": 0.0,
+        "calciumMg": 230.0,
+        "ironMg": 1.7,
+        "vitaminAMcg": 880.0,
+        "vitaminEMg": 3.9,
+        "vitaminB1Mg": 0.13,
+        "vitaminB2Mg": 0.34,
+        "vitaminCMg": 26.0,
+        "saturatedFatG": 0.01
+      },
+      "sourceFoodIds": [
+        "mext_06095"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_06116",
+      "canonicalName": "ズッキーニ（生）",
+      "aliases": [
+        "ズッキーニ"
+      ],
+      "category": "野菜",
+      "nutrients": {
+        "energyKcal": 16.0,
+        "proteinG": 1.3,
+        "fatG": 0.1,
+        "carbohydrateG": 2.8,
+        "fiberG": 1.3,
+        "saltG": 0.0,
+        "calciumMg": 24.0,
+        "ironMg": 0.5,
+        "vitaminAMcg": 27.0,
+        "vitaminEMg": 0.4,
+        "vitaminB1Mg": 0.05,
+        "vitaminB2Mg": 0.05,
+        "vitaminCMg": 20.0,
+        "saturatedFatG": 0.03
+      },
+      "sourceFoodIds": [
+        "mext_06116"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_06119",
+      "canonicalName": "セロリ（生）",
+      "aliases": [
+        "セロリ",
+        "セロリー"
+      ],
+      "category": "野菜",
+      "nutrients": {
+        "energyKcal": 12.0,
+        "proteinG": 0.4,
+        "fatG": 0.1,
+        "carbohydrateG": 3.6,
+        "fiberG": 1.5,
+        "saltG": 0.1,
+        "calciumMg": 39.0,
+        "ironMg": 0.2,
+        "vitaminAMcg": 4.0,
+        "vitaminEMg": 0.2,
+        "vitaminB1Mg": 0.03,
+        "vitaminB2Mg": 0.03,
+        "vitaminCMg": 7.0,
+        "saturatedFatG": 0.02
+      },
+      "sourceFoodIds": [
+        "mext_06119"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_06134",
+      "canonicalName": "だいこん（皮なし・生）",
+      "aliases": [
+        "だいこん",
+        "大根",
+        "だいこんおろし"
+      ],
+      "category": "野菜",
+      "nutrients": {
+        "energyKcal": 15.0,
+        "proteinG": 0.4,
+        "fatG": 0.1,
+        "carbohydrateG": 4.1,
+        "fiberG": 1.3,
+        "saltG": 0.0,
+        "calciumMg": 23.0,
+        "ironMg": 0.2,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.0,
+        "vitaminB1Mg": 0.02,
+        "vitaminB2Mg": 0.01,
+        "vitaminCMg": 11.0,
+        "saturatedFatG": 0.01
+      },
+      "sourceFoodIds": [
+        "mext_06134"
+      ],
+      "priorProbability": 1,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "大根おろしを含む加工状態不明の表記は、MEXTの皮なし生を代表参照として使用しています。"
+      ]
+    },
+    {
+      "profileId": "general_mext_06149",
+      "canonicalName": "たけのこ（生）",
+      "aliases": [
+        "たけのこ",
+        "竹の子"
+      ],
+      "category": "野菜",
+      "nutrients": {
+        "energyKcal": 27.0,
+        "proteinG": 3.6,
+        "fatG": 0.2,
+        "carbohydrateG": 4.3,
+        "fiberG": 2.8,
+        "saltG": 0.0,
+        "calciumMg": 16.0,
+        "ironMg": 0.4,
+        "vitaminAMcg": 1.0,
+        "vitaminEMg": 0.7,
+        "vitaminB1Mg": 0.05,
+        "vitaminB2Mg": 0.11,
+        "vitaminCMg": 10.0,
+        "saturatedFatG": 0.05
+      },
+      "sourceFoodIds": [
+        "mext_06149"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_06151",
+      "canonicalName": "たけのこ水煮",
+      "aliases": [
+        "たけのこ水煮",
+        "竹の子水煮"
+      ],
+      "category": "野菜",
+      "nutrients": {
+        "energyKcal": 22.0,
+        "proteinG": 2.7,
+        "fatG": 0.2,
+        "carbohydrateG": 4.0,
+        "fiberG": 2.3,
+        "saltG": 0.0,
+        "calciumMg": 19.0,
+        "ironMg": 0.3,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 1.0,
+        "vitaminB1Mg": 0.01,
+        "vitaminB2Mg": 0.04,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 0.05
+      },
+      "sourceFoodIds": [
+        "mext_06151"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_06160",
+      "canonicalName": "チンゲンサイ（生）",
+      "aliases": [
+        "チンゲン菜",
+        "チンゲンサイ",
+        "青梗菜"
+      ],
+      "category": "野菜",
+      "nutrients": {
+        "energyKcal": 9.0,
+        "proteinG": 0.6,
+        "fatG": 0.1,
+        "carbohydrateG": 2.0,
+        "fiberG": 1.2,
+        "saltG": 0.1,
+        "calciumMg": 100.0,
+        "ironMg": 1.1,
+        "vitaminAMcg": 170.0,
+        "vitaminEMg": 0.7,
+        "vitaminB1Mg": 0.03,
+        "vitaminB2Mg": 0.07,
+        "vitaminCMg": 24.0,
+        "saturatedFatG": 0.01
+      },
+      "sourceFoodIds": [
+        "mext_06160"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_06175",
+      "canonicalName": "スイートコーン（生）",
+      "aliases": [
+        "とうもろこし",
+        "コーン",
+        "スイートコーン"
+      ],
+      "category": "野菜",
+      "nutrients": {
+        "energyKcal": 89.0,
+        "proteinG": 3.6,
+        "fatG": 1.7,
+        "carbohydrateG": 16.8,
+        "fiberG": 3.0,
+        "saltG": 0.0,
+        "calciumMg": 3.0,
+        "ironMg": 0.8,
+        "vitaminAMcg": 4.0,
+        "vitaminEMg": 0.3,
+        "vitaminB1Mg": 0.15,
+        "vitaminB2Mg": 0.1,
+        "vitaminCMg": 8.0,
+        "saturatedFatG": 0.26
+      },
+      "sourceFoodIds": [
+        "mext_06175"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_06182",
+      "canonicalName": "赤色トマト（生）",
+      "aliases": [
+        "トマト",
+        "固形トマト",
+        "あらごしトマト"
+      ],
+      "category": "野菜",
+      "nutrients": {
+        "energyKcal": 20.0,
+        "proteinG": 0.7,
+        "fatG": 0.1,
+        "carbohydrateG": 4.7,
+        "fiberG": 1.0,
+        "saltG": 0.0,
+        "calciumMg": 7.0,
+        "ironMg": 0.2,
+        "vitaminAMcg": 45.0,
+        "vitaminEMg": 0.9,
+        "vitaminB1Mg": 0.05,
+        "vitaminB2Mg": 0.02,
+        "vitaminCMg": 15.0,
+        "saturatedFatG": 0.02
+      },
+      "sourceFoodIds": [
+        "mext_06182"
+      ],
+      "priorProbability": 1,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "加工状態が不明なトマト表記は、MEXTの赤色トマト（生）を代表参照として使用しています。"
+      ]
+    },
+    {
+      "profileId": "general_mext_06191",
+      "canonicalName": "なす（生）",
+      "aliases": [
+        "なす",
+        "ナス",
+        "茄子"
+      ],
+      "category": "野菜",
+      "nutrients": {
+        "energyKcal": 18.0,
+        "proteinG": 1.1,
+        "fatG": 0.1,
+        "carbohydrateG": 5.1,
+        "fiberG": 2.2,
+        "saltG": 0.0,
+        "calciumMg": 18.0,
+        "ironMg": 0.3,
+        "vitaminAMcg": 8.0,
+        "vitaminEMg": 0.3,
+        "vitaminB1Mg": 0.05,
+        "vitaminB2Mg": 0.05,
+        "vitaminCMg": 4.0,
+        "saturatedFatG": 0.03
+      },
+      "sourceFoodIds": [
+        "mext_06191"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_06207",
+      "canonicalName": "にら（生）",
+      "aliases": [
+        "にら",
+        "ニラ",
+        "韮"
+      ],
+      "category": "野菜",
+      "nutrients": {
+        "energyKcal": 18.0,
+        "proteinG": 1.7,
+        "fatG": 0.3,
+        "carbohydrateG": 4.0,
+        "fiberG": 2.7,
+        "saltG": 0.0,
+        "calciumMg": 48.0,
+        "ironMg": 0.7,
+        "vitaminAMcg": 290.0,
+        "vitaminEMg": 2.5,
+        "vitaminB1Mg": 0.06,
+        "vitaminB2Mg": 0.13,
+        "vitaminCMg": 19.0,
+        "saturatedFatG": 0.04
+      },
+      "sourceFoodIds": [
+        "mext_06207"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_06233",
+      "canonicalName": "はくさい（生）",
+      "aliases": [
+        "はくさい",
+        "白菜"
+      ],
+      "category": "野菜",
+      "nutrients": {
+        "energyKcal": 13.0,
+        "proteinG": 0.8,
+        "fatG": 0.1,
+        "carbohydrateG": 3.2,
+        "fiberG": 1.3,
+        "saltG": 0.0,
+        "calciumMg": 43.0,
+        "ironMg": 0.3,
+        "vitaminAMcg": 8.0,
+        "vitaminEMg": 0.2,
+        "vitaminB1Mg": 0.03,
+        "vitaminB2Mg": 0.03,
+        "vitaminCMg": 19.0,
+        "saturatedFatG": 0.01
+      },
+      "sourceFoodIds": [
+        "mext_06233"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_06239",
+      "canonicalName": "パセリ（生）",
+      "aliases": [
+        "パセリ",
+        "乾燥パセリ"
+      ],
+      "category": "野菜",
+      "nutrients": {
+        "energyKcal": 34.0,
+        "proteinG": 4.0,
+        "fatG": 0.7,
+        "carbohydrateG": 7.8,
+        "fiberG": 6.8,
+        "saltG": 0.0,
+        "calciumMg": 290.0,
+        "ironMg": 7.5,
+        "vitaminAMcg": 620.0,
+        "vitaminEMg": 3.3,
+        "vitaminB1Mg": 0.12,
+        "vitaminB2Mg": 0.24,
+        "vitaminCMg": 120.0,
+        "saturatedFatG": 0.12
+      },
+      "sourceFoodIds": [
+        "mext_06239"
+      ],
+      "priorProbability": 1,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "乾燥度が不明な場合を含め、MEXTのパセリ（生）を代表参照として使用しています。"
+      ]
+    },
+    {
+      "profileId": "general_mext_06245",
+      "canonicalName": "青ピーマン（生）",
+      "aliases": [
+        "ピーマン",
+        "青ピーマン"
+      ],
+      "category": "野菜",
+      "nutrients": {
+        "energyKcal": 20.0,
+        "proteinG": 0.9,
+        "fatG": 0.2,
+        "carbohydrateG": 5.1,
+        "fiberG": 2.3,
+        "saltG": 0.0,
+        "calciumMg": 11.0,
+        "ironMg": 0.4,
+        "vitaminAMcg": 33.0,
+        "vitaminEMg": 0.8,
+        "vitaminB1Mg": 0.03,
+        "vitaminB2Mg": 0.03,
+        "vitaminCMg": 76.0,
+        "saturatedFatG": 0.02
+      },
+      "sourceFoodIds": [
+        "mext_06245"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_06263",
+      "canonicalName": "ブロッコリー（生）",
+      "aliases": [
+        "ブロッコリー"
+      ],
+      "category": "野菜",
+      "nutrients": {
+        "energyKcal": 37.0,
+        "proteinG": 5.4,
+        "fatG": 0.6,
+        "carbohydrateG": 6.6,
+        "fiberG": 5.1,
+        "saltG": 0.0,
+        "calciumMg": 50.0,
+        "ironMg": 1.3,
+        "vitaminAMcg": 75.0,
+        "vitaminEMg": 3.0,
+        "vitaminB1Mg": 0.17,
+        "vitaminB2Mg": 0.23,
+        "vitaminCMg": 140.0,
+        "saturatedFatG": 0.07
+      },
+      "sourceFoodIds": [
+        "mext_06263"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_06267",
+      "canonicalName": "ほうれんそう（生）",
+      "aliases": [
+        "ほうれん草",
+        "ほうれんそう"
+      ],
+      "category": "野菜",
+      "nutrients": {
+        "energyKcal": 18.0,
+        "proteinG": 2.2,
+        "fatG": 0.4,
+        "carbohydrateG": 3.1,
+        "fiberG": 2.8,
+        "saltG": 0.0,
+        "calciumMg": 49.0,
+        "ironMg": 2.0,
+        "vitaminAMcg": 350.0,
+        "vitaminEMg": 2.1,
+        "vitaminB1Mg": 0.11,
+        "vitaminB2Mg": 0.2,
+        "vitaminCMg": 35.0,
+        "saturatedFatG": 0.04
+      },
+      "sourceFoodIds": [
+        "mext_06267"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_06291",
+      "canonicalName": "りょくとうもやし（生）",
+      "aliases": [
+        "もやし",
+        "緑豆もやし"
+      ],
+      "category": "野菜",
+      "nutrients": {
+        "energyKcal": 15.0,
+        "proteinG": 1.8,
+        "fatG": 0.1,
+        "carbohydrateG": 2.4,
+        "fiberG": 1.3,
+        "saltG": 0.0,
+        "calciumMg": 9.0,
+        "ironMg": 0.2,
+        "vitaminAMcg": null,
+        "vitaminEMg": 0.1,
+        "vitaminB1Mg": 0.04,
+        "vitaminB2Mg": 0.05,
+        "vitaminCMg": 7.0,
+        "saturatedFatG": 0.03
+      },
+      "sourceFoodIds": [
+        "mext_06291"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_06312",
+      "canonicalName": "レタス（生）",
+      "aliases": [
+        "レタス"
+      ],
+      "category": "野菜",
+      "nutrients": {
+        "energyKcal": 11.0,
+        "proteinG": 0.6,
+        "fatG": 0.1,
+        "carbohydrateG": 2.8,
+        "fiberG": 1.1,
+        "saltG": 0.0,
+        "calciumMg": 19.0,
+        "ironMg": 0.3,
+        "vitaminAMcg": 20.0,
+        "vitaminEMg": 0.3,
+        "vitaminB1Mg": 0.05,
+        "vitaminB2Mg": 0.03,
+        "vitaminCMg": 5.0,
+        "saturatedFatG": 0.01
+      },
+      "sourceFoodIds": [
+        "mext_06312"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_06317",
+      "canonicalName": "れんこん（生）",
+      "aliases": [
+        "れんこん",
+        "蓮根"
+      ],
+      "category": "野菜",
+      "nutrients": {
+        "energyKcal": 66.0,
+        "proteinG": 1.9,
+        "fatG": 0.1,
+        "carbohydrateG": 15.5,
+        "fiberG": 2.0,
+        "saltG": 0.1,
+        "calciumMg": 20.0,
+        "ironMg": 0.5,
+        "vitaminAMcg": null,
+        "vitaminEMg": 0.6,
+        "vitaminB1Mg": 0.1,
+        "vitaminB2Mg": 0.01,
+        "vitaminCMg": 48.0,
+        "saturatedFatG": 0.01
+      },
+      "sourceFoodIds": [
+        "mext_06317"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_06370",
+      "canonicalName": "ドライトマト",
+      "aliases": [
+        "トマトパウダー",
+        "トマト粉末",
+        "乾燥トマト粉末"
+      ],
+      "category": "野菜",
+      "nutrients": {
+        "energyKcal": 291.0,
+        "proteinG": 14.2,
+        "fatG": 2.1,
+        "carbohydrateG": 67.3,
+        "fiberG": 21.7,
+        "saltG": 0.3,
+        "calciumMg": 110.0,
+        "ironMg": 4.2,
+        "vitaminAMcg": 220.0,
+        "vitaminEMg": 18.0,
+        "vitaminB1Mg": 0.68,
+        "vitaminB2Mg": 0.3,
+        "vitaminCMg": 15.0,
+        "saturatedFatG": 0.3
+      },
+      "sourceFoodIds": [
+        "mext_06370"
+      ],
+      "priorProbability": 1,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "粉砕度と水分が不明なため、MEXTのドライトマトを代表参照として使用しています。"
+      ]
+    },
+    {
+      "profileId": "general_mext_07006",
+      "canonicalName": "アボカド（生）",
+      "aliases": [
+        "アボカド"
+      ],
+      "category": "果物",
+      "nutrients": {
+        "energyKcal": 176.0,
+        "proteinG": 2.1,
+        "fatG": 17.5,
+        "carbohydrateG": 7.9,
+        "fiberG": 5.6,
+        "saltG": 0.0,
+        "calciumMg": 8.0,
+        "ironMg": 0.6,
+        "vitaminAMcg": 7.0,
+        "vitaminEMg": 3.3,
+        "vitaminB1Mg": 0.09,
+        "vitaminB2Mg": 0.2,
+        "vitaminCMg": 12.0,
+        "saturatedFatG": 3.03
+      },
+      "sourceFoodIds": [
+        "mext_07006"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_07015",
+      "canonicalName": "いちじく（生）",
+      "aliases": [
+        "いちじく",
+        "無花果"
+      ],
+      "category": "果物",
+      "nutrients": {
+        "energyKcal": 57.0,
+        "proteinG": 0.6,
+        "fatG": 0.1,
+        "carbohydrateG": 14.3,
+        "fiberG": 1.9,
+        "saltG": 0.0,
+        "calciumMg": 26.0,
+        "ironMg": 0.3,
+        "vitaminAMcg": 1.0,
+        "vitaminEMg": 0.4,
+        "vitaminB1Mg": 0.03,
+        "vitaminB2Mg": 0.03,
+        "vitaminCMg": 2.0,
+        "saturatedFatG": 0.02
+      },
+      "sourceFoodIds": [
+        "mext_07015"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_07027",
+      "canonicalName": "うんしゅうみかん（生）",
+      "aliases": [
+        "みかん",
+        "ミカン",
+        "温州みかん"
+      ],
+      "category": "果物",
+      "nutrients": {
+        "energyKcal": 49.0,
+        "proteinG": 0.7,
+        "fatG": 0.1,
+        "carbohydrateG": 12.0,
+        "fiberG": 1.0,
+        "saltG": 0.0,
+        "calciumMg": 21.0,
+        "ironMg": 0.2,
+        "vitaminAMcg": 84.0,
+        "vitaminEMg": 0.4,
+        "vitaminB1Mg": 0.1,
+        "vitaminB2Mg": 0.03,
+        "vitaminCMg": 32.0,
+        "saturatedFatG": 0.01
+      },
+      "sourceFoodIds": [
+        "mext_07027"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_07040",
+      "canonicalName": "ネーブルオレンジ（生）",
+      "aliases": [
+        "オレンジ"
+      ],
+      "category": "果物",
+      "nutrients": {
+        "energyKcal": 48.0,
+        "proteinG": 0.9,
+        "fatG": 0.1,
+        "carbohydrateG": 11.8,
+        "fiberG": 1.0,
+        "saltG": 0.0,
+        "calciumMg": 24.0,
+        "ironMg": 0.2,
+        "vitaminAMcg": 11.0,
+        "vitaminEMg": 0.3,
+        "vitaminB1Mg": 0.07,
+        "vitaminB2Mg": 0.04,
+        "vitaminCMg": 60.0,
+        "saturatedFatG": 0.01
+      },
+      "sourceFoodIds": [
+        "mext_07040"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_07049",
+      "canonicalName": "甘がき（生）",
+      "aliases": [
+        "柿",
+        "かき"
+      ],
+      "category": "果物",
+      "nutrients": {
+        "energyKcal": 63.0,
+        "proteinG": 0.4,
+        "fatG": 0.2,
+        "carbohydrateG": 15.9,
+        "fiberG": 1.6,
+        "saltG": 0.0,
+        "calciumMg": 9.0,
+        "ironMg": 0.2,
+        "vitaminAMcg": 35.0,
+        "vitaminEMg": 0.1,
+        "vitaminB1Mg": 0.03,
+        "vitaminB2Mg": 0.02,
+        "vitaminCMg": 70.0,
+        "saturatedFatG": 0.02
+      },
+      "sourceFoodIds": [
+        "mext_07049"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_07054",
+      "canonicalName": "キウイフルーツ（緑肉種・生）",
+      "aliases": [
+        "キウイ",
+        "キウイフルーツ"
+      ],
+      "category": "果物",
+      "nutrients": {
+        "energyKcal": 51.0,
+        "proteinG": 1.0,
+        "fatG": 0.2,
+        "carbohydrateG": 13.4,
+        "fiberG": 2.6,
+        "saltG": 0.0,
+        "calciumMg": 26.0,
+        "ironMg": 0.3,
+        "vitaminAMcg": 4.0,
+        "vitaminEMg": 1.3,
+        "vitaminB1Mg": 0.01,
+        "vitaminB2Mg": 0.02,
+        "vitaminCMg": 71.0,
+        "saturatedFatG": 0.02
+      },
+      "sourceFoodIds": [
+        "mext_07054"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_07062",
+      "canonicalName": "グレープフルーツ（生）",
+      "aliases": [
+        "グレープフルーツ"
+      ],
+      "category": "果物",
+      "nutrients": {
+        "energyKcal": 40.0,
+        "proteinG": 0.9,
+        "fatG": 0.1,
+        "carbohydrateG": 9.6,
+        "fiberG": 0.6,
+        "saltG": 0.0,
+        "calciumMg": 15.0,
+        "ironMg": null,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.3,
+        "vitaminB1Mg": 0.07,
+        "vitaminB2Mg": 0.03,
+        "vitaminCMg": 36.0,
+        "saturatedFatG": 0.01
+      },
+      "sourceFoodIds": [
+        "mext_07062"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_07070",
+      "canonicalName": "さくらんぼ（国産・生）",
+      "aliases": [
+        "さくらんぼ",
+        "サクランボ",
+        "チェリー"
+      ],
+      "category": "果物",
+      "nutrients": {
+        "energyKcal": 64.0,
+        "proteinG": 1.0,
+        "fatG": 0.2,
+        "carbohydrateG": 15.2,
+        "fiberG": 1.2,
+        "saltG": 0.0,
+        "calciumMg": 13.0,
+        "ironMg": 0.3,
+        "vitaminAMcg": 8.0,
+        "vitaminEMg": 0.5,
+        "vitaminB1Mg": 0.03,
+        "vitaminB2Mg": 0.03,
+        "vitaminCMg": 10.0,
+        "saturatedFatG": 0.04
+      },
+      "sourceFoodIds": [
+        "mext_07070"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_07073",
+      "canonicalName": "ざくろ（生）",
+      "aliases": [
+        "ざくろ",
+        "ザクロ"
+      ],
+      "category": "果物",
+      "nutrients": {
+        "energyKcal": 63.0,
+        "proteinG": 0.2,
+        "fatG": null,
+        "carbohydrateG": 15.5,
+        "fiberG": 0.0,
+        "saltG": 0.0,
+        "calciumMg": 8.0,
+        "ironMg": 0.1,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.1,
+        "vitaminB1Mg": 0.01,
+        "vitaminB2Mg": 0.01,
+        "vitaminCMg": 10.0,
+        "saturatedFatG": null
+      },
+      "sourceFoodIds": [
+        "mext_07073"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_07077",
+      "canonicalName": "すいか（赤肉種・生）",
+      "aliases": [
+        "すいか",
+        "スイカ",
+        "西瓜"
+      ],
+      "category": "果物",
+      "nutrients": {
+        "energyKcal": 41.0,
+        "proteinG": 0.6,
+        "fatG": 0.1,
+        "carbohydrateG": 9.5,
+        "fiberG": 0.3,
+        "saltG": 0.0,
+        "calciumMg": 4.0,
+        "ironMg": 0.2,
+        "vitaminAMcg": 69.0,
+        "vitaminEMg": 0.1,
+        "vitaminB1Mg": 0.03,
+        "vitaminB2Mg": 0.02,
+        "vitaminCMg": 10.0,
+        "saturatedFatG": 0.01
+      },
+      "sourceFoodIds": [
+        "mext_07077"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_07082",
+      "canonicalName": "プルーン（乾）",
+      "aliases": [
+        "プルーン"
+      ],
+      "category": "果物",
+      "nutrients": {
+        "energyKcal": 211.0,
+        "proteinG": 2.4,
+        "fatG": 0.2,
+        "carbohydrateG": 62.3,
+        "fiberG": 7.1,
+        "saltG": 0.0,
+        "calciumMg": 57.0,
+        "ironMg": 1.1,
+        "vitaminAMcg": 100.0,
+        "vitaminEMg": 1.3,
+        "vitaminB1Mg": 0.07,
+        "vitaminB2Mg": 0.07,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 0.04
+      },
+      "sourceFoodIds": [
+        "mext_07082"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_07088",
+      "canonicalName": "日本なし（生）",
+      "aliases": [
+        "なし",
+        "梨",
+        "日本なし"
+      ],
+      "category": "果物",
+      "nutrients": {
+        "energyKcal": 38.0,
+        "proteinG": 0.3,
+        "fatG": 0.1,
+        "carbohydrateG": 11.3,
+        "fiberG": 0.9,
+        "saltG": 0.0,
+        "calciumMg": 2.0,
+        "ironMg": 0.0,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.1,
+        "vitaminB1Mg": 0.02,
+        "vitaminB2Mg": null,
+        "vitaminCMg": 3.0,
+        "saturatedFatG": 0.01
+      },
+      "sourceFoodIds": [
+        "mext_07088"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_07097",
+      "canonicalName": "パインアップル（生）",
+      "aliases": [
+        "パインアップル",
+        "パイナップル"
+      ],
+      "category": "果物",
+      "nutrients": {
+        "energyKcal": 54.0,
+        "proteinG": 0.6,
+        "fatG": 0.1,
+        "carbohydrateG": 13.7,
+        "fiberG": 1.2,
+        "saltG": 0.0,
+        "calciumMg": 11.0,
+        "ironMg": 0.2,
+        "vitaminAMcg": 3.0,
+        "vitaminEMg": null,
+        "vitaminB1Mg": 0.09,
+        "vitaminB2Mg": 0.02,
+        "vitaminCMg": 35.0,
+        "saturatedFatG": 0.01
+      },
+      "sourceFoodIds": [
+        "mext_07097"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_07109",
+      "canonicalName": "パパイア（完熟・生）",
+      "aliases": [
+        "パパイア",
+        "パパイヤ"
+      ],
+      "category": "果物",
+      "nutrients": {
+        "energyKcal": 33.0,
+        "proteinG": 0.5,
+        "fatG": 0.2,
+        "carbohydrateG": 9.5,
+        "fiberG": 2.2,
+        "saltG": 0.0,
+        "calciumMg": 20.0,
+        "ironMg": 0.2,
+        "vitaminAMcg": 40.0,
+        "vitaminEMg": 0.3,
+        "vitaminB1Mg": 0.02,
+        "vitaminB2Mg": 0.04,
+        "vitaminCMg": 50.0,
+        "saturatedFatG": 0.06
+      },
+      "sourceFoodIds": [
+        "mext_07109"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_07116",
+      "canonicalName": "ぶどう（皮なし・生）",
+      "aliases": [
+        "ぶどう",
+        "ブドウ",
+        "葡萄"
+      ],
+      "category": "果物",
+      "nutrients": {
+        "energyKcal": 58.0,
+        "proteinG": 0.4,
+        "fatG": 0.1,
+        "carbohydrateG": 15.7,
+        "fiberG": 0.5,
+        "saltG": 0.0,
+        "calciumMg": 6.0,
+        "ironMg": 0.1,
+        "vitaminAMcg": 2.0,
+        "vitaminEMg": 0.1,
+        "vitaminB1Mg": 0.04,
+        "vitaminB2Mg": 0.01,
+        "vitaminCMg": 2.0,
+        "saturatedFatG": 0.01
+      },
+      "sourceFoodIds": [
+        "mext_07116"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_07124",
+      "canonicalName": "ブルーベリー（生）",
+      "aliases": [
+        "ブルーベリー"
+      ],
+      "category": "果物",
+      "nutrients": {
+        "energyKcal": 48.0,
+        "proteinG": 0.5,
+        "fatG": 0.1,
+        "carbohydrateG": 12.9,
+        "fiberG": 3.3,
+        "saltG": 0.0,
+        "calciumMg": 8.0,
+        "ironMg": 0.2,
+        "vitaminAMcg": 5.0,
+        "vitaminEMg": 1.7,
+        "vitaminB1Mg": 0.03,
+        "vitaminB2Mg": 0.03,
+        "vitaminCMg": 9.0,
+        "saturatedFatG": 0.01
+      },
+      "sourceFoodIds": [
+        "mext_07124"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_07132",
+      "canonicalName": "マンゴー（生）",
+      "aliases": [
+        "マンゴー"
+      ],
+      "category": "果物",
+      "nutrients": {
+        "energyKcal": 68.0,
+        "proteinG": 0.6,
+        "fatG": 0.1,
+        "carbohydrateG": 16.9,
+        "fiberG": 1.3,
+        "saltG": 0.0,
+        "calciumMg": 15.0,
+        "ironMg": 0.2,
+        "vitaminAMcg": 51.0,
+        "vitaminEMg": 1.8,
+        "vitaminB1Mg": 0.04,
+        "vitaminB2Mg": 0.06,
+        "vitaminCMg": 20.0,
+        "saturatedFatG": 0.02
+      },
+      "sourceFoodIds": [
+        "mext_07132"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_07135",
+      "canonicalName": "メロン（緑肉種・生）",
+      "aliases": [
+        "メロン"
+      ],
+      "category": "果物",
+      "nutrients": {
+        "energyKcal": 45.0,
+        "proteinG": 1.0,
+        "fatG": 0.1,
+        "carbohydrateG": 10.4,
+        "fiberG": 0.5,
+        "saltG": 0.0,
+        "calciumMg": 6.0,
+        "ironMg": 0.2,
+        "vitaminAMcg": 12.0,
+        "vitaminEMg": 0.2,
+        "vitaminB1Mg": 0.05,
+        "vitaminB2Mg": 0.02,
+        "vitaminCMg": 25.0,
+        "saturatedFatG": 0.03
+      },
+      "sourceFoodIds": [
+        "mext_07135"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_07144",
+      "canonicalName": "ライチー（生）",
+      "aliases": [
+        "ライチ",
+        "ライチー"
+      ],
+      "category": "果物",
+      "nutrients": {
+        "energyKcal": 61.0,
+        "proteinG": 1.0,
+        "fatG": 0.1,
+        "carbohydrateG": 16.4,
+        "fiberG": 0.9,
+        "saltG": 0.0,
+        "calciumMg": 2.0,
+        "ironMg": 0.2,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.1,
+        "vitaminB1Mg": 0.02,
+        "vitaminB2Mg": 0.06,
+        "vitaminCMg": 36.0,
+        "saturatedFatG": 0.02
+      },
+      "sourceFoodIds": [
+        "mext_07144"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_07146",
+      "canonicalName": "ラズベリー（生）",
+      "aliases": [
+        "ラズベリー"
+      ],
+      "category": "果物",
+      "nutrients": {
+        "energyKcal": 36.0,
+        "proteinG": 1.1,
+        "fatG": 0.1,
+        "carbohydrateG": 10.2,
+        "fiberG": 4.7,
+        "saltG": 0.0,
+        "calciumMg": 22.0,
+        "ironMg": 0.7,
+        "vitaminAMcg": 2.0,
+        "vitaminEMg": 0.8,
+        "vitaminB1Mg": 0.02,
+        "vitaminB2Mg": 0.04,
+        "vitaminCMg": 22.0,
+        "saturatedFatG": null
+      },
+      "sourceFoodIds": [
+        "mext_07146"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_07149",
+      "canonicalName": "りんごストレートジュース",
+      "aliases": [
+        "りんご果汁",
+        "リンゴ果汁",
+        "りんごジュース",
+        "アップルジュース"
+      ],
+      "category": "果物",
+      "nutrients": {
+        "energyKcal": 43.0,
+        "proteinG": 0.2,
+        "fatG": 0.1,
+        "carbohydrateG": 11.8,
+        "fiberG": null,
+        "saltG": 0.0,
+        "calciumMg": 2.0,
+        "ironMg": 0.4,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.1,
+        "vitaminB1Mg": 0.01,
+        "vitaminB2Mg": 0.01,
+        "vitaminCMg": 3.0,
+        "saturatedFatG": 0.01
+      },
+      "sourceFoodIds": [
+        "mext_07149"
+      ],
+      "priorProbability": 1,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "濃縮度が明記されないりんご果汁は、MEXTのストレートジュースを代表参照として使用しています。"
+      ]
+    },
+    {
+      "profileId": "general_mext_07155",
+      "canonicalName": "レモン（全果・生）",
+      "aliases": [
+        "レモン",
+        "レモン皮"
+      ],
+      "category": "果物",
+      "nutrients": {
+        "energyKcal": 43.0,
+        "proteinG": 0.9,
+        "fatG": 0.7,
+        "carbohydrateG": 12.5,
+        "fiberG": 4.9,
+        "saltG": 0.0,
+        "calciumMg": 67.0,
+        "ironMg": 0.2,
+        "vitaminAMcg": 2.0,
+        "vitaminEMg": 1.6,
+        "vitaminB1Mg": 0.07,
+        "vitaminB2Mg": 0.07,
+        "vitaminCMg": 100.0,
+        "saturatedFatG": 0.05
+      },
+      "sourceFoodIds": [
+        "mext_07155"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_07170",
+      "canonicalName": "ナタデココ",
+      "aliases": [
+        "ナタデココ"
+      ],
+      "category": "果物",
+      "nutrients": {
+        "energyKcal": 80.0,
+        "proteinG": 0.0,
+        "fatG": null,
+        "carbohydrateG": 20.2,
+        "fiberG": 0.5,
+        "saltG": 0.0,
+        "calciumMg": 1.0,
+        "ironMg": 0.0,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.0,
+        "vitaminB1Mg": 0.0,
+        "vitaminB2Mg": 0.0,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": null
+      },
+      "sourceFoodIds": [
+        "mext_07170"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_08001",
+      "canonicalName": "えのきたけ（生）",
+      "aliases": [
+        "えのき",
+        "えのきたけ"
+      ],
+      "category": "きのこ",
+      "nutrients": {
+        "energyKcal": 34.0,
+        "proteinG": 2.7,
+        "fatG": 0.2,
+        "carbohydrateG": 7.6,
+        "fiberG": 3.9,
+        "saltG": 0.0,
+        "calciumMg": null,
+        "ironMg": 1.1,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.0,
+        "vitaminB1Mg": 0.24,
+        "vitaminB2Mg": 0.17,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 0.02
+      },
+      "sourceFoodIds": [
+        "mext_08001"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_08006",
+      "canonicalName": "きくらげ（乾）",
+      "aliases": [
+        "きくらげ",
+        "木耳"
+      ],
+      "category": "きのこ",
+      "nutrients": {
+        "energyKcal": 216.0,
+        "proteinG": 7.9,
+        "fatG": 2.1,
+        "carbohydrateG": 71.1,
+        "fiberG": 57.4,
+        "saltG": 0.1,
+        "calciumMg": 310.0,
+        "ironMg": 35.0,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.0,
+        "vitaminB1Mg": 0.19,
+        "vitaminB2Mg": 0.87,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 0.29
+      },
+      "sourceFoodIds": [
+        "mext_08006"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_08016",
+      "canonicalName": "ぶなしめじ（生）",
+      "aliases": [
+        "しめじ",
+        "ぶなしめじ"
+      ],
+      "category": "きのこ",
+      "nutrients": {
+        "energyKcal": 26.0,
+        "proteinG": 2.7,
+        "fatG": 0.5,
+        "carbohydrateG": 4.8,
+        "fiberG": 3.0,
+        "saltG": 0.0,
+        "calciumMg": 1.0,
+        "ironMg": 0.5,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.0,
+        "vitaminB1Mg": 0.15,
+        "vitaminB2Mg": 0.17,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 0.05
+      },
+      "sourceFoodIds": [
+        "mext_08016"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_08028",
+      "canonicalName": "まいたけ（生）",
+      "aliases": [
+        "まいたけ",
+        "舞茸"
+      ],
+      "category": "きのこ",
+      "nutrients": {
+        "energyKcal": 22.0,
+        "proteinG": 2.0,
+        "fatG": 0.5,
+        "carbohydrateG": 4.4,
+        "fiberG": 3.5,
+        "saltG": 0.0,
+        "calciumMg": null,
+        "ironMg": 0.2,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.0,
+        "vitaminB1Mg": 0.09,
+        "vitaminB2Mg": 0.19,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 0.06
+      },
+      "sourceFoodIds": [
+        "mext_08028"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_08031",
+      "canonicalName": "マッシュルーム（生）",
+      "aliases": [
+        "マッシュルーム"
+      ],
+      "category": "きのこ",
+      "nutrients": {
+        "energyKcal": 15.0,
+        "proteinG": 2.9,
+        "fatG": 0.3,
+        "carbohydrateG": 2.1,
+        "fiberG": 2.0,
+        "saltG": 0.0,
+        "calciumMg": 3.0,
+        "ironMg": 0.3,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.0,
+        "vitaminB1Mg": 0.06,
+        "vitaminB2Mg": 0.29,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 0.03
+      },
+      "sourceFoodIds": [
+        "mext_08031"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_09001",
+      "canonicalName": "あおさ（素干し）",
+      "aliases": [
+        "あおさ"
+      ],
+      "category": "藻類",
+      "nutrients": {
+        "energyKcal": 201.0,
+        "proteinG": 22.1,
+        "fatG": 0.6,
+        "carbohydrateG": 41.7,
+        "fiberG": 29.1,
+        "saltG": 9.9,
+        "calciumMg": 490.0,
+        "ironMg": 5.3,
+        "vitaminAMcg": 220.0,
+        "vitaminEMg": 1.1,
+        "vitaminB1Mg": 0.07,
+        "vitaminB2Mg": 0.48,
+        "vitaminCMg": 25.0,
+        "saturatedFatG": 0.12
+      },
+      "sourceFoodIds": [
+        "mext_09001"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_09004",
+      "canonicalName": "焼きのり",
+      "aliases": [
+        "のり",
+        "海苔",
+        "焼きのり"
+      ],
+      "category": "藻類",
+      "nutrients": {
+        "energyKcal": 297.0,
+        "proteinG": 41.4,
+        "fatG": 3.7,
+        "carbohydrateG": 44.3,
+        "fiberG": 36.0,
+        "saltG": 1.3,
+        "calciumMg": 280.0,
+        "ironMg": 11.0,
+        "vitaminAMcg": 2300.0,
+        "vitaminEMg": 4.6,
+        "vitaminB1Mg": 0.69,
+        "vitaminB2Mg": 2.33,
+        "vitaminCMg": 210.0,
+        "saturatedFatG": 0.55
+      },
+      "sourceFoodIds": [
+        "mext_09004"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_09017",
+      "canonicalName": "まこんぶ（素干し）",
+      "aliases": [
+        "昆布",
+        "昆布エキス",
+        "こんぶエキス",
+        "昆布エキスパウダー",
+        "こんぶエキスパウダー"
+      ],
+      "category": "藻類",
+      "nutrients": {
+        "energyKcal": 170.0,
+        "proteinG": 5.8,
+        "fatG": 1.3,
+        "carbohydrateG": 64.3,
+        "fiberG": 32.1,
+        "saltG": 6.6,
+        "calciumMg": 780.0,
+        "ironMg": 3.2,
+        "vitaminAMcg": 130.0,
+        "vitaminEMg": 2.6,
+        "vitaminB1Mg": 0.26,
+        "vitaminB2Mg": 0.31,
+        "vitaminCMg": 29.0,
+        "saturatedFatG": 0.35
+      },
+      "sourceFoodIds": [
+        "mext_09017"
+      ],
+      "priorProbability": 1,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "昆布の種類・乾燥状態・エキスの濃縮度が不明なため、MEXTのまこんぶ（素干し）を代表参照として使用しています。"
+      ]
+    },
+    {
+      "profileId": "general_mext_09039",
+      "canonicalName": "わかめ（原藻・生）",
+      "aliases": [
+        "わかめ",
+        "ワカメ"
+      ],
+      "category": "藻類",
+      "nutrients": {
+        "energyKcal": 24.0,
+        "proteinG": 1.9,
+        "fatG": 0.2,
+        "carbohydrateG": 5.6,
+        "fiberG": 3.6,
+        "saltG": 1.5,
+        "calciumMg": 100.0,
+        "ironMg": 0.7,
+        "vitaminAMcg": 79.0,
+        "vitaminEMg": 0.1,
+        "vitaminB1Mg": 0.07,
+        "vitaminB2Mg": 0.18,
+        "vitaminCMg": 15.0,
+        "saturatedFatG": 0.01
+      },
+      "sourceFoodIds": [
+        "mext_09039"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_09050",
+      "canonicalName": "ほしひじき（乾）",
+      "aliases": [
+        "ひじき",
+        "ヒジキ"
+      ],
+      "category": "藻類",
+      "nutrients": {
+        "energyKcal": 180.0,
+        "proteinG": 9.2,
+        "fatG": 3.2,
+        "carbohydrateG": 58.4,
+        "fiberG": 51.8,
+        "saltG": 4.7,
+        "calciumMg": 1000.0,
+        "ironMg": 6.2,
+        "vitaminAMcg": 360.0,
+        "vitaminEMg": 5.0,
+        "vitaminB1Mg": 0.09,
+        "vitaminB2Mg": 0.42,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 0.59
+      },
+      "sourceFoodIds": [
+        "mext_09050"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_10047",
+      "canonicalName": "まいわし（生）",
+      "aliases": [
+        "いわし",
+        "イワシ",
+        "鰯"
+      ],
+      "category": "魚介",
+      "nutrients": {
+        "energyKcal": 156.0,
+        "proteinG": 19.2,
+        "fatG": 9.2,
+        "carbohydrateG": 0.2,
+        "fiberG": 0.0,
+        "saltG": 0.2,
+        "calciumMg": 74.0,
+        "ironMg": 2.1,
+        "vitaminAMcg": 8.0,
+        "vitaminEMg": 2.5,
+        "vitaminB1Mg": 0.03,
+        "vitaminB2Mg": 0.39,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 2.55
+      },
+      "sourceFoodIds": [
+        "mext_10047"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_10067",
+      "canonicalName": "うなぎ（養殖・生）",
+      "aliases": [
+        "うなぎ",
+        "ウナギ",
+        "鰻"
+      ],
+      "category": "魚介",
+      "nutrients": {
+        "energyKcal": 228.0,
+        "proteinG": 17.1,
+        "fatG": 19.3,
+        "carbohydrateG": 0.3,
+        "fiberG": 0.0,
+        "saltG": 0.2,
+        "calciumMg": 130.0,
+        "ironMg": 0.5,
+        "vitaminAMcg": 2400.0,
+        "vitaminEMg": 7.4,
+        "vitaminB1Mg": 0.37,
+        "vitaminB2Mg": 0.48,
+        "vitaminCMg": 2.0,
+        "saturatedFatG": 4.12
+      },
+      "sourceFoodIds": [
+        "mext_10067"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_10086",
+      "canonicalName": "かつお（春獲り・生）",
+      "aliases": [
+        "かつお",
+        "カツオ",
+        "鰹"
+      ],
+      "category": "魚介",
+      "nutrients": {
+        "energyKcal": 108.0,
+        "proteinG": 25.8,
+        "fatG": 0.5,
+        "carbohydrateG": 0.1,
+        "fiberG": 0.0,
+        "saltG": 0.1,
+        "calciumMg": 11.0,
+        "ironMg": 1.9,
+        "vitaminAMcg": 5.0,
+        "vitaminEMg": 0.3,
+        "vitaminB1Mg": 0.13,
+        "vitaminB2Mg": 0.17,
+        "vitaminCMg": null,
+        "saturatedFatG": 0.12
+      },
+      "sourceFoodIds": [
+        "mext_10086"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_10091",
+      "canonicalName": "かつお節",
+      "aliases": [
+        "かつお節",
+        "かつおぶし",
+        "かつおぶし粉末"
+      ],
+      "category": "魚介",
+      "nutrients": {
+        "energyKcal": 332.0,
+        "proteinG": 77.1,
+        "fatG": 2.9,
+        "carbohydrateG": 0.8,
+        "fiberG": 0.0,
+        "saltG": 0.3,
+        "calciumMg": 28.0,
+        "ironMg": 5.5,
+        "vitaminAMcg": null,
+        "vitaminEMg": 1.2,
+        "vitaminB1Mg": 0.55,
+        "vitaminB2Mg": 0.35,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 0.62
+      },
+      "sourceFoodIds": [
+        "mext_10091"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_10092",
+      "canonicalName": "削り節",
+      "aliases": [
+        "削りぶし",
+        "削り節",
+        "削りぶし粉末",
+        "かつおパック"
+      ],
+      "category": "魚介",
+      "nutrients": {
+        "energyKcal": 327.0,
+        "proteinG": 75.7,
+        "fatG": 3.2,
+        "carbohydrateG": 0.4,
+        "fiberG": 0.0,
+        "saltG": 1.2,
+        "calciumMg": 46.0,
+        "ironMg": 9.0,
+        "vitaminAMcg": 24.0,
+        "vitaminEMg": 1.1,
+        "vitaminB1Mg": 0.38,
+        "vitaminB2Mg": 0.57,
+        "vitaminCMg": null,
+        "saturatedFatG": 0.71
+      },
+      "sourceFoodIds": [
+        "mext_10092"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_10134",
+      "canonicalName": "しろさけ（生）",
+      "aliases": [
+        "鮭",
+        "さけ",
+        "サーモン"
+      ],
+      "category": "魚介",
+      "nutrients": {
+        "energyKcal": 124.0,
+        "proteinG": 22.3,
+        "fatG": 4.1,
+        "carbohydrateG": 0.1,
+        "fiberG": 0.0,
+        "saltG": 0.2,
+        "calciumMg": 14.0,
+        "ironMg": 0.5,
+        "vitaminAMcg": 11.0,
+        "vitaminEMg": 1.2,
+        "vitaminB1Mg": 0.15,
+        "vitaminB2Mg": 0.21,
+        "vitaminCMg": 1.0,
+        "saturatedFatG": 0.8
+      },
+      "sourceFoodIds": [
+        "mext_10134"
+      ],
+      "priorProbability": 1,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "さけの種類・養殖状態が不明なため、MEXTのしろさけ（生）を代表参照として使用しています。"
+      ]
+    },
+    {
+      "profileId": "general_mext_10154",
+      "canonicalName": "まさば（生）",
+      "aliases": [
+        "さば",
+        "サバ",
+        "鯖"
+      ],
+      "category": "魚介",
+      "nutrients": {
+        "energyKcal": 211.0,
+        "proteinG": 20.6,
+        "fatG": 16.8,
+        "carbohydrateG": 0.3,
+        "fiberG": 0.0,
+        "saltG": 0.3,
+        "calciumMg": 6.0,
+        "ironMg": 1.2,
+        "vitaminAMcg": 37.0,
+        "vitaminEMg": 1.3,
+        "vitaminB1Mg": 0.21,
+        "vitaminB2Mg": 0.31,
+        "vitaminCMg": 1.0,
+        "saturatedFatG": 4.57
+      },
+      "sourceFoodIds": [
+        "mext_10154"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_10202",
+      "canonicalName": "たらこ（生）",
+      "aliases": [
+        "たらこ"
+      ],
+      "category": "魚介",
+      "nutrients": {
+        "energyKcal": 131.0,
+        "proteinG": 24.0,
+        "fatG": 4.7,
+        "carbohydrateG": 0.4,
+        "fiberG": 0.0,
+        "saltG": 4.6,
+        "calciumMg": 24.0,
+        "ironMg": 0.6,
+        "vitaminAMcg": 24.0,
+        "vitaminEMg": 7.1,
+        "vitaminB1Mg": 0.71,
+        "vitaminB2Mg": 0.43,
+        "vitaminCMg": 33.0,
+        "saturatedFatG": 0.71
+      },
+      "sourceFoodIds": [
+        "mext_10202"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_10204",
+      "canonicalName": "からしめんたいこ",
+      "aliases": [
+        "めんたいこ",
+        "明太子",
+        "からしめんたいこ"
+      ],
+      "category": "魚介",
+      "nutrients": {
+        "energyKcal": 121.0,
+        "proteinG": 21.0,
+        "fatG": 3.3,
+        "carbohydrateG": 3.0,
+        "fiberG": 0.0,
+        "saltG": 5.6,
+        "calciumMg": 23.0,
+        "ironMg": 0.7,
+        "vitaminAMcg": 41.0,
+        "vitaminEMg": 6.5,
+        "vitaminB1Mg": 0.34,
+        "vitaminB2Mg": 0.33,
+        "vitaminCMg": 76.0,
+        "saturatedFatG": 0.54
+      },
+      "sourceFoodIds": [
+        "mext_10204"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_10205",
+      "canonicalName": "まだら（生）",
+      "aliases": [
+        "たら",
+        "タラ",
+        "鱈"
+      ],
+      "category": "魚介",
+      "nutrients": {
+        "energyKcal": 72.0,
+        "proteinG": 17.6,
+        "fatG": 0.2,
+        "carbohydrateG": 0.1,
+        "fiberG": 0.0,
+        "saltG": 0.3,
+        "calciumMg": 32.0,
+        "ironMg": 0.2,
+        "vitaminAMcg": 10.0,
+        "vitaminEMg": 0.8,
+        "vitaminB1Mg": 0.1,
+        "vitaminB2Mg": 0.1,
+        "vitaminCMg": null,
+        "saturatedFatG": 0.03
+      },
+      "sourceFoodIds": [
+        "mext_10205"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_10253",
+      "canonicalName": "くろまぐろ赤身（生）",
+      "aliases": [
+        "まぐろ",
+        "マグロ",
+        "鮪",
+        "ツナ"
+      ],
+      "category": "魚介",
+      "nutrients": {
+        "energyKcal": 115.0,
+        "proteinG": 26.4,
+        "fatG": 1.4,
+        "carbohydrateG": 0.1,
+        "fiberG": 0.0,
+        "saltG": 0.1,
+        "calciumMg": 5.0,
+        "ironMg": 1.1,
+        "vitaminAMcg": 83.0,
+        "vitaminEMg": 0.8,
+        "vitaminB1Mg": 0.1,
+        "vitaminB2Mg": 0.05,
+        "vitaminCMg": 2.0,
+        "saturatedFatG": 0.25
+      },
+      "sourceFoodIds": [
+        "mext_10253"
+      ],
+      "priorProbability": 1,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "まぐろの種類・部位・加工状態が不明なため、MEXTのくろまぐろ赤身（生）を代表参照として使用しています。"
+      ]
+    },
+    {
+      "profileId": "general_mext_10281",
+      "canonicalName": "あさり（生）",
+      "aliases": [
+        "あさり",
+        "アサリ"
+      ],
+      "category": "魚介",
+      "nutrients": {
+        "energyKcal": 29.0,
+        "proteinG": 5.7,
+        "fatG": 0.7,
+        "carbohydrateG": 0.4,
+        "fiberG": 0.0,
+        "saltG": 2.0,
+        "calciumMg": 66.0,
+        "ironMg": 2.2,
+        "vitaminAMcg": 4.0,
+        "vitaminEMg": 0.4,
+        "vitaminB1Mg": 0.01,
+        "vitaminB2Mg": 0.16,
+        "vitaminCMg": 1.0,
+        "saturatedFatG": 0.08
+      },
+      "sourceFoodIds": [
+        "mext_10281"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_10311",
+      "canonicalName": "ほたてがい（生）",
+      "aliases": [
+        "ほたて",
+        "ホタテ",
+        "帆立"
+      ],
+      "category": "魚介",
+      "nutrients": {
+        "energyKcal": 66.0,
+        "proteinG": 13.5,
+        "fatG": 0.9,
+        "carbohydrateG": 1.5,
+        "fiberG": 0.0,
+        "saltG": 0.8,
+        "calciumMg": 22.0,
+        "ironMg": 2.2,
+        "vitaminAMcg": 23.0,
+        "vitaminEMg": 0.9,
+        "vitaminB1Mg": 0.05,
+        "vitaminB2Mg": 0.29,
+        "vitaminCMg": 3.0,
+        "saturatedFatG": 0.18
+      },
+      "sourceFoodIds": [
+        "mext_10311"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_10335",
+      "canonicalName": "ずわいがに（生）",
+      "aliases": [
+        "かに",
+        "カニ",
+        "蟹"
+      ],
+      "category": "魚介",
+      "nutrients": {
+        "energyKcal": 59.0,
+        "proteinG": 13.9,
+        "fatG": 0.4,
+        "carbohydrateG": 0.1,
+        "fiberG": 0.0,
+        "saltG": 0.8,
+        "calciumMg": 90.0,
+        "ironMg": 0.5,
+        "vitaminAMcg": null,
+        "vitaminEMg": 2.1,
+        "vitaminB1Mg": 0.24,
+        "vitaminB2Mg": 0.6,
+        "vitaminCMg": null,
+        "saturatedFatG": 0.03
+      },
+      "sourceFoodIds": [
+        "mext_10335"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_10345",
+      "canonicalName": "するめいか（生）",
+      "aliases": [
+        "いか",
+        "イカ",
+        "烏賊"
+      ],
+      "category": "魚介",
+      "nutrients": {
+        "energyKcal": 76.0,
+        "proteinG": 17.9,
+        "fatG": 0.8,
+        "carbohydrateG": 0.1,
+        "fiberG": 0.0,
+        "saltG": 0.5,
+        "calciumMg": 11.0,
+        "ironMg": 0.1,
+        "vitaminAMcg": 13.0,
+        "vitaminEMg": 2.1,
+        "vitaminB1Mg": 0.07,
+        "vitaminB2Mg": 0.05,
+        "vitaminCMg": 1.0,
+        "saturatedFatG": 0.11
+      },
+      "sourceFoodIds": [
+        "mext_10345"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_10361",
+      "canonicalName": "まだこ（皮つき・生）",
+      "aliases": [
+        "たこ",
+        "タコ",
+        "蛸"
+      ],
+      "category": "魚介",
+      "nutrients": {
+        "energyKcal": 70.0,
+        "proteinG": 16.1,
+        "fatG": 0.9,
+        "carbohydrateG": 0.2,
+        "fiberG": 0.0,
+        "saltG": 1.0,
+        "calciumMg": 15.0,
+        "ironMg": 0.6,
+        "vitaminAMcg": 1.0,
+        "vitaminEMg": 0.8,
+        "vitaminB1Mg": 0.03,
+        "vitaminB2Mg": 0.08,
+        "vitaminCMg": 1.0,
+        "saturatedFatG": 0.09
+      },
+      "sourceFoodIds": [
+        "mext_10361"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_10379",
+      "canonicalName": "蒸しかまぼこ",
+      "aliases": [
+        "かまぼこ",
+        "蒲鉾"
+      ],
+      "category": "魚介",
+      "nutrients": {
+        "energyKcal": 93.0,
+        "proteinG": 12.0,
+        "fatG": 0.9,
+        "carbohydrateG": 9.7,
+        "fiberG": 0.0,
+        "saltG": 2.5,
+        "calciumMg": 25.0,
+        "ironMg": 0.3,
+        "vitaminAMcg": null,
+        "vitaminEMg": 0.2,
+        "vitaminB1Mg": null,
+        "vitaminB2Mg": 0.01,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 0.13
+      },
+      "sourceFoodIds": [
+        "mext_10379"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_10381",
+      "canonicalName": "焼き竹輪",
+      "aliases": [
+        "ちくわ",
+        "竹輪"
+      ],
+      "category": "魚介",
+      "nutrients": {
+        "energyKcal": 107.0,
+        "proteinG": 13.2,
+        "fatG": 0.4,
+        "carbohydrateG": 13.3,
+        "fiberG": 0.0,
+        "saltG": 2.5,
+        "calciumMg": 48.0,
+        "ironMg": 0.2,
+        "vitaminAMcg": 11.0,
+        "vitaminEMg": 0.3,
+        "vitaminB1Mg": 0.01,
+        "vitaminB2Mg": 0.05,
+        "vitaminCMg": 36.0,
+        "saturatedFatG": 0.14
+      },
+      "sourceFoodIds": [
+        "mext_10381"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_10388",
+      "canonicalName": "魚肉ソーセージ",
+      "aliases": [
+        "魚肉ソーセージ",
+        "魚肉"
+      ],
+      "category": "魚介",
+      "nutrients": {
+        "energyKcal": 158.0,
+        "proteinG": 11.5,
+        "fatG": 7.2,
+        "carbohydrateG": 12.6,
+        "fiberG": 0.0,
+        "saltG": 2.1,
+        "calciumMg": 100.0,
+        "ironMg": 1.0,
+        "vitaminAMcg": null,
+        "vitaminEMg": 0.2,
+        "vitaminB1Mg": 0.2,
+        "vitaminB2Mg": 0.6,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 2.53
+      },
+      "sourceFoodIds": [
+        "mext_10388"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_10451",
+      "canonicalName": "くろまぐろ赤身（水煮）",
+      "aliases": [
+        "まぐろ水煮",
+        "マグロ水煮"
+      ],
+      "category": "魚介",
+      "nutrients": {
+        "energyKcal": 173.0,
+        "proteinG": 27.2,
+        "fatG": 8.3,
+        "carbohydrateG": 0.3,
+        "fiberG": 0.0,
+        "saltG": 0.1,
+        "calciumMg": 3.0,
+        "ironMg": 1.0,
+        "vitaminAMcg": 900.0,
+        "vitaminEMg": 1.8,
+        "vitaminB1Mg": 0.16,
+        "vitaminB2Mg": 0.04,
+        "vitaminCMg": 2.0,
+        "saturatedFatG": 1.92
+      },
+      "sourceFoodIds": [
+        "mext_10451"
+      ],
+      "priorProbability": 1,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "まぐろの種類が不明なため、MEXTのくろまぐろ養殖赤身（水煮）を代表参照として使用しています。"
+      ]
+    },
+    {
+      "profileId": "general_mext_11090",
+      "canonicalName": "牛舌（生）",
+      "aliases": [
+        "牛舌",
+        "牛タン"
+      ],
+      "category": "肉・肉加工品",
+      "nutrients": {
+        "energyKcal": 318.0,
+        "proteinG": 13.3,
+        "fatG": 31.8,
+        "carbohydrateG": 0.2,
+        "fiberG": 0.0,
+        "saltG": 0.2,
+        "calciumMg": 3.0,
+        "ironMg": 2.0,
+        "vitaminAMcg": 3.0,
+        "vitaminEMg": 0.9,
+        "vitaminB1Mg": 0.1,
+        "vitaminB2Mg": 0.23,
+        "vitaminCMg": 1.0,
+        "saturatedFatG": 11.19
+      },
+      "sourceFoodIds": [
+        "mext_11090"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_11115",
+      "canonicalName": "豚かた脂身つき（生）",
+      "aliases": [
+        "豚肩肉",
+        "豚かた肉"
+      ],
+      "category": "肉・肉加工品",
+      "nutrients": {
+        "energyKcal": 201.0,
+        "proteinG": 18.5,
+        "fatG": 14.6,
+        "carbohydrateG": 0.2,
+        "fiberG": 0.0,
+        "saltG": 0.1,
+        "calciumMg": 4.0,
+        "ironMg": 0.5,
+        "vitaminAMcg": 5.0,
+        "vitaminEMg": 0.3,
+        "vitaminB1Mg": 0.66,
+        "vitaminB2Mg": 0.23,
+        "vitaminCMg": 2.0,
+        "saturatedFatG": 5.25
+      },
+      "sourceFoodIds": [
+        "mext_11115"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_11176",
+      "canonicalName": "ロースハム",
+      "aliases": [
+        "ハム",
+        "ロースハム"
+      ],
+      "category": "肉・肉加工品",
+      "nutrients": {
+        "energyKcal": 211.0,
+        "proteinG": 18.6,
+        "fatG": 14.5,
+        "carbohydrateG": 2.0,
+        "fiberG": 0.0,
+        "saltG": 2.3,
+        "calciumMg": 4.0,
+        "ironMg": 0.5,
+        "vitaminAMcg": 3.0,
+        "vitaminEMg": 0.1,
+        "vitaminB1Mg": 0.7,
+        "vitaminB2Mg": 0.12,
+        "vitaminCMg": 25.0,
+        "saturatedFatG": 5.35
+      },
+      "sourceFoodIds": [
+        "mext_11176"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_11178",
+      "canonicalName": "プレスハム",
+      "aliases": [
+        "プレスハム"
+      ],
+      "category": "肉・肉加工品",
+      "nutrients": {
+        "energyKcal": 113.0,
+        "proteinG": 15.4,
+        "fatG": 4.5,
+        "carbohydrateG": 3.9,
+        "fiberG": 0.0,
+        "saltG": 2.4,
+        "calciumMg": 8.0,
+        "ironMg": 1.2,
+        "vitaminAMcg": null,
+        "vitaminEMg": 0.3,
+        "vitaminB1Mg": 0.55,
+        "vitaminB2Mg": 0.18,
+        "vitaminCMg": 43.0,
+        "saturatedFatG": 1.51
+      },
+      "sourceFoodIds": [
+        "mext_11178"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_11183",
+      "canonicalName": "ばらベーコン",
+      "aliases": [
+        "ベーコン",
+        "ばらベーコン"
+      ],
+      "category": "肉・肉加工品",
+      "nutrients": {
+        "energyKcal": 241.0,
+        "proteinG": 15.4,
+        "fatG": 19.4,
+        "carbohydrateG": 3.2,
+        "fiberG": 0.0,
+        "saltG": 2.6,
+        "calciumMg": 4.0,
+        "ironMg": 0.4,
+        "vitaminAMcg": null,
+        "vitaminEMg": 0.6,
+        "vitaminB1Mg": 0.54,
+        "vitaminB2Mg": 0.11,
+        "vitaminCMg": 69.0,
+        "saturatedFatG": 6.94
+      },
+      "sourceFoodIds": [
+        "mext_11183"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_11186",
+      "canonicalName": "ウインナーソーセージ",
+      "aliases": [
+        "ソーセージ",
+        "ウインナー",
+        "ウインナーソーセージ"
+      ],
+      "category": "肉・肉加工品",
+      "nutrients": {
+        "energyKcal": 319.0,
+        "proteinG": 11.5,
+        "fatG": 30.6,
+        "carbohydrateG": 3.3,
+        "fiberG": 0.0,
+        "saltG": 1.9,
+        "calciumMg": 6.0,
+        "ironMg": 0.5,
+        "vitaminAMcg": 2.0,
+        "vitaminEMg": 0.4,
+        "vitaminB1Mg": 0.35,
+        "vitaminB2Mg": 0.12,
+        "vitaminCMg": 32.0,
+        "saturatedFatG": 10.98
+      },
+      "sourceFoodIds": [
+        "mext_11186"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_11195",
+      "canonicalName": "焼き豚",
+      "aliases": [
+        "焼豚",
+        "チャーシュー"
+      ],
+      "category": "肉・肉加工品",
+      "nutrients": {
+        "energyKcal": 166.0,
+        "proteinG": 19.4,
+        "fatG": 8.2,
+        "carbohydrateG": 5.1,
+        "fiberG": 0.0,
+        "saltG": 2.4,
+        "calciumMg": 9.0,
+        "ironMg": 0.7,
+        "vitaminAMcg": null,
+        "vitaminEMg": 0.3,
+        "vitaminB1Mg": 0.85,
+        "vitaminB2Mg": 0.2,
+        "vitaminCMg": 20.0,
+        "saturatedFatG": 2.51
+      },
+      "sourceFoodIds": [
+        "mext_11195"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_11219",
+      "canonicalName": "若どりむね皮つき（生）",
+      "aliases": [
+        "鶏むね肉",
+        "鶏胸肉"
+      ],
+      "category": "肉・肉加工品",
+      "nutrients": {
+        "energyKcal": 133.0,
+        "proteinG": 21.3,
+        "fatG": 5.9,
+        "carbohydrateG": 0.1,
+        "fiberG": 0.0,
+        "saltG": 0.1,
+        "calciumMg": 4.0,
+        "ironMg": 0.3,
+        "vitaminAMcg": 18.0,
+        "vitaminEMg": 0.3,
+        "vitaminB1Mg": 0.09,
+        "vitaminB2Mg": 0.1,
+        "vitaminCMg": 3.0,
+        "saturatedFatG": 1.53
+      },
+      "sourceFoodIds": [
+        "mext_11219"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_11235",
+      "canonicalName": "鶏皮（もも・生）",
+      "aliases": [
+        "鶏皮",
+        "とり皮"
+      ],
+      "category": "肉・肉加工品",
+      "nutrients": {
+        "energyKcal": 474.0,
+        "proteinG": 6.6,
+        "fatG": 51.6,
+        "carbohydrateG": 0.0,
+        "fiberG": 0.0,
+        "saltG": 0.1,
+        "calciumMg": 6.0,
+        "ironMg": 0.3,
+        "vitaminAMcg": 120.0,
+        "vitaminEMg": 0.2,
+        "vitaminB1Mg": 0.01,
+        "vitaminB2Mg": 0.05,
+        "vitaminCMg": 1.0,
+        "saturatedFatG": 16.3
+      },
+      "sourceFoodIds": [
+        "mext_11235"
+      ],
+      "priorProbability": 1,
+      "ambiguous": true
+    },
+    {
+      "profileId": "general_mext_12004",
+      "canonicalName": "鶏卵（全卵・生）",
+      "aliases": [
+        "液全卵",
+        "加工液卵"
+      ],
+      "category": "卵・乳",
+      "nutrients": {
+        "energyKcal": 142.0,
+        "proteinG": 12.2,
+        "fatG": 10.2,
+        "carbohydrateG": 0.4,
+        "fiberG": 0.0,
+        "saltG": 0.4,
+        "calciumMg": 46.0,
+        "ironMg": 1.5,
+        "vitaminAMcg": 210.0,
+        "vitaminEMg": 1.3,
+        "vitaminB1Mg": 0.06,
+        "vitaminB2Mg": 0.37,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 3.12
+      },
+      "sourceFoodIds": [
+        "mext_12004"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_12010",
+      "canonicalName": "鶏卵（卵黄・生）",
+      "aliases": [
+        "液卵黄",
+        "加糖卵黄"
+      ],
+      "category": "卵・乳",
+      "nutrients": {
+        "energyKcal": 336.0,
+        "proteinG": 16.5,
+        "fatG": 34.3,
+        "carbohydrateG": 0.2,
+        "fiberG": 0.0,
+        "saltG": 0.1,
+        "calciumMg": 140.0,
+        "ironMg": 4.8,
+        "vitaminAMcg": 690.0,
+        "vitaminEMg": 4.5,
+        "vitaminB1Mg": 0.21,
+        "vitaminB2Mg": 0.45,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 9.39
+      },
+      "sourceFoodIds": [
+        "mext_12010"
+      ],
+      "priorProbability": 1,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "加糖量が不明な加糖卵黄を含むため、MEXTの生卵黄を代表参照として使用しています。"
+      ]
+    },
+    {
+      "profileId": "general_mext_12014",
+      "canonicalName": "卵白（生）",
+      "aliases": [
+        "液卵白",
+        "液状卵白"
+      ],
+      "category": "卵・乳",
+      "nutrients": {
+        "energyKcal": 44.0,
+        "proteinG": 10.1,
+        "fatG": null,
+        "carbohydrateG": 0.5,
+        "fiberG": 0.0,
+        "saltG": 0.5,
+        "calciumMg": 5.0,
+        "ironMg": null,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.0,
+        "vitaminB1Mg": 0.0,
+        "vitaminB2Mg": 0.35,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": null
+      },
+      "sourceFoodIds": [
+        "mext_12014"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_13006",
+      "canonicalName": "脱脂乳",
+      "aliases": [
+        "脱脂乳",
+        "無脂肪牛乳"
+      ],
+      "category": "卵・乳",
+      "nutrients": {
+        "energyKcal": 31.0,
+        "proteinG": 3.4,
+        "fatG": 0.1,
+        "carbohydrateG": 4.8,
+        "fiberG": 0.0,
+        "saltG": 0.1,
+        "calciumMg": 100.0,
+        "ironMg": 0.1,
+        "vitaminAMcg": null,
+        "vitaminEMg": null,
+        "vitaminB1Mg": 0.04,
+        "vitaminB2Mg": 0.15,
+        "vitaminCMg": 2.0,
+        "saturatedFatG": 0.05
+      },
+      "sourceFoodIds": [
+        "mext_13006"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_13038",
+      "canonicalName": "パルメザンチーズ",
+      "aliases": [
+        "チーズ粉末",
+        "チーズパウダー"
+      ],
+      "category": "卵・乳",
+      "nutrients": {
+        "energyKcal": 445.0,
+        "proteinG": 44.0,
+        "fatG": 30.8,
+        "carbohydrateG": 1.9,
+        "fiberG": 0.0,
+        "saltG": 3.8,
+        "calciumMg": 1300.0,
+        "ironMg": 0.4,
+        "vitaminAMcg": 240.0,
+        "vitaminEMg": 0.8,
+        "vitaminB1Mg": 0.05,
+        "vitaminB2Mg": 0.68,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 18.15
+      },
+      "sourceFoodIds": [
+        "mext_13038"
+      ],
+      "priorProbability": 1,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "チーズの種類と副原料が不明な粉末表記では、MEXTのパルメザンチーズを代表参照として使用しています。"
+      ]
+    },
+    {
+      "profileId": "general_mext_13040",
+      "canonicalName": "プロセスチーズ",
+      "aliases": [
+        "チーズフード",
+        "チーズ加工品"
+      ],
+      "category": "卵・乳",
+      "nutrients": {
+        "energyKcal": 313.0,
+        "proteinG": 22.7,
+        "fatG": 26.0,
+        "carbohydrateG": 1.3,
+        "fiberG": 0.0,
+        "saltG": 2.8,
+        "calciumMg": 630.0,
+        "ironMg": 0.3,
+        "vitaminAMcg": 250.0,
+        "vitaminEMg": 1.1,
+        "vitaminB1Mg": 0.03,
+        "vitaminB2Mg": 0.38,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 16.0
+      },
+      "sourceFoodIds": [
+        "mext_13040"
+      ],
+      "priorProbability": 1,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "チーズフード・チーズ加工品の乳化剤や副原料が不明なため、MEXTのプロセスチーズを代表参照として使用しています。"
+      ]
+    },
+    {
+      "profileId": "general_mext_14001",
+      "canonicalName": "オリーブ油",
+      "aliases": [
+        "オリーブ油",
+        "オリーブオイル"
+      ],
+      "category": "油脂",
+      "nutrients": {
+        "energyKcal": 894.0,
+        "proteinG": 0.0,
+        "fatG": 100.0,
+        "carbohydrateG": 0.0,
+        "fiberG": 0.0,
+        "saltG": 0.0,
+        "calciumMg": null,
+        "ironMg": 0.0,
+        "vitaminAMcg": 15.0,
+        "vitaminEMg": 7.4,
+        "vitaminB1Mg": 0.0,
+        "vitaminB2Mg": 0.0,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 13.29
+      },
+      "sourceFoodIds": [
+        "mext_14001"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_14002",
+      "canonicalName": "ごま油",
+      "aliases": [
+        "ごま油",
+        "胡麻油"
+      ],
+      "category": "油脂",
+      "nutrients": {
+        "energyKcal": 890.0,
+        "proteinG": 0.0,
+        "fatG": 100.0,
+        "carbohydrateG": 0.0,
+        "fiberG": 0.0,
+        "saltG": 0.0,
+        "calciumMg": 1.0,
+        "ironMg": 0.1,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.4,
+        "vitaminB1Mg": 0.0,
+        "vitaminB2Mg": 0.0,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 15.04
+      },
+      "sourceFoodIds": [
+        "mext_14002"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_14003",
+      "canonicalName": "米ぬか油",
+      "aliases": [
+        "米油",
+        "こめ油",
+        "米ぬか油"
+      ],
+      "category": "油脂",
+      "nutrients": {
+        "energyKcal": 880.0,
+        "proteinG": 0.0,
+        "fatG": 100.0,
+        "carbohydrateG": 0.0,
+        "fiberG": 0.0,
+        "saltG": 0.0,
+        "calciumMg": null,
+        "ironMg": 0.0,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 26.0,
+        "vitaminB1Mg": 0.0,
+        "vitaminB2Mg": 0.0,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 18.8
+      },
+      "sourceFoodIds": [
+        "mext_14003"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_14007",
+      "canonicalName": "とうもろこし油",
+      "aliases": [
+        "コーン油",
+        "とうもろこし油"
+      ],
+      "category": "油脂",
+      "nutrients": {
+        "energyKcal": 884.0,
+        "proteinG": 0.0,
+        "fatG": 100.0,
+        "carbohydrateG": 0.0,
+        "fiberG": 0.0,
+        "saltG": 0.0,
+        "calciumMg": null,
+        "ironMg": 0.0,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 17.0,
+        "vitaminB1Mg": 0.0,
+        "vitaminB2Mg": 0.0,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 13.04
+      },
+      "sourceFoodIds": [
+        "mext_14007"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_14023",
+      "canonicalName": "あまに油",
+      "aliases": [
+        "アマニ油",
+        "亜麻仁油",
+        "あまに油"
+      ],
+      "category": "油脂",
+      "nutrients": {
+        "energyKcal": 897.0,
+        "proteinG": 0.0,
+        "fatG": 100.0,
+        "carbohydrateG": 0.0,
+        "fiberG": 0.0,
+        "saltG": 0.0,
+        "calciumMg": null,
+        "ironMg": 0.0,
+        "vitaminAMcg": 1.0,
+        "vitaminEMg": 0.5,
+        "vitaminB1Mg": 0.0,
+        "vitaminB2Mg": 0.0,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 8.09
+      },
+      "sourceFoodIds": [
+        "mext_14023"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_16001",
+      "canonicalName": "清酒（普通酒）",
+      "aliases": [
+        "清酒",
+        "日本酒",
+        "酒"
+      ],
+      "category": "調味料",
+      "nutrients": {
+        "energyKcal": 107.0,
+        "proteinG": 0.4,
+        "fatG": null,
+        "carbohydrateG": 4.9,
+        "fiberG": 0.0,
+        "saltG": 0.0,
+        "calciumMg": 3.0,
+        "ironMg": null,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.0,
+        "vitaminB1Mg": null,
+        "vitaminB2Mg": 0.0,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 0.0
+      },
+      "sourceFoodIds": [
+        "mext_16001"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_16006",
+      "canonicalName": "ビール（淡色）",
+      "aliases": [
+        "ビール"
+      ],
+      "category": "調味料",
+      "nutrients": {
+        "energyKcal": 39.0,
+        "proteinG": 0.3,
+        "fatG": 0.0,
+        "carbohydrateG": 3.1,
+        "fiberG": 0.0,
+        "saltG": 0.0,
+        "calciumMg": 3.0,
+        "ironMg": null,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.0,
+        "vitaminB1Mg": 0.0,
+        "vitaminB2Mg": 0.02,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 0.0
+      },
+      "sourceFoodIds": [
+        "mext_16006"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_16011",
+      "canonicalName": "赤ワイン",
+      "aliases": [
+        "ワイン",
+        "赤ワイン",
+        "ぶどう酒"
+      ],
+      "category": "調味料",
+      "nutrients": {
+        "energyKcal": 68.0,
+        "proteinG": 0.2,
+        "fatG": null,
+        "carbohydrateG": 1.5,
+        "fiberG": null,
+        "saltG": 0.0,
+        "calciumMg": 7.0,
+        "ironMg": 0.4,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": null,
+        "vitaminB1Mg": 0.0,
+        "vitaminB2Mg": 0.01,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": null
+      },
+      "sourceFoodIds": [
+        "mext_16011"
+      ],
+      "priorProbability": 1,
+      "ambiguous": true
+    },
+    {
+      "profileId": "general_mext_17001",
+      "canonicalName": "ウスターソース",
+      "aliases": [
+        "ウスターソース",
+        "ソース"
+      ],
+      "category": "調味料",
+      "nutrients": {
+        "energyKcal": 117.0,
+        "proteinG": 1.0,
+        "fatG": 0.1,
+        "carbohydrateG": 27.1,
+        "fiberG": 0.5,
+        "saltG": 8.5,
+        "calciumMg": 59.0,
+        "ironMg": 1.6,
+        "vitaminAMcg": 4.0,
+        "vitaminEMg": 0.2,
+        "vitaminB1Mg": 0.01,
+        "vitaminB2Mg": 0.02,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 0.01
+      },
+      "sourceFoodIds": [
+        "mext_17001"
+      ],
+      "priorProbability": 0.35,
+      "ambiguous": true,
+      "priorSignals": [
+        {
+          "terms": [
+            "ウスター"
+          ],
+          "multiplier": 8
+        }
+      ]
+    },
+    {
+      "profileId": "general_mext_17002",
+      "canonicalName": "中濃ソース",
+      "aliases": [
+        "中濃ソース",
+        "ソース"
+      ],
+      "category": "調味料",
+      "nutrients": {
+        "energyKcal": 129.0,
+        "proteinG": 0.8,
+        "fatG": 0.1,
+        "carbohydrateG": 30.9,
+        "fiberG": 1.0,
+        "saltG": 5.8,
+        "calciumMg": 61.0,
+        "ironMg": 1.7,
+        "vitaminAMcg": 7.0,
+        "vitaminEMg": 0.5,
+        "vitaminB1Mg": 0.02,
+        "vitaminB2Mg": 0.04,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 0.01
+      },
+      "sourceFoodIds": [
+        "mext_17002"
+      ],
+      "priorProbability": 0.4,
+      "ambiguous": true,
+      "priorSignals": [
+        {
+          "terms": [
+            "中濃"
+          ],
+          "multiplier": 8
+        }
+      ]
+    },
+    {
+      "profileId": "general_mext_17003",
+      "canonicalName": "濃厚ソース",
+      "aliases": [
+        "濃厚ソース",
+        "とんかつソース",
+        "ソース"
+      ],
+      "category": "調味料",
+      "nutrients": {
+        "energyKcal": 130.0,
+        "proteinG": 0.9,
+        "fatG": 0.1,
+        "carbohydrateG": 30.9,
+        "fiberG": 1.0,
+        "saltG": 5.6,
+        "calciumMg": 61.0,
+        "ironMg": 1.5,
+        "vitaminAMcg": 9.0,
+        "vitaminEMg": 0.5,
+        "vitaminB1Mg": 0.03,
+        "vitaminB2Mg": 0.04,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": null
+      },
+      "sourceFoodIds": [
+        "mext_17003"
+      ],
+      "priorProbability": 0.25,
+      "ambiguous": true,
+      "priorSignals": [
+        {
+          "terms": [
+            "濃厚",
+            "とんかつ"
+          ],
+          "multiplier": 8
+        }
+      ]
+    },
+    {
+      "profileId": "general_mext_17004",
+      "canonicalName": "トウバンジャン",
+      "aliases": [
+        "豆板醤",
+        "トウバンジャン"
+      ],
+      "category": "調味料",
+      "nutrients": {
+        "energyKcal": 49.0,
+        "proteinG": 2.0,
+        "fatG": 2.3,
+        "carbohydrateG": 7.9,
+        "fiberG": 4.3,
+        "saltG": 17.8,
+        "calciumMg": 32.0,
+        "ironMg": 2.3,
+        "vitaminAMcg": 120.0,
+        "vitaminEMg": 3.0,
+        "vitaminB1Mg": 0.04,
+        "vitaminB2Mg": 0.17,
+        "vitaminCMg": 3.0,
+        "saturatedFatG": 0.34
+      },
+      "sourceFoodIds": [
+        "mext_17004"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_17006",
+      "canonicalName": "ラー油",
+      "aliases": [
+        "ラー油"
+      ],
+      "category": "調味料",
+      "nutrients": {
+        "energyKcal": 887.0,
+        "proteinG": 0.1,
+        "fatG": 99.8,
+        "carbohydrateG": null,
+        "fiberG": null,
+        "saltG": 0.0,
+        "calciumMg": null,
+        "ironMg": 0.1,
+        "vitaminAMcg": 59.0,
+        "vitaminEMg": 3.7,
+        "vitaminB1Mg": 0.0,
+        "vitaminB2Mg": 0.0,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 14.58
+      },
+      "sourceFoodIds": [
+        "mext_17006"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_17016",
+      "canonicalName": "米酢",
+      "aliases": [
+        "米酢"
+      ],
+      "category": "調味料",
+      "nutrients": {
+        "energyKcal": 46.0,
+        "proteinG": 0.2,
+        "fatG": 0.0,
+        "carbohydrateG": 7.4,
+        "fiberG": 0.0,
+        "saltG": 0.0,
+        "calciumMg": 2.0,
+        "ironMg": 0.1,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": null,
+        "vitaminB1Mg": 0.01,
+        "vitaminB2Mg": 0.01,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": null
+      },
+      "sourceFoodIds": [
+        "mext_17016"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_17018",
+      "canonicalName": "りんご酢",
+      "aliases": [
+        "りんご酢",
+        "リンゴ酢"
+      ],
+      "category": "調味料",
+      "nutrients": {
+        "energyKcal": 26.0,
+        "proteinG": 0.1,
+        "fatG": 0.0,
+        "carbohydrateG": 2.4,
+        "fiberG": 0.0,
+        "saltG": 0.0,
+        "calciumMg": 4.0,
+        "ironMg": 0.2,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": null,
+        "vitaminB1Mg": 0.0,
+        "vitaminB2Mg": 0.01,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": null
+      },
+      "sourceFoodIds": [
+        "mext_17018"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_17024",
+      "canonicalName": "鶏がらだし",
+      "aliases": [
+        "鶏がらだし",
+        "鶏がらスープ",
+        "チキンストック"
+      ],
+      "category": "調味料",
+      "nutrients": {
+        "energyKcal": 7.0,
+        "proteinG": 0.9,
+        "fatG": 0.4,
+        "carbohydrateG": null,
+        "fiberG": 0.0,
+        "saltG": 0.1,
+        "calciumMg": 1.0,
+        "ironMg": 0.1,
+        "vitaminAMcg": 1.0,
+        "vitaminEMg": null,
+        "vitaminB1Mg": 0.01,
+        "vitaminB2Mg": 0.04,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 0.11
+      },
+      "sourceFoodIds": [
+        "mext_17024"
+      ],
+      "priorProbability": 1,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "濃縮度が明記されない鶏がらスープは、MEXTの鶏がらだしを代表参照として使用しています。"
+      ]
+    },
+    {
+      "profileId": "general_mext_17027",
+      "canonicalName": "固形ブイヨン",
+      "aliases": [
+        "コンソメパウダー",
+        "乾燥コンソメ",
+        "ブイヨン",
+        "濃縮ブイヨン",
+        "チキンコンソメパウダー",
+        "チキンブイヨン",
+        "ブイヨンパウダー",
+        "中華ブイヨン",
+        "がらスープの素"
+      ],
+      "category": "調味料",
+      "nutrients": {
+        "energyKcal": 233.0,
+        "proteinG": 7.0,
+        "fatG": 4.3,
+        "carbohydrateG": 42.1,
+        "fiberG": 0.3,
+        "saltG": 43.2,
+        "calciumMg": 26.0,
+        "ironMg": 0.4,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.7,
+        "vitaminB1Mg": 0.03,
+        "vitaminB2Mg": 0.08,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 2.12
+      },
+      "sourceFoodIds": [
+        "mext_17027"
+      ],
+      "priorProbability": 1,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "ブイヨン・コンソメの形状と濃縮度が不明なため、MEXTの固形ブイヨンを代表参照として使用しています。"
+      ]
+    },
+    {
+      "profileId": "general_mext_17029",
+      "canonicalName": "めんつゆ（ストレート）",
+      "aliases": [
+        "つゆ",
+        "めんつゆ"
+      ],
+      "category": "調味料",
+      "nutrients": {
+        "energyKcal": 44.0,
+        "proteinG": 2.2,
+        "fatG": 0.0,
+        "carbohydrateG": 8.7,
+        "fiberG": null,
+        "saltG": 3.3,
+        "calciumMg": 8.0,
+        "ironMg": 0.4,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": null,
+        "vitaminB1Mg": 0.01,
+        "vitaminB2Mg": 0.04,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": null
+      },
+      "sourceFoodIds": [
+        "mext_17029"
+      ],
+      "priorProbability": 1,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "つゆの濃縮度が不明なため、MEXTのめんつゆ（ストレート）を代表参照として使用しています。"
+      ]
+    },
+    {
+      "profileId": "general_mext_17031",
+      "canonicalName": "オイスターソース",
+      "aliases": [
+        "オイスターソース"
+      ],
+      "category": "調味料",
+      "nutrients": {
+        "energyKcal": 105.0,
+        "proteinG": 7.7,
+        "fatG": 0.3,
+        "carbohydrateG": 18.3,
+        "fiberG": 0.2,
+        "saltG": 11.4,
+        "calciumMg": 25.0,
+        "ironMg": 1.2,
+        "vitaminAMcg": null,
+        "vitaminEMg": 0.1,
+        "vitaminB1Mg": 0.01,
+        "vitaminB2Mg": 0.07,
+        "vitaminCMg": null,
+        "saturatedFatG": 0.03
+      },
+      "sourceFoodIds": [
+        "mext_17031"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_17034",
+      "canonicalName": "トマトピューレー",
+      "aliases": [
+        "トマトピューレ",
+        "トマトピューレー"
+      ],
+      "category": "調味料",
+      "nutrients": {
+        "energyKcal": 44.0,
+        "proteinG": 1.9,
+        "fatG": 0.1,
+        "carbohydrateG": 9.9,
+        "fiberG": 1.8,
+        "saltG": 0.0,
+        "calciumMg": 19.0,
+        "ironMg": 0.8,
+        "vitaminAMcg": 52.0,
+        "vitaminEMg": 2.7,
+        "vitaminB1Mg": 0.09,
+        "vitaminB2Mg": 0.07,
+        "vitaminCMg": 10.0,
+        "saturatedFatG": 0.02
+      },
+      "sourceFoodIds": [
+        "mext_17034"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_17042",
+      "canonicalName": "マヨネーズ（全卵型）",
+      "aliases": [
+        "マヨネーズ"
+      ],
+      "category": "調味料",
+      "nutrients": {
+        "energyKcal": 668.0,
+        "proteinG": 1.4,
+        "fatG": 76.0,
+        "carbohydrateG": 3.6,
+        "fiberG": 0.0,
+        "saltG": 1.9,
+        "calciumMg": 8.0,
+        "ironMg": 0.3,
+        "vitaminAMcg": 24.0,
+        "vitaminEMg": 13.1,
+        "vitaminB1Mg": 0.01,
+        "vitaminB2Mg": 0.03,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 6.07
+      },
+      "sourceFoodIds": [
+        "mext_17042"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_17053",
+      "canonicalName": "酒かす",
+      "aliases": [
+        "酒粕",
+        "酒かす"
+      ],
+      "category": "調味料",
+      "nutrients": {
+        "energyKcal": 215.0,
+        "proteinG": 14.9,
+        "fatG": 1.5,
+        "carbohydrateG": 23.8,
+        "fiberG": 5.2,
+        "saltG": 0.0,
+        "calciumMg": 8.0,
+        "ironMg": 0.8,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.0,
+        "vitaminB1Mg": 0.03,
+        "vitaminB2Mg": 0.26,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": null
+      },
+      "sourceFoodIds": [
+        "mext_17053"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_17056",
+      "canonicalName": "オニオンパウダー",
+      "aliases": [
+        "オニオンパウダー",
+        "乾燥オニオン",
+        "乾燥たまねぎ",
+        "たまねぎ粉末",
+        "ローストオニオンパウダー"
+      ],
+      "category": "調味料",
+      "nutrients": {
+        "energyKcal": 363.0,
+        "proteinG": 8.8,
+        "fatG": 1.1,
+        "carbohydrateG": 79.8,
+        "fiberG": null,
+        "saltG": 0.1,
+        "calciumMg": 140.0,
+        "ironMg": 3.1,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": null,
+        "vitaminB1Mg": 0.3,
+        "vitaminB2Mg": 0.1,
+        "vitaminCMg": 10.0,
+        "saturatedFatG": 0.23
+      },
+      "sourceFoodIds": [
+        "mext_17056"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_17057",
+      "canonicalName": "からし（粉）",
+      "aliases": [
+        "からし粉"
+      ],
+      "category": "調味料",
+      "nutrients": {
+        "energyKcal": 435.0,
+        "proteinG": 33.0,
+        "fatG": 14.3,
+        "carbohydrateG": 43.7,
+        "fiberG": null,
+        "saltG": 0.1,
+        "calciumMg": 250.0,
+        "ironMg": 11.0,
+        "vitaminAMcg": 3.0,
+        "vitaminEMg": null,
+        "vitaminB1Mg": 0.73,
+        "vitaminB2Mg": 0.26,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 0.78
+      },
+      "sourceFoodIds": [
+        "mext_17057"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_17058",
+      "canonicalName": "練りからし",
+      "aliases": [
+        "からし",
+        "練りからし"
+      ],
+      "category": "調味料",
+      "nutrients": {
+        "energyKcal": 314.0,
+        "proteinG": 5.9,
+        "fatG": 14.5,
+        "carbohydrateG": 40.1,
+        "fiberG": null,
+        "saltG": 7.4,
+        "calciumMg": 60.0,
+        "ironMg": 2.1,
+        "vitaminAMcg": 1.0,
+        "vitaminEMg": null,
+        "vitaminB1Mg": 0.22,
+        "vitaminB2Mg": 0.07,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 0.8
+      },
+      "sourceFoodIds": [
+        "mext_17058"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_17059",
+      "canonicalName": "練りマスタード",
+      "aliases": [
+        "マスタード",
+        "練りマスタード"
+      ],
+      "category": "調味料",
+      "nutrients": {
+        "energyKcal": 175.0,
+        "proteinG": 4.8,
+        "fatG": 10.6,
+        "carbohydrateG": 13.1,
+        "fiberG": null,
+        "saltG": 3.0,
+        "calciumMg": 71.0,
+        "ironMg": 1.8,
+        "vitaminAMcg": 4.0,
+        "vitaminEMg": 1.2,
+        "vitaminB1Mg": 0.14,
+        "vitaminB2Mg": 0.04,
+        "vitaminCMg": null,
+        "saturatedFatG": 0.58
+      },
+      "sourceFoodIds": [
+        "mext_17059"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_17066",
+      "canonicalName": "さんしょう（粉）",
+      "aliases": [
+        "花椒",
+        "山椒"
+      ],
+      "category": "調味料",
+      "nutrients": {
+        "energyKcal": 375.0,
+        "proteinG": 10.3,
+        "fatG": 6.2,
+        "carbohydrateG": 69.6,
+        "fiberG": null,
+        "saltG": 0.0,
+        "calciumMg": 750.0,
+        "ironMg": 10.0,
+        "vitaminAMcg": 17.0,
+        "vitaminEMg": null,
+        "vitaminB1Mg": 0.1,
+        "vitaminB2Mg": 0.45,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": null
+      },
+      "sourceFoodIds": [
+        "mext_17066"
+      ],
+      "priorProbability": 1,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "花椒と山椒を区別できない表記では、MEXTのさんしょう粉を代表参照として使用しています。"
+      ]
+    },
+    {
+      "profileId": "general_mext_17067",
+      "canonicalName": "シナモン（粉）",
+      "aliases": [
+        "シナモン",
+        "シナモン粉末"
+      ],
+      "category": "調味料",
+      "nutrients": {
+        "energyKcal": 356.0,
+        "proteinG": 3.6,
+        "fatG": 3.5,
+        "carbohydrateG": 79.6,
+        "fiberG": null,
+        "saltG": 0.1,
+        "calciumMg": 1200.0,
+        "ironMg": 7.1,
+        "vitaminAMcg": 1.0,
+        "vitaminEMg": null,
+        "vitaminB1Mg": 0.08,
+        "vitaminB2Mg": 0.14,
+        "vitaminCMg": null,
+        "saturatedFatG": 0.97
+      },
+      "sourceFoodIds": [
+        "mext_17067"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_17069",
+      "canonicalName": "おろししょうが",
+      "aliases": [
+        "おろししょうが",
+        "おろし生姜",
+        "ジンジャーペースト"
+      ],
+      "category": "調味料",
+      "nutrients": {
+        "energyKcal": 41.0,
+        "proteinG": 0.7,
+        "fatG": 0.6,
+        "carbohydrateG": 8.6,
+        "fiberG": null,
+        "saltG": 1.5,
+        "calciumMg": 16.0,
+        "ironMg": 0.3,
+        "vitaminAMcg": 1.0,
+        "vitaminEMg": null,
+        "vitaminB1Mg": 0.02,
+        "vitaminB2Mg": 0.03,
+        "vitaminCMg": 120.0,
+        "saturatedFatG": 0.16
+      },
+      "sourceFoodIds": [
+        "mext_17069"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_17073",
+      "canonicalName": "とうがらし（粉）",
+      "aliases": [
+        "とうがらし",
+        "唐辛子",
+        "赤唐辛子",
+        "とうがらし粉",
+        "チリパウダー"
+      ],
+      "category": "調味料",
+      "nutrients": {
+        "energyKcal": 412.0,
+        "proteinG": 16.2,
+        "fatG": 9.7,
+        "carbohydrateG": 66.8,
+        "fiberG": null,
+        "saltG": 0.0,
+        "calciumMg": 110.0,
+        "ironMg": 12.0,
+        "vitaminAMcg": 720.0,
+        "vitaminEMg": null,
+        "vitaminB1Mg": 0.43,
+        "vitaminB2Mg": 1.15,
+        "vitaminCMg": null,
+        "saturatedFatG": 1.83
+      },
+      "sourceFoodIds": [
+        "mext_17073"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_17075",
+      "canonicalName": "ガーリックパウダー（食塩無添加）",
+      "aliases": [
+        "ガーリックパウダー",
+        "ガーリック粉末",
+        "にんにく粉末"
+      ],
+      "category": "調味料",
+      "nutrients": {
+        "energyKcal": 380.0,
+        "proteinG": 19.9,
+        "fatG": 0.8,
+        "carbohydrateG": 73.8,
+        "fiberG": null,
+        "saltG": 0.0,
+        "calciumMg": 100.0,
+        "ironMg": 6.6,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.4,
+        "vitaminB1Mg": 0.54,
+        "vitaminB2Mg": 0.15,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 0.1
+      },
+      "sourceFoodIds": [
+        "mext_17075"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_17081",
+      "canonicalName": "練りわさび",
+      "aliases": [
+        "わさび",
+        "練りわさび"
+      ],
+      "category": "調味料",
+      "nutrients": {
+        "energyKcal": 265.0,
+        "proteinG": 3.3,
+        "fatG": 10.3,
+        "carbohydrateG": 39.8,
+        "fiberG": null,
+        "saltG": 6.1,
+        "calciumMg": 62.0,
+        "ironMg": 2.0,
+        "vitaminAMcg": 1.0,
+        "vitaminEMg": null,
+        "vitaminB1Mg": 0.11,
+        "vitaminB2Mg": 0.07,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": null
+      },
+      "sourceFoodIds": [
+        "mext_17081"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_17090",
+      "canonicalName": "黒酢",
+      "aliases": [
+        "黒酢",
+        "米黒酢"
+      ],
+      "category": "調味料",
+      "nutrients": {
+        "energyKcal": 54.0,
+        "proteinG": 1.0,
+        "fatG": 0.0,
+        "carbohydrateG": 9.0,
+        "fiberG": 0.0,
+        "saltG": 0.0,
+        "calciumMg": 5.0,
+        "ironMg": 0.2,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.0,
+        "vitaminB1Mg": 0.02,
+        "vitaminB2Mg": 0.01,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": null
+      },
+      "sourceFoodIds": [
+        "mext_17090"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_17091",
+      "canonicalName": "バルサミコ酢",
+      "aliases": [
+        "バルサミコ酢"
+      ],
+      "category": "調味料",
+      "nutrients": {
+        "energyKcal": 99.0,
+        "proteinG": 0.5,
+        "fatG": 0.0,
+        "carbohydrateG": 19.4,
+        "fiberG": 0.0,
+        "saltG": 0.1,
+        "calciumMg": 17.0,
+        "ironMg": 0.7,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.0,
+        "vitaminB1Mg": 0.01,
+        "vitaminB2Mg": 0.01,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": null
+      },
+      "sourceFoodIds": [
+        "mext_17091"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_17107",
+      "canonicalName": "ナンプラー",
+      "aliases": [
+        "魚醤",
+        "ナンプラー"
+      ],
+      "category": "調味料",
+      "nutrients": {
+        "energyKcal": 47.0,
+        "proteinG": 9.1,
+        "fatG": 0.1,
+        "carbohydrateG": 2.7,
+        "fiberG": 0.0,
+        "saltG": 22.9,
+        "calciumMg": 20.0,
+        "ironMg": 1.2,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.0,
+        "vitaminB1Mg": 0.01,
+        "vitaminB2Mg": 0.1,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": null
+      },
+      "sourceFoodIds": [
+        "mext_17107"
+      ],
+      "priorProbability": 1,
+      "ambiguous": true
+    },
+    {
+      "profileId": "general_mext_17138",
+      "canonicalName": "料理酒",
+      "aliases": [
+        "料理酒"
+      ],
+      "category": "調味料",
+      "nutrients": {
+        "energyKcal": 88.0,
+        "proteinG": 0.2,
+        "fatG": null,
+        "carbohydrateG": 4.7,
+        "fiberG": 0.0,
+        "saltG": 2.2,
+        "calciumMg": 2.0,
+        "ironMg": null,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.0,
+        "vitaminB1Mg": null,
+        "vitaminB2Mg": 0.0,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": null
+      },
+      "sourceFoodIds": [
+        "mext_17138"
+      ],
+      "priorProbability": 1,
+      "ambiguous": false
+    },
+    {
+      "profileId": "general_mext_17142",
+      "canonicalName": "ラーメンスープ（しょうゆ味）",
+      "aliases": [
+        "ラーメンスープ",
+        "しょうゆラーメンスープ"
+      ],
+      "category": "調味料",
+      "nutrients": {
+        "energyKcal": 157.0,
+        "proteinG": 3.3,
+        "fatG": 11.7,
+        "carbohydrateG": 9.9,
+        "fiberG": null,
+        "saltG": 17.1,
+        "calciumMg": 22.0,
+        "ironMg": 0.6,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.1,
+        "vitaminB1Mg": 0.03,
+        "vitaminB2Mg": 0.08,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": null
+      },
+      "sourceFoodIds": [
+        "mext_17142"
+      ],
+      "priorProbability": 1,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "味と濃縮度が明記されないラーメンスープは、MEXTのしょうゆ味を代表参照として使用しています。"
+      ]
+    },
+    {
+      "profileId": "proxy_hydrolyzed_protein_high_salt",
+      "canonicalName": "たん白加水分解物（高塩分候補）",
+      "aliases": [
+        "たん白加水分解物",
+        "たんぱく加水分解物",
+        "植物性たん白加水分解物",
+        "植物性たんぱく加水分解物"
+      ],
+      "category": "複合原材料",
+      "nutrients": {
+        "energyKcal": 233.0,
+        "proteinG": 7.0,
+        "fatG": 4.3,
+        "carbohydrateG": 42.1,
+        "fiberG": 0.3,
+        "saltG": 43.2,
+        "calciumMg": 26.0,
+        "ironMg": 0.4,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.7,
+        "vitaminB1Mg": 0.03,
+        "vitaminB2Mg": 0.08,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 2.12
+      },
+      "sourceFoodIds": [
+        "mext_17027"
+      ],
+      "priorProbability": 0.45,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "粉末たん白加水分解物の塩分仕様が製品により大きく異なるため、高塩分候補には対象栄養素が全て数値化されているMEXTの固形ブイヨンを代理参照しています。"
+      ],
+      "priorSignals": [
+        {
+          "terms": [
+            "スープ",
+            "ラーメン",
+            "ソーセージ",
+            "ウインナー"
+          ],
+          "multiplier": 2
+        }
+      ]
+    },
+    {
+      "profileId": "proxy_hydrolyzed_protein_wheat",
+      "canonicalName": "たん白加水分解物（高たんぱく候補）",
+      "aliases": [
+        "たん白加水分解物",
+        "たんぱく加水分解物",
+        "植物性たん白加水分解物",
+        "植物性たんぱく加水分解物",
+        "小麦たんぱく加水分解物",
+        "小麦たん白加水分解物"
+      ],
+      "category": "複合原材料",
+      "nutrients": {
+        "energyKcal": 398.0,
+        "proteinG": 72.0,
+        "fatG": 9.7,
+        "carbohydrateG": 10.6,
+        "fiberG": 2.4,
+        "saltG": 0.2,
+        "calciumMg": 75.0,
+        "ironMg": 6.6,
+        "vitaminAMcg": 1.0,
+        "vitaminEMg": 1.1,
+        "vitaminB1Mg": 0.03,
+        "vitaminB2Mg": 0.12,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 1.43
+      },
+      "sourceFoodIds": [
+        "mext_01071"
+      ],
+      "priorProbability": 0.55,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "加水分解前の原料と塩分が不明なため、粉末製品の高たんぱく候補として、対象栄養素が全て数値化されているMEXTの粉末状小麦たんぱくを代理参照しています。"
+      ],
+      "priorSignals": [
+        {
+          "terms": [
+            "小麦"
+          ],
+          "multiplier": 3
+        }
+      ]
+    },
+    {
+      "profileId": "proxy_malt_extract_dry",
+      "canonicalName": "麦芽エキス（乾燥相当）",
+      "aliases": [
+        "麦芽エキス",
+        "モルトエキス"
+      ],
+      "category": "複合原材料",
+      "nutrients": {
+        "energyKcal": 378.35,
+        "proteinG": 7.705,
+        "fatG": 1.725,
+        "carbohydrateG": 90.045,
+        "fiberG": 14.03,
+        "saltG": 0.0,
+        "calciumMg": 24.15,
+        "ironMg": 1.265,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.115,
+        "vitaminB1Mg": 0.1265,
+        "vitaminB2Mg": 0.0345,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 0.4945
+      },
+      "sourceFoodIds": [
+        "mext_01006"
+      ],
+      "priorProbability": 0.45,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "MEXT参照食品の成分値を固形分濃度の候補倍率1.15倍でスケーリングしています。",
+        "メーカー仕様にある液状約22%水分・乾燥約3%水分の差を、液状／乾燥の離散候補として扱っています。"
+      ]
+    },
+    {
+      "profileId": "proxy_malt_extract_liquid",
+      "canonicalName": "麦芽エキス（液状相当）",
+      "aliases": [
+        "麦芽エキス",
+        "モルトエキス"
+      ],
+      "category": "複合原材料",
+      "nutrients": {
+        "energyKcal": 329.0,
+        "proteinG": 6.7,
+        "fatG": 1.5,
+        "carbohydrateG": 78.3,
+        "fiberG": 12.2,
+        "saltG": 0.0,
+        "calciumMg": 21.0,
+        "ironMg": 1.1,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.1,
+        "vitaminB1Mg": 0.11,
+        "vitaminB2Mg": 0.03,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 0.43
+      },
+      "sourceFoodIds": [
+        "mext_01006"
+      ],
+      "priorProbability": 0.55,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "麦芽エキスの液状・乾燥状態が不明なため、液状製品の主要組成に近いMEXTの押麦を代理参照しています。"
+      ]
+    }
+  ]
+}

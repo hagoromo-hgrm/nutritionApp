@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
   ESTIMATABLE_NUTRIENT_KEYS,
+  GENRE_PRIOR_PARTIAL_METHOD,
+  PARTIAL_METHOD,
   estimateNutrients,
   type EstimatableNutrientKey,
 } from '../src/services/nutrientEstimator'
@@ -64,10 +66,19 @@ function calculateBenchmark(): AccuracyBenchmark {
       const estimate = result.estimates[key]
       const truthAvailable = truth !== null
       const estimateAvailable = estimate.status === 'available'
-      availabilityMatches.get(key)!.push(truthAvailable === estimateAvailable)
+      const fullEstimateAvailable = estimateAvailable
+        && ![PARTIAL_METHOD, GENRE_PRIOR_PARTIAL_METHOD].includes(estimate.method)
+      availabilityMatches.get(key)!.push(
+        truthAvailable ? estimateAvailable : !fullEstimateAvailable,
+      )
 
       if (truth === null || estimate.status !== 'available') continue
-      expect(['browser_ingredient_macro_fit', 'browser_ingredient_rule']).toContain(estimate.method)
+      expect([
+        'browser_ingredient_macro_fit',
+        'browser_ingredient_rule',
+        PARTIAL_METHOD,
+        GENRE_PRIOR_PARTIAL_METHOD,
+      ]).toContain(estimate.method)
       const error = Math.abs(estimate.value - truth)
       absoluteErrors.get(key)!.push(error)
       if (truth !== 0) absolutePercentageErrors.get(key)!.push(error / Math.abs(truth))

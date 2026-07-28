@@ -1,19 +1,29 @@
 {
   "format": "nutrition-estimator-spu-evaluation-summary",
   "formatVersion": 1,
-  "modelVersion": "browser-rule-0.6.0",
-  "generatedAt": "2026-07-27T11:28:43.897Z",
-  "datasetHash": "1b38542e85851cc4f487b2ea73c88ccb504b3397b681b815a6b9dbe0ae127a9e",
-  "evaluationHash": "5ce64d5e756f185d40d1a25c257424c7f8010e4cbdd8a755b81a0d7d1c5585c9",
-  "recordCount": 367,
-  "evaluatedRecords": 355,
-  "failedRecords": 220,
+  "modelVersion": "browser-rule-0.13.0",
+  "generatedAt": "2026-07-28T14:38:08.391Z",
+  "datasetHash": "bd2b3230343b917e4fa8c542043519f8c532b9f967f8feb44056b4c273e246e3",
+  "evaluationHash": "27e32fda5af0e255670ac8f4080581475eb9328175eef30a139bc383e98a4ca2",
+  "recordCount": 779,
+  "evaluatedRecords": 749,
+  "failedRecords": 0,
   "methodology": {
     "split": "maker + productFamily deterministic 70/15/15",
     "estimatedLabelsExcluded": true,
     "labelValuesEvaluatedAsIntervals": true,
     "unavailableValuesExcludedFromErrorAndCoverage": true,
-    "availabilityReportedSeparately": true
+    "availabilityReportedSeparately": true,
+    "knownOnlyPartialValuesReportedSeparately": true,
+    "knownOnlyPartialValuesExcludedFromCalibration": true,
+    "genrePriorValuesReportedSeparately": true,
+    "genrePriorBuiltFromTrainingSplitOnly": true,
+    "genrePriorValuesExcludedFromCalibration": true
+  },
+  "numericAvailabilityGate": {
+    "targetPercent": 80,
+    "actualPercent": 100,
+    "passed": true
   },
   "calibrationDecision": {
     "minimumSampleSizePerNutrient": 30,
@@ -22,264 +32,1102 @@
     "reason": "推計可能な校正標本が栄養素ごとに30件未満のため、実測校正は採用しません。"
   },
   "dataWarnings": [
-    "baked_sweets: pilot target 50 not reached (13)",
-    "baked_sweets: maker share exceeds 20% (森永製菓: 13/13)",
-    "cake_pastry: pilot target 50 not reached (4)",
-    "cake_pastry: maker share exceeds 20% (森永製菓: 4/4)",
-    "chocolate: maker share exceeds 20% (明治: 42/54)",
-    "chocolate: maker share exceeds 20% (森永製菓: 12/54)",
-    "dairy: maker share exceeds 20% (明治: 117/119)",
-    "drink_jelly_pudding: maker share exceeds 20% (明治: 34/66)",
-    "drink_jelly_pudding: maker share exceeds 20% (森永製菓: 32/66)",
-    "frozen_dessert: pilot target 50 not reached (1)",
-    "frozen_dessert: maker share exceeds 20% (明治: 1/1)",
-    "other_unknown: maker share exceeds 20% (明治: 58/73)",
-    "other_unknown: maker share exceeds 20% (森永製菓: 15/73)",
-    "prepared_meal: pilot target 50 not reached (17)",
-    "prepared_meal: maker share exceeds 20% (明治: 17/17)",
-    "snack_rice_cracker: pilot target 50 not reached (6)",
-    "snack_rice_cracker: maker share exceeds 20% (森永製菓: 6/6)",
-    "sugar_confectionery: pilot target 50 not reached (14)",
-    "sugar_confectionery: maker share exceeds 20% (明治: 5/14)",
-    "sugar_confectionery: maker share exceeds 20% (森永製菓: 9/14)"
+    "baked_sweets: maker share exceeds 20% (ブルボン: 69/82)",
+    "cake_pastry: pilot target 50 not reached (13)",
+    "cake_pastry: maker share exceeds 20% (ブルボン: 8/13)",
+    "cake_pastry: maker share exceeds 20% (森永製菓: 4/13)",
+    "chocolate: maker share exceeds 20% (ブルボン: 47/102)",
+    "chocolate: maker share exceeds 20% (明治: 42/102)",
+    "dairy: maker share exceeds 20% (明治: 119/142)",
+    "drink_jelly_pudding: maker share exceeds 20% (明治: 34/70)",
+    "drink_jelly_pudding: maker share exceeds 20% (森永製菓: 32/70)",
+    "fried_food: pilot target 50 not reached (1)",
+    "fried_food: maker share exceeds 20% (キユーピー: 1/1)",
+    "frozen_dessert: pilot target 50 not reached (2)",
+    "frozen_dessert: maker share exceeds 20% (ブルボン: 1/2)",
+    "frozen_dessert: maker share exceeds 20% (明治: 1/2)",
+    "noodle_flour_dish: pilot target 50 not reached (2)",
+    "noodle_flour_dish: maker share exceeds 20% (キユーピー: 2/2)",
+    "other_unknown: maker share exceeds 20% (キユーピー: 35/153)",
+    "other_unknown: maker share exceeds 20% (明治: 58/153)",
+    "prepared_meal: pilot target 50 not reached (36)",
+    "prepared_meal: maker share exceeds 20% (伊藤ハム: 9/36)",
+    "prepared_meal: maker share exceeds 20% (明治: 17/36)",
+    "sauce_spread: maker share exceeds 20% (フジッコ: 68/122)",
+    "sauce_spread: maker share exceeds 20% (キユーピー: 46/122)",
+    "snack_rice_cracker: pilot target 50 not reached (30)",
+    "snack_rice_cracker: maker share exceeds 20% (ブルボン: 24/30)",
+    "sugar_confectionery: pilot target 50 not reached (24)",
+    "sugar_confectionery: maker share exceeds 20% (ブルボン: 10/24)",
+    "sugar_confectionery: maker share exceeds 20% (明治: 5/24)",
+    "sugar_confectionery: maker share exceeds 20% (森永製菓: 9/24)"
   ],
   "overall": {
-    "referenceCount": 877,
-    "availableCount": 135,
-    "availabilityPercent": 15.393387,
-    "pointInsideReferencePercent": 46.666667,
-    "rangeCoveragePercent": 62.222222,
-    "maeOutsideReference": 100.345078,
-    "mapeOutsideReferencePercent": 95.387234
+    "referenceCount": 1551,
+    "availableCount": 1551,
+    "availabilityPercent": 100,
+    "pointInsideReferencePercent": 23.597679,
+    "pointAtOrBelowReferenceMinPercent": 60.412637,
+    "pointAtOrBelowReferenceMaxPercent": 83.558994,
+    "rangeCoveragePercent": 58.865248,
+    "maeOutsideReference": 45.145342,
+    "mapeOutsideReferencePercent": 75.917094
+  },
+  "byEstimateKind": {
+    "full": {
+      "referenceCount": 1551,
+      "availableCount": 315,
+      "availabilityPercent": 20.309478,
+      "pointInsideReferencePercent": 47.936508,
+      "pointAtOrBelowReferenceMinPercent": 33.968254,
+      "pointAtOrBelowReferenceMaxPercent": 80.634921,
+      "rangeCoveragePercent": 67.936508,
+      "maeOutsideReference": 53.993644,
+      "mapeOutsideReferencePercent": 155.67858
+    },
+    "knownOnly": {
+      "referenceCount": 1551,
+      "availableCount": 383,
+      "availabilityPercent": 24.693746,
+      "pointInsideReferencePercent": 10.704961,
+      "pointAtOrBelowReferenceMinPercent": 83.289817,
+      "pointAtOrBelowReferenceMaxPercent": 93.994778,
+      "rangeCoveragePercent": 24.543081,
+      "maeOutsideReference": 29.10772,
+      "mapeOutsideReferencePercent": 54.486757
+    },
+    "genrePrior": {
+      "referenceCount": 1551,
+      "availableCount": 853,
+      "availabilityPercent": 54.996776,
+      "pointInsideReferencePercent": 20.398593,
+      "pointAtOrBelowReferenceMinPercent": 59.906213,
+      "pointAtOrBelowReferenceMaxPercent": 79.953107,
+      "rangeCoveragePercent": 70.926143,
+      "maeOutsideReference": 49.078747,
+      "mapeOutsideReferencePercent": 56.084681
+    }
+  },
+  "limitationReasons": {
+    "overall": [
+      {
+        "code": "additive_contribution_unknown",
+        "label": "添加物寄与割合不明",
+        "count": 770,
+        "partialAvailableCount": 340,
+        "genrePriorAvailableCount": 430,
+        "unavailableCount": 0
+      },
+      {
+        "code": "reference_value_missing",
+        "label": "参照値欠損",
+        "count": 638,
+        "partialAvailableCount": 73,
+        "genrePriorAvailableCount": 565,
+        "unavailableCount": 0
+      },
+      {
+        "code": "ingredient_unresolved",
+        "label": "原材料未解決",
+        "count": 615,
+        "partialAvailableCount": 0,
+        "genrePriorAvailableCount": 615,
+        "unavailableCount": 0
+      }
+    ],
+    "byNutrient": {
+      "calciumMg": [
+        {
+          "code": "reference_value_missing",
+          "label": "参照値欠損",
+          "count": 194,
+          "partialAvailableCount": 13,
+          "genrePriorAvailableCount": 181,
+          "unavailableCount": 0
+        },
+        {
+          "code": "additive_contribution_unknown",
+          "label": "添加物寄与割合不明",
+          "count": 172,
+          "partialAvailableCount": 48,
+          "genrePriorAvailableCount": 124,
+          "unavailableCount": 0
+        },
+        {
+          "code": "ingredient_unresolved",
+          "label": "原材料未解決",
+          "count": 132,
+          "partialAvailableCount": 0,
+          "genrePriorAvailableCount": 132,
+          "unavailableCount": 0
+        }
+      ],
+      "fiberG": [
+        {
+          "code": "reference_value_missing",
+          "label": "参照値欠損",
+          "count": 175,
+          "partialAvailableCount": 20,
+          "genrePriorAvailableCount": 155,
+          "unavailableCount": 0
+        },
+        {
+          "code": "ingredient_unresolved",
+          "label": "原材料未解決",
+          "count": 173,
+          "partialAvailableCount": 0,
+          "genrePriorAvailableCount": 173,
+          "unavailableCount": 0
+        },
+        {
+          "code": "additive_contribution_unknown",
+          "label": "添加物寄与割合不明",
+          "count": 37,
+          "partialAvailableCount": 23,
+          "genrePriorAvailableCount": 14,
+          "unavailableCount": 0
+        }
+      ],
+      "ironMg": [
+        {
+          "code": "additive_contribution_unknown",
+          "label": "添加物寄与割合不明",
+          "count": 91,
+          "partialAvailableCount": 17,
+          "genrePriorAvailableCount": 74,
+          "unavailableCount": 0
+        },
+        {
+          "code": "reference_value_missing",
+          "label": "参照値欠損",
+          "count": 87,
+          "partialAvailableCount": 9,
+          "genrePriorAvailableCount": 78,
+          "unavailableCount": 0
+        },
+        {
+          "code": "ingredient_unresolved",
+          "label": "原材料未解決",
+          "count": 50,
+          "partialAvailableCount": 0,
+          "genrePriorAvailableCount": 50,
+          "unavailableCount": 0
+        }
+      ],
+      "saturatedFatG": [
+        {
+          "code": "ingredient_unresolved",
+          "label": "原材料未解決",
+          "count": 86,
+          "partialAvailableCount": 0,
+          "genrePriorAvailableCount": 86,
+          "unavailableCount": 0
+        },
+        {
+          "code": "reference_value_missing",
+          "label": "参照値欠損",
+          "count": 76,
+          "partialAvailableCount": 20,
+          "genrePriorAvailableCount": 56,
+          "unavailableCount": 0
+        }
+      ],
+      "vitaminAMcg": [
+        {
+          "code": "additive_contribution_unknown",
+          "label": "添加物寄与割合不明",
+          "count": 48,
+          "partialAvailableCount": 23,
+          "genrePriorAvailableCount": 25,
+          "unavailableCount": 0
+        },
+        {
+          "code": "ingredient_unresolved",
+          "label": "原材料未解決",
+          "count": 22,
+          "partialAvailableCount": 0,
+          "genrePriorAvailableCount": 22,
+          "unavailableCount": 0
+        },
+        {
+          "code": "reference_value_missing",
+          "label": "参照値欠損",
+          "count": 5,
+          "partialAvailableCount": 1,
+          "genrePriorAvailableCount": 4,
+          "unavailableCount": 0
+        }
+      ],
+      "vitaminB1Mg": [
+        {
+          "code": "additive_contribution_unknown",
+          "label": "添加物寄与割合不明",
+          "count": 132,
+          "partialAvailableCount": 87,
+          "genrePriorAvailableCount": 45,
+          "unavailableCount": 0
+        },
+        {
+          "code": "ingredient_unresolved",
+          "label": "原材料未解決",
+          "count": 41,
+          "partialAvailableCount": 0,
+          "genrePriorAvailableCount": 41,
+          "unavailableCount": 0
+        },
+        {
+          "code": "reference_value_missing",
+          "label": "参照値欠損",
+          "count": 11,
+          "partialAvailableCount": 3,
+          "genrePriorAvailableCount": 8,
+          "unavailableCount": 0
+        }
+      ],
+      "vitaminB2Mg": [
+        {
+          "code": "additive_contribution_unknown",
+          "label": "添加物寄与割合不明",
+          "count": 131,
+          "partialAvailableCount": 85,
+          "genrePriorAvailableCount": 46,
+          "unavailableCount": 0
+        },
+        {
+          "code": "ingredient_unresolved",
+          "label": "原材料未解決",
+          "count": 41,
+          "partialAvailableCount": 0,
+          "genrePriorAvailableCount": 41,
+          "unavailableCount": 0
+        },
+        {
+          "code": "reference_value_missing",
+          "label": "参照値欠損",
+          "count": 21,
+          "partialAvailableCount": 5,
+          "genrePriorAvailableCount": 16,
+          "unavailableCount": 0
+        }
+      ],
+      "vitaminCMg": [
+        {
+          "code": "additive_contribution_unknown",
+          "label": "添加物寄与割合不明",
+          "count": 115,
+          "partialAvailableCount": 54,
+          "genrePriorAvailableCount": 61,
+          "unavailableCount": 0
+        },
+        {
+          "code": "ingredient_unresolved",
+          "label": "原材料未解決",
+          "count": 49,
+          "partialAvailableCount": 0,
+          "genrePriorAvailableCount": 49,
+          "unavailableCount": 0
+        },
+        {
+          "code": "reference_value_missing",
+          "label": "参照値欠損",
+          "count": 27,
+          "partialAvailableCount": 1,
+          "genrePriorAvailableCount": 26,
+          "unavailableCount": 0
+        }
+      ],
+      "vitaminEMg": [
+        {
+          "code": "additive_contribution_unknown",
+          "label": "添加物寄与割合不明",
+          "count": 44,
+          "partialAvailableCount": 3,
+          "genrePriorAvailableCount": 41,
+          "unavailableCount": 0
+        },
+        {
+          "code": "reference_value_missing",
+          "label": "参照値欠損",
+          "count": 42,
+          "partialAvailableCount": 1,
+          "genrePriorAvailableCount": 41,
+          "unavailableCount": 0
+        },
+        {
+          "code": "ingredient_unresolved",
+          "label": "原材料未解決",
+          "count": 21,
+          "partialAvailableCount": 0,
+          "genrePriorAvailableCount": 21,
+          "unavailableCount": 0
+        }
+      ]
+    },
+    "byGenre": {
+      "baked_sweets": [
+        {
+          "code": "ingredient_unresolved",
+          "label": "原材料未解決",
+          "count": 86,
+          "partialAvailableCount": 0,
+          "genrePriorAvailableCount": 86,
+          "unavailableCount": 0
+        },
+        {
+          "code": "reference_value_missing",
+          "label": "参照値欠損",
+          "count": 76,
+          "partialAvailableCount": 20,
+          "genrePriorAvailableCount": 56,
+          "unavailableCount": 0
+        },
+        {
+          "code": "additive_contribution_unknown",
+          "label": "添加物寄与割合不明",
+          "count": 33,
+          "partialAvailableCount": 11,
+          "genrePriorAvailableCount": 22,
+          "unavailableCount": 0
+        }
+      ],
+      "cake_pastry": [
+        {
+          "code": "reference_value_missing",
+          "label": "参照値欠損",
+          "count": 13,
+          "partialAvailableCount": 0,
+          "genrePriorAvailableCount": 13,
+          "unavailableCount": 0
+        },
+        {
+          "code": "ingredient_unresolved",
+          "label": "原材料未解決",
+          "count": 11,
+          "partialAvailableCount": 0,
+          "genrePriorAvailableCount": 11,
+          "unavailableCount": 0
+        },
+        {
+          "code": "additive_contribution_unknown",
+          "label": "添加物寄与割合不明",
+          "count": 7,
+          "partialAvailableCount": 4,
+          "genrePriorAvailableCount": 3,
+          "unavailableCount": 0
+        }
+      ],
+      "chocolate": [
+        {
+          "code": "additive_contribution_unknown",
+          "label": "添加物寄与割合不明",
+          "count": 97,
+          "partialAvailableCount": 49,
+          "genrePriorAvailableCount": 48,
+          "unavailableCount": 0
+        },
+        {
+          "code": "reference_value_missing",
+          "label": "参照値欠損",
+          "count": 78,
+          "partialAvailableCount": 14,
+          "genrePriorAvailableCount": 64,
+          "unavailableCount": 0
+        },
+        {
+          "code": "ingredient_unresolved",
+          "label": "原材料未解決",
+          "count": 65,
+          "partialAvailableCount": 0,
+          "genrePriorAvailableCount": 65,
+          "unavailableCount": 0
+        }
+      ],
+      "dairy": [
+        {
+          "code": "additive_contribution_unknown",
+          "label": "添加物寄与割合不明",
+          "count": 148,
+          "partialAvailableCount": 20,
+          "genrePriorAvailableCount": 128,
+          "unavailableCount": 0
+        },
+        {
+          "code": "ingredient_unresolved",
+          "label": "原材料未解決",
+          "count": 135,
+          "partialAvailableCount": 0,
+          "genrePriorAvailableCount": 135,
+          "unavailableCount": 0
+        },
+        {
+          "code": "reference_value_missing",
+          "label": "参照値欠損",
+          "count": 92,
+          "partialAvailableCount": 8,
+          "genrePriorAvailableCount": 84,
+          "unavailableCount": 0
+        }
+      ],
+      "drink_jelly_pudding": [
+        {
+          "code": "additive_contribution_unknown",
+          "label": "添加物寄与割合不明",
+          "count": 107,
+          "partialAvailableCount": 46,
+          "genrePriorAvailableCount": 61,
+          "unavailableCount": 0
+        },
+        {
+          "code": "ingredient_unresolved",
+          "label": "原材料未解決",
+          "count": 49,
+          "partialAvailableCount": 0,
+          "genrePriorAvailableCount": 49,
+          "unavailableCount": 0
+        },
+        {
+          "code": "reference_value_missing",
+          "label": "参照値欠損",
+          "count": 41,
+          "partialAvailableCount": 6,
+          "genrePriorAvailableCount": 35,
+          "unavailableCount": 0
+        }
+      ],
+      "fried_food": [
+        {
+          "code": "ingredient_unresolved",
+          "label": "原材料未解決",
+          "count": 2,
+          "partialAvailableCount": 0,
+          "genrePriorAvailableCount": 2,
+          "unavailableCount": 0
+        },
+        {
+          "code": "reference_value_missing",
+          "label": "参照値欠損",
+          "count": 2,
+          "partialAvailableCount": 0,
+          "genrePriorAvailableCount": 2,
+          "unavailableCount": 0
+        },
+        {
+          "code": "additive_contribution_unknown",
+          "label": "添加物寄与割合不明",
+          "count": 1,
+          "partialAvailableCount": 0,
+          "genrePriorAvailableCount": 1,
+          "unavailableCount": 0
+        }
+      ],
+      "frozen_dessert": [
+        {
+          "code": "additive_contribution_unknown",
+          "label": "添加物寄与割合不明",
+          "count": 3,
+          "partialAvailableCount": 3,
+          "genrePriorAvailableCount": 0,
+          "unavailableCount": 0
+        },
+        {
+          "code": "ingredient_unresolved",
+          "label": "原材料未解決",
+          "count": 2,
+          "partialAvailableCount": 0,
+          "genrePriorAvailableCount": 2,
+          "unavailableCount": 0
+        }
+      ],
+      "noodle_flour_dish": [
+        {
+          "code": "additive_contribution_unknown",
+          "label": "添加物寄与割合不明",
+          "count": 1,
+          "partialAvailableCount": 1,
+          "genrePriorAvailableCount": 0,
+          "unavailableCount": 0
+        },
+        {
+          "code": "reference_value_missing",
+          "label": "参照値欠損",
+          "count": 1,
+          "partialAvailableCount": 0,
+          "genrePriorAvailableCount": 1,
+          "unavailableCount": 0
+        }
+      ],
+      "other_unknown": [
+        {
+          "code": "additive_contribution_unknown",
+          "label": "添加物寄与割合不明",
+          "count": 257,
+          "partialAvailableCount": 160,
+          "genrePriorAvailableCount": 97,
+          "unavailableCount": 0
+        },
+        {
+          "code": "ingredient_unresolved",
+          "label": "原材料未解決",
+          "count": 101,
+          "partialAvailableCount": 0,
+          "genrePriorAvailableCount": 101,
+          "unavailableCount": 0
+        },
+        {
+          "code": "reference_value_missing",
+          "label": "参照値欠損",
+          "count": 101,
+          "partialAvailableCount": 12,
+          "genrePriorAvailableCount": 89,
+          "unavailableCount": 0
+        }
+      ],
+      "prepared_meal": [
+        {
+          "code": "reference_value_missing",
+          "label": "参照値欠損",
+          "count": 28,
+          "partialAvailableCount": 2,
+          "genrePriorAvailableCount": 26,
+          "unavailableCount": 0
+        },
+        {
+          "code": "ingredient_unresolved",
+          "label": "原材料未解決",
+          "count": 24,
+          "partialAvailableCount": 0,
+          "genrePriorAvailableCount": 24,
+          "unavailableCount": 0
+        },
+        {
+          "code": "additive_contribution_unknown",
+          "label": "添加物寄与割合不明",
+          "count": 14,
+          "partialAvailableCount": 7,
+          "genrePriorAvailableCount": 7,
+          "unavailableCount": 0
+        }
+      ],
+      "sauce_spread": [
+        {
+          "code": "reference_value_missing",
+          "label": "参照値欠損",
+          "count": 145,
+          "partialAvailableCount": 4,
+          "genrePriorAvailableCount": 141,
+          "unavailableCount": 0
+        },
+        {
+          "code": "ingredient_unresolved",
+          "label": "原材料未解決",
+          "count": 83,
+          "partialAvailableCount": 0,
+          "genrePriorAvailableCount": 83,
+          "unavailableCount": 0
+        },
+        {
+          "code": "additive_contribution_unknown",
+          "label": "添加物寄与割合不明",
+          "count": 43,
+          "partialAvailableCount": 14,
+          "genrePriorAvailableCount": 29,
+          "unavailableCount": 0
+        }
+      ],
+      "snack_rice_cracker": [
+        {
+          "code": "reference_value_missing",
+          "label": "参照値欠損",
+          "count": 49,
+          "partialAvailableCount": 7,
+          "genrePriorAvailableCount": 42,
+          "unavailableCount": 0
+        },
+        {
+          "code": "ingredient_unresolved",
+          "label": "原材料未解決",
+          "count": 40,
+          "partialAvailableCount": 0,
+          "genrePriorAvailableCount": 40,
+          "unavailableCount": 0
+        },
+        {
+          "code": "additive_contribution_unknown",
+          "label": "添加物寄与割合不明",
+          "count": 13,
+          "partialAvailableCount": 0,
+          "genrePriorAvailableCount": 13,
+          "unavailableCount": 0
+        }
+      ],
+      "sugar_confectionery": [
+        {
+          "code": "additive_contribution_unknown",
+          "label": "添加物寄与割合不明",
+          "count": 46,
+          "partialAvailableCount": 25,
+          "genrePriorAvailableCount": 21,
+          "unavailableCount": 0
+        },
+        {
+          "code": "ingredient_unresolved",
+          "label": "原材料未解決",
+          "count": 17,
+          "partialAvailableCount": 0,
+          "genrePriorAvailableCount": 17,
+          "unavailableCount": 0
+        },
+        {
+          "code": "reference_value_missing",
+          "label": "参照値欠損",
+          "count": 12,
+          "partialAvailableCount": 0,
+          "genrePriorAvailableCount": 12,
+          "unavailableCount": 0
+        }
+      ]
+    }
+  },
+  "bySplitEstimateKind": {
+    "full": {
+      "calibration": {
+        "referenceCount": 230,
+        "availableCount": 46,
+        "availabilityPercent": 20,
+        "pointInsideReferencePercent": 60.869565,
+        "pointAtOrBelowReferenceMinPercent": 26.086957,
+        "pointAtOrBelowReferenceMaxPercent": 86.956522,
+        "rangeCoveragePercent": 80.434783,
+        "maeOutsideReference": 40.782119,
+        "mapeOutsideReferencePercent": 42.642583
+      },
+      "test": {
+        "referenceCount": 219,
+        "availableCount": 43,
+        "availabilityPercent": 19.634703,
+        "pointInsideReferencePercent": 48.837209,
+        "pointAtOrBelowReferenceMinPercent": 34.883721,
+        "pointAtOrBelowReferenceMaxPercent": 83.72093,
+        "rangeCoveragePercent": 72.093023,
+        "maeOutsideReference": 26.176705,
+        "mapeOutsideReferencePercent": 56.460947
+      },
+      "train": {
+        "referenceCount": 1102,
+        "availableCount": 226,
+        "availabilityPercent": 20.508167,
+        "pointInsideReferencePercent": 45.132743,
+        "pointAtOrBelowReferenceMinPercent": 35.39823,
+        "pointAtOrBelowReferenceMaxPercent": 78.761062,
+        "rangeCoveragePercent": 64.60177,
+        "maeOutsideReference": 61.975318,
+        "mapeOutsideReferencePercent": 197.563598
+      }
+    },
+    "knownOnly": {
+      "calibration": {
+        "referenceCount": 230,
+        "availableCount": 59,
+        "availabilityPercent": 25.652174,
+        "pointInsideReferencePercent": 8.474576,
+        "pointAtOrBelowReferenceMinPercent": 74.576271,
+        "pointAtOrBelowReferenceMaxPercent": 83.050847,
+        "rangeCoveragePercent": 20.338983,
+        "maeOutsideReference": 49.588021,
+        "mapeOutsideReferencePercent": 102.468338
+      },
+      "test": {
+        "referenceCount": 219,
+        "availableCount": 53,
+        "availabilityPercent": 24.200913,
+        "pointInsideReferencePercent": 9.433962,
+        "pointAtOrBelowReferenceMinPercent": 84.90566,
+        "pointAtOrBelowReferenceMaxPercent": 94.339623,
+        "rangeCoveragePercent": 32.075472,
+        "maeOutsideReference": 34.401269,
+        "mapeOutsideReferencePercent": 44.075848
+      },
+      "train": {
+        "referenceCount": 1102,
+        "availableCount": 271,
+        "availabilityPercent": 24.591652,
+        "pointInsideReferencePercent": 11.439114,
+        "pointAtOrBelowReferenceMinPercent": 84.870849,
+        "pointAtOrBelowReferenceMaxPercent": 96.309963,
+        "rangeCoveragePercent": 23.98524,
+        "maeOutsideReference": 23.61364,
+        "mapeOutsideReferencePercent": 46.076665
+      }
+    },
+    "genrePrior": {
+      "calibration": {
+        "referenceCount": 230,
+        "availableCount": 125,
+        "availabilityPercent": 54.347826,
+        "pointInsideReferencePercent": 28,
+        "pointAtOrBelowReferenceMinPercent": 48,
+        "pointAtOrBelowReferenceMaxPercent": 75.2,
+        "rangeCoveragePercent": 73.6,
+        "maeOutsideReference": 65.800842,
+        "mapeOutsideReferencePercent": 64.703102
+      },
+      "test": {
+        "referenceCount": 219,
+        "availableCount": 123,
+        "availabilityPercent": 56.164384,
+        "pointInsideReferencePercent": 21.95122,
+        "pointAtOrBelowReferenceMinPercent": 60.162602,
+        "pointAtOrBelowReferenceMaxPercent": 82.113821,
+        "rangeCoveragePercent": 65.04065,
+        "maeOutsideReference": 46.930037,
+        "mapeOutsideReferencePercent": 49.269375
+      },
+      "train": {
+        "referenceCount": 1102,
+        "availableCount": 605,
+        "availabilityPercent": 54.900181,
+        "pointInsideReferencePercent": 18.512397,
+        "pointAtOrBelowReferenceMinPercent": 62.31405,
+        "pointAtOrBelowReferenceMaxPercent": 80.495868,
+        "rangeCoveragePercent": 71.570248,
+        "maeOutsideReference": 46.060614,
+        "mapeOutsideReferencePercent": 55.689606
+      }
+    }
   },
   "bySplit": {
     "calibration": {
-      "referenceCount": 135,
-      "availableCount": 24,
-      "availabilityPercent": 17.777778,
-      "pointInsideReferencePercent": 58.333333,
-      "rangeCoveragePercent": 75,
-      "maeOutsideReference": 62.432546,
-      "mapeOutsideReferencePercent": 65.710311
+      "referenceCount": 230,
+      "availableCount": 230,
+      "availabilityPercent": 100,
+      "pointInsideReferencePercent": 29.565217,
+      "pointAtOrBelowReferenceMinPercent": 50.434783,
+      "pointAtOrBelowReferenceMaxPercent": 79.565217,
+      "rangeCoveragePercent": 61.304348,
+      "maeOutsideReference": 56.638156,
+      "mapeOutsideReferencePercent": 69.978602
     },
     "test": {
-      "referenceCount": 114,
-      "availableCount": 17,
-      "availabilityPercent": 14.912281,
-      "pointInsideReferencePercent": 47.058824,
-      "rangeCoveragePercent": 70.588235,
-      "maeOutsideReference": 6.52374,
-      "mapeOutsideReferencePercent": 58.174893
+      "referenceCount": 219,
+      "availableCount": 219,
+      "availabilityPercent": 100,
+      "pointInsideReferencePercent": 24.200913,
+      "pointAtOrBelowReferenceMinPercent": 61.187215,
+      "pointAtOrBelowReferenceMaxPercent": 85.388128,
+      "rangeCoveragePercent": 58.447489,
+      "maeOutsideReference": 39.823105,
+      "mapeOutsideReferencePercent": 49.424538
     },
     "train": {
-      "referenceCount": 628,
-      "availableCount": 94,
-      "availabilityPercent": 14.968153,
-      "pointInsideReferencePercent": 43.617021,
-      "rangeCoveragePercent": 57.446809,
-      "maeOutsideReference": 126.992563,
-      "mapeOutsideReferencePercent": 109.694212
+      "referenceCount": 1102,
+      "availableCount": 1102,
+      "availabilityPercent": 100,
+      "pointInsideReferencePercent": 22.232305,
+      "pointAtOrBelowReferenceMinPercent": 62.341198,
+      "pointAtOrBelowReferenceMaxPercent": 84.029038,
+      "rangeCoveragePercent": 58.439201,
+      "maeOutsideReference": 43.804346,
+      "mapeOutsideReferencePercent": 82.42138
     }
   },
   "byNutrient": {
     "calciumMg": {
-      "referenceCount": 208,
-      "availableCount": 53,
-      "availabilityPercent": 25.480769,
-      "pointInsideReferencePercent": 45.283019,
-      "rangeCoveragePercent": 62.264151,
-      "maeOutsideReference": 250.362322,
-      "mapeOutsideReferencePercent": 95.363347
+      "referenceCount": 344,
+      "availableCount": 344,
+      "availabilityPercent": 100,
+      "pointInsideReferencePercent": 23.546512,
+      "pointAtOrBelowReferenceMinPercent": 52.034884,
+      "pointAtOrBelowReferenceMaxPercent": 75.581395,
+      "rangeCoveragePercent": 59.593023,
+      "maeOutsideReference": 151.028898,
+      "mapeOutsideReferencePercent": 85.640829
     },
     "fiberG": {
-      "referenceCount": 131,
-      "availableCount": 82,
-      "availabilityPercent": 62.59542,
-      "pointInsideReferencePercent": 47.560976,
-      "rangeCoveragePercent": 62.195122,
-      "maeOutsideReference": 3.382714,
-      "mapeOutsideReferencePercent": 95.402672
+      "referenceCount": 456,
+      "availableCount": 456,
+      "availabilityPercent": 100,
+      "pointInsideReferencePercent": 35.745614,
+      "pointAtOrBelowReferenceMinPercent": 35.964912,
+      "pointAtOrBelowReferenceMaxPercent": 70.394737,
+      "rangeCoveragePercent": 76.535088,
+      "maeOutsideReference": 2.848814,
+      "mapeOutsideReferencePercent": 118.49615
     },
     "ironMg": {
-      "referenceCount": 74,
-      "availableCount": 0,
-      "availabilityPercent": 0,
-      "pointInsideReferencePercent": null,
-      "rangeCoveragePercent": null,
-      "maeOutsideReference": null,
-      "mapeOutsideReferencePercent": null
+      "referenceCount": 101,
+      "availableCount": 101,
+      "availabilityPercent": 100,
+      "pointInsideReferencePercent": 12.871287,
+      "pointAtOrBelowReferenceMinPercent": 84.158416,
+      "pointAtOrBelowReferenceMaxPercent": 97.029703,
+      "rangeCoveragePercent": 63.366337,
+      "maeOutsideReference": 3.597013,
+      "mapeOutsideReferencePercent": 58.435315
+    },
+    "saturatedFatG": {
+      "referenceCount": 173,
+      "availableCount": 173,
+      "availabilityPercent": 100,
+      "pointInsideReferencePercent": 50.867052,
+      "pointAtOrBelowReferenceMinPercent": 32.369942,
+      "pointAtOrBelowReferenceMaxPercent": 83.236994,
+      "rangeCoveragePercent": 83.815029,
+      "maeOutsideReference": 0.643954,
+      "mapeOutsideReferencePercent": 23.186063
     },
     "vitaminAMcg": {
       "referenceCount": 48,
-      "availableCount": 0,
-      "availabilityPercent": 0,
-      "pointInsideReferencePercent": null,
-      "rangeCoveragePercent": null,
-      "maeOutsideReference": null,
-      "mapeOutsideReferencePercent": null
+      "availableCount": 48,
+      "availabilityPercent": 100,
+      "pointInsideReferencePercent": 2.083333,
+      "pointAtOrBelowReferenceMinPercent": 100,
+      "pointAtOrBelowReferenceMaxPercent": 100,
+      "rangeCoveragePercent": 12.5,
+      "maeOutsideReference": 203.331709,
+      "mapeOutsideReferencePercent": 55.456383
     },
     "vitaminB1Mg": {
       "referenceCount": 132,
-      "availableCount": 0,
-      "availabilityPercent": 0,
-      "pointInsideReferencePercent": null,
-      "rangeCoveragePercent": null,
-      "maeOutsideReference": null,
-      "mapeOutsideReferencePercent": null
+      "availableCount": 132,
+      "availabilityPercent": 100,
+      "pointInsideReferencePercent": 2.272727,
+      "pointAtOrBelowReferenceMinPercent": 97.727273,
+      "pointAtOrBelowReferenceMaxPercent": 100,
+      "rangeCoveragePercent": 19.69697,
+      "maeOutsideReference": 0.441471,
+      "mapeOutsideReferencePercent": 47.17129
     },
     "vitaminB2Mg": {
       "referenceCount": 131,
-      "availableCount": 0,
-      "availabilityPercent": 0,
-      "pointInsideReferencePercent": null,
-      "rangeCoveragePercent": null,
-      "maeOutsideReference": null,
-      "mapeOutsideReferencePercent": null
+      "availableCount": 131,
+      "availabilityPercent": 100,
+      "pointInsideReferencePercent": 12.21374,
+      "pointAtOrBelowReferenceMinPercent": 85.496183,
+      "pointAtOrBelowReferenceMaxPercent": 97.709924,
+      "rangeCoveragePercent": 35.877863,
+      "maeOutsideReference": 0.39827,
+      "mapeOutsideReferencePercent": 42.029961
     },
     "vitaminCMg": {
-      "referenceCount": 108,
-      "availableCount": 0,
-      "availabilityPercent": 0,
-      "pointInsideReferencePercent": null,
-      "rangeCoveragePercent": null,
-      "maeOutsideReference": null,
-      "mapeOutsideReferencePercent": null
+      "referenceCount": 121,
+      "availableCount": 121,
+      "availabilityPercent": 100,
+      "pointInsideReferencePercent": 0.826446,
+      "pointAtOrBelowReferenceMinPercent": 99.173554,
+      "pointAtOrBelowReferenceMaxPercent": 100,
+      "rangeCoveragePercent": 31.404959,
+      "maeOutsideReference": 52.279137,
+      "mapeOutsideReferencePercent": 56.786117
     },
     "vitaminEMg": {
       "referenceCount": 45,
-      "availableCount": 0,
-      "availabilityPercent": 0,
-      "pointInsideReferencePercent": null,
-      "rangeCoveragePercent": null,
-      "maeOutsideReference": null,
-      "mapeOutsideReferencePercent": null
+      "availableCount": 45,
+      "availabilityPercent": 100,
+      "pointInsideReferencePercent": 0,
+      "pointAtOrBelowReferenceMinPercent": 97.777778,
+      "pointAtOrBelowReferenceMaxPercent": 97.777778,
+      "rangeCoveragePercent": 73.333333,
+      "maeOutsideReference": 2.146176,
+      "mapeOutsideReferencePercent": 68.311255
     }
   },
   "byGenre": {
     "baked_sweets": {
-      "referenceCount": 36,
-      "availableCount": 1,
-      "availabilityPercent": 2.777778,
-      "pointInsideReferencePercent": 0,
-      "rangeCoveragePercent": 0,
-      "maeOutsideReference": 2.2,
-      "mapeOutsideReferencePercent": 77.192982
+      "referenceCount": 179,
+      "availableCount": 179,
+      "availabilityPercent": 100,
+      "pointInsideReferencePercent": 41.340782,
+      "pointAtOrBelowReferenceMinPercent": 43.01676,
+      "pointAtOrBelowReferenceMaxPercent": 84.357542,
+      "rangeCoveragePercent": 79.329609,
+      "maeOutsideReference": 10.672618,
+      "mapeOutsideReferencePercent": 27.299959
     },
     "cake_pastry": {
-      "referenceCount": 6,
-      "availableCount": 0,
-      "availabilityPercent": 0,
-      "pointInsideReferencePercent": null,
-      "rangeCoveragePercent": null,
-      "maeOutsideReference": null,
-      "mapeOutsideReferencePercent": null
+      "referenceCount": 24,
+      "availableCount": 24,
+      "availabilityPercent": 100,
+      "pointInsideReferencePercent": 45.833333,
+      "pointAtOrBelowReferenceMinPercent": 41.666667,
+      "pointAtOrBelowReferenceMaxPercent": 87.5,
+      "rangeCoveragePercent": 79.166667,
+      "maeOutsideReference": 13.631856,
+      "mapeOutsideReferencePercent": 33.572139
     },
     "chocolate": {
-      "referenceCount": 137,
-      "availableCount": 36,
-      "availabilityPercent": 26.277372,
-      "pointInsideReferencePercent": 75,
-      "rangeCoveragePercent": 100,
-      "maeOutsideReference": 0.039098,
-      "mapeOutsideReferencePercent": 1.508017
+      "referenceCount": 237,
+      "availableCount": 237,
+      "availabilityPercent": 100,
+      "pointInsideReferencePercent": 38.818565,
+      "pointAtOrBelowReferenceMinPercent": 51.054852,
+      "pointAtOrBelowReferenceMaxPercent": 89.873418,
+      "rangeCoveragePercent": 64.135021,
+      "maeOutsideReference": 14.111429,
+      "mapeOutsideReferencePercent": 28.339088
     },
     "dairy": {
-      "referenceCount": 240,
-      "availableCount": 53,
-      "availabilityPercent": 22.083333,
-      "pointInsideReferencePercent": 45.283019,
-      "rangeCoveragePercent": 62.264151,
-      "maeOutsideReference": 250.362322,
-      "mapeOutsideReferencePercent": 95.363347
+      "referenceCount": 259,
+      "availableCount": 259,
+      "availabilityPercent": 100,
+      "pointInsideReferencePercent": 20.07722,
+      "pointAtOrBelowReferenceMinPercent": 57.142857,
+      "pointAtOrBelowReferenceMaxPercent": 77.220077,
+      "rangeCoveragePercent": 54.440154,
+      "maeOutsideReference": 131.324831,
+      "mapeOutsideReferencePercent": 91.673161
     },
     "drink_jelly_pudding": {
-      "referenceCount": 131,
-      "availableCount": 13,
-      "availabilityPercent": 9.923664,
-      "pointInsideReferencePercent": 7.692308,
-      "rangeCoveragePercent": 23.076923,
-      "maeOutsideReference": 20.448228,
-      "mapeOutsideReferencePercent": 481.252936
+      "referenceCount": 135,
+      "availableCount": 135,
+      "availabilityPercent": 100,
+      "pointInsideReferencePercent": 8.888889,
+      "pointAtOrBelowReferenceMinPercent": 71.851852,
+      "pointAtOrBelowReferenceMaxPercent": 79.259259,
+      "rangeCoveragePercent": 48.148148,
+      "maeOutsideReference": 62.369752,
+      "mapeOutsideReferencePercent": 145.265046
+    },
+    "fried_food": {
+      "referenceCount": 2,
+      "availableCount": 2,
+      "availabilityPercent": 100,
+      "pointInsideReferencePercent": 0,
+      "pointAtOrBelowReferenceMinPercent": 50,
+      "pointAtOrBelowReferenceMaxPercent": 50,
+      "rangeCoveragePercent": 50,
+      "maeOutsideReference": 29.505596,
+      "mapeOutsideReferencePercent": 100.085156
     },
     "frozen_dessert": {
-      "referenceCount": 3,
-      "availableCount": 0,
-      "availabilityPercent": 0,
-      "pointInsideReferencePercent": null,
-      "rangeCoveragePercent": null,
-      "maeOutsideReference": null,
-      "mapeOutsideReferencePercent": null
+      "referenceCount": 5,
+      "availableCount": 5,
+      "availabilityPercent": 100,
+      "pointInsideReferencePercent": 40,
+      "pointAtOrBelowReferenceMinPercent": 60,
+      "pointAtOrBelowReferenceMaxPercent": 100,
+      "rangeCoveragePercent": 40,
+      "maeOutsideReference": 6.74954,
+      "mapeOutsideReferencePercent": 28.246528
+    },
+    "noodle_flour_dish": {
+      "referenceCount": 2,
+      "availableCount": 2,
+      "availabilityPercent": 100,
+      "pointInsideReferencePercent": 0,
+      "pointAtOrBelowReferenceMinPercent": 50,
+      "pointAtOrBelowReferenceMaxPercent": 50,
+      "rangeCoveragePercent": 50,
+      "maeOutsideReference": 15.0441,
+      "mapeOutsideReferencePercent": 143.396927
     },
     "other_unknown": {
-      "referenceCount": 259,
-      "availableCount": 28,
-      "availabilityPercent": 10.810811,
-      "pointInsideReferencePercent": 35.714286,
-      "rangeCoveragePercent": 39.285714,
-      "maeOutsideReference": 0.262429,
-      "mapeOutsideReferencePercent": 47.687478
+      "referenceCount": 373,
+      "availableCount": 373,
+      "availabilityPercent": 100,
+      "pointInsideReferencePercent": 11.260054,
+      "pointAtOrBelowReferenceMinPercent": 79.624665,
+      "pointAtOrBelowReferenceMaxPercent": 89.812332,
+      "rangeCoveragePercent": 40.482574,
+      "maeOutsideReference": 33.051245,
+      "mapeOutsideReferencePercent": 124.805745
     },
     "prepared_meal": {
-      "referenceCount": 17,
-      "availableCount": 0,
-      "availabilityPercent": 0,
-      "pointInsideReferencePercent": null,
-      "rangeCoveragePercent": null,
-      "maeOutsideReference": null,
-      "mapeOutsideReferencePercent": null
+      "referenceCount": 37,
+      "availableCount": 37,
+      "availabilityPercent": 100,
+      "pointInsideReferencePercent": 37.837838,
+      "pointAtOrBelowReferenceMinPercent": 32.432432,
+      "pointAtOrBelowReferenceMaxPercent": 70.27027,
+      "rangeCoveragePercent": 78.378378,
+      "maeOutsideReference": 105.22056,
+      "mapeOutsideReferencePercent": 64.895222
+    },
+    "sauce_spread": {
+      "referenceCount": 186,
+      "availableCount": 186,
+      "availabilityPercent": 100,
+      "pointInsideReferencePercent": 29.032258,
+      "pointAtOrBelowReferenceMinPercent": 40.322581,
+      "pointAtOrBelowReferenceMaxPercent": 68.817204,
+      "rangeCoveragePercent": 79.032258,
+      "maeOutsideReference": 23.325474,
+      "mapeOutsideReferencePercent": 40.502925
     },
     "snack_rice_cracker": {
-      "referenceCount": 6,
-      "availableCount": 0,
-      "availabilityPercent": 0,
-      "pointInsideReferencePercent": null,
-      "rangeCoveragePercent": null,
-      "maeOutsideReference": null,
-      "mapeOutsideReferencePercent": null
+      "referenceCount": 58,
+      "availableCount": 58,
+      "availabilityPercent": 100,
+      "pointInsideReferencePercent": 13.793103,
+      "pointAtOrBelowReferenceMinPercent": 79.310345,
+      "pointAtOrBelowReferenceMaxPercent": 93.103448,
+      "rangeCoveragePercent": 67.241379,
+      "maeOutsideReference": 8.375221,
+      "mapeOutsideReferencePercent": 41.213196
     },
     "sugar_confectionery": {
-      "referenceCount": 42,
-      "availableCount": 4,
-      "availabilityPercent": 9.52381,
-      "pointInsideReferencePercent": 25,
-      "rangeCoveragePercent": 25,
-      "maeOutsideReference": 0.15,
-      "mapeOutsideReferencePercent": 25
+      "referenceCount": 54,
+      "availableCount": 54,
+      "availabilityPercent": 100,
+      "pointInsideReferencePercent": 9.259259,
+      "pointAtOrBelowReferenceMinPercent": 90.740741,
+      "pointAtOrBelowReferenceMaxPercent": 100,
+      "rangeCoveragePercent": 44.444444,
+      "maeOutsideReference": 15.499687,
+      "mapeOutsideReferencePercent": 45.90228
     }
   },
   "calibrationByNutrient": {
     "calciumMg": {
-      "referenceCount": 39,
-      "availableCount": 12,
-      "availabilityPercent": 30.769231,
-      "pointInsideReferencePercent": 50,
-      "rangeCoveragePercent": 66.666667,
-      "maeOutsideReference": 122.033938,
-      "mapeOutsideReferencePercent": 61.106133
+      "referenceCount": 55,
+      "availableCount": 17,
+      "availabilityPercent": 30.909091,
+      "pointInsideReferencePercent": 52.941176,
+      "pointAtOrBelowReferenceMinPercent": 29.411765,
+      "pointAtOrBelowReferenceMaxPercent": 82.352941,
+      "rangeCoveragePercent": 70.588235,
+      "maeOutsideReference": 108.022889,
+      "mapeOutsideReferencePercent": 57.215138
     },
     "fiberG": {
-      "referenceCount": 23,
-      "availableCount": 12,
-      "availabilityPercent": 52.173913,
-      "pointInsideReferencePercent": 66.666667,
-      "rangeCoveragePercent": 83.333333,
-      "maeOutsideReference": 2.831154,
-      "mapeOutsideReferencePercent": 70.314489
+      "referenceCount": 69,
+      "availableCount": 23,
+      "availabilityPercent": 33.333333,
+      "pointInsideReferencePercent": 60.869565,
+      "pointAtOrBelowReferenceMinPercent": 26.086957,
+      "pointAtOrBelowReferenceMaxPercent": 86.956522,
+      "rangeCoveragePercent": 82.608696,
+      "maeOutsideReference": 1.704978,
+      "mapeOutsideReferencePercent": 42.187018
     },
     "ironMg": {
-      "referenceCount": 8,
+      "referenceCount": 11,
       "availableCount": 0,
       "availabilityPercent": 0,
       "pointInsideReferencePercent": null,
+      "pointAtOrBelowReferenceMinPercent": null,
+      "pointAtOrBelowReferenceMaxPercent": null,
       "rangeCoveragePercent": null,
       "maeOutsideReference": null,
       "mapeOutsideReferencePercent": null
+    },
+    "saturatedFatG": {
+      "referenceCount": 28,
+      "availableCount": 6,
+      "availabilityPercent": 21.428571,
+      "pointInsideReferencePercent": 83.333333,
+      "pointAtOrBelowReferenceMinPercent": 16.666667,
+      "pointAtOrBelowReferenceMaxPercent": 100,
+      "rangeCoveragePercent": 100,
+      "maeOutsideReference": 0.06231,
+      "mapeOutsideReferencePercent": 3.100008
     },
     "vitaminAMcg": {
       "referenceCount": 8,
       "availableCount": 0,
       "availabilityPercent": 0,
       "pointInsideReferencePercent": null,
+      "pointAtOrBelowReferenceMinPercent": null,
+      "pointAtOrBelowReferenceMaxPercent": null,
       "rangeCoveragePercent": null,
       "maeOutsideReference": null,
       "mapeOutsideReferencePercent": null
@@ -289,6 +1137,8 @@
       "availableCount": 0,
       "availabilityPercent": 0,
       "pointInsideReferencePercent": null,
+      "pointAtOrBelowReferenceMinPercent": null,
+      "pointAtOrBelowReferenceMaxPercent": null,
       "rangeCoveragePercent": null,
       "maeOutsideReference": null,
       "mapeOutsideReferencePercent": null
@@ -298,15 +1148,19 @@
       "availableCount": 0,
       "availabilityPercent": 0,
       "pointInsideReferencePercent": null,
+      "pointAtOrBelowReferenceMinPercent": null,
+      "pointAtOrBelowReferenceMaxPercent": null,
       "rangeCoveragePercent": null,
       "maeOutsideReference": null,
       "mapeOutsideReferencePercent": null
     },
     "vitaminCMg": {
-      "referenceCount": 13,
+      "referenceCount": 15,
       "availableCount": 0,
       "availabilityPercent": 0,
       "pointInsideReferencePercent": null,
+      "pointAtOrBelowReferenceMinPercent": null,
+      "pointAtOrBelowReferenceMaxPercent": null,
       "rangeCoveragePercent": null,
       "maeOutsideReference": null,
       "mapeOutsideReferencePercent": null
@@ -316,6 +1170,8 @@
       "availableCount": 0,
       "availabilityPercent": 0,
       "pointInsideReferencePercent": null,
+      "pointAtOrBelowReferenceMinPercent": null,
+      "pointAtOrBelowReferenceMaxPercent": null,
       "rangeCoveragePercent": null,
       "maeOutsideReference": null,
       "mapeOutsideReferencePercent": null

@@ -9,6 +9,21 @@ export type Nutrients = Record<NutrientKey, number | null>
 export type NutrientOrigin = 'manufacturer_label' | 'external_source' | 'user_input' | 'estimated' | 'derived' | 'unknown'
 export type EstimationConfidence = 'high' | 'medium' | 'low' | 'unavailable'
 
+export const ESTIMATION_LIMITATION_REASONS = [
+  'invalid_basis',
+  'reference_mass_missing',
+  'reference_mass_source_missing',
+  'ingredients_missing',
+  'ingredients_unverified',
+  'ingredient_parse_failed',
+  'ingredient_unresolved',
+  'reference_value_missing',
+  'additive_contribution_unknown',
+  'not_requested',
+] as const
+
+export type EstimationLimitationReason = (typeof ESTIMATION_LIMITATION_REASONS)[number]
+
 /** 栄養値の由来。推計値は値だけでなく不確実性も一緒に保持する。 */
 export interface NutrientMetadata {
   origin: NutrientOrigin
@@ -442,6 +457,7 @@ export interface NutrientEstimate {
   source?: string
   sourceFoodIds?: string[]
   warnings: string[]
+  limitationReasons?: EstimationLimitationReason[]
   calibration?: EstimationCalibrationMetadata
 }
 
@@ -463,6 +479,7 @@ export interface EstimationResult {
   estimates: Partial<Record<NutrientKey, NutrientEstimate>>
   globalWarnings: string[]
   unresolvedIngredients?: string[]
+  limitationReasons?: EstimationLimitationReason[]
   optimization?: { converged: boolean; objectiveError?: number; scenarioCount?: number }
   error?: { code: string; message: string; nextAction: string }
   modelVersion: string

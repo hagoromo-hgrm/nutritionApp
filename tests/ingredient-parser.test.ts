@@ -23,6 +23,13 @@ describe('ingredient declaration parser', () => {
     expect(parsed.ingredients.every((item) => item.components.length === 0)).toBe(true)
   })
 
+  it('独立した括弧内アレルゲン注記を原材料として扱わない', () => {
+    const parsed = parseIngredientDeclaration('小麦粉、砂糖、（一部に小麦・乳成分を含む）')
+
+    expect(parsed.ingredients.map((item) => item.normalizedName)).toEqual(['小麦粉', '砂糖'])
+    expect(parsed.additives).toEqual([])
+  })
+
   it('スラッシュ以降を添加物区画として食品原材料から分離する', () => {
     const parsed = parseIngredientDeclaration('小麦粉、はちみつ／増粘剤、香料、酸味料')
 
@@ -60,5 +67,47 @@ describe('ingredient declaration parser', () => {
     const parsed = parseIngredientDeclaration('<チーズ>生乳、＜レモン味＞砂糖')
 
     expect(parsed.ingredients.map((item) => item.normalizedName)).toEqual(['生乳', '砂糖'])
+  })
+
+  it('亀甲括弧の複合原材料を展開する', () => {
+    const parsed = parseIngredientDeclaration(
+      'めん〔小麦粉（国内製造）、卵粉、植物油脂／かんすい〕、野菜（にんじん、ねぎ）',
+    )
+
+    expect(parsed.ingredients.map((item) => item.normalizedName)).toEqual(['めん', '野菜'])
+    expect(parsed.ingredients[0].components.map((item) => item.normalizedName)).toEqual([
+      '小麦粉',
+      '卵粉',
+      '植物油脂',
+    ])
+    expect(parsed.additives.map((item) => item.normalizedName)).toEqual(['かんすい'])
+  })
+
+  it('複数区画の見出しで添加物区画を食品原材料へ戻す', () => {
+    const parsed = parseIngredientDeclaration(
+      '「めん」小麦粉、植物油脂／かんすい「添付調味料」ポークエキス、砂糖／調味料',
+    )
+
+    expect(parsed.ingredients.map((item) => item.normalizedName)).toEqual([
+      '小麦粉',
+      '植物油脂',
+      'ポークエキス',
+      '砂糖',
+    ])
+    expect(parsed.additives.map((item) => item.normalizedName)).toEqual(['かんすい', '調味料'])
+  })
+
+  it('隅付き括弧の商品区画名を原材料名から分離する', () => {
+    const parsed = parseIngredientDeclaration(
+      '【ミックス】小麦粉、砂糖【ソース】植物油脂、マヨネーズ／調味料',
+    )
+
+    expect(parsed.ingredients.map((item) => item.normalizedName)).toEqual([
+      '小麦粉',
+      '砂糖',
+      '植物油脂',
+      'マヨネーズ',
+    ])
+    expect(parsed.additives.map((item) => item.normalizedName)).toEqual(['調味料'])
   })
 })

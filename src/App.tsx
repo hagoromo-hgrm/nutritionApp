@@ -64,7 +64,7 @@ import {
   type NutrientEstimateAdoption,
   type NutrientEstimateEvaluation,
 } from './components/NutrientEstimatePanel'
-import { ESTIMATABLE_NUTRIENT_KEYS, ESTIMATE_FIT_NUTRIENT_KEYS, toStoredNutrientEstimateResult } from './services/nutrientEstimator'
+import { ESTIMATABLE_NUTRIENT_KEYS, ESTIMATE_FIT_NUTRIENT_KEYS, GENRE_PRIOR_PARTIAL_METHOD, PARTIAL_METHOD, toStoredNutrientEstimateResult } from './services/nutrientEstimator'
 import { calculateBmi, calculateNutrients, estimateDailyGoals, formatGraphNutrient, formatNutrient, getFoodDefaultServing, getFoodQuantityUnits, goalRate, incrementByQuantityUnit, nutrientRangeForGoals, scaleNutritionGoals, sumAvailableNutrients, sumByMealType, sumEntries, sumNutrients } from './services/nutrition'
 import { getMenuIngredients, menuToFood, menusWithUnsupportedIngredientUnits, wouldCreateMenuCycle } from './services/menuIngredients'
 import {
@@ -3153,7 +3153,7 @@ function SettingsView({ settings, estimationSettings, goalInputs, setGoalInputs,
       <div className="food-master-actions"><button className="button primary" type="button" onClick={onOpenNewFood}>＋ 新しい食品を登録</button><button className="button secondary" type="button" onClick={onOpenFoodMaster}>登録済み食品を確認・検索</button></div>
       <div className="settings-info-row settings-inline-row nutrient-estimate-setting">
         <label className="toggle-row"><input type="checkbox" checked={estimationSettings.enabled} onChange={(event) => onToggleNutrientEstimator(event.target.checked)} />欠損した飽和脂肪酸・食物繊維・ビタミン・ミネラルの参考推計を使う</label>
-        <InfoPopover className="settings-info" label="参考推計について" text="確認済みの原材料表示と重量を使い、端末内だけで参考候補を計算します。初期値は無効です。結果は確認後に手動で採用し、既存値を上書きしません。" />
+        <InfoPopover className="settings-info" label="参考推計について" text="確認済みの原材料表示と重量を使い、端末内だけで参考候補を計算します。未対応原材料、参照値欠損、栄養添加物の寄与割合不明がある場合は、該当分を加算しない既知原材料分の部分参考値を低信頼度で表示します。部分参考値は商品の保証下限ではありません。初期値は無効で、結果は確認後に手動採用し、既存値を上書きしません。" />
       </div>
       <div className="settings-info-row">
         <div className="settings-action-buttons">
@@ -3431,7 +3431,7 @@ function FoodFormView({ draft, returnView, allowCommercialClassification, estima
           <div className="nutrient-input-grid">{NUTRIENT_KEYS.map((key) => {
             const metadata = draft.nutrientMetadata[key]
             return <label key={key}>{NUTRIENT_LABELS[key]}<div className="unit-input"><input type="number" min="0" step="any" value={draft.nutrients[key]} onChange={(event) => updateNutrientValue(key, event.target.value)} placeholder="未設定" /><span>{NUTRIENT_UNITS[key]}</span></div>
-              {metadata?.origin === 'estimated' && <span className="estimated-origin-row"><small>参考推計 · 信頼度 {metadata.confidence ?? '不明'}</small>{draft.id && <button type="button" className="small-action" onClick={() => onRevertEstimate(draft.id!, key)}>採用を取り消す</button>}</span>}
+              {metadata?.origin === 'estimated' && <span className="estimated-origin-row"><small>{metadata.method === GENRE_PRIOR_PARTIAL_METHOD ? 'ジャンル補完参考推計' : metadata.method === PARTIAL_METHOD ? '部分参考推計' : '参考推計'} · 信頼度 {metadata.confidence ?? '不明'}</small>{draft.id && <button type="button" className="small-action" onClick={() => onRevertEstimate(draft.id!, key)}>採用を取り消す</button>}</span>}
             </label>
           })}</div>
           {estimationEnabled && hasEstimatableMissingValue && <NutrientEstimatePanel
