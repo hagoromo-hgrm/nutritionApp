@@ -334,6 +334,8 @@ export type GeneralMenu = Menu
 export interface MenuSet {
   id: string
   name: string
+  /** 同じMyセット一覧内の表示順。未指定は既存の名前順で扱う。 */
+  sortOrder?: number
   menuIds: string[]
   /** 一般メニューをセットへ含めるための参照。未指定は空として扱う。 */
   generalMenuIds?: string[]

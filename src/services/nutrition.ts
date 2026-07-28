@@ -1,4 +1,4 @@
-import { EMPTY_NUTRIENTS, NUTRIENT_KEYS, type BodyProfile, type Food, type MealEntry, type NutrientKey, type Nutrients, type NutritionGoals, type QuantityUnit } from '../types'
+import { EMPTY_NUTRIENTS, NUTRIENT_KEYS, type BodyProfile, type Food, type MealEntry, type MealType, type NutrientKey, type Nutrients, type NutritionGoals, type QuantityUnit } from '../types'
 import { isValidQuantityUnit } from '../utils/validation'
 
 export function quantityUnitConversionFor(food: Food, unit: QuantityUnit) {
@@ -165,6 +165,15 @@ export function nutrientRangeForGoals(goals: NutritionGoals, key: NutrientKey): 
 
 export function scaleNutritionGoals(goals: NutritionGoals, factor: number): NutritionGoals {
   return Object.fromEntries(NUTRIENT_KEYS.map((key) => [key, goals[key] === null ? null : goals[key] * factor])) as unknown as NutritionGoals
+}
+
+export function mealDetailNutritionGoals(goals: NutritionGoals, mealType: MealType): NutritionGoals {
+  if (mealType !== '間食') return scaleNutritionGoals(goals, 1 / 3)
+  const dailyEnergy = goals.energyKcal
+  if (dailyEnergy === null || !Number.isFinite(dailyEnergy) || dailyEnergy <= 0) {
+    return Object.fromEntries(NUTRIENT_KEYS.map((key) => [key, key === 'energyKcal' ? 200 : null])) as unknown as NutritionGoals
+  }
+  return { ...scaleNutritionGoals(goals, 200 / dailyEnergy), energyKcal: 200 }
 }
 
 export function calculateBmi(profile: BodyProfile): number | null {

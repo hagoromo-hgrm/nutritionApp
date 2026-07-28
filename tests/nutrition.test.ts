@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { calculateBmi, calculateNutrients, estimateDailyEnergyTarget, estimateDailyGoals, formatGraphNutrient, formatNutrient, getFoodDefaultServing, goalRate, incrementByBaseAmount, nutrientRangeForGoals, scaleNutritionGoals, sumAvailableNutrients, sumByMealType, sumEntries, sumNutrients } from '../src/services/nutrition'
+import { calculateBmi, calculateNutrients, estimateDailyEnergyTarget, estimateDailyGoals, formatGraphNutrient, formatNutrient, getFoodDefaultServing, goalRate, incrementByBaseAmount, mealDetailNutritionGoals, nutrientRangeForGoals, scaleNutritionGoals, sumAvailableNutrients, sumByMealType, sumEntries, sumNutrients } from '../src/services/nutrition'
 import { isValidQuantityUnit } from '../src/utils/validation'
 import type { BodyProfile, Food, MealEntry, Nutrients } from '../src/types'
 
@@ -131,6 +131,30 @@ describe('nutrition calculation', () => {
     expect(nutrientRangeForGoals(goals, 'calciumMg')).toEqual({ min: 750, max: null })
     expect(nutrientRangeForGoals(goals, 'saltG')).toEqual({ min: null, max: 7.5 })
     expect(scaleNutritionGoals(goals, 1 / 3).energyKcal).toBe(720)
+  })
+
+  it('間食詳細は200kcalを基準に他の栄養素も日次目標から比例配分する', () => {
+    const goals = estimateDailyGoals({ heightCm: 170, weightKg: 65, ageYears: 30, sex: 'male', activityLevel: 'moderate' })
+    expect(goals).not.toBeNull()
+    if (!goals) return
+    const snackGoals = mealDetailNutritionGoals(goals, '間食')
+    expect(snackGoals.energyKcal).toBe(200)
+    expect(snackGoals.proteinG).toBeCloseTo(goals.proteinG! * (200 / goals.energyKcal!), 8)
+    expect(mealDetailNutritionGoals(goals, '朝食').energyKcal).toBe(720)
+  })
+
+  it('日次カロリー目標が未設定でも間食の200kcal基準だけは表示する', () => {
+    const goals = { ...estimateDailyGoals({ heightCm: 170, weightKg: 65, ageYears: 30, sex: 'male', activityLevel: 'moderate' })!, energyKcal: null }
+    const snackGoals = mealDetailNutritionGoals(goals, '間食')
+    expect(snackGoals.energyKcal).toBe(200)
+    expect(snackGoals.proteinG).toBeNull()
+  })
+
+  it('日次カロリー目標が不正値でも間食の比例計算へ伝播させない', () => {
+    const goals = { ...estimateDailyGoals({ heightCm: 170, weightKg: 65, ageYears: 30, sex: 'male', activityLevel: 'moderate' })!, energyKcal: Number.NaN }
+    const snackGoals = mealDetailNutritionGoals(goals, '間食')
+    expect(snackGoals.energyKcal).toBe(200)
+    expect(snackGoals.proteinG).toBeNull()
   })
 
   it('4桁以上の表示値は小数点以下を丸める', () => {

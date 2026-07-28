@@ -404,6 +404,14 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .meal-menu-modal { width: min(100%, 700px); }
 .meal-menu-snapshot-editor { display: grid; gap: .7rem; }
 .meal-menu-snapshot-editor > .helper-text { margin: 0; line-height: 1.55; }
+.meal-menu-selected-details > summary { display: flex; align-items: center; gap: .65rem; cursor: pointer; list-style: none; }
+.meal-menu-selected-details > summary::-webkit-details-marker { display: none; }
+.meal-menu-selected-details > summary > div { min-width: 0; flex: 1; }
+.meal-menu-selected-details > summary h3 { margin-top: .18rem; color: var(--ink); font-size: .98rem; }
+.meal-menu-selected-details > summary p { margin-top: .28rem; color: var(--muted); font-size: .68rem; font-weight: 500; line-height: 1.55; }
+.meal-menu-selected-details > summary > i { flex: 0 0 auto; width: .5rem; height: .5rem; border-right: 2px solid var(--accent-deep); border-bottom: 2px solid var(--accent-deep); transform: rotate(-45deg); transition: transform .15s ease; }
+.meal-menu-selected-details[open] > summary { margin-bottom: .7rem; }
+.meal-menu-selected-details[open] > summary > i { transform: rotate(45deg); }
 .meal-snapshot-ingredients { overflow: hidden; border: 1px solid var(--line); border-radius: .8rem; padding: .15rem .8rem; background: #fbfdff; }
 .meal-snapshot-ingredient + .meal-snapshot-ingredient { border-top: 1px solid #edf2f8; }
 .meal-snapshot-ingredient .menu-ingredient-row { border-bottom: 0; }
@@ -512,6 +520,11 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .menu-management-panel { margin-top: 1rem; }
 .menu-management-panel > .section-title { align-items: center; }
 .menu-category-groups, .menu-set-list { display: grid; gap: .65rem; }
+.menu-set-order-helper { margin: -.35rem 0 .75rem; }
+.menu-set-order-row { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: stretch; gap: .45rem; }
+.menu-set-order-buttons { display: grid; align-content: center; gap: .3rem; }
+.menu-set-order-buttons button { display: grid; width: 2rem; height: 2rem; place-items: center; border: 1px solid var(--line); border-radius: .55rem; color: var(--accent-deep); background: #f7fbff; font-size: .8rem; font-weight: 900; }
+.menu-set-order-buttons button:disabled { color: #aab7c5; background: #f1f4f7; opacity: .55; }
 .menu-category-group, .menu-set-card { overflow: hidden; border: 1px solid var(--line); border-radius: 1rem; background: white; }
 .menu-category-group > summary, .menu-set-card > summary { display: flex; align-items: center; justify-content: space-between; gap: .7rem; padding: .85rem .95rem; color: var(--accent-deep); cursor: pointer; list-style: none; }
 .menu-category-group > summary::-webkit-details-marker, .menu-set-card > summary::-webkit-details-marker { display: none; }
@@ -686,7 +699,7 @@ legend { padding: 0 .35rem; color: var(--muted); font-size: .75rem; font-weight:
 @media (max-width: 760px) {
   .app-header { padding: 1rem; }
   .content { width: min(100% - 1.2rem, 620px); }
-  input, select, textarea { font-size: 16px; }
+  input, select, textarea, .menu-ingredient-amount input, .menu-ingredient-amount select, select.field-suffix { font-size: 16px; }
   .page-heading { align-items: start; flex-direction: column; padding-top: 1.6rem; }
   .food-screen-heading { gap: .35rem; padding-top: 1rem; padding-bottom: .55rem; }
   .food-screen-heading .button { align-self: flex-start; padding-top: .42rem; padding-bottom: .42rem; }

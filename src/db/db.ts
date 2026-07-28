@@ -560,7 +560,7 @@ export async function searchMenus(query: string): Promise<Menu[]> {
 
 export async function searchMenuSets(query: string): Promise<MenuSet[]> {
   const normalized = normalizeSearchText(query)
-  const sets = await db.menuSets.orderBy('name').toArray()
+  const sets = sortMenuSets(await db.menuSets.orderBy('name').toArray())
   if (!normalized) return sets
   const menus = await db.menus.toArray()
   const menuById = new Map(menus.map((menu) => [menu.id, menu]))
@@ -598,10 +598,10 @@ export async function searchMenuSets(query: string): Promise<MenuSet[]> {
       || getMenuFoodIds(menu).some(foodMatches)
       || getNestedMenuIds(menu).some((nestedMenuId) => menuMatches(nestedMenuId, nextVisited))
   }
-  return sets.filter((set) => textMatches(set.name) || (set.foodIds ?? []).some(foodMatches)
+  return sortMenuSets(sets.filter((set) => textMatches(set.name) || (set.foodIds ?? []).some(foodMatches)
     || (set.foodItems ?? []).some((item) => foodMatches(item.foodId))
     || set.menuIds.some((menuId) => menuMatches(menuId))
-    || (set.generalMenuIds ?? []).some((menuId) => generalMenuMatches(menuId)))
+    || (set.generalMenuIds ?? []).some((menuId) => generalMenuMatches(menuId))))
 }
 
 export async function getAllMenus(): Promise<Menu[]> {
@@ -651,7 +651,27 @@ export async function getAllGeneralMenus(): Promise<GeneralMenu[]> {
 }
 
 export async function getAllMenuSets(): Promise<MenuSet[]> {
-  return db.menuSets.orderBy('name').toArray()
+  return sortMenuSets(await db.menuSets.orderBy('name').toArray())
+}
+
+function isValidMenuSetSortOrder(value: unknown): value is number {
+  return Number.isSafeInteger(value) && Number(value) >= 0
+}
+
+/** 明示順を優先し、旧データや同順位は既存の名前順を維持する。 */
+function sortMenuSets(menuSets: MenuSet[]): MenuSet[] {
+  return menuSets
+    .map((menuSet, index) => ({ menuSet, index }))
+    .sort((left, right) => {
+      const leftHasOrder = isValidMenuSetSortOrder(left.menuSet.sortOrder)
+      const rightHasOrder = isValidMenuSetSortOrder(right.menuSet.sortOrder)
+      if (leftHasOrder !== rightHasOrder) return leftHasOrder ? -1 : 1
+      if (leftHasOrder && rightHasOrder && left.menuSet.sortOrder !== right.menuSet.sortOrder) {
+        return (left.menuSet.sortOrder ?? 0) - (right.menuSet.sortOrder ?? 0)
+      }
+      return left.index - right.index
+    })
+    .map(({ menuSet }) => menuSet)
 }
 
 export async function saveMenu(menu: Menu): Promise<void> {
@@ -695,6 +715,25 @@ export async function deleteMenu(id: string): Promise<void> {
 
 export async function saveMenuSet(menuSet: MenuSet): Promise<void> {
   await db.menuSets.put(menuSet)
+}
+
+/** 全Myセットを指定順へ一括更新する。対象が一致しない場合は書き込まない。 */
+export async function reorderMenuSets(orderedMenuSetIds: string[]): Promise<void> {
+  if (new Set(orderedMenuSetIds).size !== orderedMenuSetIds.length) throw new Error('並び順に重複したMyセットがあります。')
+  await db.transaction('rw', db.menuSets, async () => {
+    const menuSets = await db.menuSets.toArray()
+    const currentIds = new Set(menuSets.map((menuSet) => menuSet.id))
+    if (menuSets.length !== orderedMenuSetIds.length || orderedMenuSetIds.some((id) => !currentIds.has(id))) {
+      throw new Error('Myセットが変更されたため、並び替えを再試行してください。')
+    }
+    const menuSetsById = new Map(menuSets.map((menuSet) => [menuSet.id, menuSet]))
+    const reordered = orderedMenuSetIds.map((id, sortOrder) => {
+      const menuSet = menuSetsById.get(id)
+      if (!menuSet) throw new Error('並び替えるMyセットが見つかりません。')
+      return { ...menuSet, sortOrder }
+    })
+    if (reordered.length > 0) await db.menuSets.bulkPut(reordered)
+  })
 }
 
 export async function deleteMenuSet(id: string): Promise<void> {

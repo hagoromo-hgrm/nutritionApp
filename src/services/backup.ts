@@ -237,6 +237,7 @@ function isGeneralMenu(value: unknown): value is GeneralMenu {
 function isMenuSet(value: unknown): value is MenuSet {
   if (!isRecord(value)) return false
   return isNonEmptyString(value.id) && isNonEmptyString(value.name) && Array.isArray(value.menuIds) && value.menuIds.every(isNonEmptyString)
+    && (value.sortOrder === undefined || (Number.isSafeInteger(value.sortOrder) && Number(value.sortOrder) >= 0))
     && (value.generalMenuIds === undefined || (Array.isArray(value.generalMenuIds) && value.generalMenuIds.every(isNonEmptyString)))
     && (value.foodIds === undefined || (Array.isArray(value.foodIds) && value.foodIds.every(isNonEmptyString)))
     && (value.foodItems === undefined || (Array.isArray(value.foodItems) && value.foodItems.every((item) => isRecord(item) && isNonEmptyString(item.foodId) && typeof item.amount === 'number' && Number.isFinite(item.amount) && item.amount > 0 && item.amount <= 100000 && isValidQuantityUnit(String(item.unit)))))
