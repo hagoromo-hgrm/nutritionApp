@@ -543,9 +543,10 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .menu-set-card > summary strong { overflow: hidden; color: var(--ink); text-overflow: ellipsis; white-space: nowrap; font-size: .86rem; }
 .menu-set-card-body { padding: .75rem .9rem .85rem; }
 .menu-set-card-body ul { display: grid; gap: .5rem; margin: 0; padding: 0; list-style: none; }
-.menu-set-card-body li { display: grid; grid-template-columns: 5.2rem minmax(0, 1fr); align-items: center; gap: .5rem; border-bottom: 1px solid #edf2f8; padding: 0 0 .5rem; }
+.menu-set-card-body li { display: grid; grid-template-columns: 5.2rem minmax(0, 1fr) auto; align-items: center; gap: .5rem; border-bottom: 1px solid #edf2f8; padding: 0 0 .5rem; }
 .menu-set-card-body li span { color: var(--muted); font-size: .65rem; }
 .menu-set-card-body li strong { overflow: hidden; color: var(--ink); text-overflow: ellipsis; white-space: nowrap; font-size: .76rem; }
+.menu-set-card-body li small { color: var(--muted); font-size: .68rem; white-space: nowrap; }
 .menu-set-card-body .menu-card-actions { justify-content: flex-end; margin-top: .7rem; }
 .body-profile-form { display: grid; gap: .85rem; margin-top: 1rem; }
 .estimated-target { display: grid; grid-template-columns: 1fr 1fr; gap: .65rem; margin-top: 1rem; }

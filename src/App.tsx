@@ -78,7 +78,7 @@ import {
   createMealMenuSnapshot,
   createTemporaryMealMenuSnapshot,
 } from './services/mealMenuSnapshots'
-import { createMenuSetMealBatch, getMenuSetFoodItems } from './services/menuSetMeals'
+import { createMenuSetMealBatch, getMenuSetCalorieSummary, getMenuSetFoodItems } from './services/menuSetMeals'
 import { normalizeMealEntryOrder, sortMealEntries, sortMealEntryGroup } from './services/mealEntryOrder'
 import { buildDailyNutrientTrend } from './services/trend'
 import { shouldShowTrendDate } from './services/trendDateLabels'
@@ -2927,11 +2927,16 @@ function MenuView({ menus, generalMenus, menuSets, foods, onNewMenu, onShowMenuN
   }
   const menuName = (id: string) => menus.find((menu) => menu.id === id)?.name ?? '削除済みメニュー'
   const generalMenuName = (id: string) => generalMenus.find((menu) => menu.id === id)?.name ?? '削除済み一般メニュー'
-  const menuSetItems = (menuSet: MenuSet) => [
+  const formatMenuSetCalories = (energyKcal: number | null) => `${energyKcal === null ? '--.-' : formatNutrient(energyKcal)}kcal`
+  const menuSetItems = (menuSet: MenuSet) => {
+    const items = [
     ...menuSet.menuIds.map((id) => ({ id: `menu:${id}`, kind: 'Myメニュー', name: menuName(id) })),
     ...(menuSet.generalMenuIds ?? []).map((id) => ({ id: `general-menu:${id}`, kind: '一般メニュー', name: generalMenuName(id) })),
     ...getMenuSetFoodItems(menuSet, foods).map((item) => ({ id: `food:${item.foodId}`, kind: '食品', name: foodName(item.foodId) })),
-  ]
+    ]
+    const calories = getMenuSetCalorieSummary({ menuSet, menus, generalMenus, foods })
+    return { items: items.map((item, index) => ({ ...item, energyKcal: calories.items[index]?.energyKcal ?? null })), energyKcal: calories.energyKcal }
+  }
   const menuList = (items: Array<Menu | GeneralMenu>, kind: 'my' | 'general') => <div className="menu-category-groups">{MENU_CATEGORIES.map((category) => {
     const categoryMenus = items.filter((menu) => menu.category === category)
     return <details className="menu-category-group" key={category}><summary><span className="menu-picker-summary-label"><i aria-hidden="true" />{category}</span><small>{categoryMenus.length > 0 ? `${categoryMenus.length}件` : '登録なし'}</small></summary>{categoryMenus.length > 0 ? <div className="menu-list">{categoryMenus.map((menu) => {
@@ -2951,13 +2956,13 @@ function MenuView({ menus, generalMenus, menuSets, foods, onNewMenu, onShowMenuN
       {menuList(menus, 'my')}
     </section> : activeTab === 'sets' ? <section className="section-block menu-management-panel" role="tabpanel">
       <div className="section-title"><div><span className="eyebrow">MY SETS</span><h2>Myセット</h2></div><button className="button primary" type="button" onClick={onNewMenuSet}>＋ Myセット</button></div>
-      {orderedMenuSets.length === 0 ? <div className="empty-state">Myセットはまだありません。</div> : <><p className="helper-text menu-set-order-helper">≡をドラッグして、食事登録画面に表示する順番を変更できます。</p><div ref={listRef} className={`menu-set-list${draggedMenuSetId ? ' is-reordering' : ''}`}>{orderedMenuSets.map((menuSet) => { const items = menuSetItems(menuSet); return <div className="menu-set-order-row" key={menuSet.id}><div className={`menu-set-card-shell${draggedMenuSetId === menuSet.id ? ' is-drag-placeholder' : ''}`} data-menu-set-id={menuSet.id}><button className="meal-order-handle menu-set-order-handle" type="button" aria-label={`${menuSet.name}をドラッグして並び替え`} disabled={savingMenuSetOrder || orderedMenuSets.length < 2} onPointerDown={(event) => startMenuSetDrag(event, menuSet.id)} onPointerUp={(event) => finishDragRef.current(event.pointerId, true)} onPointerCancel={(event) => finishDragRef.current(event.pointerId, false)}>≡</button><details className="menu-set-card"><summary><span><span className="source-badge">セット</span><strong>{menuSet.name}</strong></span><small>{items.length > 0 ? `構成 ${items.length}件` : '構成なし'}</small></summary><div className="menu-set-card-body">{items.length > 0 ? <ul>{items.map((item) => <li key={item.id}><span>{item.kind}</span><strong>{item.name}</strong></li>)}</ul> : <p className="menu-picker-empty">メニュー・食品が選択されていません。</p>}<div className="menu-card-actions"><button type="button" className="small-action" onClick={() => onEditMenuSet(menuSet)}>編集</button><button type="button" className="small-action danger-text" onClick={() => onDeleteMenuSet(menuSet)}>削除</button></div></div></details></div></div> })}</div></>}
+      {orderedMenuSets.length === 0 ? <div className="empty-state">Myセットはまだありません。</div> : <><p className="helper-text menu-set-order-helper">≡をドラッグして、食事登録画面に表示する順番を変更できます。</p><div ref={listRef} className={`menu-set-list${draggedMenuSetId ? ' is-reordering' : ''}`}>{orderedMenuSets.map((menuSet) => { const setDisplay = menuSetItems(menuSet); const items = setDisplay.items; return <div className="menu-set-order-row" key={menuSet.id}><div className={`menu-set-card-shell${draggedMenuSetId === menuSet.id ? ' is-drag-placeholder' : ''}`} data-menu-set-id={menuSet.id}><button className="meal-order-handle menu-set-order-handle" type="button" aria-label={`${menuSet.name}をドラッグして並び替え`} disabled={savingMenuSetOrder || orderedMenuSets.length < 2} onPointerDown={(event) => startMenuSetDrag(event, menuSet.id)} onPointerUp={(event) => finishDragRef.current(event.pointerId, true)} onPointerCancel={(event) => finishDragRef.current(event.pointerId, false)}>≡</button><details className="menu-set-card"><summary><span><span className="source-badge">セット</span><strong>{menuSet.name}</strong></span><small>{formatMenuSetCalories(setDisplay.energyKcal)}</small></summary><div className="menu-set-card-body">{items.length > 0 ? <ul>{items.map((item) => <li key={item.id}><span>{item.kind}</span><strong>{item.name}</strong><small>{formatMenuSetCalories(item.energyKcal)}</small></li>)}</ul> : <p className="menu-picker-empty">メニュー・食品が選択されていません。</p>}<div className="menu-card-actions"><button type="button" className="small-action" onClick={() => onEditMenuSet(menuSet)}>編集</button><button type="button" className="small-action danger-text" onClick={() => onDeleteMenuSet(menuSet)}>削除</button></div></div></details></div></div> })}</div></>}
     </section> : <section className="section-block menu-management-panel" role="tabpanel">
       <div className="section-title"><div><span className="eyebrow">GENERAL MENUS</span><h2>一般メニュー</h2></div><button className="button primary" type="button" onClick={onNewGeneralMenu}>＋ 一般メニュー</button></div>
       <p className="helper-text">汎用的な料理を登録します。食事へ追加した後の変更はその食事だけに反映されます。</p>
       {menuList(generalMenus, 'general')}
     </section>}
-    {draggedMenuSet && dragPreview && <div className="menu-set-drag-overlay" style={dragPreview} aria-hidden="true"><span className="meal-order-handle">≡</span><div className="menu-set-drag-copy"><span><span className="source-badge">セット</span><strong>{draggedMenuSet.name}</strong></span><small>{menuSetItems(draggedMenuSet).length > 0 ? `構成 ${menuSetItems(draggedMenuSet).length}件` : '構成なし'}</small></div></div>}
+    {draggedMenuSet && dragPreview && <div className="menu-set-drag-overlay" style={dragPreview} aria-hidden="true"><span className="meal-order-handle">≡</span><div className="menu-set-drag-copy"><span><span className="source-badge">セット</span><strong>{draggedMenuSet.name}</strong></span><small>{formatMenuSetCalories(menuSetItems(draggedMenuSet).energyKcal)}</small></div></div>}
   </>
 }
 

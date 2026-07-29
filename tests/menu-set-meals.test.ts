@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createMenuSetMealBatch } from '../src/services/menuSetMeals'
+import { createMenuSetMealBatch, getMenuSetCalorieSummary } from '../src/services/menuSetMeals'
 import type { Food, GeneralMenu, Menu, MenuSet, Nutrients } from '../src/types'
 
 const nutrients = (energyKcal: number): Nutrients => ({
@@ -30,6 +30,26 @@ const breakfast: MenuSet = {
 }
 
 describe('menu set meal batches', () => {
+  it('Myメニュー・一般メニュー・分量指定食品を同じ値で合計する', () => {
+    const summary = getMenuSetCalorieSummary({
+      menuSet: { ...breakfast, menuIds: ['soup'], generalMenuIds: [generalBreakfast.id], foodItems: [{ foodId: 'rice', amount: 0.5, unit: 'g' }] },
+      menus: [soup], generalMenus: [generalBreakfast], foods: [rice, soupIngredient],
+    })
+
+    expect(summary.items.map((item) => item.energyKcal)).toEqual([20, 160, 0.8])
+    expect(summary.energyKcal).toBeCloseTo(180.8)
+  })
+
+  it('欠損した構成食品を0kcalにせず、項目を欠損表示できる値で返す', () => {
+    const summary = getMenuSetCalorieSummary({
+      menuSet: { ...breakfast, menuIds: [], foodIds: ['missing-food'], foodItems: [{ foodId: 'rice', amount: 100, unit: 'g' }, { foodId: 'missing-food', amount: 1, unit: 'g' }] },
+      menus: [], foods: [rice],
+    })
+
+    expect(summary.items.map((item) => item.energyKcal)).toEqual([160, null])
+    expect(summary.energyKcal).toBeNull()
+  })
+
   it('セット名ではなく料理メニューと食品を個別の食事記録へ展開する', () => {
     let index = 0
     const batch = createMenuSetMealBatch({
