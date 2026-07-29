@@ -163,6 +163,10 @@ export function nutrientRangeForGoals(goals: NutritionGoals, key: NutrientKey): 
   return { min: goal, max: null }
 }
 
+export function nutrientGraphMax(goal: number | null, availableValue: number | null): number {
+  return goal !== null && goal > 0 ? goal * 2 : Math.max(availableValue ?? 0, 1)
+}
+
 export function scaleNutritionGoals(goals: NutritionGoals, factor: number): NutritionGoals {
   return Object.fromEntries(NUTRIENT_KEYS.map((key) => [key, goals[key] === null ? null : goals[key] * factor])) as unknown as NutritionGoals
 }

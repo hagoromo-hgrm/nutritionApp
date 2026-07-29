@@ -66,7 +66,7 @@ import {
   type NutrientEstimateEvaluation,
 } from './components/NutrientEstimatePanel'
 import { ESTIMATABLE_NUTRIENT_KEYS, ESTIMATE_FIT_NUTRIENT_KEYS, GENRE_PRIOR_PARTIAL_METHOD, PARTIAL_METHOD, toStoredNutrientEstimateResult } from './services/nutrientEstimator'
-import { calculateBmi, calculateNutrients, estimateDailyGoals, formatGraphNutrient, formatNutrient, getFoodDefaultServing, getFoodQuantityUnits, goalRate, incrementByQuantityUnit, mealDetailNutritionGoals, nutrientRangeForGoals, scaleNutritionGoals, sumAvailableNutrients, sumByMealType, sumEntries, sumNutrients } from './services/nutrition'
+import { calculateBmi, calculateNutrients, estimateDailyGoals, formatGraphNutrient, formatNutrient, getFoodDefaultServing, getFoodQuantityUnits, goalRate, incrementByQuantityUnit, mealDetailNutritionGoals, nutrientGraphMax, nutrientRangeForGoals, scaleNutritionGoals, sumAvailableNutrients, sumByMealType, sumEntries, sumNutrients } from './services/nutrition'
 import { getMenuIngredients, menuToFood, menusWithUnsupportedIngredientUnits, wouldCreateMenuCycle } from './services/menuIngredients'
 import {
   calculateMealMenuEntryNutrients,
@@ -1971,7 +1971,7 @@ function MealColorLegend() {
 
 function NutrientGraphRow({ label, value, availableValue = value, goal, unit, range, segments, showReference = true }: { label: string; value: number | null; availableValue?: number | null; goal: number | null; unit: string; range: { min: number | null; max: number | null }; segments?: GoalSegment[]; showReference?: boolean }) {
   const hasGoal = showReference && goal !== null && goal > 0
-  const graphMax = hasGoal ? Math.max(goal * 2, 1) : Math.max(availableValue ?? 0, 1)
+  const graphMax = nutrientGraphMax(hasGoal ? goal : null, availableValue)
   const valuePercent = availableValue === null ? 0 : Math.min(100, Math.max(0, (availableValue / graphMax) * 100))
   const rangeLeft = hasGoal ? Math.min(100, Math.max(0, ((range.min ?? 0) / graphMax) * 100)) : 0
   const rangeRight = hasGoal ? Math.min(100, Math.max(rangeLeft, ((range.max ?? graphMax) / graphMax) * 100)) : 0

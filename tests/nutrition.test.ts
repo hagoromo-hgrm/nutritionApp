@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { calculateBmi, calculateNutrients, estimateDailyEnergyTarget, estimateDailyGoals, formatGraphNutrient, formatNutrient, getFoodDefaultServing, goalRate, incrementByBaseAmount, mealDetailNutritionGoals, nutrientRangeForGoals, scaleNutritionGoals, sumAvailableNutrients, sumByMealType, sumEntries, sumNutrients } from '../src/services/nutrition'
+import { calculateBmi, calculateNutrients, estimateDailyEnergyTarget, estimateDailyGoals, formatGraphNutrient, formatNutrient, getFoodDefaultServing, goalRate, incrementByBaseAmount, mealDetailNutritionGoals, nutrientGraphMax, nutrientRangeForGoals, scaleNutritionGoals, sumAvailableNutrients, sumByMealType, sumEntries, sumNutrients } from '../src/services/nutrition'
 import { isValidQuantityUnit } from '../src/utils/validation'
 import type { BodyProfile, Food, MealEntry, Nutrients } from '../src/types'
 
@@ -141,6 +141,26 @@ describe('nutrition calculation', () => {
     expect(snackGoals.energyKcal).toBe(200)
     expect(snackGoals.proteinG).toBeCloseTo(goals.proteinG! * (200 / goals.energyKcal!), 8)
     expect(mealDetailNutritionGoals(goals, '朝食').energyKcal).toBe(720)
+  })
+
+  it('間食の低いビタミン目標でも基準線と推奨範囲の下端を50%で一致させる', () => {
+    const goals = estimateDailyGoals({ heightCm: 170, weightKg: 65, ageYears: 30, sex: 'male', activityLevel: 'moderate' })
+    expect(goals).not.toBeNull()
+    if (!goals) return
+    const snackGoals = mealDetailNutritionGoals(goals, '間食')
+    for (const key of ['vitaminB1Mg', 'vitaminB2Mg'] as const) {
+      const goal = snackGoals[key]!
+      const graphMax = nutrientGraphMax(goal, 0)
+      const range = nutrientRangeForGoals(snackGoals, key)
+      expect(graphMax).toBe(goal * 2)
+      expect((range.min! / graphMax) * 100).toBeCloseTo(50, 8)
+    }
+  })
+
+  it('目標がない栄養素のグラフ最大値は既知量と1の大きい方を使う', () => {
+    expect(nutrientGraphMax(null, null)).toBe(1)
+    expect(nutrientGraphMax(null, 0)).toBe(1)
+    expect(nutrientGraphMax(null, 2.5)).toBe(2.5)
   })
 
   it('日次カロリー目標が未設定でも間食の200kcal基準だけは表示する', () => {
