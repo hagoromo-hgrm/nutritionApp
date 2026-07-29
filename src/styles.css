@@ -296,19 +296,16 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .meal-confirmation-summary > div { display: flex; align-items: center; gap: .5rem; color: var(--ink); font-weight: 800; }
 .meal-confirmation-summary > strong { color: var(--accent-deep); font-size: .82rem; }
 .meal-confirmation-list { display: grid; margin-top: .8rem; }
-.meal-confirmation-entry { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: .55rem; border-bottom: 1px solid var(--line); padding: .7rem .15rem; transition: opacity .15s ease, transform .15s ease, background .15s ease; }
+.meal-confirmation-entry { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto auto; align-items: center; gap: .55rem; border-bottom: 1px solid var(--line); padding: .7rem .15rem; transition: opacity .15s ease, transform .15s ease, background .15s ease; }
 .meal-confirmation-entry.is-drag-placeholder { border-radius: .75rem; opacity: .18; background: #dfeefa; }
 .meal-confirmation-entry-copy { display: grid; min-width: 0; gap: .2rem; }
-.meal-confirmation-entry-actions { display: flex; flex: 0 0 auto; align-items: center; gap: .4rem; }
 .meal-confirmation-entry strong { overflow: hidden; color: var(--ink); text-overflow: ellipsis; white-space: nowrap; font-size: .8rem; }
 .meal-confirmation-entry span { color: var(--muted); font-size: .68rem; }
-.meal-confirmation-entry b { color: var(--accent); font-size: .72rem; }
+.meal-confirmation-entry > b { color: var(--accent); font-size: .72rem; white-space: nowrap; }
+.meal-confirmation-entry > .small-action { min-width: max-content; white-space: nowrap; }
 .meal-order-handle { display: grid; width: 2.15rem; height: 2.4rem; touch-action: none; place-items: center; border: 1px solid var(--line); border-radius: .7rem; color: var(--accent-deep); background: #f7fbff; cursor: grab; font-size: 1.15rem; font-weight: 800; user-select: none; -webkit-user-select: none; }
 .meal-order-handle:active { cursor: grabbing; }
 .meal-order-handle:disabled { opacity: .38; cursor: default; }
-.meal-order-buttons { display: flex; gap: .18rem; }
-.meal-order-buttons button { display: grid; width: 1.8rem; height: 1.8rem; place-items: center; border: 1px solid var(--line); border-radius: .5rem; color: var(--accent-deep); background: #f7fbff; font-size: .8rem; font-weight: 900; }
-.meal-order-buttons button:disabled { color: #b7c5d4; background: #f4f7fa; }
 .meal-drag-overlay { position: fixed; z-index: 30; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: .55rem; box-sizing: border-box; border: 1px solid #b9d5ef; border-radius: .8rem; padding: .7rem .15rem; pointer-events: none; color: var(--ink); background: #f7fbff; box-shadow: 0 .7rem 1.7rem rgba(67, 112, 158, .24); transform: scale(1.015); }
 .meal-drag-overlay .meal-order-handle { cursor: grabbing; }
 .meal-drag-overlay strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .8rem; }
@@ -734,8 +731,6 @@ legend { padding: 0 .35rem; color: var(--muted); font-size: .75rem; font-weight:
   .meal-entry-actions { gap: 0; }
   .meal-entry-actions b { font-size: .67rem; }
   .meal-entry-actions button { min-width: 2.25rem; padding-right: .2rem; padding-left: .2rem; }
-  .meal-confirmation-entry { grid-template-columns: auto minmax(0, 1fr); }
-  .meal-confirmation-entry-actions { grid-column: 2; justify-content: space-between; }
   .settings-action-buttons .button { flex: 1 1 auto; padding-right: .65rem; padding-left: .65rem; }
   .food-master-actions { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: .45rem; }
   .food-master-actions .button { min-width: 0; padding: .72rem .4rem; font-size: .62rem; line-height: 1.35; white-space: normal; }
