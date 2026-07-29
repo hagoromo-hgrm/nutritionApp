@@ -783,6 +783,13 @@ legend { padding: 0 .35rem; color: var(--muted); font-size: .75rem; font-weight:
 .nutrient-estimate-values dl div { min-width: 0; }
 .nutrient-estimate-values dt { color: var(--muted); font-size: .6rem; }
 .nutrient-estimate-values dd { overflow-wrap: anywhere; margin: .1rem 0 0; color: var(--ink); font-size: .68rem; line-height: 1.4; }
+.nutrient-estimate-details, .nutrient-estimate-result-notes { border-top: 1px solid var(--line); }
+.nutrient-estimate-details > summary, .nutrient-estimate-result-notes > summary { display: flex; align-items: center; justify-content: space-between; gap: .5rem; min-height: 2.75rem; padding: .25rem .15rem; color: var(--accent-deep); cursor: pointer; list-style: none; font-size: .68rem; font-weight: 800; }
+.nutrient-estimate-details > summary::-webkit-details-marker, .nutrient-estimate-result-notes > summary::-webkit-details-marker { display: none; }
+.nutrient-estimate-details > summary > i, .nutrient-estimate-result-notes > summary > i { flex: 0 0 auto; width: .5rem; height: .5rem; border-right: 2px solid var(--accent-deep); border-bottom: 2px solid var(--accent-deep); transform: rotate(-45deg); transition: transform .15s ease; }
+.nutrient-estimate-details[open] > summary, .nutrient-estimate-result-notes[open] > summary { margin-bottom: .55rem; }
+.nutrient-estimate-details[open] > summary > i, .nutrient-estimate-result-notes[open] > summary > i { transform: rotate(45deg); }
+.nutrient-estimate-details .nutrient-estimate-warnings { margin-top: .55rem; }
 .nutrient-estimate-warnings { display: grid; gap: .2rem; margin: 0; padding-left: 1.1rem; color: #765a25; font-size: .66rem; line-height: 1.45; }
 .nutrient-estimate-unavailable { display: grid; gap: .28rem; margin-top: .65rem; border-left: 3px solid #d89b31; border-radius: .35rem; padding: .6rem .7rem; background: #fff6df; }
 .nutrient-estimate-unavailable strong { color: #765a25; font-size: .76rem; }
@@ -790,6 +797,7 @@ legend { padding: 0 .35rem; color: var(--muted); font-size: .75rem; font-weight:
 .nutrient-estimate-existing-note { margin-top: .55rem; color: var(--muted); font-size: .64rem; line-height: 1.5; }
 .nutrient-estimate-global-warning, .nutrient-estimate-medical-note, .nutrient-estimate-snapshot-note { color: var(--muted); font-size: .64rem; line-height: 1.55; }
 .nutrient-estimate-medical-note { border-radius: .65rem; padding: .55rem .65rem; background: #f3f5f8; }
+.nutrient-estimate-result-notes > div { display: grid; gap: .5rem; }
 .nutrient-estimate-selection-actions { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
 .nutrient-estimate-selection-actions .button, .nutrient-estimate-adopt { min-height: 2.75rem; padding-right: .55rem; padding-left: .55rem; font-size: .72rem; }
 .nutrient-estimate-adopt { width: 100%; }

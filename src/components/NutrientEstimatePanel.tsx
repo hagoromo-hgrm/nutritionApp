@@ -225,8 +225,6 @@ export function NutrientEstimatePanel(props: NutrientEstimatePanelProps) {
               </article>
             )
           })}
-          {result.globalWarnings.map((warning) => <p className="nutrient-estimate-global-warning" key={warning}>※ {warning}</p>)}
-          <p className="nutrient-estimate-medical-note">医療上の判断、診断、治療、個別の栄養指導には使用できません。</p>
           <div className="nutrient-estimate-selection-actions" aria-label="推計値の選択操作">
             <button className="button secondary" type="button" onClick={selectAll} disabled={selectableKeys.length === 0}>採用可能を一括選択</button>
             <button className="button ghost" type="button" onClick={() => setSelected(new Set())} disabled={selectedCount === 0}>全解除</button>
@@ -241,7 +239,14 @@ export function NutrientEstimatePanel(props: NutrientEstimatePanelProps) {
               ? '候補を入力欄へ反映しました。画面下の「保存する」で採用を確定します。'
               : '不採用を選択しました。画面下の「保存する」で判断履歴を保存します。'}
           </p>}
-          <p className="nutrient-estimate-snapshot-note">採用しても、保存済みの食事記録と栄養値には遡って反映されません。</p>
+          <details className="nutrient-estimate-result-notes">
+            <summary><span>推計全体の注意書き</span><i aria-hidden="true" /></summary>
+            <div>
+              {result.globalWarnings.map((warning) => <p className="nutrient-estimate-global-warning" key={warning}>※ {warning}</p>)}
+              <p className="nutrient-estimate-medical-note">医療上の判断、診断、治療、個別の栄養指導には使用できません。</p>
+              <p className="nutrient-estimate-snapshot-note">採用しても、保存済みの食事記録と栄養値には遡って反映されません。</p>
+            </div>
+          </details>
         </div>
       )}
     </section>
@@ -258,20 +263,25 @@ function AvailableEstimateDetails({ estimate, unit }: { estimate: AvailableNutri
         <div><dt>{isPartial ? '既知分の推定範囲' : '範囲'}</dt><dd>{format(estimate.range.min)}〜{format(estimate.range.max)}{unit}</dd></div>
         <div><dt>信頼度</dt><dd>{CONFIDENCE_LABELS[estimate.confidence]}</dd></div>
         {estimate.limitationReasons.length > 0 && <div><dt>部分推計の理由</dt><dd>{estimate.limitationReasons.map((reason) => ESTIMATION_LIMITATION_LABELS[reason]).join('・')}</dd></div>}
-        <div><dt>方法</dt><dd>{isGenrePriorPartial
-          ? '既知原材料とジャンル階層型事前分布による端末内推計'
-          : isPartial
-          ? '数値を確認できる原材料分だけの端末内推計'
-          : estimate.method === 'browser_ingredient_macro_fit'
-            ? '原材料表示順と主要栄養値による端末内推計'
-            : '原材料表示順による端末内推計'}</dd></div>
-        <div><dt>出典</dt><dd>{estimate.source}</dd></div>
       </dl>
-      {estimate.warnings.length > 0 && (
-        <ul className="nutrient-estimate-warnings" aria-label="推計上の注意">
-          {estimate.warnings.map((warning) => <li key={warning}>{warning}</li>)}
-        </ul>
-      )}
+      <details className="nutrient-estimate-details">
+        <summary><span>方法・出典・注意書き</span><i aria-hidden="true" /></summary>
+        <dl>
+          <div><dt>方法</dt><dd>{isGenrePriorPartial
+            ? '既知原材料とジャンル階層型事前分布による端末内推計'
+            : isPartial
+            ? '数値を確認できる原材料分だけの端末内推計'
+            : estimate.method === 'browser_ingredient_macro_fit'
+              ? '原材料表示順と主要栄養値による端末内推計'
+              : '原材料表示順による端末内推計'}</dd></div>
+          <div><dt>出典</dt><dd>{estimate.source}</dd></div>
+        </dl>
+        {estimate.warnings.length > 0 && (
+          <ul className="nutrient-estimate-warnings" aria-label="推計上の注意">
+            {estimate.warnings.map((warning) => <li key={warning}>{warning}</li>)}
+          </ul>
+        )}
+      </details>
     </div>
   )
 }
