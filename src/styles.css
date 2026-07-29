@@ -521,7 +521,9 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .menu-set-order-row { min-width: 0; }
 .menu-set-card-shell { position: relative; min-width: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 1rem; background: white; }
 .menu-set-card-shell.is-drag-placeholder { border-radius: 1rem; opacity: .18; background: #dfeefa; }
-.menu-set-order-handle { position: absolute; z-index: 1; top: .55rem; left: .55rem; }
+.menu-set-order-handle { position: absolute; z-index: 1; top: .55rem; left: .55rem; font-size: 0; }
+.menu-set-order-handle::before, .menu-set-drag-overlay .meal-order-handle::before { content: ''; width: 1rem; height: .75rem; background: linear-gradient(to bottom, currentColor 0 .12rem, transparent .12rem .315rem, currentColor .315rem .435rem, transparent .435rem .63rem, currentColor .63rem .75rem); }
+.menu-set-drag-overlay .meal-order-handle { font-size: 0; }
 .menu-set-drag-overlay { position: fixed; z-index: 30; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: .55rem; box-sizing: border-box; border: 1px solid #b9d5ef; border-radius: 1rem; padding: .35rem; pointer-events: none; color: var(--ink); background: #f7fbff; box-shadow: 0 .7rem 1.7rem rgba(67, 112, 158, .24); transform: scale(1.015); }
 .menu-set-drag-overlay .meal-order-handle { cursor: grabbing; }
 .menu-set-drag-copy { display: grid; min-width: 0; gap: .35rem; border: 1px solid var(--line); border-radius: .8rem; padding: .85rem .95rem; background: white; }
