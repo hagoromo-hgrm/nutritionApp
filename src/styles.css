@@ -795,6 +795,7 @@ legend { padding: 0 .35rem; color: var(--muted); font-size: .75rem; font-weight:
 .nutrient-estimate-unavailable strong { color: #765a25; font-size: .76rem; }
 .nutrient-estimate-unavailable p, .nutrient-estimate-unavailable small { color: #765a25; font-size: .66rem; line-height: 1.5; }
 .nutrient-estimate-existing-note { margin-top: .55rem; color: var(--muted); font-size: .64rem; line-height: 1.5; }
+.nutrient-estimate-adoption-note { margin-top: .55rem; color: var(--muted); font-size: .64rem; line-height: 1.5; }
 .nutrient-estimate-global-warning, .nutrient-estimate-medical-note, .nutrient-estimate-snapshot-note { color: var(--muted); font-size: .64rem; line-height: 1.55; }
 .nutrient-estimate-medical-note { border-radius: .65rem; padding: .55rem .65rem; background: #f3f5f8; }
 .nutrient-estimate-result-notes > div { display: grid; gap: .5rem; }

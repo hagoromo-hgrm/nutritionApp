@@ -15,6 +15,7 @@ import {
   NUTRIENT_KEYS,
   NUTRIENT_LABELS,
   type EstimationResult,
+  type EstimationAdoptionClass,
   type EstimationCalibrationMetadata,
   type EstimationLimitationReason,
   type EstimationZeroEvidence,
@@ -55,7 +56,8 @@ export const ESTIMATE_FIT_NUTRIENT_KEYS = [
 ] as const satisfies readonly NutrientKey[]
 export type EstimateFitNutrientKey = (typeof ESTIMATE_FIT_NUTRIENT_KEYS)[number]
 export type EstimateConfidence = 'high' | 'medium' | 'low' | 'unavailable'
-export const NUTRIENT_ESTIMATOR_MODEL_VERSION = 'browser-rule-0.17.0' as const
+export type EstimateAdoptability = EstimationAdoptionClass | 'unavailable'
+export const NUTRIENT_ESTIMATOR_MODEL_VERSION = 'browser-rule-0.18.0' as const
 const MEXT_SOURCE = '文部科学省 日本食品標準成分表（八訂）増補2023年（2026年3月27日正誤表対応）' as const
 const FDC_SOURCE = 'USDA FoodData Central SR Legacy 04/2018' as const
 const INGREDIENT_SPEC_SOURCE = '原料メーカー・業界団体公式仕様' as const
@@ -102,6 +104,7 @@ export interface AvailableNutrientEstimate extends EstimateDetails {
   confidence: Exclude<EstimateConfidence, 'unavailable'>
   calibration: EstimationCalibrationMetadata
   zeroEvidence?: EstimationZeroEvidence
+  adoptionClass: EstimationAdoptionClass
 }
 
 export interface UnavailableNutrientEstimate extends EstimateDetails {
@@ -139,9 +142,14 @@ export interface NutrientEstimateResult {
   estimatedAt: string
 }
 
-/** 0は入力済みの値なので、nullの場合だけ参考推計を採用候補にできる。 */
-export function isEstimateAdoptable(currentValue: number | null, estimate: NutrientEstimate): estimate is AvailableNutrientEstimate {
+/** 既存値の非上書きを守りつつ、参考値の根拠に応じた確認段階を返す。 */
+export function estimateAdoptability(
+  currentValue: number | null,
+  estimate: NutrientEstimate,
+): EstimateAdoptability {
   return currentValue === null && estimate.status === 'available'
+    ? estimate.adoptionClass
+    : 'unavailable'
 }
 
 const FALLBACK_METHOD: EstimateDetails['method'] = 'browser_ingredient_rule'
@@ -880,6 +888,7 @@ function partialKnownIngredientEstimates(
         range: genrePrior.range,
         confidence: 'low',
         calibration: genrePrior.calibration,
+        adoptionClass: 'genre_prior_confirmation',
         method: GENRE_PRIOR_PARTIAL_METHOD,
         sourceFoodIds: [],
         source: ESTIMATOR_GENRE_NUTRIENT_PRIOR_SOURCE,
@@ -976,6 +985,7 @@ function partialKnownIngredientEstimates(
       range: genrePrior?.range ?? calibrated.range,
       confidence: 'low',
       calibration: genrePrior?.calibration ?? calibrated.calibration,
+      adoptionClass: genrePrior ? 'genre_prior_confirmation' : 'limited_confirmation',
       ...(value === 0 ? { zeroEvidence } : {}),
       method: genrePrior ? GENRE_PRIOR_PARTIAL_METHOD : PARTIAL_METHOD,
       sourceFoodIds,
@@ -1220,6 +1230,11 @@ export function estimateNutrients(request: NutrientEstimateRequest): NutrientEst
             : baseRange,
           confidence: isPartial ? 'low' : calibrated.confidence,
           calibration: genrePrior?.calibration ?? calibrated.calibration,
+          adoptionClass: genrePrior
+            ? 'genre_prior_confirmation'
+            : isPartial || calibrated.confidence === 'low'
+              ? 'limited_confirmation'
+              : 'standard_confirmation',
           ...(value === 0 ? { zeroEvidence } : {}),
           method: genrePrior
             ? GENRE_PRIOR_PARTIAL_METHOD
@@ -1331,6 +1346,7 @@ export function toStoredNutrientEstimateResult(
         : {}),
       calibration: { ...estimate.calibration },
       ...(estimate.zeroEvidence ? { zeroEvidence: estimate.zeroEvidence } : {}),
+      adoptionClass: estimate.adoptionClass,
     }
   }
   const unavailableEstimate = Object.values(result.estimates).find((estimate) => estimate.status === 'unavailable')

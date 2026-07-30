@@ -9,6 +9,10 @@ export type Nutrients = Record<NutrientKey, number | null>
 export type NutrientOrigin = 'manufacturer_label' | 'external_source' | 'user_input' | 'estimated' | 'derived' | 'unknown'
 export type EstimationConfidence = 'high' | 'medium' | 'low' | 'unavailable'
 export type EstimationZeroEvidence = 'derived_from_parent_zero' | 'known_parent_zero' | 'uncertain'
+export type EstimationAdoptionClass =
+  | 'standard_confirmation'
+  | 'limited_confirmation'
+  | 'genre_prior_confirmation'
 
 export const ESTIMATION_LIMITATION_REASONS = [
   'invalid_basis',
@@ -39,6 +43,7 @@ export interface NutrientMetadata {
   adoptedAt?: string
   calibration?: EstimationCalibrationMetadata
   zeroEvidence?: EstimationZeroEvidence
+  adoptionClass?: EstimationAdoptionClass
 }
 
 export type NutrientMetadataMap = Partial<Record<NutrientKey, NutrientMetadata>>
@@ -464,6 +469,7 @@ export interface NutrientEstimate {
   limitationReasons?: EstimationLimitationReason[]
   calibration?: EstimationCalibrationMetadata
   zeroEvidence?: EstimationZeroEvidence
+  adoptionClass?: EstimationAdoptionClass
 }
 
 export interface EstimationCalibrationMetadata {

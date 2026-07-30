@@ -90,6 +90,7 @@ describe('nutrient estimation store', () => {
       sampleSize: 0,
       scope: 'fallback',
     })
+    expect(adopted?.nutrientMetadata?.fiberG?.adoptionClass).toBe('limited_confirmation')
   })
 
   it('明示された基準重量だけを推計入力へ渡し、単位からgを推測しない', () => {
@@ -117,6 +118,7 @@ describe('nutrient estimation store', () => {
     expect(adopted?.nutrients.fiberG).toBe(1.25)
     expect(adopted?.nutrients.calciumMg).toBe(12)
     expect(adopted?.nutrientMetadata?.fiberG).toMatchObject({ origin: 'estimated', requestId: request.requestId, modelVersion: 'test-1' })
+    expect(adopted?.nutrientMetadata?.fiberG?.adoptionClass).toBe('standard_confirmation')
     expect(adopted?.nutrientMetadata?.saturatedFatG?.zeroEvidence).toBe('uncertain')
     expect((await db.mealEntries.get(entry.id))?.foodSnapshot.nutrients.fiberG).toBeNull()
     expect((await db.mealEntries.get(entry.id))?.foodSnapshot.nutrients.calciumMg).toBeNull()

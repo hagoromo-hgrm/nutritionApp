@@ -557,11 +557,16 @@ NutritionApp上で以下を比較表示できること。
 
 一括採用はユーザーが選択した欠損栄養素を1回の確認で保存する操作とし、未選択項目および既存値を変更しないこと。
 
+推計結果は採用可否を単一の真偽値にせず、`standard_confirmation`、`limited_confirmation`、`genre_prior_confirmation`または`unavailable`で返すこと。全原材料推計かつ信頼度中以上は`standard_confirmation`、信頼度低または既知分部分参考値は`limited_confirmation`、ジャンル分布を使用した参考値は`genre_prior_confirmation`とする。画面へ区分を表示し、後二者を入力欄へ反映する直前には注意書きの追加確認を求めること。
+
+既存要件では部分参考値とジャンル補完参考値もユーザーが手動採用できるため、`reference-only`として採用不可にはしない。自動採用は全区分で禁止し、現在値がある場合と推計不能の場合だけ`unavailable`とする。
+
 ### EST-FR-019 採用時の保存
 
 - 採用前の推計値は`foods`ストアへ直接反映しないこと。
 - 採用操作後に、現在値が`null`の栄養素だけを`nutrients`へ反映すること。
 - 採用した値には栄養素単位のメタデータを付与すること。
+- 採用時の`adoptionClass`を栄養素メタデータへ保存すること。
 - 既存値がある場合は採用不可とし、パッケージ表示またはユーザー入力を正として維持すること。
 - 推計開始後に対象食品の入力値、原材料、基準量、単位または対象栄養素が変更されていた場合は採用を中止し、再推計を案内すること。
 - 食品マスター、栄養素メタデータおよび採用判断履歴をIndexedDBの1トランザクションで保存し、一部だけを成功させないこと。
@@ -682,6 +687,7 @@ NutritionApp上で以下を比較表示できること。
         "max": 9.8
       },
       "confidence": "medium",
+      "adoptionClass": "standard_confirmation",
       "method": "ingredient_optimization",
       "warnings": [
         "植物油脂の種類を特定できませんでした"
@@ -694,6 +700,7 @@ NutritionApp上で以下を比較表示できること。
         "max": 1.7
       },
       "confidence": "low",
+      "adoptionClass": "limited_confirmation",
       "method": "ingredient_optimization",
       "warnings": []
     }
@@ -777,6 +784,7 @@ NutritionApp上で以下を比較表示できること。
       "method": "ingredient_optimization",
       "modelVersion": "0.1.0",
       "requestId": "estimate_01J...",
+      "adoptionClass": "limited_confirmation",
       "adoptedAt": "2026-07-25T00:00:00.000Z"
     }
   }

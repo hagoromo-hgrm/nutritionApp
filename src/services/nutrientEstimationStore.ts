@@ -181,6 +181,12 @@ export async function getEstimationDecisionsForFood(foodId: string, options: { l
 }
 
 function estimatedMetadata(requestId: string, estimate: NonNullable<EstimationResult['estimates'][NutrientKey]>, modelVersion: string, adoptedAt: string): NutrientMetadata {
+  const adoptionClass = estimate.adoptionClass
+    ?? (estimate.method === 'browser_genre_prior_partial_rule'
+      ? 'genre_prior_confirmation'
+      : estimate.method === 'browser_ingredient_partial_rule' || estimate.confidence === 'low'
+        ? 'limited_confirmation'
+        : 'standard_confirmation')
   return {
     origin: 'estimated', source: estimate.source ?? 'nutrition_estimator', confidence: estimate.confidence,
     ...(estimate.range ? { estimatedRange: { ...estimate.range } } : {}),
@@ -188,6 +194,7 @@ function estimatedMetadata(requestId: string, estimate: NonNullable<EstimationRe
     method: estimate.method, modelVersion, requestId, adoptedAt,
     ...(estimate.calibration ? { calibration: { ...estimate.calibration } } : {}),
     ...(estimate.zeroEvidence ? { zeroEvidence: estimate.zeroEvidence } : {}),
+    adoptionClass,
   }
 }
 

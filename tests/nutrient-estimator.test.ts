@@ -3,8 +3,8 @@ import {
   GENRE_PRIOR_PARTIAL_METHOD,
   NUTRIENT_ESTIMATOR_MODEL_VERSION,
   PARTIAL_METHOD,
+  estimateAdoptability,
   estimateNutrients,
-  isEstimateAdoptable,
   toStoredNutrientEstimateResult,
   unresolvedIngredientNames,
   type NutrientEstimateRequest,
@@ -109,8 +109,33 @@ describe('browser nutrient estimator', () => {
       value: null,
       range: null,
     })
-    expect(isEstimateAdoptable(null, zero.estimates.fiberG)).toBe(true)
-    expect(isEstimateAdoptable(0, zero.estimates.fiberG)).toBe(false)
+    expect(estimateAdoptability(null, zero.estimates.fiberG)).toBe('limited_confirmation')
+    expect(estimateAdoptability(0, zero.estimates.fiberG)).toBe('unavailable')
+  })
+
+  it('根拠に応じた採用区分をbooleanではなく段階で返す', () => {
+    const result = estimateNutrients({
+      ...eligibleRequest,
+      productName: '砂糖菓子',
+      referenceMassG: 100,
+      ingredientsText: '薄力粉、砂糖',
+      knownNutrients: {
+        energyKcal: 363,
+        proteinG: 5.5,
+        fatG: 1,
+        carbohydrateG: 83.6,
+        saltG: 0,
+      },
+      requestedNutrients: ['fiberG'],
+    })
+
+    expect(result.estimates.fiberG).toMatchObject({
+      status: 'available',
+      confidence: 'medium',
+      adoptionClass: 'standard_confirmation',
+    })
+    expect(estimateAdoptability(null, result.estimates.fiberG)).toBe('standard_confirmation')
+    expect(estimateAdoptability(0, result.estimates.fiberG)).toBe('unavailable')
   })
 
   it('内訳の推計値と範囲を入力済み総量以下に補正する', () => {
@@ -417,6 +442,7 @@ describe('browser nutrient estimator', () => {
     expect(stored.limitationReasons).toEqual(['ingredient_unresolved'])
     expect(stored.estimates.fiberG?.method).toBe(GENRE_PRIOR_PARTIAL_METHOD)
     expect(stored.estimates.fiberG?.limitationReasons).toEqual(['ingredient_unresolved'])
+    expect(stored.estimates.fiberG?.adoptionClass).toBe('genre_prior_confirmation')
   })
 
   it('参照できる原材料が1件もない場合は全体分布へ縮約した低信頼度参考値を返す', () => {
@@ -441,6 +467,7 @@ describe('browser nutrient estimator', () => {
     expect(stored.limitationReasons).toEqual(['ingredient_unresolved'])
     expect(stored.error).toBeUndefined()
     expect(stored.estimates.fiberG?.calibration?.scope).toBe('pooled_nutrient')
+    expect(stored.estimates.fiberG?.adoptionClass).toBe('genre_prior_confirmation')
   })
 
   it('カカオマス・乳糖・ココアバター・イーストを含む商品を代理参照付きで部分推計する', () => {
@@ -600,6 +627,7 @@ describe('browser nutrient estimator', () => {
         status: 'available',
         confidence: 'low',
         method: key === 'ironMg' ? GENRE_PRIOR_PARTIAL_METHOD : PARTIAL_METHOD,
+        adoptionClass: key === 'ironMg' ? 'genre_prior_confirmation' : 'limited_confirmation',
       })
       expect(result.estimates[key].limitationReasons).toContain('additive_contribution_unknown')
       expect(result.estimates[key].warnings.join(' ')).toContain('配合量は不明なため加算していません')

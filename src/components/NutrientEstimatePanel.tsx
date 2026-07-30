@@ -4,8 +4,8 @@ import {
   ESTIMATION_LIMITATION_LABELS,
   GENRE_PRIOR_PARTIAL_METHOD,
   PARTIAL_METHOD,
+  estimateAdoptability,
   estimateNutrients,
-  isEstimateAdoptable,
   requestedEstimatableNutrientKeys,
   type AvailableNutrientEstimate,
   type EstimatableNutrientKey,
@@ -54,6 +54,12 @@ const CONFIDENCE_LABELS = {
   unavailable: '推計不可',
 } as const
 
+const ADOPTION_CLASS_LABELS = {
+  standard_confirmation: '内容確認後に反映可能',
+  limited_confirmation: '限定参考値の追加確認が必要',
+  genre_prior_confirmation: 'ジャンル補完の追加確認が必要',
+} as const
+
 function format(value: number): string {
   return value.toFixed(1)
 }
@@ -85,7 +91,7 @@ export function NutrientEstimatePanel(props: NutrientEstimatePanelProps) {
 
   const selectableKeys = result
     ? resultKeys.filter((key) =>
-        isEstimateAdoptable(props.currentNutrients[key], result.estimates[key]))
+        estimateAdoptability(props.currentNutrients[key], result.estimates[key]) !== 'unavailable')
     : []
   const selectedCount = [...selected].filter((key) => selectableKeys.includes(key)).length
 
@@ -129,13 +135,23 @@ export function NutrientEstimatePanel(props: NutrientEstimatePanelProps) {
   function adopt() {
     if (!result) return
     const values: Partial<Record<EstimatableNutrientKey, number>> = {}
+    const adoptionClasses = new Set<string>()
     for (const key of selected) {
       const estimate = result.estimates[key]
+      const adoptability = estimateAdoptability(props.currentNutrients[key], estimate)
       // 推計後に親の現在値が変わった場合も、既存値を上書きするイベントを発火しない。
-      if (isEstimateAdoptable(props.currentNutrients[key], estimate)) values[key] = estimate.value
+      if (adoptability !== 'unavailable' && estimate.status === 'available') {
+        values[key] = estimate.value
+        adoptionClasses.add(adoptability)
+      }
     }
     if (Object.keys(values).length === 0) return
     if (!evaluation) return
+    if (adoptionClasses.has('genre_prior_confirmation')) {
+      if (!window.confirm('選択項目には、商品固有の原材料値ではなく同ジャンルの分布で補った低信頼度の参考値が含まれます。注意書きを確認し、入力欄へ反映しますか？')) return
+    } else if (adoptionClasses.has('limited_confirmation')) {
+      if (!window.confirm('選択項目には、未確認の寄与または大きな候補差を含む限定的な参考値があります。注意書きを確認し、入力欄へ反映しますか？')) return
+    }
     props.onAdopt({ requestId: result.requestId, request: evaluation.request, basis: result.basis, values, result })
     setQueuedAction('adopt')
   }
@@ -194,7 +210,8 @@ export function NutrientEstimatePanel(props: NutrientEstimatePanelProps) {
           {resultKeys.map((key) => {
             const estimate = result.estimates[key]
             const currentValue = props.currentNutrients[key]
-            const canSelect = isEstimateAdoptable(currentValue, estimate)
+            const adoptability = estimateAdoptability(currentValue, estimate)
+            const canSelect = adoptability !== 'unavailable'
             return (
               <article
                 className={`nutrient-estimate-item${canSelect ? '' : ' is-disabled'}`}
@@ -225,6 +242,11 @@ export function NutrientEstimatePanel(props: NutrientEstimatePanelProps) {
                       <small>{estimate.nextAction}</small>
                     </div>
                   )}
+                {estimate.status === 'available' && currentValue === null && (
+                  <p className="nutrient-estimate-adoption-note">
+                    採用区分: {ADOPTION_CLASS_LABELS[estimate.adoptionClass]}
+                  </p>
+                )}
                 {currentValue !== null && <p className="nutrient-estimate-existing-note">現在値があるため採用できません。パッケージ表示または入力値を維持します。</p>}
               </article>
             )
