@@ -187,6 +187,7 @@ function estimatedMetadata(requestId: string, estimate: NonNullable<EstimationRe
     ...(estimate.sourceFoodIds ? { sourceFoodIds: [...estimate.sourceFoodIds] } : {}),
     method: estimate.method, modelVersion, requestId, adoptedAt,
     ...(estimate.calibration ? { calibration: { ...estimate.calibration } } : {}),
+    ...(estimate.zeroEvidence ? { zeroEvidence: estimate.zeroEvidence } : {}),
   }
 }
 

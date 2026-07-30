@@ -17,6 +17,7 @@ import {
   type EstimationResult,
   type EstimationCalibrationMetadata,
   type EstimationLimitationReason,
+  type EstimationZeroEvidence,
   type EstimatorGenreId,
   type FoodUnit,
   type IngredientsSource,
@@ -54,7 +55,7 @@ export const ESTIMATE_FIT_NUTRIENT_KEYS = [
 ] as const satisfies readonly NutrientKey[]
 export type EstimateFitNutrientKey = (typeof ESTIMATE_FIT_NUTRIENT_KEYS)[number]
 export type EstimateConfidence = 'high' | 'medium' | 'low' | 'unavailable'
-export const NUTRIENT_ESTIMATOR_MODEL_VERSION = 'browser-rule-0.14.0' as const
+export const NUTRIENT_ESTIMATOR_MODEL_VERSION = 'browser-rule-0.15.0' as const
 const MEXT_SOURCE = '文部科学省 日本食品標準成分表（八訂）増補2023年（2026年3月27日正誤表対応）' as const
 const FDC_SOURCE = 'USDA FoodData Central SR Legacy 04/2018' as const
 const INGREDIENT_SPEC_SOURCE = '原料メーカー・業界団体公式仕様' as const
@@ -100,6 +101,7 @@ export interface AvailableNutrientEstimate extends EstimateDetails {
   }
   confidence: Exclude<EstimateConfidence, 'unavailable'>
   calibration: EstimationCalibrationMetadata
+  zeroEvidence?: EstimationZeroEvidence
 }
 
 export interface UnavailableNutrientEstimate extends EstimateDetails {
@@ -231,6 +233,7 @@ function applyCompositionUpperBounds(
       ...estimate,
       value,
       range,
+      ...(upperBound === 0 && value === 0 ? { zeroEvidence: 'known_parent_zero' as const } : {}),
       warnings: [...new Set([
         ...estimate.warnings,
         `${NUTRIENT_LABELS[key]}は${NUTRIENT_LABELS[parentKey]}の内訳であるため、入力済みの${NUTRIENT_LABELS[parentKey]}（${round(upperBound)}g）を上限として推計値と推定範囲を補正しました。`,
@@ -280,6 +283,7 @@ function applyGenrePriorToUnmodeledMass(input: {
     nutrientKey: input.nutrientKey,
     genreId: input.genreId,
     confidence: 'low',
+    zeroEvidence: 'uncertain',
   })
   return {
     value,
@@ -487,6 +491,27 @@ function orderedRatiosFromQ(q: readonly number[]): number[] {
 function fallbackRatios(count: number): number[] {
   const denominator = count * (count + 1) / 2
   return Array.from({ length: count }, (_value, index) => (count - index) / denominator)
+}
+
+function zeroEvidenceFromResolvedCandidates(
+  resolved: readonly ResolvedIngredient[],
+  nutrientKey: EstimatableNutrientKey,
+  hasUnmodeledAdditive: boolean,
+): EstimationZeroEvidence {
+  if (hasUnmodeledAdditive) return 'uncertain'
+  const parentKey = COMPOSITION_PARENT_NUTRIENTS[nutrientKey]
+  if (!parentKey) return 'uncertain'
+  const allCandidateParentsAreZero = resolved.every((item) => (
+    item.candidates.length > 0
+    && item.candidates.every((candidate) => candidate.nutrients[parentKey] === 0)
+  ))
+  return allCandidateParentsAreZero ? 'derived_from_parent_zero' : 'uncertain'
+}
+
+function uncertainZeroWarning(value: number, zeroEvidence: EstimationZeroEvidence): string[] {
+  return value === 0 && zeroEvidence === 'uncertain'
+    ? ['推計値は0ですが、参照食品の0だけでは真の0と断定できないため、推定範囲に栄養素別の絶対幅を持たせています。']
+    : []
 }
 
 function fitIngredientRatios(
@@ -745,11 +770,13 @@ function partialKnownIngredientEstimates(
       )
     }
     const value = genrePrior?.value ?? round(per100g * request.referenceMassG! / 100)
+    const zeroEvidence: EstimationZeroEvidence = 'uncertain'
     const calibrated = calibratedEstimateRange({
       value,
       nutrientKey: key,
       genreId: request.estimatorGenreId,
       confidence: 'low',
+      zeroEvidence,
     })
     const sourceFoodIds = [...new Set(numeric.flatMap((item) => item.profile.sourceFoodIds))]
     return {
@@ -758,6 +785,7 @@ function partialKnownIngredientEstimates(
       range: genrePrior?.range ?? calibrated.range,
       confidence: 'low',
       calibration: genrePrior?.calibration ?? calibrated.calibration,
+      ...(value === 0 ? { zeroEvidence } : {}),
       method: genrePrior ? GENRE_PRIOR_PARTIAL_METHOD : PARTIAL_METHOD,
       sourceFoodIds,
       source: [
@@ -785,6 +813,7 @@ function partialKnownIngredientEstimates(
         ...(genrePrior
           ? ['推定範囲はジャンル内のばらつきを含みますが、この商品の栄養値全体を保証する上下限ではありません。']
           : ['部分参考値の範囲は既知原材料分だけの不確実性を表し、商品の栄養値全体の上限を表しません。']),
+        ...uncertainZeroWarning(value, zeroEvidence),
       ])],
     }
   })
@@ -969,11 +998,15 @@ export function estimateNutrients(request: NutrientEstimateRequest): NutrientEst
         ]
         const isPartial = limitationReasons.length > 0
         const value = genrePrior?.value ?? round(knownPer100g * request.referenceMassG! / 100)
+        const zeroEvidence = isPartial || genrePrior
+          ? 'uncertain' as const
+          : zeroEvidenceFromResolvedCandidates(resolved, key, unmodeledAdditives.length > 0)
         const calibrated = calibratedEstimateRange({
           value,
           nutrientKey: key,
           genreId: request.estimatorGenreId,
           confidence: isPartial ? 'low' : confidence,
+          zeroEvidence,
         })
         const contributingProfiles = numericProfileIndexes.map((index) => selected.profiles[index])
         const sourceFoodIds = [...new Set(contributingProfiles.flatMap((profile) => profile.sourceFoodIds))]
@@ -983,6 +1016,7 @@ export function estimateNutrients(request: NutrientEstimateRequest): NutrientEst
           range: genrePrior?.range ?? calibrated.range,
           confidence: isPartial ? 'low' : calibrated.confidence,
           calibration: genrePrior?.calibration ?? calibrated.calibration,
+          ...(value === 0 ? { zeroEvidence } : {}),
           method: genrePrior
             ? GENRE_PRIOR_PARTIAL_METHOD
             : isPartial
@@ -1021,6 +1055,7 @@ export function estimateNutrients(request: NutrientEstimateRequest): NutrientEst
             ...(calibrated.processingDeferred
               ? ['加工・調理係数を後回しにしているジャンル・栄養素のため、信頼度を低にしています。']
               : []),
+            ...uncertainZeroWarning(value, zeroEvidence),
             '教師データによる校正前のため、推定範囲は90%被覆率を目標とする暫定フォールバックです。',
           ])],
         }
@@ -1088,6 +1123,7 @@ export function toStoredNutrientEstimateResult(
         ? { limitationReasons: [...estimate.limitationReasons] }
         : {}),
       calibration: { ...estimate.calibration },
+      ...(estimate.zeroEvidence ? { zeroEvidence: estimate.zeroEvidence } : {}),
     }
   }
   const unavailableEstimate = Object.values(result.estimates).find((estimate) => estimate.status === 'unavailable')

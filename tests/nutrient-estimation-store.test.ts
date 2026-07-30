@@ -33,7 +33,14 @@ function resultFor(requestId: string, inputHash: string): EstimationResult {
     requestId, foodId: food.id, inputHash, status: 'completed', basis: { baseAmount: 1, baseUnit: '個' },
     estimates: {
       fiberG: { value: 1.25, range: { min: 1, max: 1.5 }, confidence: 'medium', method: 'test', warnings: [] },
-      saturatedFatG: { value: 0.8, confidence: 'low', method: 'test', warnings: ['参考値です'] },
+      saturatedFatG: {
+        value: 0,
+        range: { min: 0, max: 0.1 },
+        confidence: 'low',
+        method: 'test',
+        warnings: ['参考値です'],
+        zeroEvidence: 'uncertain',
+      },
       calciumMg: { value: 12, range: { min: 8, max: 16 }, confidence: 'low', method: 'test', warnings: ['参考値です'] },
     },
     globalWarnings: [], modelVersion: 'test-1', estimatedAt: '2026-07-25T00:01:00.000Z',
@@ -110,6 +117,7 @@ describe('nutrient estimation store', () => {
     expect(adopted?.nutrients.fiberG).toBe(1.25)
     expect(adopted?.nutrients.calciumMg).toBe(12)
     expect(adopted?.nutrientMetadata?.fiberG).toMatchObject({ origin: 'estimated', requestId: request.requestId, modelVersion: 'test-1' })
+    expect(adopted?.nutrientMetadata?.saturatedFatG?.zeroEvidence).toBe('uncertain')
     expect((await db.mealEntries.get(entry.id))?.foodSnapshot.nutrients.fiberG).toBeNull()
     expect((await db.mealEntries.get(entry.id))?.foodSnapshot.nutrients.calciumMg).toBeNull()
     expect((await getEstimationDecisionsForFood(food.id)).items).toHaveLength(3)

@@ -1,6 +1,7 @@
 import type {
   EstimationCalibrationMetadata,
   EstimationConfidence,
+  EstimationZeroEvidence,
   EstimatorGenreId,
   NutrientKey,
 } from '../types'
@@ -59,6 +60,7 @@ export function calibratedEstimateRange(input: {
   nutrientKey: NutrientKey
   genreId?: EstimatorGenreId | null
   confidence: Exclude<EstimationConfidence, 'unavailable'>
+  zeroEvidence: EstimationZeroEvidence
 }): CalibratedEstimateRange {
   const processingDeferred = Boolean(
     input.genreId
@@ -72,10 +74,18 @@ export function calibratedEstimateRange(input: {
     sampleSize: 0,
     scope: 'fallback',
   }
-  // 参照元の全候補が明示的な0である場合は、欠損や表示上の丸め0とは別の「真の0」として維持する。
-  if (input.value === 0) {
+  // 参照値の0だけでは真の0と断定せず、上位総量0から導出できる場合だけ確定範囲にする。
+  if (input.value === 0 && input.zeroEvidence !== 'uncertain') {
     return {
       range: { min: 0, max: 0 },
+      confidence,
+      calibration,
+      processingDeferred,
+    }
+  }
+  if (input.value === 0) {
+    return {
+      range: { min: 0, max: ABSOLUTE_FLOOR[input.nutrientKey] },
       confidence,
       calibration,
       processingDeferred,

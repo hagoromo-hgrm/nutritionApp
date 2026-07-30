@@ -102,6 +102,7 @@ describe('browser nutrient estimator', () => {
       status: 'available',
       value: 0,
       range: { min: 0, max: 0 },
+      zeroEvidence: 'derived_from_parent_zero',
     })
     expect(unavailable.estimates.fiberG).toMatchObject({
       status: 'unavailable',
@@ -169,8 +170,16 @@ describe('browser nutrient estimator', () => {
     expect(result.estimates.vitaminCMg).toMatchObject({
       status: 'available',
       value: 0,
-      range: { min: 0, max: 0 },
+      range: { min: 0, max: 1 },
+      zeroEvidence: 'uncertain',
     })
+    const stored = toStoredNutrientEstimateResult(result, {
+      foodId: 'food-almond',
+      inputHash: 'hash-almond',
+      baseAmount: 1,
+      baseUnit: '袋',
+    })
+    expect(stored.estimates.vitaminCMg?.zeroEvidence).toBe('uncertain')
   })
 
   it('市販品で頻出する肉類・卵粉・小麦たんぱく・調味料をMEXT参照へ解決する', () => {

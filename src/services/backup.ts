@@ -109,6 +109,7 @@ function isNutrientMetadata(value: unknown): boolean {
     && (value.requestId === undefined || isNonEmptyString(value.requestId))
     && (value.adoptedAt === undefined || isIsoDateTime(value.adoptedAt))
     && (value.calibration === undefined || isCalibrationMetadata(value.calibration))
+    && (value.zeroEvidence === undefined || ['derived_from_parent_zero', 'known_parent_zero', 'uncertain'].includes(String(value.zeroEvidence)))
 }
 
 function isNutrientMetadataMap(value: unknown): value is NutrientMetadataMap {
@@ -321,6 +322,7 @@ function isNutrientEstimate(value: unknown): boolean {
     && (value.limitationReasons === undefined || (Array.isArray(value.limitationReasons)
       && value.limitationReasons.every((reason) => (ESTIMATION_LIMITATION_REASONS as readonly unknown[]).includes(reason))))
     && (value.calibration === undefined || isCalibrationMetadata(value.calibration))
+    && (value.zeroEvidence === undefined || ['derived_from_parent_zero', 'known_parent_zero', 'uncertain'].includes(String(value.zeroEvidence)))
 }
 
 function isEstimationResult(value: unknown): value is EstimationResult {
