@@ -325,6 +325,37 @@ function isNutrientEstimate(value: unknown): boolean {
     && (value.calibration === undefined || isCalibrationMetadata(value.calibration))
     && (value.zeroEvidence === undefined || ['derived_from_parent_zero', 'known_parent_zero', 'uncertain'].includes(String(value.zeroEvidence)))
     && (value.adoptionClass === undefined || ['standard_confirmation', 'limited_confirmation', 'genre_prior_confirmation'].includes(String(value.adoptionClass)))
+    && (value.ratioAdjustment === undefined || isEstimationRatioAdjustment(value.ratioAdjustment))
+}
+
+function isEstimationRatioAdjustment(value: unknown): boolean {
+  return isRecord(value)
+    && value.ratioKey === 'saturatedFatToFat'
+    && value.parentNutrient === 'fatG'
+    && typeof value.parentValue === 'number' && Number.isFinite(value.parentValue) && value.parentValue > 0
+    && typeof value.blendWeight === 'number' && Number.isFinite(value.blendWeight) && value.blendWeight > 0 && value.blendWeight <= 1
+    && typeof value.p05 === 'number' && Number.isFinite(value.p05) && value.p05 >= 0
+    && typeof value.median === 'number' && Number.isFinite(value.median) && value.median >= value.p05
+    && typeof value.p95 === 'number' && Number.isFinite(value.p95) && value.p95 >= value.median && value.p95 <= 1
+    && typeof value.sampleSize === 'number' && Number.isSafeInteger(value.sampleSize) && value.sampleSize >= 0
+    && (value.pooledSampleSize === undefined || (
+      typeof value.pooledSampleSize === 'number'
+      && Number.isSafeInteger(value.pooledSampleSize)
+      && value.pooledSampleSize > 0
+      && value.pooledSampleSize >= value.sampleSize
+    ))
+    && ['genre_nutrient', 'pooled_nutrient'].includes(String(value.scope))
+    && (
+      value.sampleSize > 0
+      || (value.scope === 'pooled_nutrient' && value.pooledSampleSize !== undefined)
+    )
+    && isNonEmptyString(value.priorVersion)
+    && isNonEmptyString(value.datasetHash)
+    && typeof value.unadjustedValue === 'number' && Number.isFinite(value.unadjustedValue) && value.unadjustedValue >= 0
+    && isRecord(value.unadjustedRange)
+    && typeof value.unadjustedRange.min === 'number' && Number.isFinite(value.unadjustedRange.min) && value.unadjustedRange.min >= 0
+    && typeof value.unadjustedRange.max === 'number' && Number.isFinite(value.unadjustedRange.max)
+    && value.unadjustedRange.max >= value.unadjustedRange.min
 }
 
 function isEstimationTrace(value: unknown): boolean {

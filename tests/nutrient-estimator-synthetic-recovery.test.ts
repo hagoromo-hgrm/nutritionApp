@@ -79,10 +79,18 @@ function calculateBenchmark(): AccuracyBenchmark {
         PARTIAL_METHOD,
         GENRE_PRIOR_PARTIAL_METHOD,
       ]).toContain(estimate.method)
-      const error = Math.abs(estimate.value - truth)
+      // 同じ原材料プロファイルから作ったfixtureでは、外部実商品比率を統合する前の
+      // 原材料コア値を評価し、実商品比率の精度とは混同しない。
+      const evaluatedValue = key === 'saturatedFatG'
+        ? estimate.ratioAdjustment?.unadjustedValue ?? estimate.value
+        : estimate.value
+      const evaluatedRange = key === 'saturatedFatG'
+        ? estimate.ratioAdjustment?.unadjustedRange ?? estimate.range
+        : estimate.range
+      const error = Math.abs(evaluatedValue - truth)
       absoluteErrors.get(key)!.push(error)
       if (truth !== 0) absolutePercentageErrors.get(key)!.push(error / Math.abs(truth))
-      rangeHits.get(key)!.push(truth >= estimate.range.min && truth <= estimate.range.max)
+      rangeHits.get(key)!.push(truth >= evaluatedRange.min && truth <= evaluatedRange.max)
     }
   }
 

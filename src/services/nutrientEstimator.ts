@@ -9,7 +9,9 @@ import { ESTIMATOR_GENRE_PRIOR_VERSION } from '../data/nutrientEstimatorGenrePri
 import {
   ESTIMATOR_GENRE_NUTRIENT_PRIOR_SOURCE,
   genreNutrientPrior,
+  saturatedFatRatioPrior,
   type GenreNutrientPrior,
+  type SaturatedFatRatioPrior,
 } from '../data/nutrientEstimatorGenreNutrientPriors'
 import {
   NUTRIENT_KEYS,
@@ -19,6 +21,7 @@ import {
   type EstimationCalibrationMetadata,
   type EstimationLimitationReason,
   type EstimationOptimization,
+  type EstimationRatioAdjustment,
   type EstimationTrace,
   type EstimationZeroEvidence,
   type EstimatorGenreId,
@@ -59,7 +62,7 @@ export const ESTIMATE_FIT_NUTRIENT_KEYS = [
 export type EstimateFitNutrientKey = (typeof ESTIMATE_FIT_NUTRIENT_KEYS)[number]
 export type EstimateConfidence = 'high' | 'medium' | 'low' | 'unavailable'
 export type EstimateAdoptability = EstimationAdoptionClass | 'unavailable'
-export const NUTRIENT_ESTIMATOR_MODEL_VERSION = 'browser-rule-0.20.0' as const
+export const NUTRIENT_ESTIMATOR_MODEL_VERSION = 'browser-rule-0.21.0' as const
 const MEXT_SOURCE = '文部科学省 日本食品標準成分表（八訂）増補2023年（2026年3月27日正誤表対応）' as const
 const FDC_SOURCE = 'USDA FoodData Central SR Legacy 04/2018' as const
 const INGREDIENT_SPEC_SOURCE = '原料メーカー・業界団体公式仕様' as const
@@ -107,6 +110,7 @@ export interface AvailableNutrientEstimate extends EstimateDetails {
   calibration: EstimationCalibrationMetadata
   zeroEvidence?: EstimationZeroEvidence
   adoptionClass: EstimationAdoptionClass
+  ratioAdjustment?: EstimationRatioAdjustment
 }
 
 export interface UnavailableNutrientEstimate extends EstimateDetails {
@@ -245,10 +249,10 @@ function applyCompositionUpperBounds(
       return estimate
     }
 
-    const value = round(Math.min(estimate.value, upperBound))
+    const value = Math.min(upperBound, round(Math.min(estimate.value, upperBound)))
     const range = {
-      min: round(Math.min(estimate.range.min, upperBound)),
-      max: round(Math.min(estimate.range.max, upperBound)),
+      min: Math.min(upperBound, round(Math.min(estimate.range.min, upperBound))),
+      max: Math.min(upperBound, round(Math.min(estimate.range.max, upperBound))),
     }
     if (value === estimate.value && range.min === estimate.range.min && range.max === estimate.range.max) {
       return estimate
@@ -266,7 +270,9 @@ function applyCompositionUpperBounds(
   })
 }
 
-function priorCalibration(prior: GenreNutrientPrior): EstimationCalibrationMetadata {
+function priorCalibration(
+  prior: GenreNutrientPrior | SaturatedFatRatioPrior,
+): EstimationCalibrationMetadata {
   return {
     calibrationVersion: prior.priorVersion,
     targetCoverage: 0.9,
@@ -275,6 +281,79 @@ function priorCalibration(prior: GenreNutrientPrior): EstimationCalibrationMetad
       : prior.sampleSize,
     datasetHash: prior.datasetHash,
     scope: prior.scope,
+  }
+}
+
+export const SATURATED_FAT_RATIO_BLEND_WEIGHT = 0.75
+
+function applySaturatedFatRatioPrior(
+  estimates: Record<EstimatableNutrientKey, NutrientEstimate>,
+  knownNutrients: NutrientEstimateRequest['knownNutrients'],
+  genreId: EstimatorGenreId | null | undefined,
+): Record<EstimatableNutrientKey, NutrientEstimate> {
+  const estimate = estimates.saturatedFatG
+  const fatG = knownNutrients?.fatG
+  if (
+    estimate.status !== 'available'
+    || fatG === null
+    || fatG === undefined
+    || !Number.isFinite(fatG)
+    || fatG <= 0
+  ) return estimates
+  const prior = saturatedFatRatioPrior(genreId)
+  if (!prior) return estimates
+
+  const boundedIngredientValue = Math.min(estimate.value, fatG)
+  const ratioPoint = fatG * prior.median
+  const value = round(
+    boundedIngredientValue * (1 - SATURATED_FAT_RATIO_BLEND_WEIGHT)
+    + ratioPoint * SATURATED_FAT_RATIO_BLEND_WEIGHT,
+  )
+  const range = {
+    min: round(Math.min(value, Math.min(estimate.range.min, fatG), fatG * prior.p05)),
+    max: round(Math.max(value, Math.min(estimate.range.max, fatG), fatG * prior.p95)),
+  }
+  const ratioAdjustment: EstimationRatioAdjustment = {
+    ratioKey: 'saturatedFatToFat',
+    parentNutrient: 'fatG',
+    parentValue: fatG,
+    blendWeight: SATURATED_FAT_RATIO_BLEND_WEIGHT,
+    p05: prior.p05,
+    median: prior.median,
+    p95: prior.p95,
+    sampleSize: prior.sampleSize,
+    ...(prior.pooledSampleSize === undefined
+      ? {}
+      : { pooledSampleSize: prior.pooledSampleSize }),
+    scope: prior.scope,
+    priorVersion: prior.priorVersion,
+    datasetHash: prior.datasetHash,
+    unadjustedValue: estimate.value,
+    unadjustedRange: { ...estimate.range },
+  }
+  const percent = (ratio: number) => Math.round(ratio * 1_000) / 10
+  return {
+    ...estimates,
+    saturatedFatG: {
+      ...estimate,
+      value,
+      range,
+      calibration: priorCalibration(prior),
+      ratioAdjustment,
+      ...(value === 0 ? { zeroEvidence: 'uncertain' as const } : { zeroEvidence: undefined }),
+      source: [...new Set([
+        ...estimate.source.split(' / '),
+        `${ESTIMATOR_GENRE_NUTRIENT_PRIOR_SOURCE}（飽和脂肪酸／脂質比率）`,
+      ])].join(' / '),
+      warnings: [...new Set([
+        ...estimate.warnings,
+        `入力済み脂質とtrain標本${prior.pooledSampleSize ?? prior.sampleSize}件の飽和脂肪酸／脂質比率を使い、比率中央値を${percent(SATURATED_FAT_RATIO_BLEND_WEIGHT)}%、原材料推計を${percent(1 - SATURATED_FAT_RATIO_BLEND_WEIGHT)}%の重みで統合しました。`,
+        `比率分布の5〜95%点（${percent(prior.p05)}〜${percent(prior.p95)}%）を、原材料推計の暫定範囲の外側へ統合しています。`,
+        ...(estimate.value > fatG || estimate.range.max > fatG
+          ? [`飽和脂肪酸は脂質の内訳であるため、入力済みの脂質（${round(fatG)}g）を上限として原材料推計を比率統合前に補正しました。`]
+          : []),
+      ])],
+    },
   }
 }
 
@@ -1387,6 +1466,11 @@ export function estimateNutrients(request: NutrientEstimateRequest): NutrientEst
     }
   }
 
+  estimates = applySaturatedFatRatioPrior(
+    estimates,
+    request.knownNutrients,
+    request.estimatorGenreId,
+  )
   estimates = applyCompositionUpperBounds(estimates, request.knownNutrients)
   const unresolvedIngredients = request.ingredientsText?.trim()
     ? unresolvedIngredientNames(request.ingredientsText, request.productName, request.estimatorGenreId)
@@ -1441,6 +1525,14 @@ export function toStoredNutrientEstimateResult(
       calibration: { ...estimate.calibration },
       ...(estimate.zeroEvidence ? { zeroEvidence: estimate.zeroEvidence } : {}),
       adoptionClass: estimate.adoptionClass,
+      ...(estimate.ratioAdjustment
+        ? {
+            ratioAdjustment: {
+              ...estimate.ratioAdjustment,
+              unadjustedRange: { ...estimate.ratioAdjustment.unadjustedRange },
+            },
+          }
+        : {}),
     }
   }
   const unavailableEstimate = Object.values(result.estimates).find((estimate) => estimate.status === 'unavailable')

@@ -68,6 +68,11 @@ python3 scripts/validate_nutrient_estimator_training.py \
   data/estimator/private/spu_training.json \
   --output-manifest data/estimator/private/spu_training_manifest.json
 
+python3 scripts/build_spu_genre_nutrient_priors.py \
+  data/estimator/private/spu_training.json \
+  --manifest data/estimator/private/spu_training_manifest.json \
+  --output data/estimator/spu_genre_nutrient_priors.json
+
 node_modules/.bin/vite-node scripts/evaluate_spu_nutrient_estimator.ts \
   --training data/estimator/private/spu_training.json \
   --manifest data/estimator/private/spu_training_manifest.json \
@@ -75,16 +80,7 @@ node_modules/.bin/vite-node scripts/evaluate_spu_nutrient_estimator.ts \
   --summary-output docs/analysis/spu_estimator_evaluation.json
 ```
 
-ジャンル別栄養分布は、固定分割後の`train`だけから個別商品を含まない集計生成物へ変換する。
-
-```bash
-python3 scripts/build_spu_genre_nutrient_priors.py \
-  data/estimator/private/spu_training.json \
-  --manifest data/estimator/private/spu_training_manifest.json \
-  --output data/estimator/spu_genre_nutrient_priors.json
-```
-
-生成物は100g当たりの5・50・95パーセンタイル、標本数、メーカー数、最大メーカー比率、元データハッシュだけを含む。低頻度・メーカー偏重・`other_unknown`は栄養素全体へ縮約し、分離重量または校正済み誤差分布として扱わない。
+ジャンル別栄養分布と栄養素比率は、評価より先に、固定分割後の`train`だけから個別商品を含まない集計生成物へ変換する。生成物は100g当たりの栄養素と`飽和脂肪酸÷脂質`の5・50・95パーセンタイル、標本数、メーカー数、最大メーカー比率、元データハッシュだけを含む。比率は脂質が正で`0 ≦ 飽和脂肪酸 ≦ 脂質`を満たす非推定ラベルだけを使用する。低頻度・メーカー偏重・`other_unknown`は栄養素全体へ縮約し、分離重量または校正済み誤差分布として扱わない。評価スクリプトは生成物とマニフェストのデータハッシュが一致しない場合に停止する。
 
 メーカーのカテゴリ名はそのまま`genreId`へ流用せず、商品名、カテゴリ、原材料の順でアプリのジャンルへ決定的に変換する。変換レポートには元ファイルのSHA-256、除外理由、メーカーカテゴリからジャンルへの対応件数を残す。容量違い・味違いは`productFamily`へまとめ、同じ系列が学習・校正・最終テストへまたがらないようにする。
 

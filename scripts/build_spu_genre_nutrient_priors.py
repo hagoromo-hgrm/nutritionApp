@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any
 
 
-TRANSFORM_VERSION = "spu-genre-nutrient-prior-0.1.0"
+TRANSFORM_VERSION = "spu-genre-nutrient-prior-0.2.0"
 TARGET_NUTRIENTS = (
     "saturatedFatG",
     "fiberG",
@@ -24,6 +24,9 @@ TARGET_NUTRIENTS = (
     "vitaminB2Mg",
     "vitaminCMg",
 )
+RATIO_DEFINITIONS = {
+    "saturatedFatToFat": ("saturatedFatG", "fatG"),
+}
 
 
 class PriorBuildError(ValueError):
@@ -128,6 +131,13 @@ def build_priors(
     global_values: dict[str, list[float]] = defaultdict(list)
     genre_values: dict[str, dict[str, list[float]]] = defaultdict(lambda: defaultdict(list))
     genre_makers: dict[str, Counter[str]] = defaultdict(Counter)
+    global_ratio_values: dict[str, list[float]] = defaultdict(list)
+    genre_ratio_values: dict[str, dict[str, list[float]]] = defaultdict(
+        lambda: defaultdict(list)
+    )
+    genre_ratio_makers: dict[str, dict[str, Counter[str]]] = defaultdict(
+        lambda: defaultdict(Counter)
+    )
     for record in train_records:
         genre_id = record.get("genreId")
         maker = record.get("maker")
@@ -155,6 +165,18 @@ def build_priors(
                 continue
             global_values[nutrient_key].append(per_100g)
             genre_values[genre_id][nutrient_key].append(per_100g)
+        for ratio_key, (numerator_key, denominator_key) in RATIO_DEFINITIONS.items():
+            numerator = _label_center(nutrients.get(numerator_key))
+            denominator = _label_center(nutrients.get(denominator_key))
+            if numerator is None or denominator is None or denominator <= 0:
+                continue
+            ratio = numerator / denominator
+            # 表示丸めを逆算せず、物理制約を満たす観測だけを比率分布へ使う。
+            if not math.isfinite(ratio) or ratio < 0 or ratio > 1:
+                continue
+            global_ratio_values[ratio_key].append(ratio)
+            genre_ratio_values[genre_id][ratio_key].append(ratio)
+            genre_ratio_makers[genre_id][ratio_key][maker] += 1
 
     missing_global = [
         nutrient_key for nutrient_key in TARGET_NUTRIENTS
@@ -163,6 +185,15 @@ def build_priors(
     if missing_global:
         raise PriorBuildError(
             "training split has no observations for: " + ", ".join(missing_global)
+        )
+    missing_global_ratios = [
+        ratio_key for ratio_key in RATIO_DEFINITIONS
+        if not global_ratio_values[ratio_key]
+    ]
+    if missing_global_ratios:
+        raise PriorBuildError(
+            "training split has no ratio observations for: "
+            + ", ".join(missing_global_ratios)
         )
 
     global_priors = {
@@ -173,6 +204,17 @@ def build_priors(
             **_distribution([(value, 1.0) for value in global_values[nutrient_key]]),
         }
         for nutrient_key in TARGET_NUTRIENTS
+    }
+    global_ratio_priors = {
+        ratio_key: {
+            "sampleSize": len(global_ratio_values[ratio_key]),
+            "scope": "pooled_nutrient",
+            "genreObservationWeight": 0.0,
+            **_distribution([
+                (value, 1.0) for value in global_ratio_values[ratio_key]
+            ]),
+        }
+        for ratio_key in RATIO_DEFINITIONS
     }
     genres: dict[str, Any] = {}
     for genre_id in sorted(genre_makers):
@@ -209,11 +251,57 @@ def build_priors(
                 "genreObservationWeight": round(genre_weight, 6),
                 **_distribution(weighted),
             }
+        ratio_priors: dict[str, Any] = {}
+        for ratio_key in RATIO_DEFINITIONS:
+            values = genre_ratio_values[genre_id][ratio_key]
+            ratio_maker_counts = genre_ratio_makers[genre_id][ratio_key]
+            ratio_product_count = sum(ratio_maker_counts.values())
+            ratio_maximum_maker_share = (
+                max(ratio_maker_counts.values()) / ratio_product_count
+                if ratio_product_count > 0
+                else 1.0
+            )
+            use_genre = (
+                genre_id != "other_unknown"
+                and len(values) >= minimum_genre_samples
+                and len(ratio_maker_counts) >= minimum_genre_makers
+            )
+            if use_genre:
+                maker_balance = min(
+                    1.0,
+                    max(0.0, (1 - ratio_maximum_maker_share) / 0.5),
+                )
+                effective_genre_size = len(values) * maker_balance
+                pooled_weight = prior_strength / len(global_ratio_values[ratio_key])
+                weighted = [
+                    *((value, maker_balance) for value in values),
+                    *((value, pooled_weight) for value in global_ratio_values[ratio_key]),
+                ]
+                scope = "genre_nutrient"
+                genre_weight = effective_genre_size / (
+                    effective_genre_size + prior_strength
+                )
+            else:
+                weighted = [
+                    (value, 1.0) for value in global_ratio_values[ratio_key]
+                ]
+                scope = "pooled_nutrient"
+                genre_weight = 0.0
+            ratio_priors[ratio_key] = {
+                "sampleSize": len(values),
+                "pooledSampleSize": len(global_ratio_values[ratio_key]),
+                "makerCount": len(ratio_maker_counts),
+                "maximumMakerShare": round(ratio_maximum_maker_share, 6),
+                "scope": scope,
+                "genreObservationWeight": round(genre_weight, 6),
+                **_distribution(weighted),
+            }
         genres[genre_id] = {
             "trainingProductCount": product_count,
             "makerCount": len(maker_counts),
             "maximumMakerShare": round(maximum_maker_share, 6),
             "nutrients": nutrient_priors,
+            "ratios": ratio_priors,
         }
 
     return {
@@ -237,10 +325,21 @@ def build_priors(
             "otherUnknownUsesPooledDistribution": True,
             "estimatedLabelsExcluded": True,
             "separatedIngredientWeightsUsed": False,
+            "ratioDefinitions": {
+                ratio_key: {
+                    "numerator": numerator,
+                    "denominator": denominator,
+                }
+                for ratio_key, (numerator, denominator) in RATIO_DEFINITIONS.items()
+            },
+            "ratioRequiresPositiveDenominator": True,
+            "ratioBounds": [0, 1],
+            "invalidRatiosExcluded": True,
         },
         "trainingRecordCount": len(train_records),
         "global": {
             "nutrients": global_priors,
+            "ratios": global_ratio_priors,
         },
         "genres": genres,
     }

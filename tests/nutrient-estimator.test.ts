@@ -159,7 +159,87 @@ describe('browser nutrient estimator', () => {
       expect(estimate.range.min).toBeLessThanOrEqual(estimate.value)
       expect(estimate.range.max).toBeLessThanOrEqual(0.25)
       expect(estimate.warnings.join(' ')).toContain(`${parentLabel}（0.25g）を上限`)
+      if (key === 'saturatedFatG') {
+        expect(estimate.value).toBeLessThan(0.25)
+        expect(estimate.ratioAdjustment).toMatchObject({
+          ratioKey: 'saturatedFatToFat',
+          parentNutrient: 'fatG',
+          parentValue: 0.25,
+          blendWeight: 0.75,
+          sampleSize: 113,
+          scope: 'pooled_nutrient',
+        })
+      }
     }
+  })
+
+  it('脂質比率を原材料推計へ統合し、上限超過を脂質と同値にしない', () => {
+    const withoutRatio = estimateNutrients({
+      ...eligibleRequest,
+      productName: '植物油脂クッキー',
+      referenceMassG: 100,
+      ingredientsText: '植物油脂',
+      knownNutrients: undefined,
+      requestedNutrients: ['saturatedFatG'],
+    })
+    const result = estimateNutrients({
+      ...eligibleRequest,
+      productName: '植物油脂クッキー',
+      referenceMassG: 100,
+      ingredientsText: '植物油脂',
+      knownNutrients: { fatG: 10 },
+      requestedNutrients: ['saturatedFatG'],
+    })
+    const estimate = result.estimates.saturatedFatG
+
+    const estimateWithoutRatio = withoutRatio.estimates.saturatedFatG
+    expect(estimateWithoutRatio).toMatchObject({
+      status: 'available',
+      value: 47.08,
+    })
+    if (estimateWithoutRatio.status !== 'available') return
+    expect(estimateWithoutRatio.ratioAdjustment).toBeUndefined()
+    expect(estimate.status).toBe('available')
+    if (estimate.status !== 'available') return
+    expect(estimate.value).toBeGreaterThan(5)
+    expect(estimate.value).toBeLessThan(10)
+    expect(estimate.range.max).toBeLessThanOrEqual(10)
+    expect(estimate.sourceFoodIds.length).toBeGreaterThan(0)
+    expect(estimate.ratioAdjustment?.unadjustedValue).toBeGreaterThan(10)
+    expect(estimate.warnings.join(' ')).toContain('飽和脂肪酸／脂質比率')
+  })
+
+  it('極小の脂質でも丸め後の飽和脂肪酸を脂質以下に保つ', () => {
+    const result = estimateNutrients({
+      ...eligibleRequest,
+      knownNutrients: { fatG: 0.00000051 },
+      requestedNutrients: ['saturatedFatG'],
+    })
+    const estimate = result.estimates.saturatedFatG
+
+    expect(estimate.status).toBe('available')
+    if (estimate.status !== 'available') return
+    expect(estimate.value).toBeLessThanOrEqual(0.00000051)
+    expect(estimate.range.min).toBeLessThanOrEqual(estimate.value)
+    expect(estimate.range.max).toBeLessThanOrEqual(0.00000051)
+  })
+
+  it('脂質0では比率事前分布を適用せず包含制約だけで0にする', () => {
+    const result = estimateNutrients({
+      ...eligibleRequest,
+      knownNutrients: { fatG: 0 },
+      requestedNutrients: ['saturatedFatG'],
+    })
+    const estimate = result.estimates.saturatedFatG
+
+    expect(estimate).toMatchObject({
+      status: 'available',
+      value: 0,
+      range: { min: 0, max: 0 },
+      zeroEvidence: 'known_parent_zero',
+    })
+    if (estimate.status !== 'available') return
+    expect(estimate.ratioAdjustment).toBeUndefined()
   })
 
   it('未指定の栄養素は推計対象に含めない', () => {

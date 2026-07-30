@@ -492,6 +492,12 @@ ingredient_1 >= ingredient_2 >= ... >= ingredient_n
 
 点推計が0の場合も、参照食品の数値が0であることだけを根拠に推定範囲を`[0, 0]`へ固定してはならない。入力済み上位総量が0の場合、または全候補の上位総量が0で対象栄養素も0と導出できる場合だけ確定した0として扱う。それ以外は`zeroEvidence=uncertain`を保存し、栄養素別の絶対幅を上限に持つ範囲と注意書きを返すこと。
 
+飽和脂肪酸は、商品と同じ表示基準の脂質が既知かつ正のとき、原材料推計に加えて`飽和脂肪酸÷脂質`の事前分布を利用する。事前分布は固定分割後の`train`だけから、脂質と飽和脂肪酸のメーカー公表値がともにあり、脂質が正、かつ`0 ≦ 飽和脂肪酸 ≦ 脂質`を満たす非推定ラベルを集計する。ジャンル別標本が少ない、メーカーが少ない、または単一メーカーへ偏る場合は全ジャンル分布へ縮約する。
+
+原材料推計値を`E`、既知の脂質を`F`、比率分布の5・50・95パーセンタイルを`q05`、`q50`、`q95`とする。点推計は`0.25 × min(E, F) + 0.75 × F × q50`とし、重み0.75は校正区分だけで`0、0.25、0.5、0.75、1`を比較して範囲外MAPEが最小となる候補を採用する。推定範囲は、補正前の範囲を脂質以下へ制約した区間と`[F × q05, F × q95]`の外側を採り、点推計を必ず含めた後、最終的に脂質以下へ制約する。脂質が欠損する場合は比率補正を行わず、脂質が0の場合は既存の包含制約により飽和脂肪酸を0とする。
+
+比率補正を行った結果には、補正前の点推計・範囲、既知の脂質、使用した比率分布、重み、標本数、縮約範囲、事前分布版および元データハッシュを`ratioAdjustment`として保存する。最終テストを重み選択へ使用せず、教師データ更新時も同じ生成・校正手順を再現できること。
+
 ### EST-FR-015 信頼度の算出
 
 各栄養素について以下の信頼度を返すこと。
@@ -683,16 +689,36 @@ NutritionApp上で以下を比較表示できること。
   },
   "estimates": {
     "saturatedFatG": {
-      "value": 8.1,
+      "value": 8.2,
       "range": {
-        "min": 6.7,
-        "max": 9.8
+        "min": 3.9,
+        "max": 10.2
       },
       "confidence": "medium",
       "adoptionClass": "standard_confirmation",
       "method": "ingredient_optimization",
+      "ratioAdjustment": {
+        "ratioKey": "saturatedFatToFat",
+        "parentNutrient": "fatG",
+        "parentValue": 16,
+        "blendWeight": 0.75,
+        "p05": 0.241379,
+        "median": 0.503185,
+        "p95": 0.636364,
+        "sampleSize": 47,
+        "pooledSampleSize": 113,
+        "scope": "pooled_nutrient",
+        "priorVersion": "spu-genre-nutrient-prior-0.2.0",
+        "datasetHash": "sha256:...",
+        "unadjustedValue": 8.7,
+        "unadjustedRange": {
+          "min": 6.7,
+          "max": 9.8
+        }
+      },
       "warnings": [
-        "植物油脂の種類を特定できませんでした"
+        "植物油脂の種類を特定できませんでした",
+        "メーカー公表値から作成した飽和脂肪酸/脂質比を75%使用しました"
       ]
     },
     "fiberG": {
@@ -725,7 +751,7 @@ NutritionApp上で以下を比較表示できること。
       "genrePriorContributionRatios": {}
     }
   },
-  "modelVersion": "0.1.0",
+  "modelVersion": "browser-rule-0.21.0",
   "estimatedAt": "2026-07-25T00:00:00.000Z"
 }
 ```

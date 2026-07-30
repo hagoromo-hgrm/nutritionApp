@@ -1,7 +1,7 @@
 {
   "format": "nutrition-estimator-spu-genre-nutrient-priors",
   "formatVersion": 1,
-  "transformVersion": "spu-genre-nutrient-prior-0.1.0",
+  "transformVersion": "spu-genre-nutrient-prior-0.2.0",
   "source": {
     "provider": "メーカー公式栄養成分表示の集計",
     "datasetSha256": "bd2b3230343b917e4fa8c542043519f8c532b9f967f8feb44056b4c273e246e3",
@@ -22,7 +22,19 @@
     "makerDominanceShrinkageStartsAt": 0.5,
     "otherUnknownUsesPooledDistribution": true,
     "estimatedLabelsExcluded": true,
-    "separatedIngredientWeightsUsed": false
+    "separatedIngredientWeightsUsed": false,
+    "ratioDefinitions": {
+      "saturatedFatToFat": {
+        "numerator": "saturatedFatG",
+        "denominator": "fatG"
+      }
+    },
+    "ratioRequiresPositiveDenominator": true,
+    "ratioBounds": [
+      0,
+      1
+    ],
+    "invalidRatiosExcluded": true
   },
   "trainingRecordCount": 545,
   "global": {
@@ -98,6 +110,16 @@
         "p05": 35.833333,
         "median": 153.571429,
         "p95": 625.0
+      }
+    },
+    "ratios": {
+      "saturatedFatToFat": {
+        "sampleSize": 113,
+        "scope": "pooled_nutrient",
+        "genreObservationWeight": 0.0,
+        "p05": 0.241379,
+        "median": 0.503185,
+        "p95": 0.636364
       }
     }
   },
@@ -188,6 +210,19 @@
           "median": 153.571429,
           "p95": 625.0
         }
+      },
+      "ratios": {
+        "saturatedFatToFat": {
+          "sampleSize": 47,
+          "pooledSampleSize": 113,
+          "makerCount": 1,
+          "maximumMakerShare": 1.0,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.241379,
+          "median": 0.503185,
+          "p95": 0.636364
+        }
       }
     },
     "cake_pastry": {
@@ -275,6 +310,19 @@
           "p05": 35.833333,
           "median": 153.571429,
           "p95": 625.0
+        }
+      },
+      "ratios": {
+        "saturatedFatToFat": {
+          "sampleSize": 4,
+          "pooledSampleSize": 113,
+          "makerCount": 1,
+          "maximumMakerShare": 1.0,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.241379,
+          "median": 0.503185,
+          "p95": 0.636364
         }
       }
     },
@@ -364,6 +412,19 @@
           "median": 153.571429,
           "p95": 625.0
         }
+      },
+      "ratios": {
+        "saturatedFatToFat": {
+          "sampleSize": 28,
+          "pooledSampleSize": 113,
+          "makerCount": 1,
+          "maximumMakerShare": 1.0,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.241379,
+          "median": 0.503185,
+          "p95": 0.636364
+        }
       }
     },
     "dairy": {
@@ -451,6 +512,19 @@
           "p05": 35.833333,
           "median": 153.571429,
           "p95": 555.555556
+        }
+      },
+      "ratios": {
+        "saturatedFatToFat": {
+          "sampleSize": 2,
+          "pooledSampleSize": 113,
+          "makerCount": 2,
+          "maximumMakerShare": 0.5,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.241379,
+          "median": 0.503185,
+          "p95": 0.636364
         }
       }
     },
@@ -540,6 +614,19 @@
           "median": 153.571429,
           "p95": 555.555556
         }
+      },
+      "ratios": {
+        "saturatedFatToFat": {
+          "sampleSize": 0,
+          "pooledSampleSize": 113,
+          "makerCount": 0,
+          "maximumMakerShare": 1.0,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.241379,
+          "median": 0.503185,
+          "p95": 0.636364
+        }
       }
     },
     "frozen_dessert": {
@@ -627,6 +714,19 @@
           "p05": 35.833333,
           "median": 153.571429,
           "p95": 625.0
+        }
+      },
+      "ratios": {
+        "saturatedFatToFat": {
+          "sampleSize": 1,
+          "pooledSampleSize": 113,
+          "makerCount": 1,
+          "maximumMakerShare": 1.0,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.241379,
+          "median": 0.503185,
+          "p95": 0.636364
         }
       }
     },
@@ -716,6 +816,19 @@
           "median": 153.571429,
           "p95": 625.0
         }
+      },
+      "ratios": {
+        "saturatedFatToFat": {
+          "sampleSize": 0,
+          "pooledSampleSize": 113,
+          "makerCount": 0,
+          "maximumMakerShare": 1.0,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.241379,
+          "median": 0.503185,
+          "p95": 0.636364
+        }
       }
     },
     "other_unknown": {
@@ -803,6 +916,19 @@
           "p05": 35.833333,
           "median": 153.571429,
           "p95": 625.0
+        }
+      },
+      "ratios": {
+        "saturatedFatToFat": {
+          "sampleSize": 6,
+          "pooledSampleSize": 113,
+          "makerCount": 1,
+          "maximumMakerShare": 1.0,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.241379,
+          "median": 0.503185,
+          "p95": 0.636364
         }
       }
     },
@@ -892,6 +1018,19 @@
           "median": 153.571429,
           "p95": 625.0
         }
+      },
+      "ratios": {
+        "saturatedFatToFat": {
+          "sampleSize": 0,
+          "pooledSampleSize": 113,
+          "makerCount": 0,
+          "maximumMakerShare": 1.0,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.241379,
+          "median": 0.503185,
+          "p95": 0.636364
+        }
       }
     },
     "sauce_spread": {
@@ -979,6 +1118,19 @@
           "p05": 35.833333,
           "median": 153.571429,
           "p95": 625.0
+        }
+      },
+      "ratios": {
+        "saturatedFatToFat": {
+          "sampleSize": 6,
+          "pooledSampleSize": 113,
+          "makerCount": 1,
+          "maximumMakerShare": 1.0,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.241379,
+          "median": 0.503185,
+          "p95": 0.636364
         }
       }
     },
@@ -1068,6 +1220,19 @@
           "median": 153.571429,
           "p95": 625.0
         }
+      },
+      "ratios": {
+        "saturatedFatToFat": {
+          "sampleSize": 18,
+          "pooledSampleSize": 113,
+          "makerCount": 1,
+          "maximumMakerShare": 1.0,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.241379,
+          "median": 0.503185,
+          "p95": 0.636364
+        }
       }
     },
     "sugar_confectionery": {
@@ -1155,6 +1320,19 @@
           "p05": 33.333333,
           "median": 153.571429,
           "p95": 625.0
+        }
+      },
+      "ratios": {
+        "saturatedFatToFat": {
+          "sampleSize": 1,
+          "pooledSampleSize": 113,
+          "makerCount": 1,
+          "maximumMakerShare": 1.0,
+          "scope": "pooled_nutrient",
+          "genreObservationWeight": 0.0,
+          "p05": 0.241379,
+          "median": 0.503185,
+          "p95": 0.636364
         }
       }
     }

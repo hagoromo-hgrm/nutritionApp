@@ -6,11 +6,16 @@ import {
   ESTIMATION_LIMITATION_LABELS,
   ESTIMATE_FIT_NUTRIENT_KEYS,
   GENRE_PRIOR_PARTIAL_METHOD,
+  SATURATED_FAT_RATIO_BLEND_WEIGHT,
   estimateNutrients,
   NUTRIENT_ESTIMATOR_MODEL_VERSION,
   type EstimatableNutrientKey,
   type EstimateFitNutrientKey,
 } from '../src/services/nutrientEstimator'
+import {
+  ESTIMATOR_GENRE_NUTRIENT_PRIOR_DATASET_HASH,
+  ESTIMATOR_GENRE_NUTRIENT_PRIOR_VERSION,
+} from '../src/data/nutrientEstimatorGenreNutrientPriors'
 import {
   intervalDistance,
   nutrientLabelReferenceInterval,
@@ -83,6 +88,14 @@ interface Observation {
   predictedMax: number | null
   referenceMin: number
   referenceMax: number
+  ratioAdjustment?: {
+    parentValue: number
+    blendWeight: number
+    unadjustedValue: number
+    unadjustedMin: number
+    unadjustedMax: number
+    priorMedian: number
+  }
 }
 
 interface MetricSummary {
@@ -201,6 +214,83 @@ function summarize(observations: readonly Observation[]): MetricSummary {
   }
 }
 
+function median(values: readonly number[]): number | null {
+  if (values.length === 0) return null
+  const sorted = [...values].sort((left, right) => left - right)
+  const middle = (sorted.length - 1) / 2
+  const lower = Math.floor(middle)
+  const upper = Math.ceil(middle)
+  return round((sorted[lower] + sorted[upper]) / 2)
+}
+
+function summarizeRatioAdjustments(observations: readonly Observation[]) {
+  const saturatedFatReferences = observations.filter((item) => item.nutrientKey === 'saturatedFatG')
+  const adjusted = saturatedFatReferences.filter((item) => item.ratioAdjustment !== undefined)
+  const absoluteChanges = adjusted.map((item) => (
+    Math.abs(item.predictedValue! - item.ratioAdjustment!.unadjustedValue)
+  ))
+  const relativeChanges = adjusted.map((item) => (
+    Math.abs(item.predictedValue! - item.ratioAdjustment!.unadjustedValue)
+    / Math.max(item.ratioAdjustment!.unadjustedValue, 0.01)
+  ))
+  return {
+    saturatedFatReferenceCount: saturatedFatReferences.length,
+    appliedCount: adjusted.length,
+    appliedPercent: percent(adjusted.length, saturatedFatReferences.length),
+    blendWeight: adjusted[0]?.ratioAdjustment?.blendWeight ?? null,
+    medianAbsoluteChangeG: median(absoluteChanges),
+    medianRelativeChangePercent: median(relativeChanges.map((value) => value * 100)),
+    changedOver10PercentCount: relativeChanges.filter((value) => value > 0.1).length,
+    changedOver25PercentCount: relativeChanges.filter((value) => value > 0.25).length,
+    unadjustedPointEqualsFatCount: adjusted.filter((item) => (
+      Math.abs(item.ratioAdjustment!.unadjustedValue - item.ratioAdjustment!.parentValue) <= 0.000001
+    )).length,
+    unadjustedPointExceedsFatCount: adjusted.filter((item) => (
+      item.ratioAdjustment!.unadjustedValue > item.ratioAdjustment!.parentValue
+    )).length,
+    adjustedPointEqualsFatCount: adjusted.filter((item) => (
+      Math.abs(item.predictedValue! - item.ratioAdjustment!.parentValue) <= 0.000001
+    )).length,
+  }
+}
+
+function summarizeRatioWeight(
+  observations: readonly Observation[],
+  blendWeight: number,
+) {
+  const adjusted = observations.filter((item) => (
+    item.nutrientKey === 'saturatedFatG'
+    && item.ratioAdjustment !== undefined
+  ))
+  let pointInsideCount = 0
+  let percentageErrorTotal = 0
+  for (const item of adjusted) {
+    const adjustment = item.ratioAdjustment!
+    const ingredientValue = Math.min(adjustment.unadjustedValue, adjustment.parentValue)
+    const ratioValue = adjustment.parentValue * adjustment.priorMedian
+    const predictedValue = (
+      ingredientValue * (1 - blendWeight)
+      + ratioValue * blendWeight
+    )
+    const center = (item.referenceMin + item.referenceMax) / 2
+    const error = predictedValue < item.referenceMin
+      ? item.referenceMin - predictedValue
+      : predictedValue > item.referenceMax
+        ? predictedValue - item.referenceMax
+        : 0
+    if (error === 0) pointInsideCount += 1
+    if (center > 0) percentageErrorTotal += error / center
+  }
+  return {
+    blendWeight,
+    referenceCount: adjusted.length,
+    pointInsideReferencePercent: percent(pointInsideCount, adjusted.length),
+    mapeOutsideReferencePercent: adjusted.length === 0
+      ? null
+      : round(percentageErrorTotal / adjusted.length * 100),
+  }
+}
+
 function groupedSummaries(
   observations: readonly Observation[],
   key: (observation: Observation) => string,
@@ -300,6 +390,12 @@ async function main(): Promise<void> {
   const manifest = JSON.parse(await readFile(args.manifest, 'utf8')) as unknown
   assertDataset(dataset)
   assertManifest(manifest)
+  if (ESTIMATOR_GENRE_NUTRIENT_PRIOR_DATASET_HASH !== manifest.normalizedDatasetSha256) {
+    throw new Error(
+      'ジャンル・比率事前分布のデータセットハッシュが評価データと一致しません。'
+      + ' train分割から事前分布を再生成してください。',
+    )
+  }
   const splitByRecord = new Map(manifest.records.map((record) => [record.recordId, record.split]))
   const unresolved = new Map<string, { count: number; genres: Set<EstimatorGenreId> }>()
   const observations: Observation[] = []
@@ -389,6 +485,18 @@ async function main(): Promise<void> {
         predictedMax: estimate.range.max,
         referenceMin: reference.min,
         referenceMax: reference.max,
+        ...(estimate.ratioAdjustment
+          ? {
+              ratioAdjustment: {
+                parentValue: estimate.ratioAdjustment.parentValue,
+                blendWeight: estimate.ratioAdjustment.blendWeight,
+                unadjustedValue: estimate.ratioAdjustment.unadjustedValue,
+                unadjustedMin: estimate.ratioAdjustment.unadjustedRange.min,
+                unadjustedMax: estimate.ratioAdjustment.unadjustedRange.max,
+                priorMedian: estimate.ratioAdjustment.median,
+              },
+            }
+          : {}),
       })
     }
   }
@@ -428,7 +536,38 @@ async function main(): Promise<void> {
     byNutrient: groupedSummaries(observations, (item) => item.nutrientKey),
     byGenre: groupedSummaries(observations, (item) => item.genreId),
     bySplitNutrient: groupedSummaries(observations, (item) => `${item.split}:${item.nutrientKey}`),
+    ratioAdjustment: {
+      priorVersion: ESTIMATOR_GENRE_NUTRIENT_PRIOR_VERSION,
+      weightSelection: {
+        selectedOn: 'calibration',
+        selectedWeight: SATURATED_FAT_RATIO_BLEND_WEIGHT,
+        candidates: [0, 0.25, 0.5, 0.75, 1].map((weight) => summarizeRatioWeight(
+          observations.filter((item) => item.split === 'calibration'),
+          weight,
+        )),
+      },
+      overall: summarizeRatioAdjustments(observations),
+      bySplit: Object.fromEntries(
+        (['train', 'calibration', 'test'] as const).map((split) => [
+          split,
+          summarizeRatioAdjustments(observations.filter((item) => item.split === split)),
+        ]),
+      ),
+    },
     observations,
+  }
+  const bestCalibrationWeight = [...output.ratioAdjustment.weightSelection.candidates]
+    .sort((left, right) => (
+      (left.mapeOutsideReferencePercent ?? Number.POSITIVE_INFINITY)
+      - (right.mapeOutsideReferencePercent ?? Number.POSITIVE_INFINITY)
+      || (right.pointInsideReferencePercent ?? 0) - (left.pointInsideReferencePercent ?? 0)
+      || left.blendWeight - right.blendWeight
+    ))[0]?.blendWeight
+  if (bestCalibrationWeight !== SATURATED_FAT_RATIO_BLEND_WEIGHT) {
+    throw new Error(
+      `飽和脂肪酸比率の統合重み${SATURATED_FAT_RATIO_BLEND_WEIGHT}は`
+      + `校正区分の最良候補${bestCalibrationWeight}と一致しません。`,
+    )
   }
   await mkdir(dirname(args.output), { recursive: true })
   await writeFile(args.output, `${JSON.stringify(output, null, 2)}\n`, 'utf8')
@@ -463,6 +602,8 @@ async function main(): Promise<void> {
       genrePriorValuesReportedSeparately: true,
       genrePriorBuiltFromTrainingSplitOnly: true,
       genrePriorValuesExcludedFromCalibration: true,
+      saturatedFatRatioPriorBuiltFromTrainingSplitOnly: true,
+      saturatedFatRatioBlendWeightSelectedOnCalibrationSplit: true,
     },
     numericAvailabilityGate: {
       targetPercent: 80,
@@ -485,6 +626,7 @@ async function main(): Promise<void> {
     bySplit: output.bySplit,
     byNutrient: output.byNutrient,
     byGenre: output.byGenre,
+    ratioAdjustment: output.ratioAdjustment,
     calibrationByNutrient: calibrationMetrics,
   }
   if (args.summaryOutput) {
@@ -500,6 +642,7 @@ async function main(): Promise<void> {
     bySplitEstimateKind: output.bySplitEstimateKind,
     bySplit: output.bySplit,
     byNutrient: output.byNutrient,
+    ratioAdjustment: output.ratioAdjustment,
     topUnresolvedIngredients: output.unresolvedIngredients.slice(0, 30),
   }, null, 2)}\n`)
 }

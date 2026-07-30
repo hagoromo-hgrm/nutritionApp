@@ -470,6 +470,7 @@ export interface NutrientEstimate {
   calibration?: EstimationCalibrationMetadata
   zeroEvidence?: EstimationZeroEvidence
   adoptionClass?: EstimationAdoptionClass
+  ratioAdjustment?: EstimationRatioAdjustment
 }
 
 export interface EstimationCalibrationMetadata {
@@ -479,6 +480,23 @@ export interface EstimationCalibrationMetadata {
   sampleSize: number
   datasetHash?: string
   scope: 'genre_nutrient' | 'pooled_nutrient' | 'fallback'
+}
+
+export interface EstimationRatioAdjustment {
+  ratioKey: 'saturatedFatToFat'
+  parentNutrient: 'fatG'
+  parentValue: number
+  blendWeight: number
+  p05: number
+  median: number
+  p95: number
+  sampleSize: number
+  pooledSampleSize?: number
+  scope: Extract<EstimationCalibrationMetadata['scope'], 'genre_nutrient' | 'pooled_nutrient'>
+  priorVersion: string
+  datasetHash: string
+  unadjustedValue: number
+  unadjustedRange: { min: number; max: number }
 }
 
 export interface EstimationTrace {

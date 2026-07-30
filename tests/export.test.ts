@@ -215,6 +215,7 @@ describe('export formats', () => {
     const browserResult = estimateNutrients({
       requestId: estimationRequest.requestId,
       productName: traceFood.name,
+      estimatorGenreId: 'prepared_meal',
       baseAmount: traceFood.baseAmount,
       baseUnit: traceFood.baseUnit,
       referenceMassG: 100,
@@ -228,7 +229,7 @@ describe('export formats', () => {
         carbohydrateG: 83.6,
         saltG: 0,
       },
-      requestedNutrients: ['fiberG'],
+      requestedNutrients: ['fiberG', 'saturatedFatG'],
       requestedAt: estimatedAt,
     })
     const estimationResult = toStoredNutrientEstimateResult(browserResult, {
@@ -248,6 +249,13 @@ describe('export formats', () => {
     }
     expect(validateBackup(v2).estimationSettings?.applyMode).toBe('manual')
     expect(validateBackup(v2).estimationResults?.[0].optimization?.trace).toEqual(estimationResult.optimization?.trace)
+    expect(validateBackup(v2).estimationResults?.[0].estimates.saturatedFatG?.ratioAdjustment)
+      .toEqual(estimationResult.estimates.saturatedFatG?.ratioAdjustment)
+    expect(estimationResult.estimates.saturatedFatG?.ratioAdjustment).toMatchObject({
+      sampleSize: 0,
+      pooledSampleSize: 113,
+      scope: 'pooled_nutrient',
+    })
     expect(() => validateBackup({ ...v2, estimationSettings: { ...v2.estimationSettings, applyMode: 'automatic' } })).toThrow('推計関連データ')
     expect(() => validateBackup({
       ...v2,
@@ -258,6 +266,22 @@ describe('export formats', () => {
           trace: {
             ...estimationResult.optimization!.trace!,
             unresolvedMassRatio: 2,
+          },
+        },
+      }],
+    })).toThrow('推計要求、結果または採用履歴')
+    expect(() => validateBackup({
+      ...v2,
+      estimationResults: [{
+        ...estimationResult,
+        estimates: {
+          ...estimationResult.estimates,
+          saturatedFatG: {
+            ...estimationResult.estimates.saturatedFatG!,
+            ratioAdjustment: {
+              ...estimationResult.estimates.saturatedFatG!.ratioAdjustment!,
+              p95: 2,
+            },
           },
         },
       }],

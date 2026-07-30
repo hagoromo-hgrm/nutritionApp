@@ -41,7 +41,7 @@ const summaryText = JSON.stringify(summary)
 
 describe('nutrient estimator numeric availability gate', () => {
   it('部分参考値を分離したまま数値提示率80%を満たす', () => {
-    expect(summary.modelVersion).toBe('browser-rule-0.20.0')
+    expect(summary.modelVersion).toBe('browser-rule-0.21.0')
     expect(summary.numericAvailabilityGate).toMatchObject({
       targetPercent: 80,
       passed: true,
