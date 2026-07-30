@@ -38,6 +38,14 @@ export function getFoodDefaultServing(food: Food): { amount: number; unit: Quant
   return { amount: food.baseAmount, unit: food.baseUnit }
 }
 
+export function getFoodDefaultServingNutrition(food: Food): { amount: number; unit: QuantityUnit; nutrients: Nutrients } {
+  const serving = getFoodDefaultServing(food)
+  return {
+    ...serving,
+    nutrients: calculateNutrients(food, serving.amount, serving.unit),
+  }
+}
+
 /** 基準量を1単位として分量を増やす。gだけでなく個・丁・小さじ等にも使う。 */
 export function incrementByBaseAmount(amount: number, baseAmount: number, maximum = 100000): number {
   const current = Number.isFinite(amount) && amount > 0 ? amount : 0

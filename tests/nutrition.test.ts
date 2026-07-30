@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { calculateBmi, calculateNutrients, estimateDailyEnergyTarget, estimateDailyGoals, formatGraphNutrient, formatNutrient, getFoodDefaultServing, goalRate, incrementByBaseAmount, mealDetailNutritionGoals, nutrientGraphMax, nutrientRangeForGoals, scaleNutrientReference, scaleNutritionGoals, sumAvailableNutrients, sumByMealType, sumEntries, sumNutrients } from '../src/services/nutrition'
+import { calculateBmi, calculateNutrients, estimateDailyEnergyTarget, estimateDailyGoals, formatGraphNutrient, formatNutrient, getFoodDefaultServing, getFoodDefaultServingNutrition, goalRate, incrementByBaseAmount, mealDetailNutritionGoals, nutrientGraphMax, nutrientRangeForGoals, scaleNutrientReference, scaleNutritionGoals, sumAvailableNutrients, sumByMealType, sumEntries, sumNutrients } from '../src/services/nutrition'
 import { isValidQuantityUnit } from '../src/utils/validation'
 import type { BodyProfile, Food, MealEntry, Nutrients } from '../src/types'
 
@@ -44,6 +44,22 @@ describe('nutrition calculation', () => {
     expect(calculateNutrients(foodWithInputUnit, 60, 'g').energyKcal).toBe(120)
     expect(calculateNutrients(foodWithInputUnit, 1, 'パック').energyKcal).toBeNull()
     expect(getFoodDefaultServing(foodWithInputUnit)).toEqual({ amount: 2, unit: '個' })
+  })
+
+  it('一覧表示用の栄養価は既定の入力分量へ換算し、無効なら基準量へ戻す', () => {
+    expect(getFoodDefaultServingNutrition(foodWithInputUnit)).toMatchObject({
+      amount: 2,
+      unit: '個',
+      nutrients: { energyKcal: 240 },
+    })
+    expect(getFoodDefaultServingNutrition({
+      ...foodWithInputUnit,
+      servingUnit: 'パック',
+    })).toMatchObject({
+      amount: 100,
+      unit: 'g',
+      nutrients: { energyKcal: 200 },
+    })
   })
 
   it('入力用単位ラベルは空白・制御文字・極端な長さを拒否する', () => {
