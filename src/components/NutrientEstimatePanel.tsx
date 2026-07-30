@@ -180,7 +180,6 @@ export function NutrientEstimatePanel(props: NutrientEstimatePanelProps) {
     <section
       className="nutrient-estimate-panel"
       aria-labelledby={`${id}-title`}
-      aria-describedby={`${id}-intro`}
     >
       <div className="nutrient-estimate-heading">
         <div>
@@ -189,9 +188,6 @@ export function NutrientEstimatePanel(props: NutrientEstimatePanelProps) {
         </div>
         <span className="nutrient-estimate-badge">端末内</span>
       </div>
-      <p className="nutrient-estimate-intro" id={`${id}-intro`}>
-        原材料表示、商品名、確認済み重量から、飽和脂肪酸、食物繊維、カルシウム、鉄、ビタミンA・E・B1・B2・Cのうち、未入力の栄養素だけを参考推計します。未対応原材料や参照値欠損がある場合は、重量枠を残したまま、学習区分のメーカー公式表示から作ったジャンル事前分布で低信頼度の参考値を補います。栄養添加物の配合量が不明な分は加算しません。商品名は曖昧な参照候補を選ぶ弱い手掛かりに限り、入力済みの主要栄養値と原材料の明示語を優先します。外部へ情報を送信せず、現在値は上書きしません。
-      </p>
       <dl className="nutrient-estimate-basis">
         <div><dt>表示基準</dt><dd>{props.basis.baseAmount}{props.basis.baseUnit}当たり</dd></div>
         <div><dt>確認済み重量</dt><dd>{props.referenceMassG === null ? '未入力' : `${props.referenceMassG}g`}</dd></div>

@@ -774,7 +774,6 @@ legend { padding: 0 .35rem; color: var(--muted); font-size: .75rem; font-weight:
 .nutrient-estimate-heading, .nutrient-estimate-result-heading { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
 .nutrient-estimate-heading h3 { margin-top: .22rem; color: var(--ink); }
 .nutrient-estimate-badge { flex: 0 0 auto; border-radius: 99px; padding: .28rem .55rem; color: #456f9f; background: #e5f0fb; font-size: .65rem; font-weight: 800; }
-.nutrient-estimate-intro { margin-top: .65rem; color: var(--muted); font-size: .74rem; line-height: 1.6; }
 .nutrient-estimate-basis { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; margin: .75rem 0 0; }
 .nutrient-estimate-basis div { min-width: 0; border-radius: .7rem; padding: .55rem .65rem; background: #edf5fd; }
 .nutrient-estimate-basis dt { color: var(--muted); font-size: .62rem; }
