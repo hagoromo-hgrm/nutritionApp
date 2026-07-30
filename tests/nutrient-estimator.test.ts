@@ -283,6 +283,20 @@ describe('browser nutrient estimator', () => {
     expect(result.status).toBe('completed')
     expect(result.estimates.fiberG.method).toBe('browser_ingredient_macro_fit')
     expect(result.estimates.fiberG.warnings.join(' ')).toContain('主要栄養値との整合')
+    expect(result.optimization).toMatchObject({
+      converged: true,
+      trace: {
+        ingredientNames: ['小麦粉', 'バター', 'ココアパウダー', '卵'],
+        unresolvedMassRatio: 0,
+      },
+    })
+    const trace = result.optimization?.trace
+    expect(trace?.selectedProfileIds).toHaveLength(4)
+    expect(trace?.selectedProfileIds.every((profileId) => profileId !== null)).toBe(true)
+    expect(trace?.ingredientRatios.reduce((sum, ratio) => sum + ratio, 0)).toBeCloseTo(1, 5)
+    expect(trace?.fitScore).not.toBeNull()
+    expect(trace?.candidateCombinationCount).toBeGreaterThanOrEqual(trace?.retainedCandidateCombinationCount ?? 0)
+    expect(trace?.retainedCandidateCombinationCount).toBeGreaterThanOrEqual(trace?.plausibleScenarioCount ?? 0)
     expect(estimateNutrients(request)).toEqual(result)
   })
 
@@ -443,6 +457,9 @@ describe('browser nutrient estimator', () => {
     expect(stored.estimates.fiberG?.method).toBe(GENRE_PRIOR_PARTIAL_METHOD)
     expect(stored.estimates.fiberG?.limitationReasons).toEqual(['ingredient_unresolved'])
     expect(stored.estimates.fiberG?.adoptionClass).toBe('genre_prior_confirmation')
+    expect(stored.optimization?.trace).toEqual(result.optimization?.trace)
+    expect(stored.optimization?.trace?.selectedProfileIds).toEqual(['mext_01015', null])
+    expect(stored.optimization?.trace?.unresolvedMassRatio).toBeCloseTo(1 / 3, 5)
   })
 
   it('参照できる原材料が1件もない場合は全体分布へ縮約した低信頼度参考値を返す', () => {
@@ -468,6 +485,14 @@ describe('browser nutrient estimator', () => {
     expect(stored.error).toBeUndefined()
     expect(stored.estimates.fiberG?.calibration?.scope).toBe('pooled_nutrient')
     expect(stored.estimates.fiberG?.adoptionClass).toBe('genre_prior_confirmation')
+    expect(stored.optimization?.trace).toMatchObject({
+      selectedProfileIds: [null, null],
+      candidateCombinationCount: 0,
+      retainedCandidateCombinationCount: 0,
+      plausibleScenarioCount: 0,
+      unresolvedMassRatio: 1,
+      genrePriorContributionRatios: { fiberG: 1 },
+    })
   })
 
   it('カカオマス・乳糖・ココアバター・イーストを含む商品を代理参照付きで部分推計する', () => {

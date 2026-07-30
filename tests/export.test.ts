@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { validateBackup } from '../src/services/backup'
 import { CSV_HEADERS, LEGACY_CSV_HEADERS, PREVIOUS_CSV_HEADERS, SORTED_CSV_HEADERS, USER_FACING_CSV_HEADERS, mealsToCsv, parseMealsCsv } from '../src/services/csv'
+import { createEstimationRequest } from '../src/services/nutrientEstimationStore'
+import { estimateNutrients, toStoredNutrientEstimateResult } from '../src/services/nutrientEstimator'
 import type { BackupData, Food, MealEntry } from '../src/types'
 
 const addedNutrients = { calciumMg: null, ironMg: null, vitaminAMcg: null, vitaminEMg: null, vitaminB1Mg: null, vitaminB2Mg: null, vitaminCMg: null, saturatedFatG: null }
@@ -186,16 +188,80 @@ describe('export formats', () => {
   })
 
   it('v2バックアップは推計設定と履歴ストアを含めて検証し、v1も引き続き読み込める', () => {
+    const estimatedAt = '2026-07-25T00:00:00.000Z'
+    const traceFood: Food = {
+      ...classifiedFood,
+      id: 'trace_food',
+      name: '砂糖菓子',
+      baseAmount: 100,
+      baseUnit: 'g',
+      nutrients: {
+        ...classifiedFood.nutrients,
+        energyKcal: 363,
+        proteinG: 5.5,
+        fatG: 1,
+        carbohydrateG: 83.6,
+        saltG: 0,
+      },
+      ingredientsText: '薄力粉、砂糖',
+      ingredientsSource: { provider: 'パッケージ表示', verified: true },
+      updatedAt: estimatedAt,
+    }
+    const estimationRequest = createEstimationRequest(traceFood, {
+      requestId: 'trace_request',
+      status: 'completed',
+      now: estimatedAt,
+    })
+    const browserResult = estimateNutrients({
+      requestId: estimationRequest.requestId,
+      productName: traceFood.name,
+      baseAmount: traceFood.baseAmount,
+      baseUnit: traceFood.baseUnit,
+      referenceMassG: 100,
+      referenceMassSource: '基準単位がg',
+      ingredientsText: traceFood.ingredientsText ?? null,
+      ingredientsSource: traceFood.ingredientsSource ?? null,
+      knownNutrients: {
+        energyKcal: 363,
+        proteinG: 5.5,
+        fatG: 1,
+        carbohydrateG: 83.6,
+        saltG: 0,
+      },
+      requestedNutrients: ['fiberG'],
+      requestedAt: estimatedAt,
+    })
+    const estimationResult = toStoredNutrientEstimateResult(browserResult, {
+      foodId: traceFood.id,
+      inputHash: estimationRequest.inputHash,
+      baseAmount: traceFood.baseAmount,
+      baseUnit: traceFood.baseUnit,
+    })
     const v2 = {
       ...backup,
       dataFormatVersion: 2,
+      foods: [traceFood],
       settings: { ...backup.settings, dataFormatVersion: 2 },
       estimationDataFormatVersion: 1,
       estimationSettings: { id: 'default' as const, enabled: false, trigger: 'manual' as const, applyMode: 'manual' as const, minimumConfidenceForSuggestion: 'low' as const, updatedAt: '2026-07-25T00:00:00.000Z' },
-      estimationRequests: [], estimationResults: [], estimationDecisions: [],
+      estimationRequests: [estimationRequest], estimationResults: [estimationResult], estimationDecisions: [],
     }
     expect(validateBackup(v2).estimationSettings?.applyMode).toBe('manual')
+    expect(validateBackup(v2).estimationResults?.[0].optimization?.trace).toEqual(estimationResult.optimization?.trace)
     expect(() => validateBackup({ ...v2, estimationSettings: { ...v2.estimationSettings, applyMode: 'automatic' } })).toThrow('推計関連データ')
+    expect(() => validateBackup({
+      ...v2,
+      estimationResults: [{
+        ...estimationResult,
+        optimization: {
+          ...estimationResult.optimization!,
+          trace: {
+            ...estimationResult.optimization!.trace!,
+            unresolvedMassRatio: 2,
+          },
+        },
+      }],
+    })).toThrow('推計要求、結果または採用履歴')
     expect(validateBackup(backup).dataFormatVersion).toBe(1)
   })
 

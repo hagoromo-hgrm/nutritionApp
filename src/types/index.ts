@@ -481,6 +481,27 @@ export interface EstimationCalibrationMetadata {
   scope: 'genre_nutrient' | 'pooled_nutrient' | 'fallback'
 }
 
+export interface EstimationTrace {
+  ingredientNames: string[]
+  selectedProfileIds: Array<string | null>
+  ingredientRatios: number[]
+  fitScore: number | null
+  normalizedFitError: number | null
+  candidateCombinationCount: number
+  retainedCandidateCombinationCount: number
+  plausibleScenarioCount: number
+  unresolvedMassRatio: number
+  /** 対象栄養素でジャンル分布を適用した、製品重量に対する暫定重量比。 */
+  genrePriorContributionRatios: Partial<Record<NutrientKey, number>>
+}
+
+export interface EstimationOptimization {
+  converged: boolean
+  objectiveError?: number
+  scenarioCount?: number
+  trace?: EstimationTrace
+}
+
 export interface EstimationResult {
   requestId: string
   foodId: string
@@ -491,7 +512,7 @@ export interface EstimationResult {
   globalWarnings: string[]
   unresolvedIngredients?: string[]
   limitationReasons?: EstimationLimitationReason[]
-  optimization?: { converged: boolean; objectiveError?: number; scenarioCount?: number }
+  optimization?: EstimationOptimization
   error?: { code: string; message: string; nextAction: string }
   modelVersion: string
   estimatedAt: string

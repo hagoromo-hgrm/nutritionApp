@@ -709,7 +709,19 @@ NutritionApp上で以下を比較表示できること。
   "optimization": {
     "converged": true,
     "objectiveError": 0.032,
-    "scenarioCount": 250
+    "scenarioCount": 250,
+    "trace": {
+      "ingredientNames": ["小麦粉", "植物油脂"],
+      "selectedProfileIds": ["mext_01015", "mext_14009"],
+      "ingredientRatios": [0.65, 0.35],
+      "fitScore": 0.041,
+      "normalizedFitError": 0.032,
+      "candidateCombinationCount": 12,
+      "retainedCandidateCombinationCount": 12,
+      "plausibleScenarioCount": 4,
+      "unresolvedMassRatio": 0,
+      "genrePriorContributionRatios": {}
+    }
   },
   "modelVersion": "0.1.0",
   "estimatedAt": "2026-07-25T00:00:00.000Z"
@@ -1153,6 +1165,9 @@ error = Σ weight_nutrient × ((estimated - target) / scale)^2
 ### EST-NFR-004 追跡可能性
 
 - 推計結果から入力、候補原材料、モデルバージョン、採用判断を追跡できること。
+- 通常画面へ表示しない監査情報として、解析した原材料名、選択プロファイルID、原材料比率、最終スコア、正規化適合誤差、枝刈り前・保持後の候補組合せ数、妥当シナリオ数、未解決重量比および栄養素別のジャンル分布適用重量比を`optimization.trace`へ保存すること。
+- 未解決原材料のプロファイルIDは`null`とし、原材料名・プロファイルID・比率の配列位置を一致させること。欠損プロファイルを架空のIDやゼロ寄与として記録しないこと。
+- トレースはJSONバックアップ・復元対象とし、旧結果でトレースがない場合も復元可能とすること。
 - 栄養素ごとの由来を確認できること。
 
 ### EST-NFR-005 性能

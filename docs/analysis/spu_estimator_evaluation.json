@@ -1,8 +1,8 @@
 {
   "format": "nutrition-estimator-spu-evaluation-summary",
   "formatVersion": 1,
-  "modelVersion": "browser-rule-0.18.0",
-  "generatedAt": "2026-07-30T06:27:37.135Z",
+  "modelVersion": "browser-rule-0.19.0",
+  "generatedAt": "2026-07-30T06:46:42.620Z",
   "datasetHash": "bd2b3230343b917e4fa8c542043519f8c532b9f967f8feb44056b4c273e246e3",
   "evaluationHash": "5bceb73683fbfae9648874da43518f531cb1558de3edca84fff0c32a344a1e30",
   "recordCount": 779,

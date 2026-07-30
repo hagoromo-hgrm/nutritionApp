@@ -327,6 +327,35 @@ function isNutrientEstimate(value: unknown): boolean {
     && (value.adoptionClass === undefined || ['standard_confirmation', 'limited_confirmation', 'genre_prior_confirmation'].includes(String(value.adoptionClass)))
 }
 
+function isEstimationTrace(value: unknown): boolean {
+  if (!isRecord(value)
+    || !Array.isArray(value.ingredientNames) || !value.ingredientNames.every(isNonEmptyString)
+    || !Array.isArray(value.selectedProfileIds)
+    || !value.selectedProfileIds.every((profileId) => profileId === null || isNonEmptyString(profileId))
+    || !Array.isArray(value.ingredientRatios)
+    || !value.ingredientRatios.every((ratio) => typeof ratio === 'number' && Number.isFinite(ratio) && ratio >= 0 && ratio <= 1)
+    || value.ingredientNames.length !== value.selectedProfileIds.length
+    || value.ingredientNames.length !== value.ingredientRatios.length
+    || (value.fitScore !== null && (typeof value.fitScore !== 'number' || !Number.isFinite(value.fitScore) || value.fitScore < 0))
+    || (value.normalizedFitError !== null && (typeof value.normalizedFitError !== 'number' || !Number.isFinite(value.normalizedFitError) || value.normalizedFitError < 0))
+    || typeof value.candidateCombinationCount !== 'number' || !Number.isSafeInteger(value.candidateCombinationCount) || value.candidateCombinationCount < 0
+    || typeof value.retainedCandidateCombinationCount !== 'number' || !Number.isSafeInteger(value.retainedCandidateCombinationCount) || value.retainedCandidateCombinationCount < 0
+    || typeof value.plausibleScenarioCount !== 'number' || !Number.isSafeInteger(value.plausibleScenarioCount) || value.plausibleScenarioCount < 0
+    || value.retainedCandidateCombinationCount > value.candidateCombinationCount
+    || value.plausibleScenarioCount > value.retainedCandidateCombinationCount
+    || typeof value.unresolvedMassRatio !== 'number' || !Number.isFinite(value.unresolvedMassRatio) || value.unresolvedMassRatio < 0 || value.unresolvedMassRatio > 1
+    || !isRecord(value.genrePriorContributionRatios)) return false
+  const ratioTotal = value.ingredientRatios.reduce<number>((total, ratio) => total + ratio, 0)
+  if (value.ingredientRatios.length > 0 && Math.abs(ratioTotal - 1) > 0.0001) return false
+  return Object.entries(value.genrePriorContributionRatios).every(([key, ratio]) => (
+    isNutrientKey(key)
+    && typeof ratio === 'number'
+    && Number.isFinite(ratio)
+    && ratio >= 0
+    && ratio <= 1
+  ))
+}
+
 function isEstimationResult(value: unknown): value is EstimationResult {
   if (!isRecord(value) || !isNonEmptyString(value.requestId) || !isNonEmptyString(value.foodId) || !isNonEmptyString(value.inputHash)) return false
   if (!['completed', 'partial', 'failed'].includes(String(value.status)) || !isRecord(value.estimates) || !Object.entries(value.estimates).every(([key, estimate]) => isNutrientKey(key) && isNutrientEstimate(estimate))) return false
@@ -337,7 +366,13 @@ function isEstimationResult(value: unknown): value is EstimationResult {
       || !value.limitationReasons.every((reason) => (ESTIMATION_LIMITATION_REASONS as readonly unknown[]).includes(reason))))
     || !isNonEmptyString(value.modelVersion) || !isIsoDateTime(value.estimatedAt)) return false
   const optimization = value.optimization
-  if (optimization !== undefined && (!isRecord(optimization) || typeof optimization.converged !== 'boolean' || (optimization.objectiveError !== undefined && (typeof optimization.objectiveError !== 'number' || !Number.isFinite(optimization.objectiveError) || optimization.objectiveError < 0)) || (optimization.scenarioCount !== undefined && (typeof optimization.scenarioCount !== 'number' || !Number.isInteger(optimization.scenarioCount) || optimization.scenarioCount < 0)))) return false
+  if (optimization !== undefined && (
+    !isRecord(optimization)
+    || typeof optimization.converged !== 'boolean'
+    || (optimization.objectiveError !== undefined && (typeof optimization.objectiveError !== 'number' || !Number.isFinite(optimization.objectiveError) || optimization.objectiveError < 0))
+    || (optimization.scenarioCount !== undefined && (typeof optimization.scenarioCount !== 'number' || !Number.isInteger(optimization.scenarioCount) || optimization.scenarioCount < 0))
+    || (optimization.trace !== undefined && !isEstimationTrace(optimization.trace))
+  )) return false
   return value.error === undefined || (isRecord(value.error) && isNonEmptyString(value.error.code) && isNonEmptyString(value.error.message) && isNonEmptyString(value.error.nextAction))
 }
 

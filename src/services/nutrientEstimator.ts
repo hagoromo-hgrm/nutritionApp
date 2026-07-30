@@ -18,6 +18,8 @@ import {
   type EstimationAdoptionClass,
   type EstimationCalibrationMetadata,
   type EstimationLimitationReason,
+  type EstimationOptimization,
+  type EstimationTrace,
   type EstimationZeroEvidence,
   type EstimatorGenreId,
   type FoodUnit,
@@ -57,7 +59,7 @@ export const ESTIMATE_FIT_NUTRIENT_KEYS = [
 export type EstimateFitNutrientKey = (typeof ESTIMATE_FIT_NUTRIENT_KEYS)[number]
 export type EstimateConfidence = 'high' | 'medium' | 'low' | 'unavailable'
 export type EstimateAdoptability = EstimationAdoptionClass | 'unavailable'
-export const NUTRIENT_ESTIMATOR_MODEL_VERSION = 'browser-rule-0.18.0' as const
+export const NUTRIENT_ESTIMATOR_MODEL_VERSION = 'browser-rule-0.19.0' as const
 const MEXT_SOURCE = '文部科学省 日本食品標準成分表（八訂）増補2023年（2026年3月27日正誤表対応）' as const
 const FDC_SOURCE = 'USDA FoodData Central SR Legacy 04/2018' as const
 const INGREDIENT_SPEC_SOURCE = '原料メーカー・業界団体公式仕様' as const
@@ -138,6 +140,7 @@ export interface NutrientEstimateResult {
   estimates: Record<EstimatableNutrientKey, NutrientEstimate>
   globalWarnings: string[]
   unresolvedIngredients: string[]
+  optimization?: EstimationOptimization
   modelVersion: typeof NUTRIENT_ESTIMATOR_MODEL_VERSION
   estimatedAt: string
 }
@@ -517,6 +520,14 @@ export function combineCandidateSets(
   }))
 }
 
+function cartesianCandidateCombinationCount(
+  candidateSets: readonly (readonly IngredientProfile[])[],
+): number {
+  return candidateSets.reduce((count, candidates) => (
+    Math.min(Number.MAX_SAFE_INTEGER, count * candidates.length)
+  ), 1)
+}
+
 function makeCompoundProfile(
   ingredient: ParsedIngredient,
   profiles: readonly IngredientProfile[],
@@ -764,13 +775,17 @@ function weightedQuantile(
   return sorted[sorted.length - 1].value
 }
 
+function plausibleFits(fits: readonly MacroFit[], selected: MacroFit): MacroFit[] {
+  return fits.filter((fit) => fit.score <= selected.score + CANDIDATE_SCENARIO_SCORE_TOLERANCE)
+}
+
 function candidateScenarioRange(
   fits: readonly MacroFit[],
   selected: MacroFit,
   nutrientKey: EstimatableNutrientKey,
   referenceMassG: number,
 ): CandidateScenarioRange | null {
-  const plausible = fits.filter((fit) => fit.score <= selected.score + CANDIDATE_SCENARIO_SCORE_TOLERANCE)
+  const plausible = plausibleFits(fits, selected)
   const minimumFitError = plausible.reduce((minimum, fit) => (
     Math.min(minimum, fit.normalizedError ?? 0)
   ), Number.POSITIVE_INFINITY)
@@ -842,6 +857,11 @@ function unavailableAll(
   return mapEstimatableNutrients(() => unavailable(reason, nextAction, warnings, limitationReasons))
 }
 
+interface PartialEstimateOutput {
+  estimates: Record<EstimatableNutrientKey, NutrientEstimate>
+  trace: EstimationTrace
+}
+
 /**
  * 未対応原材料の重量枠を残し、参照できる原材料の寄与だけを表示順の暫定配合比で計算する。
  * 未対応分を0gと置いた商品の下限ではなく、既知分だけを可視化する部分参考値である。
@@ -850,13 +870,15 @@ function partialKnownIngredientEstimates(
   resolved: readonly ResolvedIngredient[],
   declaration: ParsedIngredientDeclaration,
   request: NutrientEstimateRequest,
-): Record<EstimatableNutrientKey, NutrientEstimate> {
+): PartialEstimateOutput {
   const known = resolved.filter((item) => item.candidates.length > 0)
   const unknownNames = resolved
     .filter((item) => item.candidates.length === 0)
     .map((item) => item.ingredient.normalizedName)
+  const ratios = fallbackRatios(resolved.length)
+  const genrePriorContributionRatios: Partial<Record<NutrientKey, number>> = {}
   if (known.length === 0) {
-    return mapEstimatableNutrients((key) => {
+    const estimates = mapEstimatableNutrients<NutrientEstimate>((key) => {
       if (!(request.requestedNutrients ?? ESTIMATABLE_NUTRIENT_KEYS).includes(key)) {
         return unavailable(
           'この栄養素は今回の推計対象に選ばれていません。',
@@ -881,6 +903,7 @@ function partialKnownIngredientEstimates(
           ['ingredient_unresolved'],
         )
       }
+      genrePriorContributionRatios[key] = 1
       const unmodeledAdditives = unmodeledAdditivesForNutrient(declaration.additives, key)
       return {
         status: 'available',
@@ -905,13 +928,29 @@ function partialKnownIngredientEstimates(
         ],
       }
     })
+    return {
+      estimates,
+      trace: {
+        ingredientNames: resolved.map((item) => item.ingredient.normalizedName),
+        selectedProfileIds: resolved.map(() => null),
+        ingredientRatios: ratios,
+        fitScore: null,
+        normalizedFitError: null,
+        candidateCombinationCount: 0,
+        retainedCandidateCombinationCount: 0,
+        plausibleScenarioCount: 0,
+        unresolvedMassRatio: 1,
+        genrePriorContributionRatios,
+      },
+    }
   }
 
-  const selected = combineCandidateSets(
-    known.map((item) => item.candidates),
+  const candidateSets = known.map((item) => item.candidates)
+  const combinations = combineCandidateSets(
+    candidateSets,
     MAX_PROFILE_COMBINATIONS,
-  )[0]
-  const ratios = fallbackRatios(resolved.length)
+  )
+  const selected = combinations[0]
   let profileIndex = 0
   const positioned = resolved.flatMap((item, ingredientIndex) => {
     if (item.candidates.length === 0) return []
@@ -934,7 +973,7 @@ function partialKnownIngredientEstimates(
     ...selected.profiles.flatMap((profile) => profile.derivationWarnings ?? []),
   ]
 
-  return mapEstimatableNutrients((key) => {
+  const estimates = mapEstimatableNutrients<NutrientEstimate>((key) => {
     if (!(request.requestedNutrients ?? ESTIMATABLE_NUTRIENT_KEYS).includes(key)) {
       return unavailable(
         'この栄養素は今回の推計対象に選ばれていません。',
@@ -961,6 +1000,7 @@ function partialKnownIngredientEstimates(
       referenceMassG: request.referenceMassG!,
       usePriorMedianAsPoint: numeric.length === 0,
     })
+    if (genrePrior) genrePriorContributionRatios[key] = unmodeledMassFraction
     if (numeric.length === 0 && !genrePrior) {
       return unavailable(
         `参照できる原材料にも${NUTRIENT_LABELS[key]}の数値がないため、部分参考値を計算できません。`,
@@ -1018,6 +1058,30 @@ function partialKnownIngredientEstimates(
       ])],
     }
   })
+  let selectedProfileIndex = 0
+  const selectedProfileIds = resolved.map((item) => {
+    if (item.candidates.length === 0) return null
+    const profileId = selected.profiles[selectedProfileIndex].profileId
+    selectedProfileIndex += 1
+    return profileId
+  })
+  return {
+    estimates,
+    trace: {
+      ingredientNames: resolved.map((item) => item.ingredient.normalizedName),
+      selectedProfileIds,
+      ingredientRatios: ratios,
+      fitScore: null,
+      normalizedFitError: null,
+      candidateCombinationCount: cartesianCandidateCombinationCount(candidateSets),
+      retainedCandidateCombinationCount: combinations.length,
+      plausibleScenarioCount: 1,
+      unresolvedMassRatio: round(resolved.reduce((total, item, index) => (
+        total + (item.candidates.length === 0 ? ratios[index] : 0)
+      ), 0)),
+      genrePriorContributionRatios,
+    },
+  }
 }
 
 function resultStatus(
@@ -1043,6 +1107,7 @@ function resultStatus(
 export function estimateNutrients(request: NutrientEstimateRequest): NutrientEstimateResult {
   const requested = new Set(request.requestedNutrients ?? ESTIMATABLE_NUTRIENT_KEYS)
   let estimates: Record<EstimatableNutrientKey, NutrientEstimate>
+  let optimization: EstimationOptimization | undefined
 
   if (!Number.isFinite(request.baseAmount) || request.baseAmount <= 0 || request.baseUnit.trim() === '') {
     estimates = unavailableAll(
@@ -1095,7 +1160,13 @@ export function estimateNutrients(request: NutrientEstimateRequest): NutrientEst
         ['ingredient_parse_failed'],
       )
     } else if (unknown.length > 0) {
-      estimates = partialKnownIngredientEstimates(resolved, declaration, request)
+      const partial = partialKnownIngredientEstimates(resolved, declaration, request)
+      estimates = partial.estimates
+      optimization = {
+        converged: false,
+        scenarioCount: partial.trace.plausibleScenarioCount,
+        trace: partial.trace,
+      }
     } else {
       const combinations = combineCandidateSets(
         resolved.map((item) => item.candidates),
@@ -1163,6 +1234,7 @@ export function estimateNutrients(request: NutrientEstimateRequest): NutrientEst
         || !selected.usedMacroFit
         || (selected.normalizedError ?? Number.POSITIVE_INFINITY) > 4
       ) ? 'low' : 'medium'
+      const genrePriorContributionRatios: Partial<Record<NutrientKey, number>> = {}
       const makeEstimate = (key: EstimatableNutrientKey): NutrientEstimate => {
         const unmodeledAdditives = unmodeledAdditivesForNutrient(declaration.additives, key)
         const missingProfiles = selected.profiles.filter((profile) => profile.nutrients[key] === null)
@@ -1185,6 +1257,7 @@ export function estimateNutrients(request: NutrientEstimateRequest): NutrientEst
           referenceMassG: request.referenceMassG!,
           usePriorMedianAsPoint: numericProfileIndexes.length === 0,
         })
+        if (genrePrior) genrePriorContributionRatios[key] = missingMassFraction
         if (numericProfileIndexes.length === 0 && !genrePrior) {
           const missingSourceFoodIds = [...new Set(missingProfiles.flatMap((profile) => profile.sourceFoodIds))]
           return unavailable(
@@ -1291,6 +1364,25 @@ export function estimateNutrients(request: NutrientEstimateRequest): NutrientEst
             [],
             ['not_requested'],
           ))
+      optimization = {
+        converged: selected.usedMacroFit,
+        ...(selected.normalizedError === null ? {} : { objectiveError: selected.normalizedError }),
+        scenarioCount: scenarioCount * combinations.length,
+        trace: {
+          ingredientNames: declaration.ingredients.map((ingredient) => ingredient.normalizedName),
+          selectedProfileIds: selected.profiles.map((profile) => profile.profileId),
+          ingredientRatios: selected.ratios.map(round),
+          fitScore: round(selected.score),
+          normalizedFitError: selected.normalizedError === null ? null : round(selected.normalizedError),
+          candidateCombinationCount: cartesianCandidateCombinationCount(
+            resolved.map((item) => item.candidates),
+          ),
+          retainedCandidateCombinationCount: combinations.length,
+          plausibleScenarioCount: plausibleFits(fits, selected).length,
+          unresolvedMassRatio: 0,
+          genrePriorContributionRatios,
+        },
+      }
     }
   }
 
@@ -1319,6 +1411,7 @@ export function estimateNutrients(request: NutrientEstimateRequest): NutrientEst
         : []),
     ],
     unresolvedIngredients,
+    ...(optimization ? { optimization } : {}),
     modelVersion: MODEL_VERSION,
     estimatedAt: request.requestedAt,
   }
@@ -1363,6 +1456,26 @@ export function toStoredNutrientEstimateResult(
     estimates,
     globalWarnings: [...result.globalWarnings],
     unresolvedIngredients: [...result.unresolvedIngredients],
+    ...(result.optimization
+      ? {
+          optimization: {
+            ...result.optimization,
+            ...(result.optimization.trace
+              ? {
+                  trace: {
+                    ...result.optimization.trace,
+                    ingredientNames: [...result.optimization.trace.ingredientNames],
+                    selectedProfileIds: [...result.optimization.trace.selectedProfileIds],
+                    ingredientRatios: [...result.optimization.trace.ingredientRatios],
+                    genrePriorContributionRatios: {
+                      ...result.optimization.trace.genrePriorContributionRatios,
+                    },
+                  },
+                }
+              : {}),
+          },
+        }
+      : {}),
     ...(limitationReasons.length > 0 ? { limitationReasons } : {}),
     ...(result.status === 'failed' && unavailableEstimate?.status === 'unavailable'
       ? {
