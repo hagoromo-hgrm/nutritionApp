@@ -7,10 +7,12 @@ import {
   ESTIMATE_FIT_NUTRIENT_KEYS,
   GENRE_PRIOR_PARTIAL_METHOD,
   SATURATED_FAT_RATIO_BLEND_WEIGHT,
+  SATURATED_FAT_RATIO_FEEDBACK_WEIGHT,
   estimateNutrients,
   NUTRIENT_ESTIMATOR_MODEL_VERSION,
   type EstimatableNutrientKey,
   type EstimateFitNutrientKey,
+  type NutrientEstimatorRatioStrategy,
 } from '../src/services/nutrientEstimator'
 import {
   ESTIMATOR_GENRE_NUTRIENT_PRIOR_DATASET_HASH,
@@ -179,6 +181,37 @@ function knownNutrientValue(label: TrainingNutrient | undefined): number | null 
   return null
 }
 
+function requestedNutrientsForRecord(record: TrainingRecord): EstimatableNutrientKey[] {
+  return ESTIMATABLE_NUTRIENT_KEYS.filter((key) => (
+    record.nutrients[key]?.valueKind !== undefined
+    && record.nutrients[key]?.valueKind !== 'estimated'
+  ))
+}
+
+function estimateTrainingRecord(
+  record: TrainingRecord,
+  ratioStrategy?: NutrientEstimatorRatioStrategy,
+) {
+  const knownNutrients = Object.fromEntries(ESTIMATE_FIT_NUTRIENT_KEYS.map((key) => [
+    key,
+    knownNutrientValue(record.nutrients[key]),
+  ])) as Record<EstimateFitNutrientKey, number | null>
+  return estimateNutrients({
+    requestId: `spu-${record.recordId}`,
+    productName: record.productName,
+    estimatorGenreId: record.genreId,
+    baseAmount: record.baseAmount,
+    baseUnit: record.baseUnit,
+    referenceMassG: record.referenceMassG,
+    referenceMassSource: record.referenceMassSource,
+    ingredientsText: record.ingredientsText,
+    ingredientsSource: { provider: 'メーカー公式サイト', verified: true },
+    knownNutrients,
+    requestedNutrients: requestedNutrientsForRecord(record),
+    requestedAt: record.verifiedAt,
+  }, ratioStrategy)
+}
+
 function round(value: number): number {
   return Math.round(value * 1_000_000) / 1_000_000
 }
@@ -291,6 +324,174 @@ function summarizeRatioWeight(
   }
 }
 
+const RATIO_STRATEGY_CANDIDATES: readonly NutrientEstimatorRatioStrategy[] = [
+  ...[0, 0.02, 0.05, 0.1, 0.2, 0.4].flatMap((feedbackWeight) => (
+    [0, 0.25, 0.5, 0.75].map((postBlendWeight) => ({ feedbackWeight, postBlendWeight }))
+  )),
+]
+
+function observationForStrategy(
+  record: TrainingRecord,
+  nutrientKey: EstimatableNutrientKey,
+  result: ReturnType<typeof estimateTrainingRecord>,
+): Observation | null {
+  const label = record.nutrients[nutrientKey]
+  if (!label || label.valueKind === 'estimated') return null
+  const reference = nutrientLabelReferenceInterval(nutrientKey, nutrientReference(label))
+  const estimate = result.estimates[nutrientKey]
+  if (estimate.status !== 'available') {
+    return {
+      recordId: record.recordId,
+      split: 'calibration',
+      genreId: record.genreId,
+      nutrientKey,
+      available: false,
+      estimateKind: null,
+      limitationReasons: [...estimate.limitationReasons],
+      pointError: null,
+      percentageError: null,
+      pointInsideReference: null,
+      rangeOverlapsReference: null,
+      predictedValue: null,
+      predictedMin: null,
+      predictedMax: null,
+      referenceMin: reference.min,
+      referenceMax: reference.max,
+    }
+  }
+  const center = (reference.min + reference.max) / 2
+  const pointError = intervalDistance(estimate.value, reference)
+  return {
+    recordId: record.recordId,
+    split: 'calibration',
+    genreId: record.genreId,
+    nutrientKey,
+    available: true,
+    estimateKind: estimate.method === GENRE_PRIOR_PARTIAL_METHOD
+      ? 'genre_prior'
+      : estimate.method === 'browser_ingredient_partial_rule'
+        ? 'known_only'
+        : 'full',
+    limitationReasons: [...estimate.limitationReasons],
+    pointError,
+    percentageError: center <= 0 ? null : pointError / center,
+    pointInsideReference: pointError === 0,
+    rangeOverlapsReference: estimate.range.max >= reference.min && estimate.range.min <= reference.max,
+    predictedValue: estimate.value,
+    predictedMin: estimate.range.min,
+    predictedMax: estimate.range.max,
+    referenceMin: reference.min,
+    referenceMax: reference.max,
+  }
+}
+
+function evaluateRatioStrategies(
+  dataset: TrainingDataset,
+  splitByRecord: ReadonlyMap<string, SplitId>,
+) {
+  const calibrationRecords = dataset.records.filter((record) => (
+    splitByRecord.get(record.recordId) === 'calibration'
+    && record.nutrients.saturatedFatG !== undefined
+    && record.nutrients.saturatedFatG.valueKind !== 'estimated'
+  ))
+  const baselineStrategy: NutrientEstimatorRatioStrategy = {
+    feedbackWeight: 0,
+    postBlendWeight: 0.75,
+  }
+  const baselineByRecord = new Map(calibrationRecords.map((record) => [
+    record.recordId,
+    estimateTrainingRecord(record, baselineStrategy),
+  ]))
+  return RATIO_STRATEGY_CANDIDATES.map((strategy) => {
+    const observations: Observation[] = []
+    let feedbackAppliedCount = 0
+    let postBlendAppliedCount = 0
+    let selectedProfileChangedCount = 0
+    const ratioL1Changes: number[] = []
+    for (const record of calibrationRecords) {
+      const baseline = baselineByRecord.get(record.recordId)!
+      const result = strategy.feedbackWeight === baselineStrategy.feedbackWeight
+        && strategy.postBlendWeight === baselineStrategy.postBlendWeight
+        ? baseline
+        : estimateTrainingRecord(record, strategy)
+      for (const nutrientKey of requestedNutrientsForRecord(record)) {
+        const observation = observationForStrategy(record, nutrientKey, result)
+        if (observation) observations.push(observation)
+      }
+      if (result.optimization?.trace?.ratioFeedback) feedbackAppliedCount += 1
+      if (
+        result.estimates.saturatedFatG.status === 'available'
+        && result.estimates.saturatedFatG.ratioAdjustment
+      ) postBlendAppliedCount += 1
+      const baselineTrace = baseline.optimization?.trace
+      const trace = result.optimization?.trace
+      if (baselineTrace && trace) {
+        if (baselineTrace.selectedProfileIds.join('|') !== trace.selectedProfileIds.join('|')) {
+          selectedProfileChangedCount += 1
+        }
+        if (baselineTrace.ingredientRatios.length === trace.ingredientRatios.length) {
+          ratioL1Changes.push(trace.ingredientRatios.reduce((total, ratio, index) => (
+            total + Math.abs(ratio - baselineTrace.ingredientRatios[index])
+          ), 0))
+        }
+      }
+    }
+    const saturatedFat = observations.filter((item) => item.nutrientKey === 'saturatedFatG')
+    const otherNutrients = observations.filter((item) => item.nutrientKey !== 'saturatedFatG')
+    const vitaminE = observations.filter((item) => item.nutrientKey === 'vitaminEMg')
+    return {
+      ...strategy,
+      calibrationProductCount: calibrationRecords.length,
+      feedbackAppliedCount,
+      postBlendAppliedCount,
+      selectedProfileChangedCount,
+      medianIngredientRatioL1Change: median(ratioL1Changes),
+      saturatedFat: summarize(saturatedFat),
+      otherNutrients: summarize(otherNutrients),
+      vitaminE: summarize(vitaminE),
+    }
+  })
+}
+
+function selectCalibrationRatioStrategy(
+  candidates: ReturnType<typeof evaluateRatioStrategies>,
+) {
+  const baseline = candidates.find((candidate) => (
+    candidate.feedbackWeight === 0 && candidate.postBlendWeight === 0.75
+  ))
+  if (!baseline) throw new Error('現行の比率戦略が候補にありません。')
+  const baselineOtherMape = baseline.otherNutrients.mapeOutsideReferencePercent
+    ?? Number.POSITIVE_INFINITY
+  const baselineOtherCoverage = baseline.otherNutrients.rangeCoveragePercent ?? 0
+  const eligible = candidates.filter((candidate) => (
+    (candidate.otherNutrients.mapeOutsideReferencePercent ?? Number.POSITIVE_INFINITY)
+      <= baselineOtherMape + 0.000001
+    && (candidate.otherNutrients.rangeCoveragePercent ?? 0)
+      >= baselineOtherCoverage - 0.000001
+  ))
+  const best = [...eligible].sort((left, right) => (
+    (left.saturatedFat.mapeOutsideReferencePercent ?? Number.POSITIVE_INFINITY)
+      - (right.saturatedFat.mapeOutsideReferencePercent ?? Number.POSITIVE_INFINITY)
+    || (right.saturatedFat.pointInsideReferencePercent ?? 0)
+      - (left.saturatedFat.pointInsideReferencePercent ?? 0)
+    || left.feedbackWeight - right.feedbackWeight
+    || left.postBlendWeight - right.postBlendWeight
+  ))[0] ?? baseline
+  const improvement = (
+    (baseline.saturatedFat.mapeOutsideReferencePercent ?? Number.POSITIVE_INFINITY)
+    - (best.saturatedFat.mapeOutsideReferencePercent ?? Number.POSITIVE_INFINITY)
+  )
+  const selected = best.feedbackWeight > 0 && improvement < 0.1 ? baseline : best
+  return {
+    selected,
+    baseline,
+    improvementPercentPoints: round(improvement),
+    reason: selected === baseline
+      ? 'フィードバック方式は校正MAPEを0.1ポイント以上改善しないため、現行の後段混合だけを維持します。'
+      : '他栄養素MAPEと範囲包含率を悪化させず、飽和脂肪酸MAPEを0.1ポイント以上改善しました。',
+  }
+}
+
 function groupedSummaries(
   observations: readonly Observation[],
   key: (observation: Observation) => string,
@@ -397,6 +598,19 @@ async function main(): Promise<void> {
     )
   }
   const splitByRecord = new Map(manifest.records.map((record) => [record.recordId, record.split]))
+  const ratioStrategyCandidates = evaluateRatioStrategies(dataset, splitByRecord)
+  const ratioStrategySelection = selectCalibrationRatioStrategy(ratioStrategyCandidates)
+  if (
+    ratioStrategySelection.selected.feedbackWeight !== SATURATED_FAT_RATIO_FEEDBACK_WEIGHT
+    || ratioStrategySelection.selected.postBlendWeight !== SATURATED_FAT_RATIO_BLEND_WEIGHT
+  ) {
+    throw new Error(
+      `本番比率戦略（feedback=${SATURATED_FAT_RATIO_FEEDBACK_WEIGHT},`
+      + `post=${SATURATED_FAT_RATIO_BLEND_WEIGHT}）は校正選択`
+      + `（feedback=${ratioStrategySelection.selected.feedbackWeight},`
+      + `post=${ratioStrategySelection.selected.postBlendWeight}）と一致しません。`,
+    )
+  }
   const unresolved = new Map<string, { count: number; genres: Set<EstimatorGenreId> }>()
   const observations: Observation[] = []
   let evaluatedRecords = 0
@@ -405,29 +619,9 @@ async function main(): Promise<void> {
   for (const record of dataset.records) {
     const split = splitByRecord.get(record.recordId)
     if (!split) throw new Error(`分割が見つかりません: ${record.recordId}`)
-    const requestedNutrients = ESTIMATABLE_NUTRIENT_KEYS.filter((key) => (
-      record.nutrients[key]?.valueKind !== undefined
-      && record.nutrients[key]?.valueKind !== 'estimated'
-    ))
+    const requestedNutrients = requestedNutrientsForRecord(record)
     if (requestedNutrients.length === 0) continue
-    const knownNutrients = Object.fromEntries(ESTIMATE_FIT_NUTRIENT_KEYS.map((key) => [
-      key,
-      knownNutrientValue(record.nutrients[key]),
-    ])) as Record<EstimateFitNutrientKey, number | null>
-    const result = estimateNutrients({
-      requestId: `spu-${record.recordId}`,
-      productName: record.productName,
-      estimatorGenreId: record.genreId,
-      baseAmount: record.baseAmount,
-      baseUnit: record.baseUnit,
-      referenceMassG: record.referenceMassG,
-      referenceMassSource: record.referenceMassSource,
-      ingredientsText: record.ingredientsText,
-      ingredientsSource: { provider: 'メーカー公式サイト', verified: true },
-      knownNutrients,
-      requestedNutrients,
-      requestedAt: record.verifiedAt,
-    })
+    const result = estimateTrainingRecord(record)
     evaluatedRecords += 1
     if (result.status === 'failed') failedRecords += 1
     for (const ingredientName of result.unresolvedIngredients) {
@@ -538,6 +732,15 @@ async function main(): Promise<void> {
     bySplitNutrient: groupedSummaries(observations, (item) => `${item.split}:${item.nutrientKey}`),
     ratioAdjustment: {
       priorVersion: ESTIMATOR_GENRE_NUTRIENT_PRIOR_VERSION,
+      strategySelection: {
+        selectedOn: 'calibration',
+        selectedFeedbackWeight: SATURATED_FAT_RATIO_FEEDBACK_WEIGHT,
+        selectedPostBlendWeight: SATURATED_FAT_RATIO_BLEND_WEIGHT,
+        improvementPercentPoints: ratioStrategySelection.improvementPercentPoints,
+        feedbackAdopted: SATURATED_FAT_RATIO_FEEDBACK_WEIGHT > 0,
+        reason: ratioStrategySelection.reason,
+        candidates: ratioStrategyCandidates,
+      },
       weightSelection: {
         selectedOn: 'calibration',
         selectedWeight: SATURATED_FAT_RATIO_BLEND_WEIGHT,
@@ -604,6 +807,9 @@ async function main(): Promise<void> {
       genrePriorValuesExcludedFromCalibration: true,
       saturatedFatRatioPriorBuiltFromTrainingSplitOnly: true,
       saturatedFatRatioBlendWeightSelectedOnCalibrationSplit: true,
+      saturatedFatRatioFeedbackStrategySelectedOnCalibrationSplit: true,
+      ratioFeedbackMinimumMapeImprovementPercentPoints: 0.1,
+      ratioFeedbackRequiresNoOtherNutrientMapeOrCoverageRegression: true,
     },
     numericAvailabilityGate: {
       targetPercent: 80,

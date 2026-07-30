@@ -358,6 +358,34 @@ function isEstimationRatioAdjustment(value: unknown): boolean {
     && value.unadjustedRange.max >= value.unadjustedRange.min
 }
 
+function isEstimationRatioFeedback(value: unknown): boolean {
+  return isRecord(value)
+    && value.ratioKey === 'saturatedFatToFat'
+    && value.parentNutrient === 'fatG'
+    && typeof value.parentValue === 'number' && Number.isFinite(value.parentValue) && value.parentValue > 0
+    && typeof value.feedbackWeight === 'number' && Number.isFinite(value.feedbackWeight) && value.feedbackWeight > 0
+    && typeof value.p05 === 'number' && Number.isFinite(value.p05) && value.p05 >= 0
+    && typeof value.median === 'number' && Number.isFinite(value.median) && value.median >= value.p05
+    && typeof value.p95 === 'number' && Number.isFinite(value.p95) && value.p95 >= value.median && value.p95 <= 1
+    && typeof value.sampleSize === 'number' && Number.isSafeInteger(value.sampleSize) && value.sampleSize >= 0
+    && (value.pooledSampleSize === undefined || (
+      typeof value.pooledSampleSize === 'number'
+      && Number.isSafeInteger(value.pooledSampleSize)
+      && value.pooledSampleSize > 0
+      && value.pooledSampleSize >= value.sampleSize
+    ))
+    && ['genre_nutrient', 'pooled_nutrient'].includes(String(value.scope))
+    && (
+      value.sampleSize > 0
+      || (value.scope === 'pooled_nutrient' && value.pooledSampleSize !== undefined)
+    )
+    && isNonEmptyString(value.priorVersion)
+    && isNonEmptyString(value.datasetHash)
+    && typeof value.predictedRatio === 'number' && Number.isFinite(value.predictedRatio) && value.predictedRatio >= 0
+    && typeof value.penalty === 'number' && Number.isFinite(value.penalty) && value.penalty >= 0
+    && typeof value.optimizedIngredientRatios === 'boolean'
+}
+
 function isEstimationTrace(value: unknown): boolean {
   if (!isRecord(value)
     || !Array.isArray(value.ingredientNames) || !value.ingredientNames.every(isNonEmptyString)
@@ -375,7 +403,8 @@ function isEstimationTrace(value: unknown): boolean {
     || value.retainedCandidateCombinationCount > value.candidateCombinationCount
     || value.plausibleScenarioCount > value.retainedCandidateCombinationCount
     || typeof value.unresolvedMassRatio !== 'number' || !Number.isFinite(value.unresolvedMassRatio) || value.unresolvedMassRatio < 0 || value.unresolvedMassRatio > 1
-    || !isRecord(value.genrePriorContributionRatios)) return false
+    || !isRecord(value.genrePriorContributionRatios)
+    || (value.ratioFeedback !== undefined && !isEstimationRatioFeedback(value.ratioFeedback))) return false
   const ratioTotal = value.ingredientRatios.reduce<number>((total, ratio) => total + ratio, 0)
   if (value.ingredientRatios.length > 0 && Math.abs(ratioTotal - 1) > 0.0001) return false
   return Object.entries(value.genrePriorContributionRatios).every(([key, ratio]) => (

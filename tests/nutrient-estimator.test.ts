@@ -242,6 +242,100 @@ describe('browser nutrient estimator', () => {
     expect(estimate.ratioAdjustment).toBeUndefined()
   })
 
+  it('比率フィードバックを弱い探索制約として監査し、明示原材料は置換しない', () => {
+    const request = {
+      ...eligibleRequest,
+      productName: 'なたね油',
+      estimatorGenreId: 'chocolate' as const,
+      baseAmount: 100,
+      baseUnit: 'g' as const,
+      referenceMassG: 100,
+      ingredientsText: 'なたね油',
+      knownNutrients: { fatG: 100 },
+      requestedNutrients: ['saturatedFatG'] as const,
+    }
+    const baseline = estimateNutrients(request, { feedbackWeight: 0, postBlendWeight: 0 })
+    const first = estimateNutrients(request, { feedbackWeight: 0.2, postBlendWeight: 0 })
+    const second = estimateNutrients(request, { feedbackWeight: 0.2, postBlendWeight: 0 })
+
+    expect(second).toEqual(first)
+    expect(first.optimization?.trace?.selectedProfileIds)
+      .toEqual(baseline.optimization?.trace?.selectedProfileIds)
+    expect(first.optimization?.trace?.ratioFeedback).toMatchObject({
+      ratioKey: 'saturatedFatToFat',
+      parentValue: 100,
+      feedbackWeight: 0.2,
+      optimizedIngredientRatios: false,
+    })
+    expect(first.optimization?.trace?.ratioFeedback?.predictedRatio).toBeLessThan(0.241379)
+    expect(first.optimization?.trace?.ratioFeedback?.penalty).toBeGreaterThan(0)
+    expect(first.estimates.saturatedFatG.status).toBe('available')
+    if (first.estimates.saturatedFatG.status !== 'available') return
+    expect(first.estimates.saturatedFatG.ratioAdjustment).toBeUndefined()
+  })
+
+  it('比率範囲内のペナルティを0とし、複数原材料では配合探索へ使用する', () => {
+    const inside = estimateNutrients({
+      ...eligibleRequest,
+      productName: 'パーム油',
+      baseAmount: 100,
+      baseUnit: 'g',
+      referenceMassG: 100,
+      ingredientsText: 'パーム油',
+      knownNutrients: { fatG: 100 },
+      requestedNutrients: ['saturatedFatG'],
+    }, { feedbackWeight: 0.2, postBlendWeight: 0 })
+    const optimized = estimateNutrients({
+      ...eligibleRequest,
+      productName: '混合油',
+      baseAmount: 100,
+      baseUnit: 'g',
+      referenceMassG: 100,
+      ingredientsText: 'なたね油、大豆油',
+      knownNutrients: { fatG: 100 },
+      requestedNutrients: ['saturatedFatG'],
+    }, { feedbackWeight: 0.2, postBlendWeight: 0 })
+
+    expect(inside.optimization?.trace?.ratioFeedback?.penalty).toBe(0)
+    expect(optimized.optimization?.trace?.ratioFeedback?.optimizedIngredientRatios).toBe(true)
+    expect(optimized.optimization?.trace?.ingredientRatios[0])
+      .toBeGreaterThanOrEqual(optimized.optimization!.trace!.ingredientRatios[1])
+    expect(optimized.optimization?.trace?.ingredientRatios.reduce((sum, ratio) => sum + ratio, 0))
+      .toBeCloseTo(1, 6)
+  })
+
+  it('極小脂質ではフィードバックを弱め、部分推計には適用しない', () => {
+    const tiny = estimateNutrients({
+      ...eligibleRequest,
+      productName: 'ココナッツオイル',
+      baseAmount: 100,
+      baseUnit: 'g',
+      referenceMassG: 100,
+      ingredientsText: 'ココナッツオイル',
+      knownNutrients: { fatG: 0.000001 },
+      requestedNutrients: ['saturatedFatG'],
+    }, { feedbackWeight: 0.4, postBlendWeight: 0 })
+    const partial = estimateNutrients({
+      ...eligibleRequest,
+      productName: '未解決原料入り油',
+      baseAmount: 100,
+      baseUnit: 'g',
+      referenceMassG: 100,
+      ingredientsText: 'なたね油、未解決原料',
+      knownNutrients: { fatG: 10 },
+      requestedNutrients: ['saturatedFatG'],
+    }, { feedbackWeight: 0.4, postBlendWeight: 0 })
+
+    expect(tiny.optimization?.trace?.ratioFeedback?.penalty).toBeGreaterThanOrEqual(0)
+    expect(tiny.optimization?.trace?.ratioFeedback?.penalty).toBeLessThan(0.001)
+    expect(partial.unresolvedIngredients).toContain('未解決原料')
+    expect(partial.optimization?.trace?.ratioFeedback).toBeUndefined()
+    expect(() => estimateNutrients(eligibleRequest, {
+      feedbackWeight: -1,
+      postBlendWeight: 0,
+    })).toThrow('比率フィードバック')
+  })
+
   it('未指定の栄養素は推計対象に含めない', () => {
     const result = estimateNutrients({
       ...eligibleRequest,

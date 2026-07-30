@@ -22,6 +22,7 @@ import {
   type EstimationLimitationReason,
   type EstimationOptimization,
   type EstimationRatioAdjustment,
+  type EstimationRatioFeedback,
   type EstimationTrace,
   type EstimationZeroEvidence,
   type EstimatorGenreId,
@@ -198,9 +199,16 @@ export interface CandidateCombination {
   priorProbability: number
 }
 
+interface SaturatedFatRatioFitContext {
+  parentValue: number
+  feedbackWeight: number
+  prior: SaturatedFatRatioPrior
+}
+
 export interface CandidateSelectionContext {
   referenceMassG: number
   knownNutrients: NutrientEstimateRequest['knownNutrients']
+  ratioFeedback?: SaturatedFatRatioFitContext
 }
 
 interface ResolvedIngredient {
@@ -213,6 +221,9 @@ interface MacroFit {
   ratios: number[]
   priorProbability: number
   normalizedError: number | null
+  fitObjective: number
+  ratioFeedbackPenalty: number | null
+  usedRatioFeedbackFit: boolean
   usedMacroFit: boolean
   score: number
 }
@@ -220,6 +231,76 @@ interface MacroFit {
 interface CandidateScenarioRange {
   range: { min: number; max: number }
   plausibleScenarioCount: number
+}
+
+function saturatedFatRatioFitContext(
+  knownNutrients: NutrientEstimateRequest['knownNutrients'],
+  genreId: EstimatorGenreId | null | undefined,
+  feedbackWeight: number,
+): SaturatedFatRatioFitContext | null {
+  const parentValue = knownNutrients?.fatG
+  if (
+    !Number.isFinite(feedbackWeight)
+    || feedbackWeight <= 0
+    || parentValue === null
+    || parentValue === undefined
+    || !Number.isFinite(parentValue)
+    || parentValue <= 0
+  ) return null
+  const prior = saturatedFatRatioPrior(genreId)
+  return prior ? { parentValue, feedbackWeight, prior } : null
+}
+
+function saturatedFatRatioIntervalPenalty(
+  predictedMin: number,
+  predictedMax: number,
+  prior: SaturatedFatRatioPrior,
+  parentValue: number,
+): number {
+  const standardizedDistance = predictedMax < prior.p05
+    ? (prior.p05 - predictedMax) / Math.max(0.05, prior.median - prior.p05)
+    : predictedMin > prior.p95
+      ? (predictedMin - prior.p95) / Math.max(0.05, prior.p95 - prior.median)
+      : 0
+  const cappedDistance = Math.min(4, standardizedDistance)
+  const robustPenalty = cappedDistance <= 1
+    ? 0.5 * cappedDistance * cappedDistance
+    : cappedDistance - 0.5
+  // 脂質が表示丸め幅に近い商品では比率が不安定になるため、フィードバックを連続的に弱める。
+  return robustPenalty * parentValue / (parentValue + 0.05)
+}
+
+function estimationRatioFeedback(
+  context: SaturatedFatRatioFitContext,
+  fit: MacroFit,
+  referenceMassG: number,
+): EstimationRatioFeedback | null {
+  if (
+    fit.ratioFeedbackPenalty === null
+    || fit.profiles.some((profile) => profile.nutrients.saturatedFatG === null)
+  ) return null
+  const saturatedFat = fit.profiles.reduce((sum, profile, index) => (
+    sum + profile.nutrients.saturatedFatG! * fit.ratios[index]
+  ), 0) * referenceMassG / 100
+  return {
+    ratioKey: 'saturatedFatToFat',
+    parentNutrient: 'fatG',
+    parentValue: context.parentValue,
+    feedbackWeight: context.feedbackWeight,
+    p05: context.prior.p05,
+    median: context.prior.median,
+    p95: context.prior.p95,
+    sampleSize: context.prior.sampleSize,
+    ...(context.prior.pooledSampleSize === undefined
+      ? {}
+      : { pooledSampleSize: context.prior.pooledSampleSize }),
+    scope: context.prior.scope,
+    priorVersion: context.prior.priorVersion,
+    datasetHash: context.prior.datasetHash,
+    predictedRatio: round(saturatedFat / context.parentValue),
+    penalty: round(fit.ratioFeedbackPenalty),
+    optimizedIngredientRatios: fit.usedRatioFeedbackFit,
+  }
 }
 
 function round(value: number): number {
@@ -284,12 +365,40 @@ function priorCalibration(
   }
 }
 
+export interface NutrientEstimatorRatioStrategy {
+  feedbackWeight: number
+  postBlendWeight: number
+}
+
+// 評価スクリプトは校正区分だけでこの組合せが候補中の最良であることを検証する。
+export const SATURATED_FAT_RATIO_FEEDBACK_WEIGHT = 0
 export const SATURATED_FAT_RATIO_BLEND_WEIGHT = 0.75
+export const DEFAULT_NUTRIENT_ESTIMATOR_RATIO_STRATEGY: NutrientEstimatorRatioStrategy = {
+  feedbackWeight: SATURATED_FAT_RATIO_FEEDBACK_WEIGHT,
+  postBlendWeight: SATURATED_FAT_RATIO_BLEND_WEIGHT,
+}
+
+function validatedRatioStrategy(
+  strategy: NutrientEstimatorRatioStrategy | undefined,
+): NutrientEstimatorRatioStrategy {
+  const value = strategy ?? DEFAULT_NUTRIENT_ESTIMATOR_RATIO_STRATEGY
+  if (
+    !Number.isFinite(value.feedbackWeight)
+    || value.feedbackWeight < 0
+    || !Number.isFinite(value.postBlendWeight)
+    || value.postBlendWeight < 0
+    || value.postBlendWeight > 1
+  ) {
+    throw new RangeError('比率フィードバックは0以上、後段混合重みは0〜1で指定してください。')
+  }
+  return value
+}
 
 function applySaturatedFatRatioPrior(
   estimates: Record<EstimatableNutrientKey, NutrientEstimate>,
   knownNutrients: NutrientEstimateRequest['knownNutrients'],
   genreId: EstimatorGenreId | null | undefined,
+  blendWeight: number,
 ): Record<EstimatableNutrientKey, NutrientEstimate> {
   const estimate = estimates.saturatedFatG
   const fatG = knownNutrients?.fatG
@@ -299,6 +408,8 @@ function applySaturatedFatRatioPrior(
     || fatG === undefined
     || !Number.isFinite(fatG)
     || fatG <= 0
+    || !Number.isFinite(blendWeight)
+    || blendWeight <= 0
   ) return estimates
   const prior = saturatedFatRatioPrior(genreId)
   if (!prior) return estimates
@@ -306,8 +417,8 @@ function applySaturatedFatRatioPrior(
   const boundedIngredientValue = Math.min(estimate.value, fatG)
   const ratioPoint = fatG * prior.median
   const value = round(
-    boundedIngredientValue * (1 - SATURATED_FAT_RATIO_BLEND_WEIGHT)
-    + ratioPoint * SATURATED_FAT_RATIO_BLEND_WEIGHT,
+    boundedIngredientValue * (1 - blendWeight)
+    + ratioPoint * blendWeight,
   )
   const range = {
     min: round(Math.min(value, Math.min(estimate.range.min, fatG), fatG * prior.p05)),
@@ -317,7 +428,7 @@ function applySaturatedFatRatioPrior(
     ratioKey: 'saturatedFatToFat',
     parentNutrient: 'fatG',
     parentValue: fatG,
-    blendWeight: SATURATED_FAT_RATIO_BLEND_WEIGHT,
+    blendWeight,
     p05: prior.p05,
     median: prior.median,
     p95: prior.p95,
@@ -347,7 +458,7 @@ function applySaturatedFatRatioPrior(
       ])].join(' / '),
       warnings: [...new Set([
         ...estimate.warnings,
-        `入力済み脂質とtrain標本${prior.pooledSampleSize ?? prior.sampleSize}件の飽和脂肪酸／脂質比率を使い、比率中央値を${percent(SATURATED_FAT_RATIO_BLEND_WEIGHT)}%、原材料推計を${percent(1 - SATURATED_FAT_RATIO_BLEND_WEIGHT)}%の重みで統合しました。`,
+        `入力済み脂質とtrain標本${prior.pooledSampleSize ?? prior.sampleSize}件の飽和脂肪酸／脂質比率を使い、比率中央値を${percent(blendWeight)}%、原材料推計を${percent(1 - blendWeight)}%の重みで統合しました。`,
         `比率分布の5〜95%点（${percent(prior.p05)}〜${percent(prior.p95)}%）を、原材料推計の暫定範囲の外側へ統合しています。`,
         ...(estimate.value > fatG || estimate.range.max > fatG
           ? [`飽和脂肪酸は脂質の内訳であるため、入力済みの脂質（${round(fatG)}g）を上限として原材料推計を比率統合前に補正しました。`]
@@ -495,9 +606,41 @@ function quickCandidateFitError(
     const scale = Math.max(roundingWidth, observed * 0.02)
     return [(distance / scale) ** 2]
   })
-  return errors.length > 0
+  const macroError = errors.length > 0
     ? errors.reduce((sum, error) => sum + error, 0) / errors.length
     : null
+  const ratioFeedback = context.ratioFeedback
+  let ratioPenalty: number | null = null
+  if (ratioFeedback) {
+    let minimum = 0
+    let maximum = 0
+    let complete = true
+    for (let index = 0; index < candidateSets.length; index += 1) {
+      const profiles = index < combination.profiles.length
+        ? [combination.profiles[index]]
+        : candidateSets[index]
+      const values = profiles.flatMap((profile) => {
+        const value = profile.nutrients.saturatedFatG
+        return value === null ? [] : [value]
+      })
+      if (values.length !== profiles.length) {
+        complete = false
+        break
+      }
+      minimum += Math.min(...values) * ratios[index] * context.referenceMassG / 100
+      maximum += Math.max(...values) * ratios[index] * context.referenceMassG / 100
+    }
+    if (complete) {
+      ratioPenalty = saturatedFatRatioIntervalPenalty(
+        minimum / ratioFeedback.parentValue,
+        maximum / ratioFeedback.parentValue,
+        ratioFeedback.prior,
+        ratioFeedback.parentValue,
+      )
+    }
+  }
+  if (macroError === null && ratioPenalty === null) return null
+  return (macroError ?? 0) + (ratioPenalty ?? 0) * (ratioFeedback?.feedbackWeight ?? 0)
 }
 
 function combinationId(combination: CandidateCombination): string {
@@ -746,6 +889,7 @@ function fitIngredientRatios(
   combination: CandidateCombination,
   referenceMassG: number,
   knownNutrients: NutrientEstimateRequest['knownNutrients'],
+  ratioFeedback: SaturatedFatRatioFitContext | null,
   seedInput: string,
   scenarioCount: number,
 ): MacroFit {
@@ -762,7 +906,7 @@ function fitIngredientRatios(
     profiles.reduce((sum, profile, index) => sum + profile.nutrients[key]! * ratios[index], 0)
     * referenceMassG / 100
   )
-  const objectiveForRatios = (ratios: readonly number[]) => {
+  const macroObjectiveForRatios = (ratios: readonly number[]) => {
     if (fitKeys.length === 0) return null
     return fitKeys.reduce((sum, key) => {
       const observed = knownNutrients![key]!
@@ -773,23 +917,50 @@ function fitIngredientRatios(
       return sum + error * error
     }, 0) / fitKeys.length
   }
+  const ratioPenaltyForRatios = (ratios: readonly number[]): number | null => {
+    if (
+      !ratioFeedback
+      || profiles.some((profile) => profile.nutrients.saturatedFatG === null)
+    ) return null
+    const saturatedFat = profiles.reduce((sum, profile, index) => (
+      sum + profile.nutrients.saturatedFatG! * ratios[index]
+    ), 0) * referenceMassG / 100
+    const predictedRatio = saturatedFat / ratioFeedback.parentValue
+    return saturatedFatRatioIntervalPenalty(
+      predictedRatio,
+      predictedRatio,
+      ratioFeedback.prior,
+      ratioFeedback.parentValue,
+    )
+  }
+  const fitObjectiveForRatios = (ratios: readonly number[]): number | null => {
+    const macroError = macroObjectiveForRatios(ratios)
+    const ratioPenalty = ratioPenaltyForRatios(ratios)
+    if (macroError === null && ratioPenalty === null) return null
+    return (macroError ?? 0) + (ratioPenalty ?? 0) * (ratioFeedback?.feedbackWeight ?? 0)
+  }
 
   const count = profiles.length
   let ratios = fallbackRatios(count)
-  let normalizedError = objectiveForRatios(ratios)
+  let normalizedError = macroObjectiveForRatios(ratios)
+  let fitObjective = fitObjectiveForRatios(ratios) ?? 0
   const usedMacroFit = count >= 2 && fitKeys.length >= 2
+  const usedRatioFeedbackFit = count >= 2
+    && ratioFeedback !== null
+    && profiles.every((profile) => profile.nutrients.saturatedFatG !== null)
+  const shouldOptimize = usedMacroFit || usedRatioFeedbackFit
 
-  if (usedMacroFit) {
+  if (shouldOptimize) {
     const denominator = count * (count + 1) / 2
     let bestQ = Array.from({ length: count }, (_value, index) => (index + 1) / denominator)
-    let bestError = objectiveForRatios(orderedRatiosFromQ(bestQ))!
+    let bestError = fitObjectiveForRatios(orderedRatiosFromQ(bestQ))!
     const random = createRandom(fnv1a(seedInput))
 
     for (let scenario = 0; scenario < scenarioCount; scenario += 1) {
       const exponential = Array.from({ length: count }, () => -Math.log(Math.max(random(), Number.EPSILON)))
       const total = exponential.reduce((sum, value) => sum + value, 0)
       const q = exponential.map((value) => value / total)
-      const error = objectiveForRatios(orderedRatiosFromQ(q))!
+      const error = fitObjectiveForRatios(orderedRatiosFromQ(q))!
       if (error < bestError) {
         bestQ = q
         bestError = error
@@ -811,7 +982,7 @@ function fitIngredientRatios(
             const candidate = [...bestQ]
             candidate[from] -= amount
             candidate[to] += amount
-            const error = objectiveForRatios(orderedRatiosFromQ(candidate))!
+            const error = fitObjectiveForRatios(orderedRatiosFromQ(candidate))!
             if (error + 1e-12 < bestError) {
               bestQ = candidate
               bestError = error
@@ -822,18 +993,23 @@ function fitIngredientRatios(
       }
     }
     ratios = orderedRatiosFromQ(bestQ)
-    normalizedError = bestError
+    normalizedError = macroObjectiveForRatios(ratios)
+    fitObjective = bestError
   }
 
   // 商品名等の事前確率は、主要栄養値との整合を覆さない弱いペナルティとしてだけ使う。
   const priorPenalty = -Math.log(Math.max(combination.priorProbability, 1e-9)) * 0.08
+  const ratioFeedbackPenalty = ratioPenaltyForRatios(ratios)
   return {
     profiles,
     ratios,
     priorProbability: combination.priorProbability,
     normalizedError,
+    fitObjective,
+    ratioFeedbackPenalty,
+    usedRatioFeedbackFit,
     usedMacroFit,
-    score: (normalizedError ?? 0) + priorPenalty,
+    score: fitObjective + priorPenalty,
   }
 }
 
@@ -867,14 +1043,14 @@ function candidateScenarioRange(
 ): CandidateScenarioRange | null {
   const plausible = plausibleFits(fits, selected)
   const minimumFitError = plausible.reduce((minimum, fit) => (
-    Math.min(minimum, fit.normalizedError ?? 0)
+    Math.min(minimum, fit.fitObjective)
   ), Number.POSITIVE_INFINITY)
   const scenarios = plausible.flatMap((fit) => {
     if (fit.profiles.some((profile) => profile.nutrients[nutrientKey] === null)) return []
     const value = round(fit.profiles.reduce((sum, profile, index) => (
       sum + profile.nutrients[nutrientKey]! * fit.ratios[index]
     ), 0) * referenceMassG / 100)
-    const fitErrorDelta = Math.max(0, (fit.normalizedError ?? 0) - minimumFitError)
+    const fitErrorDelta = Math.max(0, fit.fitObjective - minimumFitError)
     return [{
       value,
       weight: Math.exp(-fitErrorDelta / CANDIDATE_SCENARIO_TEMPERATURE)
@@ -1184,7 +1360,11 @@ function resultStatus(
  * 原材料表示順、商品名の弱い事前確率、入力済み主要栄養値を使う、外部通信を行わない決定的な参考推計。
  * referenceMassG は request の baseAmount/baseUnit に対応する明示的な内容物重量でなければならない。
  */
-export function estimateNutrients(request: NutrientEstimateRequest): NutrientEstimateResult {
+export function estimateNutrients(
+  request: NutrientEstimateRequest,
+  ratioStrategyOverride?: NutrientEstimatorRatioStrategy,
+): NutrientEstimateResult {
+  const ratioStrategy = validatedRatioStrategy(ratioStrategyOverride)
   const requested = new Set(request.requestedNutrients ?? ESTIMATABLE_NUTRIENT_KEYS)
   let estimates: Record<EstimatableNutrientKey, NutrientEstimate>
   let optimization: EstimationOptimization | undefined
@@ -1248,12 +1428,18 @@ export function estimateNutrients(request: NutrientEstimateRequest): NutrientEst
         trace: partial.trace,
       }
     } else {
+      const ratioFeedbackContext = saturatedFatRatioFitContext(
+        request.knownNutrients,
+        request.estimatorGenreId,
+        ratioStrategy.feedbackWeight,
+      )
       const combinations = combineCandidateSets(
         resolved.map((item) => item.candidates),
         MAX_PROFILE_COMBINATIONS,
         {
           referenceMassG: request.referenceMassG!,
           knownNutrients: request.knownNutrients,
+          ...(ratioFeedbackContext ? { ratioFeedback: ratioFeedbackContext } : {}),
         },
       )
       const scenarioCount = Math.max(512, Math.floor(4_096 / Math.max(1, combinations.length)))
@@ -1261,6 +1447,7 @@ export function estimateNutrients(request: NutrientEstimateRequest): NutrientEst
         combination,
         request.referenceMassG!,
         request.knownNutrients,
+        ratioFeedbackContext,
         JSON.stringify({
           productName: request.productName?.normalize('NFKC') ?? null,
           ...(request.estimatorGenreId && request.estimatorGenreId !== 'other_unknown'
@@ -1283,6 +1470,9 @@ export function estimateNutrients(request: NutrientEstimateRequest): NutrientEst
         || selected.profiles.some((profile) => profile.ambiguous)
       const hasCompound = declaration.ingredients.some((ingredient) => ingredient.components.length > 0)
       const hasAdditives = declaration.additives.length > 0
+      const selectedRatioFeedback = ratioFeedbackContext
+        ? estimationRatioFeedback(ratioFeedbackContext, selected, request.referenceMassG!)
+        : null
       const warnings = [
         selected.usedMacroFit
           ? '原材料の配合比は、表示順の制約内で入力済み主要栄養値との整合が高い候補を推定しています。'
@@ -1295,6 +1485,9 @@ export function estimateNutrients(request: NutrientEstimateRequest): NutrientEst
           : []),
         ...(request.estimatorGenreId && request.estimatorGenreId !== 'other_unknown'
           ? [`食品ジャンルは候補選択の事前分布（${ESTIMATOR_GENRE_PRIOR_VERSION}）にだけ使用しています。`]
+          : []),
+        ...(selectedRatioFeedback
+          ? [`入力済み脂質と飽和脂肪酸／脂質比率の5〜95%分布を、候補食品・配合比探索の弱い制約（重み${round(selectedRatioFeedback.feedbackWeight)}）として使用しました。`]
           : []),
         ...(hasCompound
           ? ['括弧付きの複合原材料は、外側の表示順と括弧内の表示順を別々に保って解析しています。']
@@ -1461,6 +1654,7 @@ export function estimateNutrients(request: NutrientEstimateRequest): NutrientEst
           plausibleScenarioCount: plausibleFits(fits, selected).length,
           unresolvedMassRatio: 0,
           genrePriorContributionRatios,
+          ...(selectedRatioFeedback ? { ratioFeedback: selectedRatioFeedback } : {}),
         },
       }
     }
@@ -1470,6 +1664,7 @@ export function estimateNutrients(request: NutrientEstimateRequest): NutrientEst
     estimates,
     request.knownNutrients,
     request.estimatorGenreId,
+    ratioStrategy.postBlendWeight,
   )
   estimates = applyCompositionUpperBounds(estimates, request.knownNutrients)
   const unresolvedIngredients = request.ingredientsText?.trim()
@@ -1563,6 +1758,9 @@ export function toStoredNutrientEstimateResult(
                     genrePriorContributionRatios: {
                       ...result.optimization.trace.genrePriorContributionRatios,
                     },
+                    ...(result.optimization.trace.ratioFeedback
+                      ? { ratioFeedback: { ...result.optimization.trace.ratioFeedback } }
+                      : {}),
                   },
                 }
               : {}),

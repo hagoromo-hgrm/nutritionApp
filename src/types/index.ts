@@ -499,6 +499,24 @@ export interface EstimationRatioAdjustment {
   unadjustedRange: { min: number; max: number }
 }
 
+export interface EstimationRatioFeedback {
+  ratioKey: 'saturatedFatToFat'
+  parentNutrient: 'fatG'
+  parentValue: number
+  feedbackWeight: number
+  p05: number
+  median: number
+  p95: number
+  sampleSize: number
+  pooledSampleSize?: number
+  scope: Extract<EstimationCalibrationMetadata['scope'], 'genre_nutrient' | 'pooled_nutrient'>
+  priorVersion: string
+  datasetHash: string
+  predictedRatio: number
+  penalty: number
+  optimizedIngredientRatios: boolean
+}
+
 export interface EstimationTrace {
   ingredientNames: string[]
   selectedProfileIds: Array<string | null>
@@ -511,6 +529,8 @@ export interface EstimationTrace {
   unresolvedMassRatio: number
   /** 対象栄養素でジャンル分布を適用した、製品重量に対する暫定重量比。 */
   genrePriorContributionRatios: Partial<Record<NutrientKey, number>>
+  /** 候補・配合探索へ弱い制約として戻した栄養素比率。 */
+  ratioFeedback?: EstimationRatioFeedback
 }
 
 export interface EstimationOptimization {

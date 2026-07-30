@@ -231,7 +231,7 @@ describe('export formats', () => {
       },
       requestedNutrients: ['fiberG', 'saturatedFatG'],
       requestedAt: estimatedAt,
-    })
+    }, { feedbackWeight: 0.2, postBlendWeight: 0.75 })
     const estimationResult = toStoredNutrientEstimateResult(browserResult, {
       foodId: traceFood.id,
       inputHash: estimationRequest.inputHash,
@@ -249,6 +249,11 @@ describe('export formats', () => {
     }
     expect(validateBackup(v2).estimationSettings?.applyMode).toBe('manual')
     expect(validateBackup(v2).estimationResults?.[0].optimization?.trace).toEqual(estimationResult.optimization?.trace)
+    expect(estimationResult.optimization?.trace?.ratioFeedback).toMatchObject({
+      feedbackWeight: 0.2,
+      pooledSampleSize: 113,
+      scope: 'pooled_nutrient',
+    })
     expect(validateBackup(v2).estimationResults?.[0].estimates.saturatedFatG?.ratioAdjustment)
       .toEqual(estimationResult.estimates.saturatedFatG?.ratioAdjustment)
     expect(estimationResult.estimates.saturatedFatG?.ratioAdjustment).toMatchObject({
@@ -266,6 +271,22 @@ describe('export formats', () => {
           trace: {
             ...estimationResult.optimization!.trace!,
             unresolvedMassRatio: 2,
+          },
+        },
+      }],
+    })).toThrow('推計要求、結果または採用履歴')
+    expect(() => validateBackup({
+      ...v2,
+      estimationResults: [{
+        ...estimationResult,
+        optimization: {
+          ...estimationResult.optimization!,
+          trace: {
+            ...estimationResult.optimization!.trace!,
+            ratioFeedback: {
+              ...estimationResult.optimization!.trace!.ratioFeedback!,
+              penalty: -1,
+            },
           },
         },
       }],

@@ -88,6 +88,8 @@ node_modules/.bin/vite-node scripts/evaluate_spu_nutrient_estimator.ts \
 
 評価集計は、全原材料を解決した推計と、未解決原材料、参照値欠損または添加物寄与割合不明の寄与を加算せず既知分だけを計算した`browser_ingredient_partial_rule`を分離する。部分参考値は数値提示率には含めるが、商品全体の正解値を使う実測校正からは除外する。公開集計には数値提示率80%ゲートと、`ingredient_unresolved`、`reference_value_missing`、`additive_contribution_unknown`の理由別・栄養素別・ジャンル別件数を含め、どの参照データを次に拡充すべきか判定できるようにする。
 
+評価時は、飽和脂肪酸／脂質比率を候補・配合探索へ戻すフィードバック重み6候補と、後段混合重み4候補の24通りを校正区分だけで再推計する。飽和脂肪酸だけでなく同じ商品の他栄養素、ビタミンE、候補変更数および配合比のL1変化を保存する。他栄養素MAPEまたは範囲包含率を悪化させず、飽和脂肪酸MAPEを0.1ポイント以上改善した場合だけ本番定数を変更する。最終テストは定数選択へ使用しない。
+
 ## 一般原材料プロファイル
 
 `general_ingredient_profile_sources.json`は、推計辞書へ追加する一般原材料とMEXT食品IDの対応を管理する正本である。MEXTの栄養値を手で複製せず、次のコマンドで検証済みの`general_ingredient_profiles.json`を再生成する。
