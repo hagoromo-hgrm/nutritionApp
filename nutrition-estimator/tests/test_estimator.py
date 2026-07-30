@@ -171,3 +171,23 @@ def test_zero_saturated_fat_derivation_is_explicit(cookie_request: dict[str, obj
 
     warnings = result["estimates"]["saturatedFatG"]["warnings"]
     assert any("脂質が0g" in warning for warning in warnings)
+
+
+def test_component_estimates_and_ranges_do_not_exceed_known_totals(
+    cookie_request: dict[str, object],
+) -> None:
+    cookie_request["knownNutrients"]["fatG"] = 0.25
+    cookie_request["knownNutrients"]["carbohydrateG"] = 0.25
+    _rehash(cookie_request)
+
+    result = estimate(cookie_request, seed=42, samples_per_combination=800)
+
+    for nutrient, parent_label in (
+        ("saturatedFatG", "脂質"),
+        ("fiberG", "炭水化物"),
+    ):
+        item = result["estimates"][nutrient]
+        assert item["value"] <= 0.25
+        assert item["range"]["min"] <= item["value"]
+        assert item["range"]["max"] <= 0.25
+        assert any(f"{parent_label}（0.25g）を上限" in warning for warning in item["warnings"])

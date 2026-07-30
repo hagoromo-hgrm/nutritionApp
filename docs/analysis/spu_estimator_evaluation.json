@@ -1,10 +1,10 @@
 {
   "format": "nutrition-estimator-spu-evaluation-summary",
   "formatVersion": 1,
-  "modelVersion": "browser-rule-0.13.0",
-  "generatedAt": "2026-07-28T14:38:08.391Z",
+  "modelVersion": "browser-rule-0.14.0",
+  "generatedAt": "2026-07-30T04:42:19.170Z",
   "datasetHash": "bd2b3230343b917e4fa8c542043519f8c532b9f967f8feb44056b4c273e246e3",
-  "evaluationHash": "27e32fda5af0e255670ac8f4080581475eb9328175eef30a139bc383e98a4ca2",
+  "evaluationHash": "48f3d5ff9e6d6eba15f8485b325cdeb6bcd3f80eb4d1717878d97627041e1b09",
   "recordCount": 779,
   "evaluatedRecords": 749,
   "failedRecords": 0,
@@ -66,24 +66,24 @@
     "referenceCount": 1551,
     "availableCount": 1551,
     "availabilityPercent": 100,
-    "pointInsideReferencePercent": 23.597679,
+    "pointInsideReferencePercent": 23.726628,
     "pointAtOrBelowReferenceMinPercent": 60.412637,
-    "pointAtOrBelowReferenceMaxPercent": 83.558994,
+    "pointAtOrBelowReferenceMaxPercent": 83.687943,
     "rangeCoveragePercent": 58.865248,
-    "maeOutsideReference": 45.145342,
-    "mapeOutsideReferencePercent": 75.917094
+    "maeOutsideReference": 45.057222,
+    "mapeOutsideReferencePercent": 59.805922
   },
   "byEstimateKind": {
     "full": {
       "referenceCount": 1551,
       "availableCount": 315,
       "availabilityPercent": 20.309478,
-      "pointInsideReferencePercent": 47.936508,
+      "pointInsideReferencePercent": 48.571429,
       "pointAtOrBelowReferenceMinPercent": 33.968254,
-      "pointAtOrBelowReferenceMaxPercent": 80.634921,
+      "pointAtOrBelowReferenceMaxPercent": 81.269841,
       "rangeCoveragePercent": 67.936508,
-      "maeOutsideReference": 53.993644,
-      "mapeOutsideReferencePercent": 155.67858
+      "maeOutsideReference": 53.642978,
+      "mapeOutsideReferencePercent": 78.679907
     },
     "knownOnly": {
       "referenceCount": 1551,
@@ -93,8 +93,8 @@
       "pointAtOrBelowReferenceMinPercent": 83.289817,
       "pointAtOrBelowReferenceMaxPercent": 93.994778,
       "rangeCoveragePercent": 24.543081,
-      "maeOutsideReference": 29.10772,
-      "mapeOutsideReferencePercent": 54.486757
+      "maeOutsideReference": 29.055607,
+      "mapeOutsideReferencePercent": 54.180391
     },
     "genrePrior": {
       "referenceCount": 1551,
@@ -104,8 +104,8 @@
       "pointAtOrBelowReferenceMinPercent": 59.906213,
       "pointAtOrBelowReferenceMaxPercent": 79.953107,
       "rangeCoveragePercent": 70.926143,
-      "maeOutsideReference": 49.078747,
-      "mapeOutsideReferencePercent": 56.084681
+      "maeOutsideReference": 49.071414,
+      "mapeOutsideReferencePercent": 55.361927
     }
   },
   "limitationReasons": {
@@ -698,8 +698,8 @@
         "pointAtOrBelowReferenceMinPercent": 26.086957,
         "pointAtOrBelowReferenceMaxPercent": 86.956522,
         "rangeCoveragePercent": 80.434783,
-        "maeOutsideReference": 40.782119,
-        "mapeOutsideReferencePercent": 42.642583
+        "maeOutsideReference": 40.618596,
+        "mapeOutsideReferencePercent": 40.99251
       },
       "test": {
         "referenceCount": 219,
@@ -716,12 +716,12 @@
         "referenceCount": 1102,
         "availableCount": 226,
         "availabilityPercent": 20.508167,
-        "pointInsideReferencePercent": 45.132743,
+        "pointInsideReferencePercent": 46.017699,
         "pointAtOrBelowReferenceMinPercent": 35.39823,
-        "pointAtOrBelowReferenceMaxPercent": 78.761062,
+        "pointAtOrBelowReferenceMaxPercent": 79.646018,
         "rangeCoveragePercent": 64.60177,
-        "maeOutsideReference": 61.975318,
-        "mapeOutsideReferencePercent": 197.563598
+        "maeOutsideReference": 61.519842,
+        "mapeOutsideReferencePercent": 90.578295
       }
     },
     "knownOnly": {
@@ -733,8 +733,8 @@
         "pointAtOrBelowReferenceMinPercent": 74.576271,
         "pointAtOrBelowReferenceMaxPercent": 83.050847,
         "rangeCoveragePercent": 20.338983,
-        "maeOutsideReference": 49.588021,
-        "mapeOutsideReferencePercent": 102.468338
+        "maeOutsideReference": 49.249729,
+        "mapeOutsideReferencePercent": 100.479556
       },
       "test": {
         "referenceCount": 219,
@@ -779,8 +779,8 @@
         "pointAtOrBelowReferenceMinPercent": 60.162602,
         "pointAtOrBelowReferenceMaxPercent": 82.113821,
         "rangeCoveragePercent": 65.04065,
-        "maeOutsideReference": 46.930037,
-        "mapeOutsideReferencePercent": 49.269375
+        "maeOutsideReference": 46.925407,
+        "mapeOutsideReferencePercent": 48.981843
       },
       "train": {
         "referenceCount": 1102,
@@ -790,8 +790,8 @@
         "pointAtOrBelowReferenceMinPercent": 62.31405,
         "pointAtOrBelowReferenceMaxPercent": 80.495868,
         "rangeCoveragePercent": 71.570248,
-        "maeOutsideReference": 46.060614,
-        "mapeOutsideReferencePercent": 55.689606
+        "maeOutsideReference": 46.051216,
+        "mapeOutsideReferencePercent": 54.72904
       }
     }
   },
@@ -804,8 +804,8 @@
       "pointAtOrBelowReferenceMinPercent": 50.434783,
       "pointAtOrBelowReferenceMaxPercent": 79.565217,
       "rangeCoveragePercent": 61.304348,
-      "maeOutsideReference": 56.638156,
-      "mapeOutsideReferencePercent": 69.978602
+      "maeOutsideReference": 56.518673,
+      "mapeOutsideReferencePercent": 69.138422
     },
     "test": {
       "referenceCount": 219,
@@ -815,19 +815,19 @@
       "pointAtOrBelowReferenceMinPercent": 61.187215,
       "pointAtOrBelowReferenceMaxPercent": 85.388128,
       "rangeCoveragePercent": 58.447489,
-      "maeOutsideReference": 39.823105,
-      "mapeOutsideReferencePercent": 49.424538
+      "maeOutsideReference": 39.820505,
+      "mapeOutsideReferencePercent": 49.263047
     },
     "train": {
       "referenceCount": 1102,
       "availableCount": 1102,
       "availabilityPercent": 100,
-      "pointInsideReferencePercent": 22.232305,
+      "pointInsideReferencePercent": 22.413793,
       "pointAtOrBelowReferenceMinPercent": 62.341198,
-      "pointAtOrBelowReferenceMaxPercent": 84.029038,
+      "pointAtOrBelowReferenceMaxPercent": 84.210526,
       "rangeCoveragePercent": 58.439201,
-      "maeOutsideReference": 43.804346,
-      "mapeOutsideReferencePercent": 82.42138
+      "maeOutsideReference": 43.705777,
+      "mapeOutsideReferencePercent": 59.953303
     }
   },
   "byNutrient": {
@@ -846,12 +846,12 @@
       "referenceCount": 456,
       "availableCount": 456,
       "availabilityPercent": 100,
-      "pointInsideReferencePercent": 35.745614,
+      "pointInsideReferencePercent": 36.184211,
       "pointAtOrBelowReferenceMinPercent": 35.964912,
-      "pointAtOrBelowReferenceMaxPercent": 70.394737,
+      "pointAtOrBelowReferenceMaxPercent": 70.833333,
       "rangeCoveragePercent": 76.535088,
-      "maeOutsideReference": 2.848814,
-      "mapeOutsideReferencePercent": 118.49615
+      "maeOutsideReference": 2.556325,
+      "mapeOutsideReferencePercent": 64.61456
     },
     "ironMg": {
       "referenceCount": 101,
@@ -872,8 +872,8 @@
       "pointAtOrBelowReferenceMinPercent": 32.369942,
       "pointAtOrBelowReferenceMaxPercent": 83.236994,
       "rangeCoveragePercent": 83.815029,
-      "maeOutsideReference": 0.643954,
-      "mapeOutsideReferencePercent": 23.186063
+      "maeOutsideReference": 0.624884,
+      "mapeOutsideReferencePercent": 20.767427
     },
     "vitaminAMcg": {
       "referenceCount": 48,
@@ -940,8 +940,8 @@
       "pointAtOrBelowReferenceMinPercent": 43.01676,
       "pointAtOrBelowReferenceMaxPercent": 84.357542,
       "rangeCoveragePercent": 79.329609,
-      "maeOutsideReference": 10.672618,
-      "mapeOutsideReferencePercent": 27.299959
+      "maeOutsideReference": 10.662349,
+      "mapeOutsideReferencePercent": 26.374781
     },
     "cake_pastry": {
       "referenceCount": 24,
@@ -951,8 +951,8 @@
       "pointAtOrBelowReferenceMinPercent": 41.666667,
       "pointAtOrBelowReferenceMaxPercent": 87.5,
       "rangeCoveragePercent": 79.166667,
-      "maeOutsideReference": 13.631856,
-      "mapeOutsideReferencePercent": 33.572139
+      "maeOutsideReference": 12.800222,
+      "mapeOutsideReferencePercent": 28.683049
     },
     "chocolate": {
       "referenceCount": 237,
@@ -962,19 +962,19 @@
       "pointAtOrBelowReferenceMinPercent": 51.054852,
       "pointAtOrBelowReferenceMaxPercent": 89.873418,
       "rangeCoveragePercent": 64.135021,
-      "maeOutsideReference": 14.111429,
-      "mapeOutsideReferencePercent": 28.339088
+      "maeOutsideReference": 14.097175,
+      "mapeOutsideReferencePercent": 26.642216
     },
     "dairy": {
       "referenceCount": 259,
       "availableCount": 259,
       "availabilityPercent": 100,
-      "pointInsideReferencePercent": 20.07722,
+      "pointInsideReferencePercent": 20.849421,
       "pointAtOrBelowReferenceMinPercent": 57.142857,
-      "pointAtOrBelowReferenceMaxPercent": 77.220077,
+      "pointAtOrBelowReferenceMaxPercent": 77.992278,
       "rangeCoveragePercent": 54.440154,
-      "maeOutsideReference": 131.324831,
-      "mapeOutsideReferencePercent": 91.673161
+      "maeOutsideReference": 131.23492,
+      "mapeOutsideReferencePercent": 86.296942
     },
     "drink_jelly_pudding": {
       "referenceCount": 135,
@@ -984,8 +984,8 @@
       "pointAtOrBelowReferenceMinPercent": 71.851852,
       "pointAtOrBelowReferenceMaxPercent": 79.259259,
       "rangeCoveragePercent": 48.148148,
-      "maeOutsideReference": 62.369752,
-      "mapeOutsideReferencePercent": 145.265046
+      "maeOutsideReference": 62.34612,
+      "mapeOutsideReferencePercent": 144.85118
     },
     "fried_food": {
       "referenceCount": 2,
@@ -1028,8 +1028,8 @@
       "pointAtOrBelowReferenceMinPercent": 79.624665,
       "pointAtOrBelowReferenceMaxPercent": 89.812332,
       "rangeCoveragePercent": 40.482574,
-      "maeOutsideReference": 33.051245,
-      "mapeOutsideReferencePercent": 124.805745
+      "maeOutsideReference": 32.847921,
+      "mapeOutsideReferencePercent": 63.816322
     },
     "prepared_meal": {
       "referenceCount": 37,
@@ -1050,8 +1050,8 @@
       "pointAtOrBelowReferenceMinPercent": 40.322581,
       "pointAtOrBelowReferenceMaxPercent": 68.817204,
       "rangeCoveragePercent": 79.032258,
-      "maeOutsideReference": 23.325474,
-      "mapeOutsideReferencePercent": 40.502925
+      "maeOutsideReference": 23.276112,
+      "mapeOutsideReferencePercent": 39.933262
     },
     "snack_rice_cracker": {
       "referenceCount": 58,
@@ -1096,8 +1096,8 @@
       "pointAtOrBelowReferenceMinPercent": 26.086957,
       "pointAtOrBelowReferenceMaxPercent": 86.956522,
       "rangeCoveragePercent": 82.608696,
-      "maeOutsideReference": 1.704978,
-      "mapeOutsideReferencePercent": 42.187018
+      "maeOutsideReference": 1.377933,
+      "mapeOutsideReferencePercent": 38.886873
     },
     "ironMg": {
       "referenceCount": 11,

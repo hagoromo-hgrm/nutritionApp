@@ -9,9 +9,13 @@ from .normalize import normalize_ingredients
 from .optimizer import Scenario, optimize
 from .profiles import NON_CONTRIBUTING_ADDITIVES, candidates_for
 
-MODEL_VERSION = "0.2.0"
+MODEL_VERSION = "0.3.0"
 DEFAULT_SEED = 20260725
 DEFAULT_SAMPLES = 900
+COMPOSITION_PARENT_NUTRIENTS = {
+    "saturatedFatG": ("fatG", "飽和脂肪酸", "脂質"),
+    "fiberG": ("carbohydrateG", "食物繊維", "炭水化物"),
+}
 
 
 def _failed(
@@ -57,6 +61,37 @@ def _confidence(
     if best_error <= 0.35 and known_count >= 2 and relative_width <= 1.0:
         return "medium"
     return "low"
+
+
+def _apply_composition_upper_bound(
+    nutrient: str,
+    estimate_item: dict[str, Any],
+    request: EstimateRequest,
+) -> None:
+    constraint = COMPOSITION_PARENT_NUTRIENTS.get(nutrient)
+    if constraint is None:
+        return
+    parent_key, nutrient_label, parent_label = constraint
+    upper_bound = request.known_nutrients.get(parent_key)
+    if upper_bound is None:
+        return
+
+    value = min(estimate_item["value"], upper_bound)
+    low = min(estimate_item["range"]["min"], upper_bound)
+    high = min(estimate_item["range"]["max"], upper_bound)
+    if (
+        value == estimate_item["value"]
+        and low == estimate_item["range"]["min"]
+        and high == estimate_item["range"]["max"]
+    ):
+        return
+    estimate_item["value"] = value
+    estimate_item["range"] = {"min": low, "max": high}
+    estimate_item["warnings"].append(
+        f"{nutrient_label}は{parent_label}の内訳であるため、"
+        f"入力済みの{parent_label}（{upper_bound:g}g）を上限として"
+        "推計値と推定範囲を補正しました。"
+    )
 
 
 def estimate(
@@ -229,11 +264,12 @@ def estimate(
         for profile in scenario.profiles
         for note in profile.derivation_notes
     })
-    for estimate_item in estimates.values():
+    for nutrient, estimate_item in estimates.items():
         estimate_item["source"] = scenarios[0].profiles[0].source_version
         estimate_item["sourceFoodIds"] = source_food_ids
         if derivation_notes:
             estimate_item["warnings"].extend(derivation_notes)
+        _apply_composition_upper_bound(nutrient, estimate_item, request)
     return {
         "requestId": request.request_id,
         "status": "completed" if len(estimates) == len(targets) else "partial",

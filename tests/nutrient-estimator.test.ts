@@ -112,6 +112,30 @@ describe('browser nutrient estimator', () => {
     expect(isEstimateAdoptable(0, zero.estimates.fiberG)).toBe(false)
   })
 
+  it('内訳の推計値と範囲を入力済み総量以下に補正する', () => {
+    const result = estimateNutrients({
+      ...eligibleRequest,
+      knownNutrients: {
+        fatG: 0.25,
+        carbohydrateG: 0.25,
+      },
+      requestedNutrients: ['saturatedFatG', 'fiberG'],
+    })
+
+    for (const [key, parentLabel] of [
+      ['saturatedFatG', '脂質'],
+      ['fiberG', '炭水化物'],
+    ] as const) {
+      const estimate = result.estimates[key]
+      expect(estimate.status).toBe('available')
+      if (estimate.status !== 'available') continue
+      expect(estimate.value).toBeLessThanOrEqual(0.25)
+      expect(estimate.range.min).toBeLessThanOrEqual(estimate.value)
+      expect(estimate.range.max).toBeLessThanOrEqual(0.25)
+      expect(estimate.warnings.join(' ')).toContain(`${parentLabel}（0.25g）を上限`)
+    }
+  })
+
   it('未指定の栄養素は推計対象に含めない', () => {
     const result = estimateNutrients({
       ...eligibleRequest,

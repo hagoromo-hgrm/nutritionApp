@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nutrition-estimator"
-version = "0.2.0"
+version = "0.3.0"
 description = "NutritionApp向けローカル栄養素推計コア"
 requires-python = ">=3.11"
 license = { text = "UNLICENSED" }

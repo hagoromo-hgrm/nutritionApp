@@ -46,7 +46,7 @@ export const ESTIMATE_FIT_NUTRIENT_KEYS = [
 ] as const satisfies readonly NutrientKey[]
 export type EstimateFitNutrientKey = (typeof ESTIMATE_FIT_NUTRIENT_KEYS)[number]
 export type EstimateConfidence = 'high' | 'medium' | 'low' | 'unavailable'
-export const NUTRIENT_ESTIMATOR_MODEL_VERSION = 'browser-rule-0.13.0' as const
+export const NUTRIENT_ESTIMATOR_MODEL_VERSION = 'browser-rule-0.14.0' as const
 const MEXT_SOURCE = '文部科学省 日本食品標準成分表（八訂）増補2023年（2026年3月27日正誤表対応）' as const
 const FDC_SOURCE = 'USDA FoodData Central SR Legacy 04/2018' as const
 const INGREDIENT_SPEC_SOURCE = '原料メーカー・業界団体公式仕様' as const
@@ -186,6 +186,49 @@ interface MacroFit {
 
 function round(value: number): number {
   return Math.round(Math.max(0, value) * 1_000_000) / 1_000_000
+}
+
+const COMPOSITION_PARENT_NUTRIENTS: Partial<Record<EstimatableNutrientKey, EstimateFitNutrientKey>> = {
+  saturatedFatG: 'fatG',
+  fiberG: 'carbohydrateG',
+}
+
+/**
+ * 同じ表示基準の総量が入力済みなら、内訳の点推計と範囲を総量以下に保つ。
+ * 公表値の丸めを逆算せず、利用者が確認した値を保存候補の上限として優先する。
+ */
+function applyCompositionUpperBounds(
+  estimates: Record<EstimatableNutrientKey, NutrientEstimate>,
+  knownNutrients: NutrientEstimateRequest['knownNutrients'],
+): Record<EstimatableNutrientKey, NutrientEstimate> {
+  return mapEstimatableNutrients((key) => {
+    const estimate = estimates[key]
+    if (estimate.status !== 'available') return estimate
+    const parentKey = COMPOSITION_PARENT_NUTRIENTS[key]
+    if (!parentKey) return estimate
+    const upperBound = knownNutrients?.[parentKey]
+    if (upperBound === null || upperBound === undefined || !Number.isFinite(upperBound) || upperBound < 0) {
+      return estimate
+    }
+
+    const value = round(Math.min(estimate.value, upperBound))
+    const range = {
+      min: round(Math.min(estimate.range.min, upperBound)),
+      max: round(Math.min(estimate.range.max, upperBound)),
+    }
+    if (value === estimate.value && range.min === estimate.range.min && range.max === estimate.range.max) {
+      return estimate
+    }
+    return {
+      ...estimate,
+      value,
+      range,
+      warnings: [...new Set([
+        ...estimate.warnings,
+        `${NUTRIENT_LABELS[key]}は${NUTRIENT_LABELS[parentKey]}の内訳であるため、入力済みの${NUTRIENT_LABELS[parentKey]}（${round(upperBound)}g）を上限として推計値と推定範囲を補正しました。`,
+      ])],
+    }
+  })
 }
 
 function priorCalibration(prior: GenreNutrientPrior): EstimationCalibrationMetadata {
@@ -986,6 +1029,7 @@ export function estimateNutrients(request: NutrientEstimateRequest): NutrientEst
     }
   }
 
+  estimates = applyCompositionUpperBounds(estimates, request.knownNutrients)
   const unresolvedIngredients = request.ingredientsText?.trim()
     ? unresolvedIngredientNames(request.ingredientsText, request.productName, request.estimatorGenreId)
     : []
