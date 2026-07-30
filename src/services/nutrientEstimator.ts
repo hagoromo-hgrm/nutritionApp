@@ -55,7 +55,7 @@ export const ESTIMATE_FIT_NUTRIENT_KEYS = [
 ] as const satisfies readonly NutrientKey[]
 export type EstimateFitNutrientKey = (typeof ESTIMATE_FIT_NUTRIENT_KEYS)[number]
 export type EstimateConfidence = 'high' | 'medium' | 'low' | 'unavailable'
-export const NUTRIENT_ESTIMATOR_MODEL_VERSION = 'browser-rule-0.15.0' as const
+export const NUTRIENT_ESTIMATOR_MODEL_VERSION = 'browser-rule-0.16.0' as const
 const MEXT_SOURCE = '文部科学省 日本食品標準成分表（八訂）増補2023年（2026年3月27日正誤表対応）' as const
 const FDC_SOURCE = 'USDA FoodData Central SR Legacy 04/2018' as const
 const INGREDIENT_SPEC_SOURCE = '原料メーカー・業界団体公式仕様' as const
@@ -176,9 +176,14 @@ const UNMODELED_ADDITIVE_NUTRIENT_TERMS: Partial<Record<EstimatableNutrientKey, 
   vitaminCMg: ['v.c', 'ビタミンc', 'アスコルビン'],
 }
 
-interface CandidateCombination {
+export interface CandidateCombination {
   profiles: IngredientProfile[]
   priorProbability: number
+}
+
+export interface CandidateSelectionContext {
+  referenceMassG: number
+  knownNutrients: NutrientEstimateRequest['knownNutrients']
 }
 
 interface ResolvedIngredient {
@@ -354,23 +359,140 @@ function compoundRatioTemplates(count: number): Array<{ ratios: number[]; prior:
   ]
 }
 
-function combineCandidateSets(
+function quickCandidateFitError(
+  combination: CandidateCombination,
+  candidateSets: readonly (readonly IngredientProfile[])[],
+  context: CandidateSelectionContext | undefined,
+): number | null {
+  if (!context || !Number.isFinite(context.referenceMassG) || context.referenceMassG <= 0) return null
+  const ratios = fallbackRatios(candidateSets.length)
+  const fitKeys = ESTIMATE_FIT_NUTRIENT_KEYS.filter((key) => {
+    const observed = context.knownNutrients?.[key]
+    return observed !== null && observed !== undefined && Number.isFinite(observed) && observed >= 0
+  })
+  const errors = fitKeys.flatMap((key) => {
+    let minPer100g = 0
+    let maxPer100g = 0
+    for (let index = 0; index < candidateSets.length; index += 1) {
+      const profiles = index < combination.profiles.length
+        ? [combination.profiles[index]]
+        : candidateSets[index]
+      const values = profiles.flatMap((profile) => {
+        const value = profile.nutrients[key]
+        return value === null ? [] : [value]
+      })
+      if (values.length !== profiles.length) return []
+      minPer100g += Math.min(...values) * ratios[index]
+      maxPer100g += Math.max(...values) * ratios[index]
+    }
+    const observed = context.knownNutrients![key]!
+    const predictedMin = minPer100g * context.referenceMassG / 100
+    const predictedMax = maxPer100g * context.referenceMassG / 100
+    const distance = observed < predictedMin
+      ? predictedMin - observed
+      : observed > predictedMax
+        ? observed - predictedMax
+        : 0
+    const roundingWidth = key === 'energyKcal' ? 0.5 : 0.05
+    const scale = Math.max(roundingWidth, observed * 0.02)
+    return [(distance / scale) ** 2]
+  })
+  return errors.length > 0
+    ? errors.reduce((sum, error) => sum + error, 0) / errors.length
+    : null
+}
+
+function combinationId(combination: CandidateCombination): string {
+  return combination.profiles.map((profile) => profile.profileId).join('|')
+}
+
+function selectCandidateBeam(
+  pool: CandidateCombination[],
   candidateSets: readonly (readonly IngredientProfile[])[],
   limit: number,
+  context: CandidateSelectionContext | undefined,
+): CandidateCombination[] {
+  const byPrior = (left: CandidateCombination, right: CandidateCombination) => (
+    right.priorProbability - left.priorProbability
+    || combinationId(left).localeCompare(combinationId(right))
+  )
+  const hasFitEvidence = context !== undefined
+    && Number.isFinite(context.referenceMassG)
+    && context.referenceMassG > 0
+    && ESTIMATE_FIT_NUTRIENT_KEYS.some((key) => {
+      const value = context.knownNutrients?.[key]
+      return value !== null && value !== undefined && Number.isFinite(value) && value >= 0
+    })
+  // 栄養表示がない場面では従来の事前確率順を維持し、根拠のない候補順変更を避ける。
+  if (pool.length <= limit || !hasFitEvidence) return pool.sort(byPrior).slice(0, limit)
+  const scored = pool.map((combination) => {
+    const fitError = quickCandidateFitError(combination, candidateSets, context)
+    const priorPenalty = -Math.log(Math.max(combination.priorProbability, 1e-12))
+    return {
+      combination,
+      fitError,
+      priorPenalty,
+      hybridScore: (fitError ?? 0) + priorPenalty * 0.08,
+      id: combinationId(combination),
+    }
+  })
+  const selected = new Map<string, CandidateCombination>()
+  const select = (item: (typeof scored)[number]) => {
+    if (selected.size < limit) selected.set(item.id, item.combination)
+  }
+  const priorSlots = Math.min(limit, Math.floor(limit / 2))
+  for (const item of [...scored]
+    .sort((left, right) => left.priorPenalty - right.priorPenalty || left.id.localeCompare(right.id))
+    .slice(0, priorSlots)) {
+    select(item)
+  }
+  const fitSlots = Math.min(limit - selected.size, Math.floor(limit * 3 / 8))
+  let addedFit = 0
+  for (const item of [...scored]
+    .filter((candidate) => candidate.fitError !== null)
+    .sort((left, right) => (
+      left.fitError! - right.fitError!
+      || left.priorPenalty - right.priorPenalty
+      || left.id.localeCompare(right.id)
+    ))) {
+    if (selected.has(item.id)) continue
+    select(item)
+    addedFit += 1
+    if (addedFit >= fitSlots) break
+  }
+
+  const represented = new Set<string>()
+  for (const combination of selected.values()) {
+    combination.profiles.forEach((profile, index) => represented.add(`${index}:${profile.profileId}`))
+  }
+  while (selected.size < limit) {
+    const remaining = scored.filter((item) => !selected.has(item.id))
+    if (remaining.length === 0) break
+    const next = remaining.sort((left, right) => {
+      const leftNovelty = left.combination.profiles.filter((profile, index) => !represented.has(`${index}:${profile.profileId}`)).length
+      const rightNovelty = right.combination.profiles.filter((profile, index) => !represented.has(`${index}:${profile.profileId}`)).length
+      return rightNovelty - leftNovelty
+        || left.hybridScore - right.hybridScore
+        || left.id.localeCompare(right.id)
+    })[0]
+    select(next)
+    next.combination.profiles.forEach((profile, index) => represented.add(`${index}:${profile.profileId}`))
+  }
+  return [...selected.values()]
+}
+
+export function combineCandidateSets(
+  candidateSets: readonly (readonly IngredientProfile[])[],
+  limit: number,
+  context?: CandidateSelectionContext,
 ): CandidateCombination[] {
   let combinations: CandidateCombination[] = [{ profiles: [], priorProbability: 1 }]
   for (const candidates of candidateSets) {
-    combinations = combinations
-      .flatMap((combination) => candidates.map((candidate) => ({
-        profiles: [...combination.profiles, candidate],
-        priorProbability: combination.priorProbability * candidate.priorProbability,
-      })))
-      .sort((left, right) => (
-        right.priorProbability - left.priorProbability
-        || left.profiles.map((profile) => profile.profileId).join('|')
-          .localeCompare(right.profiles.map((profile) => profile.profileId).join('|'))
-      ))
-      .slice(0, limit)
+    const pool = combinations.flatMap((combination) => candidates.map((candidate) => ({
+      profiles: [...combination.profiles, candidate],
+      priorProbability: combination.priorProbability * candidate.priorProbability,
+    })))
+    combinations = selectCandidateBeam(pool, candidateSets, limit, context)
   }
   const total = combinations.reduce((sum, combination) => sum + combination.priorProbability, 0)
   return combinations.map((combination) => ({
@@ -899,6 +1021,10 @@ export function estimateNutrients(request: NutrientEstimateRequest): NutrientEst
       const combinations = combineCandidateSets(
         resolved.map((item) => item.candidates),
         MAX_PROFILE_COMBINATIONS,
+        {
+          referenceMassG: request.referenceMassG!,
+          knownNutrients: request.knownNutrients,
+        },
       )
       const scenarioCount = Math.max(512, Math.floor(4_096 / Math.max(1, combinations.length)))
       const fits = combinations.map((combination) => fitIngredientRatios(
