@@ -346,7 +346,7 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .menu-editor-count { flex: 0 0 auto; border-radius: 99px; padding: .22rem .55rem; color: var(--accent-deep); background: var(--soft); font-size: .68rem; font-weight: 800; white-space: nowrap; }
 .menu-editor-basic-fields { display: grid; grid-template-columns: minmax(0, 1fr) minmax(9rem, .42fr); gap: .75rem; }
 .menu-editor-alias-field, .menu-editor-memo-field { grid-column: 1 / -1; }
-.menu-editor-memo-field textarea { min-width: 0; border: 1px solid var(--line); border-radius: .7rem; padding: .72rem .8rem; color: var(--ink); background: #fbfdff; font: inherit; font-weight: 500; line-height: 1.55; resize: vertical; }
+.menu-editor-memo-field textarea { min-width: 0; border: 1px solid var(--line); border-radius: .7rem; padding: .72rem .8rem; color: var(--ink); background: #fbfdff; font-family: inherit; font-size: 16px; font-weight: 500; line-height: 1.55; resize: vertical; }
 .menu-editor-memo-field textarea:focus-visible { outline: 3px solid rgba(109, 158, 214, .3); outline-offset: 2px; }
 .menu-editor-selected-list, .menu-set-selected-list { display: grid; gap: .55rem; }
 .menu-editor-selected-list .menu-ingredient-row { grid-template-columns: minmax(0, 1fr) minmax(12rem, .75fr) auto; border: 1px solid var(--line); border-radius: .85rem; padding: .7rem .75rem; background: #ffffff; }
