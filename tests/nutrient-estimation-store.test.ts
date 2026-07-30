@@ -1,5 +1,5 @@
 import 'fake-indexeddb/auto'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { db, getFoodById, initializeDatabase, saveMealEntry } from '../src/db/db'
 import {
   adoptEstimatedNutrients,
@@ -134,6 +134,57 @@ describe('nutrient estimation store', () => {
     expect(reverted.decision).toBe('reverted')
     expect((await getFoodById(food.id))?.nutrients.fiberG).toBeNull()
     expect((await getFoodById(food.id))?.nutrientMetadata?.fiberG).toBeUndefined()
+  })
+
+  it('同じ操作で採用した複数栄養素を順番に取り消せる', async () => {
+    const request = createEstimationRequest(food, { requestId: 'request_revert_batch', now: '2026-07-25T00:01:00.000Z' })
+    await saveEstimationRequest(request)
+    await saveEstimationResult(resultFor(request.requestId, request.inputHash))
+    vi.useFakeTimers({ toFake: ['Date'] })
+    try {
+      vi.setSystemTime(new Date('2026-07-25T00:02:00.000Z'))
+      const decisions = await adoptEstimatedNutrients(request.requestId, ['fiberG', 'calciumMg', 'saturatedFatG'])
+      const adoptionVersion = decisions[0].foodUpdatedAtAfterDecision
+
+      vi.setSystemTime(new Date('2026-07-25T00:03:00.000Z'))
+      await revertEstimatedNutrient(decisions[0].decisionId)
+      vi.setSystemTime(new Date('2026-07-25T00:04:00.000Z'))
+      await revertEstimatedNutrient(decisions[1].decisionId)
+      vi.setSystemTime(new Date('2026-07-25T00:05:00.000Z'))
+      await revertEstimatedNutrient(decisions[2].decisionId)
+
+      const reverted = await getFoodById(food.id)
+      expect(reverted?.nutrients.fiberG).toBeNull()
+      expect(reverted?.nutrients.calciumMg).toBeNull()
+      expect(reverted?.nutrients.saturatedFatG).toBeNull()
+      expect(reverted?.nutrientMetadata?.fiberG).toBeUndefined()
+      expect(reverted?.nutrientMetadata?.calciumMg).toBeUndefined()
+      expect(reverted?.nutrientMetadata?.saturatedFatG).toBeUndefined()
+      expect((await db.estimationDecisions.get(decisions[0].decisionId))?.foodUpdatedAtAfterDecision).toBe(adoptionVersion)
+      expect((await db.estimationDecisions.get(decisions[1].decisionId))?.foodUpdatedAtAfterDecision).toBe(adoptionVersion)
+      expect((await db.estimationDecisions.get(decisions[2].decisionId))?.foodUpdatedAtAfterDecision).toBe(adoptionVersion)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('同じ操作の一部を取り消した後でも、別操作で食品が変われば残りの自動取り消しを拒否する', async () => {
+    const request = createEstimationRequest(food, { requestId: 'request_revert_conflict', now: '2026-07-25T00:01:00.000Z' })
+    await saveEstimationRequest(request)
+    await saveEstimationResult(resultFor(request.requestId, request.inputHash))
+    const decisions = await adoptEstimatedNutrients(request.requestId, ['fiberG', 'calciumMg'])
+    await revertEstimatedNutrient(decisions[0].decisionId)
+
+    const partlyReverted = await getFoodById(food.id)
+    if (!partlyReverted) throw new Error('テスト対象の食品が見つかりません。')
+    await db.foods.put({
+      ...partlyReverted,
+      name: '取り消し後に手動編集した食品',
+      updatedAt: '2099-01-01T00:00:00.000Z',
+    })
+
+    await expect(revertEstimatedNutrient(decisions[1].decisionId)).rejects.toThrow('変更')
+    expect((await getFoodById(food.id))?.nutrients.calciumMg).toBe(12)
   })
 
   it('不採用判断は食品値を書き換えない', async () => {

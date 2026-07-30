@@ -6,6 +6,7 @@ import {
   PARTIAL_METHOD,
   estimateNutrients,
   isEstimateAdoptable,
+  requestedEstimatableNutrientKeys,
   type AvailableNutrientEstimate,
   type EstimatableNutrientKey,
   type NutrientEstimateBasis,
@@ -78,9 +79,12 @@ export function NutrientEstimatePanel(props: NutrientEstimatePanelProps) {
   const [queuedAction, setQueuedAction] = useState<'adopt' | 'reject' | null>(null)
   const currentKey = requestKey(props)
   const result = evaluation?.key === currentKey ? evaluation.result : null
+  const resultKeys = result && evaluation
+    ? requestedEstimatableNutrientKeys(evaluation.request.requestedNutrients)
+    : []
 
   const selectableKeys = result
-    ? ESTIMATABLE_NUTRIENT_KEYS.filter((key) =>
+    ? resultKeys.filter((key) =>
         isEstimateAdoptable(props.currentNutrients[key], result.estimates[key]))
     : []
   const selectedCount = [...selected].filter((key) => selectableKeys.includes(key)).length
@@ -138,7 +142,7 @@ export function NutrientEstimatePanel(props: NutrientEstimatePanelProps) {
 
   function rejectAll() {
     if (!evaluation || !result) return
-    const nutrientKeys = ESTIMATABLE_NUTRIENT_KEYS.filter((key) => (
+    const nutrientKeys = resultKeys.filter((key) => (
       props.currentNutrients[key] === null && result.estimates[key].status === 'available'
     ))
     if (nutrientKeys.length === 0) return
@@ -187,7 +191,7 @@ export function NutrientEstimatePanel(props: NutrientEstimatePanelProps) {
             <strong>{result.status === 'completed' ? '推計結果' : result.status === 'partial' ? '一部を推計しました' : '推計できませんでした'}</strong>
             <small>{result.basis.baseAmount}{result.basis.baseUnit}当たり</small>
           </div>
-          {ESTIMATABLE_NUTRIENT_KEYS.map((key) => {
+          {resultKeys.map((key) => {
             const estimate = result.estimates[key]
             const currentValue = props.currentNutrients[key]
             const canSelect = isEstimateAdoptable(currentValue, estimate)

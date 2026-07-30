@@ -37,6 +37,14 @@ export const ESTIMATABLE_NUTRIENT_KEYS = [
 ] as const satisfies readonly NutrientKey[]
 
 export type EstimatableNutrientKey = (typeof ESTIMATABLE_NUTRIENT_KEYS)[number]
+
+export function requestedEstimatableNutrientKeys(
+  requestedNutrients: readonly EstimatableNutrientKey[] | undefined,
+): EstimatableNutrientKey[] {
+  const requested = new Set(requestedNutrients ?? ESTIMATABLE_NUTRIENT_KEYS)
+  return ESTIMATABLE_NUTRIENT_KEYS.filter((key) => requested.has(key))
+}
+
 export const ESTIMATE_FIT_NUTRIENT_KEYS = [
   'energyKcal',
   'proteinG',

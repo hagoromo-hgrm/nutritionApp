@@ -251,7 +251,49 @@ export async function rejectEstimatedNutrients(requestId: string, nutrientKeys: 
   })
 }
 
-/** 採用直後の食品更新日時と値・メタデータが一致する場合だけ、直前値へ戻す。 */
+/**
+ * 同じ一括採用に属する取り消しだけをたどって、現在の食品版へ到達できるか確認する。
+ * 食品編集や別の推計要求による更新には判断履歴の連鎖がないため、競合として拒否する。
+ */
+function isFoodVersionReachableThroughSiblingReverts(
+  adopted: EstimationDecision,
+  currentUpdatedAt: string,
+  requestDecisions: readonly EstimationDecision[],
+): boolean {
+  const batchVersion = adopted.foodUpdatedAtAfterDecision
+  if (!batchVersion) return false
+  if (currentUpdatedAt === batchVersion) return true
+
+  const batchNutrientKeys = new Set(requestDecisions
+    .filter((decision) => (
+      decision.decision === 'adopted'
+      && decision.foodId === adopted.foodId
+      && decision.foodUpdatedAtAfterDecision === batchVersion
+    ))
+    .map((decision) => decision.nutrientKey))
+  const siblingReverts = requestDecisions.filter((decision) => (
+    decision.decision === 'reverted'
+    && decision.foodId === adopted.foodId
+    && decision.foodUpdatedAtAfterDecision !== undefined
+    && batchNutrientKeys.has(decision.nutrientKey)
+  ))
+  const reachableVersions = new Set([batchVersion])
+  let addedVersion = true
+  while (addedVersion) {
+    addedVersion = false
+    for (const decision of siblingReverts) {
+      const nextVersion = decision.foodUpdatedAtAfterDecision
+      if (!nextVersion) continue
+      if (!reachableVersions.has(decision.foodUpdatedAtBeforeDecision)
+        || reachableVersions.has(nextVersion)) continue
+      reachableVersions.add(nextVersion)
+      addedVersion = true
+    }
+  }
+  return reachableVersions.has(currentUpdatedAt)
+}
+
+/** 採用後に対象値が変わらず、食品版が同じ一括採用の取り消しだけ進んでいる場合に直前値へ戻す。 */
 export async function revertEstimatedNutrient(decisionId: string): Promise<EstimationDecision> {
   const now = new Date().toISOString()
   return db.transaction('rw', [db.foods, db.estimationDecisions], async () => {
@@ -260,7 +302,11 @@ export async function revertEstimatedNutrient(decisionId: string): Promise<Estim
       throw new Error('取り消せる採用履歴が見つかりません。')
     }
     const food = await db.foods.get(adopted.foodId)
-    if (!food || food.updatedAt !== adopted.foodUpdatedAtAfterDecision || food.nutrients[adopted.nutrientKey] !== adopted.adoptedValue
+    const requestDecisions = food && food.updatedAt !== adopted.foodUpdatedAtAfterDecision
+      ? await db.estimationDecisions.where('requestId').equals(adopted.requestId).toArray()
+      : []
+    if (!food || !isFoodVersionReachableThroughSiblingReverts(adopted, food.updatedAt, requestDecisions)
+      || food.nutrients[adopted.nutrientKey] !== adopted.adoptedValue
       || JSON.stringify(food.nutrientMetadata?.[adopted.nutrientKey]) !== JSON.stringify(adopted.adoptedMetadata)) {
       throw new Error('採用後に食品が変更されています。自動では取り消せないため、食品の値を確認してください。')
     }
