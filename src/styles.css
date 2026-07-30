@@ -518,8 +518,11 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .menu-management-tabs { margin-top: .2rem; }
 .menu-management-panel { margin-top: 1rem; }
 .menu-management-panel > .section-title { align-items: center; }
-.menu-detail-memo { margin: .85rem 0 1rem; border: 1px solid var(--line); border-radius: .9rem; padding: .8rem .9rem; background: #ffffff; }
-.menu-detail-memo p { margin-top: .35rem; color: var(--ink); font-size: .76rem; font-weight: 500; line-height: 1.65; overflow-wrap: anywhere; white-space: pre-wrap; }
+.menu-detail-nutrients { margin-top: 1rem; }
+.menu-detail-nutrients h3, .menu-detail-memo h3 { margin-top: .18rem; color: var(--ink); font-size: .92rem; }
+.menu-detail-nutrients .nutrient-graph { margin-top: .55rem; }
+.menu-detail-memo { margin: 1rem 0 0; border: 1px solid var(--line); border-radius: .9rem; padding: .8rem .9rem; background: #ffffff; }
+.menu-detail-memo p { margin-top: .45rem; color: var(--ink); font-size: .76rem; font-weight: 500; line-height: 1.65; overflow-wrap: anywhere; white-space: pre-wrap; }
 .menu-category-groups, .menu-set-list { display: grid; gap: .65rem; }
 .menu-set-order-helper { margin: -.35rem 0 .75rem; }
 .menu-set-order-row { min-width: 0; }
