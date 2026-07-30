@@ -148,9 +148,9 @@ export function NutrientEstimatePanel(props: NutrientEstimatePanelProps) {
     if (Object.keys(values).length === 0) return
     if (!evaluation) return
     if (adoptionClasses.has('genre_prior_confirmation')) {
-      if (!window.confirm('選択項目には、商品固有の原材料値ではなく同ジャンルの分布で補った低信頼度の参考値が含まれます。注意書きを確認し、入力欄へ反映しますか？')) return
+      if (!window.confirm('ジャンル分布で補った低信頼度の参考値を入力欄へ反映しますか？')) return
     } else if (adoptionClasses.has('limited_confirmation')) {
-      if (!window.confirm('選択項目には、未確認の寄与または大きな候補差を含む限定的な参考値があります。注意書きを確認し、入力欄へ反映しますか？')) return
+      if (!window.confirm('不確実性の大きい参考値を入力欄へ反映しますか？')) return
     }
     props.onAdopt({ requestId: result.requestId, request: evaluation.request, basis: result.basis, values, result })
     setQueuedAction('adopt')
