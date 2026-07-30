@@ -17,6 +17,7 @@ SCALES = {
     "carbohydrateG": 5.0,
     "saltG": 0.15,
 }
+CANDIDATE_PRIOR_WEIGHT = 0.08
 
 
 @dataclass(frozen=True)
@@ -88,7 +89,16 @@ def optimize(
                 ((ratio - (profile.typical_min_ratio + profile.typical_max_ratio) / 2.0) / 0.5) ** 2
                 for profile, ratio in zip(profiles, ratios, strict=True)
             ) / max(len(profiles), 1)
-            error = _objective(predicted, known) + 0.03 * prior_penalty
+            # 食品候補の事前確率は、主要栄養値との整合を覆さない弱い補助根拠に限定する。
+            candidate_prior_penalty = -sum(
+                math.log(max(profile.prior_probability, 1e-9))
+                for profile in profiles
+            ) / max(len(profiles), 1)
+            error = (
+                _objective(predicted, known)
+                + 0.03 * prior_penalty
+                + CANDIDATE_PRIOR_WEIGHT * candidate_prior_penalty
+            )
             if math.isfinite(error):
                 accepted.append(Scenario(tuple(profiles), ratios, error, predicted))
     accepted.sort(key=lambda item: (item.objective_error, tuple(p.profile_id for p in item.profiles), item.ratios))

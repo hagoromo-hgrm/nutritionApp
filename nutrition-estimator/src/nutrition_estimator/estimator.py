@@ -9,7 +9,7 @@ from .normalize import normalize_ingredients
 from .optimizer import Scenario, optimize
 from .profiles import NON_CONTRIBUTING_ADDITIVES, candidates_for
 
-MODEL_VERSION = "0.3.1"
+MODEL_VERSION = "0.4.0"
 DEFAULT_SEED = 20260725
 DEFAULT_SAMPLES = 900
 COMPOSITION_PARENT_NUTRIENTS = {
