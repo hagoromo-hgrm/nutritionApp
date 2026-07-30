@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { calculateBmi, calculateNutrients, estimateDailyEnergyTarget, estimateDailyGoals, formatGraphNutrient, formatNutrient, getFoodDefaultServing, goalRate, incrementByBaseAmount, mealDetailNutritionGoals, nutrientGraphMax, nutrientRangeForGoals, scaleNutritionGoals, sumAvailableNutrients, sumByMealType, sumEntries, sumNutrients } from '../src/services/nutrition'
+import { calculateBmi, calculateNutrients, estimateDailyEnergyTarget, estimateDailyGoals, formatGraphNutrient, formatNutrient, getFoodDefaultServing, goalRate, incrementByBaseAmount, mealDetailNutritionGoals, nutrientGraphMax, nutrientRangeForGoals, scaleNutrientReference, scaleNutritionGoals, sumAvailableNutrients, sumByMealType, sumEntries, sumNutrients } from '../src/services/nutrition'
 import { isValidQuantityUnit } from '../src/utils/validation'
 import type { BodyProfile, Food, MealEntry, Nutrients } from '../src/types'
 
@@ -131,6 +131,14 @@ describe('nutrition calculation', () => {
     expect(nutrientRangeForGoals(goals, 'calciumMg')).toEqual({ min: 750, max: null })
     expect(nutrientRangeForGoals(goals, 'saltG')).toEqual({ min: null, max: 7.5 })
     expect(scaleNutritionGoals(goals, 1 / 3).energyKcal).toBe(720)
+    expect(scaleNutrientReference(goals, 'energyKcal', 7)).toEqual({
+      goal: 15120,
+      range: { min: 13720, max: 16520 },
+    })
+    expect(scaleNutrientReference(goals, 'proteinG', 7)).toEqual({
+      goal: goals.proteinG! * 7,
+      range: { min: 378, max: 756 },
+    })
   })
 
   it('間食詳細は200kcalを基準に他の栄養素も日次目標から比例配分する', () => {

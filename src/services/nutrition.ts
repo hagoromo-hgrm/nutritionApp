@@ -163,6 +163,23 @@ export function nutrientRangeForGoals(goals: NutritionGoals, key: NutrientKey): 
   return { min: goal, max: null }
 }
 
+export function scaleNutrientReference(
+  goals: NutritionGoals,
+  key: NutrientKey,
+  factor: number,
+): { goal: number | null; range: NutrientRange } {
+  const multiplier = Number.isFinite(factor) && factor > 0 ? factor : 1
+  const goal = goals[key]
+  const range = nutrientRangeForGoals(goals, key)
+  return {
+    goal: goal === null ? null : goal * multiplier,
+    range: {
+      min: range.min === null ? null : range.min * multiplier,
+      max: range.max === null ? null : range.max * multiplier,
+    },
+  }
+}
+
 export function nutrientGraphMax(goal: number | null, availableValue: number | null): number {
   return goal !== null && goal > 0 ? goal * 2 : Math.max(availableValue ?? 0, 1)
 }

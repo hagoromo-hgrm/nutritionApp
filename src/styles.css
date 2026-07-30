@@ -659,6 +659,15 @@ select.field-suffix { pointer-events: auto; border: 0; background: transparent; 
 .detail-total span { color: var(--muted); font-size: .78rem; }
 .detail-total strong { color: var(--accent-deep); font-family: inherit; font-size: 1.6rem; font-weight: 800; }
 .today-details-modal { background: var(--bg, #f4f8fd); }
+.today-detail-range-control { width: min(100%, 72rem); margin: 0 auto; }
+.today-detail-range-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .4rem; }
+.today-detail-range-tabs button { min-height: 2.55rem; border: 1px solid var(--line); border-radius: .72rem; color: var(--muted); background: #f8fbff; font-size: .76rem; font-weight: 800; }
+.today-detail-range-tabs button.active { border-color: #9ec5ed; color: var(--accent-deep); background: #eaf4ff; }
+.today-detail-range-summary { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: .55rem .1rem 0; color: var(--muted); font-size: .68rem; }
+.today-detail-range-summary strong { color: var(--accent-deep); font-size: .7rem; }
+.today-detail-load-status { width: min(100%, 72rem); margin: 1rem auto 0; border: 1px solid var(--line); border-radius: 1rem; padding: 1rem; color: var(--muted); background: #ffffff; font-size: .76rem; text-align: center; }
+.today-detail-load-status.error-text { color: #b65c63; }
+.today-detail-load-status.error-text .button { margin-top: .65rem; }
 .today-details-modal .goal-progress-card { border: 1px solid var(--line); background: #ffffff; }
 .today-details-modal .goal-progress-visual { background: #ffffff; }
 .food-screen-tabs:empty { display: none; }

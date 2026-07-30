@@ -66,7 +66,7 @@ import {
   type NutrientEstimateEvaluation,
 } from './components/NutrientEstimatePanel'
 import { ESTIMATABLE_NUTRIENT_KEYS, ESTIMATE_FIT_NUTRIENT_KEYS, GENRE_PRIOR_PARTIAL_METHOD, PARTIAL_METHOD, toStoredNutrientEstimateResult } from './services/nutrientEstimator'
-import { calculateBmi, calculateNutrients, estimateDailyGoals, formatGraphNutrient, formatNutrient, getFoodDefaultServing, getFoodQuantityUnits, goalRate, incrementByQuantityUnit, mealDetailNutritionGoals, nutrientGraphMax, nutrientRangeForGoals, scaleNutritionGoals, sumAvailableNutrients, sumByMealType, sumEntries, sumNutrients } from './services/nutrition'
+import { calculateBmi, calculateNutrients, estimateDailyGoals, formatGraphNutrient, formatNutrient, getFoodDefaultServing, getFoodQuantityUnits, goalRate, incrementByQuantityUnit, mealDetailNutritionGoals, nutrientGraphMax, nutrientRangeForGoals, scaleNutrientReference, scaleNutritionGoals, sumAvailableNutrients, sumByMealType, sumEntries, sumNutrients } from './services/nutrition'
 import { getMenuIngredients, menuToFood, menusWithUnsupportedIngredientUnits, wouldCreateMenuCycle } from './services/menuIngredients'
 import {
   calculateMealMenuEntryNutrients,
@@ -82,6 +82,12 @@ import { createMenuSetMealBatch, getMenuSetCalorieSummary, getMenuSetFoodItems }
 import { normalizeMealEntryOrder, sortMealEntries, sortMealEntryGroup } from './services/mealEntryOrder'
 import { buildDailyNutrientTrend } from './services/trend'
 import { shouldShowTrendDate } from './services/trendDateLabels'
+import {
+  buildTodayDetailSummary,
+  resolveTodayDetailPeriod,
+  TODAY_DETAIL_RANGE_OPTIONS,
+  type TodayDetailRangeId,
+} from './services/todayDetails'
 import { groupFoodsByKana, type FoodIndexGroupKey } from './services/foodIndex'
 import {
   EMPTY_NUTRIENTS,
@@ -1903,7 +1909,7 @@ function App() {
       />}
       {mealFood && <MealModal food={mealFood} amount={mealAmount} setAmount={setMealAmount} amountUnit={mealAmountUnit} setAmountUnit={setMealAmountUnit} menuSnapshot={mealMenuSnapshot} setMenuSnapshot={setMealMenuSnapshot} menus={menus} foods={foods} foodGroups={foodGroups} recentFoods={recentFoods} favoriteFoods={favoriteFoods} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} foodAttributePreferences={settings.foodAttributePreferences} onSaveFoodAttributePreference={saveFoodAttributePreference} editing={Boolean(editingEntry)} onSubmit={saveMeal} onClose={() => { setMealFood(null); setMealUserFacingName(null); setEditingEntry(null); setMealMenuSnapshot(null) }} />}
       {mealDetails && <MealDetailsModal details={mealDetails} goals={mealDetailNutritionGoals(settings.goals, mealDetails.type)} onUpdateTimes={updateMealTimes} onClose={() => setMealDetails(null)} />}
-      {showTodayDetails && <TodayDetailsModal total={total} goals={settings.goals} entries={entries} onClose={() => setShowTodayDetails(false)} />}
+      {showTodayDetails && <TodayDetailsModal selectedDate={selectedDate} goals={settings.goals} entries={entries} onClose={() => setShowTodayDetails(false)} />}
       {menuNutritionDetails && <MenuNutritionDetailsModal menu={menuNutritionDetails} menus={menus} foods={foods} goals={scaleNutritionGoals(settings.goals, 1 / 3)} onClose={() => setMenuNutritionDetails(null)} />}
       {menuDraft && <MenuEditorModal draft={menuDraft} setDraft={setMenuDraft} menus={menus} foods={foods} foodGroups={foodGroups} recentFoods={recentFoods} favoriteFoods={favoriteFoods} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} foodAttributePreferences={settings.foodAttributePreferences} onSaveFoodAttributePreference={saveFoodAttributePreference} onSubmit={saveMenuDraft} onClose={() => setMenuDraft(null)} />}
       {generalMenuDraft && <MenuEditorModal draft={generalMenuDraft} setDraft={setGeneralMenuDraft} mode="general" menus={menus} foods={foods} foodGroups={foodGroups} recentFoods={recentFoods} favoriteFoods={favoriteFoods} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} foodAttributePreferences={settings.foodAttributePreferences} onSaveFoodAttributePreference={saveFoodAttributePreference} onSubmit={saveGeneralMenuDraft} onClose={() => setGeneralMenuDraft(null)} />}
@@ -1981,10 +1987,13 @@ function NutrientGraphRow({ label, value, availableValue = value, goal, unit, ra
   return <div className="nutrient-graph-row"><span className="nutrient-graph-label">{label}</span><div className="nutrient-graph-track"><span className="nutrient-graph-range" style={{ left: `${rangeLeft}%`, width: `${Math.max(0, rangeRight - rangeLeft)}%` }} />{availableValue !== null && <span className={`nutrient-graph-intake${segments && segmentTotal > 0 ? ' nutrient-graph-intake-segmented' : ''}`} style={{ width: `${valuePercent}%` }}>{segments && segmentTotal > 0 && segments.map((segment) => <i key={segment.type} className={`meal-segment meal-segment-${mealTone(segment.type)}`} style={{ width: `${(segment.value / segmentTotal) * 100}%` }} />)}</span>}{hasGoal && <span className="nutrient-graph-target" style={{ left: '50%' }} />}</div><span className={`nutrient-graph-value nutrient-graph-status-${status === '超過' ? 'over' : status === '不足' ? 'under' : status === '適正' ? 'ok' : 'unknown'}`}>{formatGraphNutrient(availableValue)}<small>{unit}</small></span></div>
 }
 
-function NutrientGoalGraphs({ nutrients, availableNutrients, goals, subtotals, availableSubtotals, colorByMeal = false, excludeEnergy = false, showReference = true }: { nutrients: Nutrients; availableNutrients?: Nutrients; goals: NutritionGoals; subtotals?: Record<string, Nutrients>; availableSubtotals?: Record<string, Nutrients>; colorByMeal?: boolean; excludeEnergy?: boolean; showReference?: boolean }) {
+function NutrientGoalGraphs({ nutrients, availableNutrients, goals, subtotals, availableSubtotals, colorByMeal = false, excludeEnergy = false, showReference = true, referenceMultiplier = 1 }: { nutrients: Nutrients; availableNutrients?: Nutrients; goals: NutritionGoals; subtotals?: Record<string, Nutrients>; availableSubtotals?: Record<string, Nutrients>; colorByMeal?: boolean; excludeEnergy?: boolean; showReference?: boolean; referenceMultiplier?: number }) {
   const keys = excludeEnergy ? NUTRIENT_KEYS.filter((key) => key !== 'energyKcal') : NUTRIENT_KEYS
   const segmentSubtotals = availableSubtotals ?? subtotals
-  return <section className={`nutrient-graph${showReference ? '' : ' nutrient-graph-without-reference'}`}><div className="nutrient-graph-heading"><span>栄養素</span><span>{showReference ? '基準ライン' : ''}</span><span>摂取量</span></div><div className="nutrient-graph-rows">{keys.map((key) => <NutrientGraphRow key={key} label={NUTRIENT_LABELS[key]} value={nutrients[key]} availableValue={availableNutrients ? availableNutrients[key] : nutrients[key]} goal={goals[key]} unit={NUTRIENT_UNITS[key]} range={nutrientRangeForGoals(goals, key)} segments={colorByMeal && segmentSubtotals ? MEAL_TYPES.map((type) => ({ type, value: segmentSubtotals[type]?.[key] ?? 0 })).filter((segment) => segment.value > 0) : undefined} showReference={showReference} />)}</div>{colorByMeal && segmentSubtotals && <div className="nutrient-graph-footer"><MealColorLegend /></div>}</section>
+  return <section className={`nutrient-graph${showReference ? '' : ' nutrient-graph-without-reference'}`}><div className="nutrient-graph-heading"><span>栄養素</span><span>{showReference ? '基準ライン' : ''}</span><span>摂取量</span></div><div className="nutrient-graph-rows">{keys.map((key) => {
+    const { goal, range } = scaleNutrientReference(goals, key, referenceMultiplier)
+    return <NutrientGraphRow key={key} label={NUTRIENT_LABELS[key]} value={nutrients[key]} availableValue={availableNutrients ? availableNutrients[key] : nutrients[key]} goal={goal} unit={NUTRIENT_UNITS[key]} range={range} segments={colorByMeal && segmentSubtotals ? MEAL_TYPES.map((type) => ({ type, value: segmentSubtotals[type]?.[key] ?? 0 })).filter((segment) => segment.value > 0) : undefined} showReference={showReference} />
+  })}</div>{colorByMeal && segmentSubtotals && <div className="nutrient-graph-footer"><MealColorLegend /></div>}</section>
 }
 
 const TREND_NUTRIENT_KEYS: NutrientKey[] = ['energyKcal', 'proteinG', 'fatG', 'carbohydrateG']
@@ -2344,11 +2353,52 @@ function MealConfirmationView({ type, entries, subtotal, onAdd, onEdit, onDelete
   </>
 }
 
-function TodayDetailsModal({ total, goals, entries, onClose }: { total: Nutrients; goals: NutritionGoals; entries: MealEntry[]; onClose: () => void }) {
-  const subtotals = sumByMealType(entries)
-  const availableNutrients = sumAvailableNutrients(entries)
-  const availableSubtotals = Object.fromEntries(MEAL_TYPES.map((type) => [type, sumAvailableNutrients(entries.filter((entry) => entry.mealType === type))])) as Record<string, Nutrients>
-  return <div className="modal-backdrop nutrient-detail-backdrop" role="dialog" aria-modal="true" aria-label="今日の栄養詳細"><section className="modal-card nutrient-detail-modal today-details-modal"><div className="modal-heading"><div><span className="eyebrow">TODAY DETAILS</span><h2>今日の詳細</h2></div><button className="icon-button" type="button" onClick={onClose} aria-label="閉じる">×</button></div><NutrientGoalGraphs nutrients={total} availableNutrients={availableNutrients} goals={goals} subtotals={subtotals} availableSubtotals={availableSubtotals} colorByMeal /></section></div>
+function TodayDetailsModal({ selectedDate, goals, entries, onClose }: { selectedDate: string; goals: NutritionGoals; entries: MealEntry[]; onClose: () => void }) {
+  const [rangeId, setRangeId] = useState<TodayDetailRangeId>('day')
+  const [loadedPeriod, setLoadedPeriod] = useState<{ key: string; entries: MealEntry[] } | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [loadError, setLoadError] = useState<{ key: string; message: string } | null>(null)
+  const [reloadToken, setReloadToken] = useState(0)
+  const period = useMemo(() => resolveTodayDetailPeriod(rangeId, selectedDate), [rangeId, selectedDate])
+  const periodKey = `${period.from}:${period.to}`
+
+  useEffect(() => {
+    if (rangeId === 'day') {
+      setLoading(false)
+      setLoadError(null)
+      return
+    }
+    let cancelled = false
+    setLoading(true)
+    setLoadError(null)
+    setLoadedPeriod((current) => current?.key === periodKey ? current : null)
+    void getEntriesBetween(period.from, period.to)
+      .then((periodEntries) => {
+        if (cancelled) return
+        setLoadedPeriod({ key: periodKey, entries: periodEntries })
+        setLoading(false)
+      })
+      .catch(() => {
+        if (cancelled) return
+        setLoadedPeriod(null)
+        setLoadError({ key: periodKey, message: '期間の食事記録を読み込めませんでした。再試行してください。' })
+        setLoading(false)
+      })
+    return () => { cancelled = true }
+  }, [period.from, period.to, periodKey, rangeId, reloadToken])
+
+  const displayedEntries = rangeId === 'day'
+    ? entries
+    : loadedPeriod?.key === periodKey ? loadedPeriod.entries : null
+  const summary = useMemo(
+    () => displayedEntries ? buildTodayDetailSummary(displayedEntries) : null,
+    [displayedEntries],
+  )
+  const currentLoadError = loadError?.key === periodKey ? loadError.message : null
+  const waitingForPeriod = rangeId !== 'day' && loadedPeriod?.key !== periodKey && currentLoadError === null
+  const periodLabel = period.from === period.to ? period.to : `${period.from}〜${period.to}`
+
+  return <div className="modal-backdrop nutrient-detail-backdrop" role="dialog" aria-modal="true" aria-label="今日の栄養詳細"><section className="modal-card nutrient-detail-modal today-details-modal" aria-busy={loading || waitingForPeriod}><div className="modal-heading"><div><span className="eyebrow">TODAY DETAILS</span><h2>今日の詳細</h2></div><button className="icon-button" type="button" onClick={onClose} aria-label="閉じる">×</button></div><div className="today-detail-range-control"><div className="today-detail-range-tabs" role="tablist" aria-label="今日の詳細の集計期間">{TODAY_DETAIL_RANGE_OPTIONS.map((option) => <button key={option.id} id={`today-detail-range-${option.id}`} type="button" role="tab" aria-selected={rangeId === option.id} aria-controls="today-detail-period-panel" className={rangeId === option.id ? 'active' : ''} onClick={() => setRangeId(option.id)}>{option.label}</button>)}</div><div className="today-detail-range-summary"><span>{periodLabel}</span><strong>{period.days}日合計</strong></div></div><div id="today-detail-period-panel" role="tabpanel" aria-labelledby={`today-detail-range-${rangeId}`}>{(loading || waitingForPeriod) && !summary ? <p className="today-detail-load-status" role="status">期間の食事記録を読み込んでいます…</p> : currentLoadError ? <div className="today-detail-load-status error-text" role="alert"><p>{currentLoadError}</p><button className="button secondary" type="button" onClick={() => setReloadToken((current) => current + 1)}>再試行</button></div> : summary && <NutrientGoalGraphs nutrients={summary.nutrients} availableNutrients={summary.availableNutrients} goals={goals} subtotals={summary.subtotals} availableSubtotals={summary.availableSubtotals} colorByMeal referenceMultiplier={period.days} />}</div></section></div>
 }
 
 function MenuNutritionDetailsModal({ menu, menus, foods, goals, onClose }: { menu: Menu; menus: Menu[]; foods: Food[]; goals: NutritionGoals; onClose: () => void }) {
