@@ -1,10 +1,10 @@
 {
   "format": "nutrition-estimator-spu-evaluation-summary",
   "formatVersion": 1,
-  "modelVersion": "browser-rule-0.16.0",
-  "generatedAt": "2026-07-30T06:04:58.483Z",
+  "modelVersion": "browser-rule-0.17.0",
+  "generatedAt": "2026-07-30T06:15:35.699Z",
   "datasetHash": "bd2b3230343b917e4fa8c542043519f8c532b9f967f8feb44056b4c273e246e3",
-  "evaluationHash": "2a065712b01a9daaf1e13f16df76f6632fa988eda951b71d00e652ac0d479224",
+  "evaluationHash": "5bceb73683fbfae9648874da43518f531cb1558de3edca84fff0c32a344a1e30",
   "recordCount": 779,
   "evaluatedRecords": 749,
   "failedRecords": 0,
@@ -69,7 +69,7 @@
     "pointInsideReferencePercent": 23.726628,
     "pointAtOrBelowReferenceMinPercent": 60.412637,
     "pointAtOrBelowReferenceMaxPercent": 83.687943,
-    "rangeCoveragePercent": 59.509994,
+    "rangeCoveragePercent": 60.219213,
     "maeOutsideReference": 44.990106,
     "mapeOutsideReferencePercent": 59.787321
   },
@@ -81,7 +81,7 @@
       "pointInsideReferencePercent": 48.571429,
       "pointAtOrBelowReferenceMinPercent": 33.968254,
       "pointAtOrBelowReferenceMaxPercent": 81.269841,
-      "rangeCoveragePercent": 68.888889,
+      "rangeCoveragePercent": 72.063492,
       "maeOutsideReference": 53.642978,
       "mapeOutsideReferencePercent": 78.679907
     },
@@ -103,7 +103,7 @@
       "pointInsideReferencePercent": 20.374707,
       "pointAtOrBelowReferenceMinPercent": 59.836066,
       "pointAtOrBelowReferenceMaxPercent": 79.859485,
-      "rangeCoveragePercent": 70.960187,
+      "rangeCoveragePercent": 71.077283,
       "maeOutsideReference": 49.045735,
       "mapeOutsideReferencePercent": 55.343851
     }
@@ -697,7 +697,7 @@
         "pointInsideReferencePercent": 60.869565,
         "pointAtOrBelowReferenceMinPercent": 26.086957,
         "pointAtOrBelowReferenceMaxPercent": 86.956522,
-        "rangeCoveragePercent": 80.434783,
+        "rangeCoveragePercent": 82.608696,
         "maeOutsideReference": 40.618596,
         "mapeOutsideReferencePercent": 40.99251
       },
@@ -708,7 +708,7 @@
         "pointInsideReferencePercent": 48.837209,
         "pointAtOrBelowReferenceMinPercent": 34.883721,
         "pointAtOrBelowReferenceMaxPercent": 83.72093,
-        "rangeCoveragePercent": 72.093023,
+        "rangeCoveragePercent": 74.418605,
         "maeOutsideReference": 26.176705,
         "mapeOutsideReferencePercent": 56.460947
       },
@@ -719,7 +719,7 @@
         "pointInsideReferencePercent": 46.017699,
         "pointAtOrBelowReferenceMinPercent": 35.39823,
         "pointAtOrBelowReferenceMaxPercent": 79.646018,
-        "rangeCoveragePercent": 65.929204,
+        "rangeCoveragePercent": 69.469027,
         "maeOutsideReference": 61.519842,
         "mapeOutsideReferencePercent": 90.578295
       }
@@ -778,7 +778,7 @@
         "pointInsideReferencePercent": 21.95122,
         "pointAtOrBelowReferenceMinPercent": 60.162602,
         "pointAtOrBelowReferenceMaxPercent": 82.113821,
-        "rangeCoveragePercent": 65.04065,
+        "rangeCoveragePercent": 65.853659,
         "maeOutsideReference": 46.893936,
         "mapeOutsideReferencePercent": 48.956304
       },
@@ -803,7 +803,7 @@
       "pointInsideReferencePercent": 29.565217,
       "pointAtOrBelowReferenceMinPercent": 50.434783,
       "pointAtOrBelowReferenceMaxPercent": 79.565217,
-      "rangeCoveragePercent": 61.304348,
+      "rangeCoveragePercent": 61.73913,
       "maeOutsideReference": 56.525518,
       "mapeOutsideReferencePercent": 69.142731
     },
@@ -814,7 +814,7 @@
       "pointInsideReferencePercent": 24.200913,
       "pointAtOrBelowReferenceMinPercent": 61.187215,
       "pointAtOrBelowReferenceMaxPercent": 85.388128,
-      "rangeCoveragePercent": 58.447489,
+      "rangeCoveragePercent": 59.360731,
       "maeOutsideReference": 39.84558,
       "mapeOutsideReferencePercent": 49.287899
     },
@@ -825,7 +825,7 @@
       "pointInsideReferencePercent": 22.413793,
       "pointAtOrBelowReferenceMinPercent": 62.341198,
       "pointAtOrBelowReferenceMaxPercent": 84.210526,
-      "rangeCoveragePercent": 59.346642,
+      "rangeCoveragePercent": 60.072595,
       "maeOutsideReference": 43.604903,
       "mapeOutsideReferencePercent": 59.921285
     }
@@ -849,7 +849,7 @@
       "pointInsideReferencePercent": 36.403509,
       "pointAtOrBelowReferenceMinPercent": 35.745614,
       "pointAtOrBelowReferenceMaxPercent": 70.833333,
-      "rangeCoveragePercent": 77.192982,
+      "rangeCoveragePercent": 77.631579,
       "maeOutsideReference": 2.556149,
       "mapeOutsideReferencePercent": 64.606597
     },
@@ -871,7 +871,7 @@
       "pointInsideReferencePercent": 50.867052,
       "pointAtOrBelowReferenceMinPercent": 32.369942,
       "pointAtOrBelowReferenceMaxPercent": 83.236994,
-      "rangeCoveragePercent": 83.815029,
+      "rangeCoveragePercent": 89.017341,
       "maeOutsideReference": 0.624884,
       "mapeOutsideReferencePercent": 20.767427
     },
@@ -939,7 +939,7 @@
       "pointInsideReferencePercent": 41.340782,
       "pointAtOrBelowReferenceMinPercent": 43.01676,
       "pointAtOrBelowReferenceMaxPercent": 84.357542,
-      "rangeCoveragePercent": 80.446927,
+      "rangeCoveragePercent": 82.681564,
       "maeOutsideReference": 10.662349,
       "mapeOutsideReferencePercent": 26.374781
     },
@@ -961,7 +961,7 @@
       "pointInsideReferencePercent": 38.396624,
       "pointAtOrBelowReferenceMinPercent": 51.476793,
       "pointAtOrBelowReferenceMaxPercent": 89.873418,
-      "rangeCoveragePercent": 64.135021,
+      "rangeCoveragePercent": 64.556962,
       "maeOutsideReference": 13.614481,
       "mapeOutsideReferencePercent": 26.367039
     },
@@ -972,7 +972,7 @@
       "pointInsideReferencePercent": 20.849421,
       "pointAtOrBelowReferenceMinPercent": 57.142857,
       "pointAtOrBelowReferenceMaxPercent": 77.992278,
-      "rangeCoveragePercent": 54.440154,
+      "rangeCoveragePercent": 54.826255,
       "maeOutsideReference": 131.334795,
       "mapeOutsideReferencePercent": 86.397408
     },
@@ -1027,7 +1027,7 @@
       "pointInsideReferencePercent": 11.52815,
       "pointAtOrBelowReferenceMinPercent": 79.356568,
       "pointAtOrBelowReferenceMaxPercent": 89.812332,
-      "rangeCoveragePercent": 40.75067,
+      "rangeCoveragePercent": 41.286863,
       "maeOutsideReference": 32.819351,
       "mapeOutsideReferencePercent": 63.782031
     },
@@ -1049,7 +1049,7 @@
       "pointInsideReferencePercent": 29.032258,
       "pointAtOrBelowReferenceMinPercent": 40.322581,
       "pointAtOrBelowReferenceMaxPercent": 68.817204,
-      "rangeCoveragePercent": 79.032258,
+      "rangeCoveragePercent": 79.569892,
       "maeOutsideReference": 23.254527,
       "mapeOutsideReferencePercent": 39.92933
     },
@@ -1060,7 +1060,7 @@
       "pointInsideReferencePercent": 13.793103,
       "pointAtOrBelowReferenceMinPercent": 79.310345,
       "pointAtOrBelowReferenceMaxPercent": 93.103448,
-      "rangeCoveragePercent": 67.241379,
+      "rangeCoveragePercent": 70.689655,
       "maeOutsideReference": 8.376429,
       "mapeOutsideReferencePercent": 41.221787
     },
@@ -1095,7 +1095,7 @@
       "pointInsideReferencePercent": 60.869565,
       "pointAtOrBelowReferenceMinPercent": 26.086957,
       "pointAtOrBelowReferenceMaxPercent": 86.956522,
-      "rangeCoveragePercent": 82.608696,
+      "rangeCoveragePercent": 86.956522,
       "maeOutsideReference": 1.377933,
       "mapeOutsideReferencePercent": 38.886873
     },

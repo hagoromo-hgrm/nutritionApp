@@ -55,7 +55,7 @@ export const ESTIMATE_FIT_NUTRIENT_KEYS = [
 ] as const satisfies readonly NutrientKey[]
 export type EstimateFitNutrientKey = (typeof ESTIMATE_FIT_NUTRIENT_KEYS)[number]
 export type EstimateConfidence = 'high' | 'medium' | 'low' | 'unavailable'
-export const NUTRIENT_ESTIMATOR_MODEL_VERSION = 'browser-rule-0.16.0' as const
+export const NUTRIENT_ESTIMATOR_MODEL_VERSION = 'browser-rule-0.17.0' as const
 const MEXT_SOURCE = '文部科学省 日本食品標準成分表（八訂）増補2023年（2026年3月27日正誤表対応）' as const
 const FDC_SOURCE = 'USDA FoodData Central SR Legacy 04/2018' as const
 const INGREDIENT_SPEC_SOURCE = '原料メーカー・業界団体公式仕様' as const
@@ -153,6 +153,8 @@ const MODEL_VERSION = NUTRIENT_ESTIMATOR_MODEL_VERSION
 const MAX_PROFILE_COMBINATIONS = 64
 const MAX_COMPOUND_CANDIDATES = 24
 const RATIO_FIT_SEED_MODEL_VERSION = 'browser-rule-0.12.0'
+const CANDIDATE_SCENARIO_SCORE_TOLERANCE = 4
+const CANDIDATE_SCENARIO_TEMPERATURE = 2
 
 function estimateSource(sourceFoodIds: readonly string[]): string {
   const sources = [
@@ -194,9 +196,15 @@ interface ResolvedIngredient {
 interface MacroFit {
   profiles: IngredientProfile[]
   ratios: number[]
+  priorProbability: number
   normalizedError: number | null
   usedMacroFit: boolean
   score: number
+}
+
+interface CandidateScenarioRange {
+  range: { min: number; max: number }
+  plausibleScenarioCount: number
 }
 
 function round(value: number): number {
@@ -723,9 +731,70 @@ function fitIngredientRatios(
   return {
     profiles,
     ratios,
+    priorProbability: combination.priorProbability,
     normalizedError,
     usedMacroFit,
     score: (normalizedError ?? 0) + priorPenalty,
+  }
+}
+
+function weightedQuantile(
+  values: readonly { value: number; weight: number }[],
+  quantile: number,
+): number {
+  const sorted = [...values]
+    .filter((item) => Number.isFinite(item.value) && Number.isFinite(item.weight) && item.weight > 0)
+    .sort((left, right) => left.value - right.value)
+  if (sorted.length === 0) return 0
+  const totalWeight = sorted.reduce((sum, item) => sum + item.weight, 0)
+  const targetWeight = Math.min(1, Math.max(0, quantile)) * totalWeight
+  let cumulativeWeight = 0
+  for (const item of sorted) {
+    cumulativeWeight += item.weight
+    if (cumulativeWeight >= targetWeight) return item.value
+  }
+  return sorted[sorted.length - 1].value
+}
+
+function candidateScenarioRange(
+  fits: readonly MacroFit[],
+  selected: MacroFit,
+  nutrientKey: EstimatableNutrientKey,
+  referenceMassG: number,
+): CandidateScenarioRange | null {
+  const plausible = fits.filter((fit) => fit.score <= selected.score + CANDIDATE_SCENARIO_SCORE_TOLERANCE)
+  const minimumFitError = plausible.reduce((minimum, fit) => (
+    Math.min(minimum, fit.normalizedError ?? 0)
+  ), Number.POSITIVE_INFINITY)
+  const scenarios = plausible.flatMap((fit) => {
+    if (fit.profiles.some((profile) => profile.nutrients[nutrientKey] === null)) return []
+    const value = round(fit.profiles.reduce((sum, profile, index) => (
+      sum + profile.nutrients[nutrientKey]! * fit.ratios[index]
+    ), 0) * referenceMassG / 100)
+    const fitErrorDelta = Math.max(0, (fit.normalizedError ?? 0) - minimumFitError)
+    return [{
+      value,
+      weight: Math.exp(-fitErrorDelta / CANDIDATE_SCENARIO_TEMPERATURE)
+        * Math.max(fit.priorProbability, 1e-12),
+    }]
+  })
+  if (scenarios.length < 2 || new Set(scenarios.map((scenario) => scenario.value)).size < 2) return null
+  return {
+    range: {
+      min: round(weightedQuantile(scenarios, 0.05)),
+      max: round(weightedQuantile(scenarios, 0.95)),
+    },
+    plausibleScenarioCount: scenarios.length,
+  }
+}
+
+function mergeEstimateRanges(
+  value: number,
+  ...ranges: Array<{ min: number; max: number } | null | undefined>
+): { min: number; max: number } {
+  return {
+    min: round(Math.min(value, ...ranges.flatMap((range) => range ? [range.min] : []))),
+    max: round(Math.max(value, ...ranges.flatMap((range) => range ? [range.max] : []))),
   }
 }
 
@@ -1134,12 +1203,21 @@ export function estimateNutrients(request: NutrientEstimateRequest): NutrientEst
           confidence: isPartial ? 'low' : confidence,
           zeroEvidence,
         })
+        const candidateScenarios = candidateScenarioRange(
+          fits,
+          selected,
+          key,
+          request.referenceMassG!,
+        )
+        const baseRange = genrePrior?.range ?? calibrated.range
         const contributingProfiles = numericProfileIndexes.map((index) => selected.profiles[index])
         const sourceFoodIds = [...new Set(contributingProfiles.flatMap((profile) => profile.sourceFoodIds))]
         return {
           status: 'available',
           value,
-          range: genrePrior?.range ?? calibrated.range,
+          range: candidateScenarios
+            ? mergeEstimateRanges(value, baseRange, candidateScenarios.range)
+            : baseRange,
           confidence: isPartial ? 'low' : calibrated.confidence,
           calibration: genrePrior?.calibration ?? calibrated.calibration,
           ...(value === 0 ? { zeroEvidence } : {}),
@@ -1177,6 +1255,9 @@ export function estimateNutrients(request: NutrientEstimateRequest): NutrientEst
               : []),
             ...(genrePrior
               ? ['ジャンル補完参考値と推定範囲は、この商品の栄養値を保証する下限または上限ではありません。']
+              : []),
+            ...(candidateScenarios
+              ? [`栄養表示への適合度が近い候補食品・配合比${candidateScenarios.plausibleScenarioCount}通りの5〜95%加重分位点を、暫定推定範囲の外側へ統合しています。`]
               : []),
             ...(calibrated.processingDeferred
               ? ['加工・調理係数を後回しにしているジャンル・栄養素のため、信頼度を低にしています。']

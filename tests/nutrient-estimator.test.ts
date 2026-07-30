@@ -358,6 +358,24 @@ describe('browser nutrient estimator', () => {
     expect(chocolate.estimates.saturatedFatG.warnings.join(' ')).toContain('弱い事前確率')
   })
 
+  it('栄養適合度が近い原材料候補のばらつきを推定範囲へ統合する', () => {
+    const result = estimateNutrients({
+      ...eligibleRequest,
+      referenceMassG: 100,
+      ingredientsText: '植物油脂',
+      knownNutrients: undefined,
+      requestedNutrients: ['saturatedFatG'],
+    })
+    const estimate = result.estimates.saturatedFatG
+
+    expect(estimate.status).toBe('available')
+    if (estimate.status !== 'available') return
+    expect(estimate.value).toBe(47.08)
+    expect(estimate.range.min).toBeLessThanOrEqual(7.06)
+    expect(estimate.range.max).toBeGreaterThanOrEqual(51.13)
+    expect(estimate.warnings.join(' ')).toContain('5〜95%加重分位点')
+  })
+
   it('未対応原材料の重量枠を残し、既知原材料分を低信頼度の部分参考値として返す', () => {
     const fullyKnown = estimateNutrients({
       ...eligibleRequest,
