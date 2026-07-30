@@ -335,7 +335,7 @@ describe('export formats', () => {
       ...backup,
       foods: [{ ...classifiedFood, id: 'food_1', name: '白ごはん', baseAmount: 100, baseUnit: 'g' as const }],
       menus: [
-        { id: 'menu_1', name: '朝ごはん', category: '主食', foodIds: ['food_1'], ingredients: [{ kind: 'food', itemId: 'food_1', amount: 150, unit: 'g' }], aliases: ['朝食'], createdAt: '2026-07-15T00:00:00.000Z', updatedAt: '2026-07-15T00:00:00.000Z' },
+        { id: 'menu_1', name: '朝ごはん', category: '主食', foodIds: ['food_1'], ingredients: [{ kind: 'food', itemId: 'food_1', amount: 150, unit: 'g' }], aliases: ['朝食'], memo: '平日の定番。前日に準備する。', createdAt: '2026-07-15T00:00:00.000Z', updatedAt: '2026-07-15T00:00:00.000Z' },
         { id: 'menu_2', name: 'おやつ', category: 'お菓子・スイーツ', foodIds: [], ingredients: [{ kind: 'menu', itemId: 'menu_1', amount: 0.5, unit: '食' }], createdAt: '2026-07-15T00:00:00.000Z', updatedAt: '2026-07-15T00:00:00.000Z' },
       ],
       generalMenus: [{ id: 'general_1', name: '一般朝食', category: '主食', foodIds: ['food_1'], ingredients: [{ kind: 'food', itemId: 'food_1', amount: 120, unit: 'g' }], aliases: ['簡単朝食'], createdAt: '2026-07-15T00:00:00.000Z', updatedAt: '2026-07-15T00:00:00.000Z' }],
@@ -343,6 +343,7 @@ describe('export formats', () => {
     }
     expect(validateBackup(withMenu).menus?.[0].name).toBe('朝ごはん')
     expect(validateBackup(withMenu).menus?.[0].aliases).toEqual(['朝食'])
+    expect(validateBackup(withMenu).menus?.[0].memo).toBe('平日の定番。前日に準備する。')
     expect(validateBackup(withMenu).menus?.[0].ingredients?.[0].amount).toBe(150)
     expect(validateBackup(withMenu).menus?.[1].ingredients?.[0].kind).toBe('menu')
     expect(validateBackup(withMenu).menus?.[1].category).toBe('お菓子・スイーツ')
@@ -357,6 +358,7 @@ describe('export formats', () => {
       { ...withMenu.menus[0], ingredients: [{ kind: 'menu', itemId: 'menu_2', amount: 1, unit: '食' }] },
       { ...withMenu.menus[1], ingredients: [{ kind: 'menu', itemId: 'menu_1', amount: 1, unit: '食' }] },
     ] })).toThrow('循環')
+    expect(() => validateBackup({ ...withMenu, menus: [{ ...withMenu.menus[0], memo: 123 }] })).toThrow('メニューまたはメニューセットの形式が不正')
   })
 
   it('バックアップ内の料理メニューで未登録の入力単位を拒否する', () => {

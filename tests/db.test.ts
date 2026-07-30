@@ -263,6 +263,7 @@ describe('IndexedDB data safety', () => {
     await saveFood(userFood)
     const menu: Menu = {
       id: 'menu_test', name: '朝ごはん', category: '主食', foodIds: [userFood.id], aliases: ['モーニング'],
+      memo: '前日に下ごしらえする',
       createdAt: '2026-07-15T00:00:00.000Z', updatedAt: '2026-07-15T00:00:00.000Z',
     }
     await saveMenu(menu)

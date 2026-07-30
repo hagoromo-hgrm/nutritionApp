@@ -345,7 +345,9 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .menu-editor-section-heading p { margin-top: .28rem; color: var(--muted); font-size: .68rem; font-weight: 500; line-height: 1.55; }
 .menu-editor-count { flex: 0 0 auto; border-radius: 99px; padding: .22rem .55rem; color: var(--accent-deep); background: var(--soft); font-size: .68rem; font-weight: 800; white-space: nowrap; }
 .menu-editor-basic-fields { display: grid; grid-template-columns: minmax(0, 1fr) minmax(9rem, .42fr); gap: .75rem; }
-.menu-editor-alias-field { grid-column: 1 / -1; }
+.menu-editor-alias-field, .menu-editor-memo-field { grid-column: 1 / -1; }
+.menu-editor-memo-field textarea { min-width: 0; border: 1px solid var(--line); border-radius: .7rem; padding: .72rem .8rem; color: var(--ink); background: #fbfdff; font: inherit; font-weight: 500; line-height: 1.55; resize: vertical; }
+.menu-editor-memo-field textarea:focus-visible { outline: 3px solid rgba(109, 158, 214, .3); outline-offset: 2px; }
 .menu-editor-selected-list, .menu-set-selected-list { display: grid; gap: .55rem; }
 .menu-editor-selected-list .menu-ingredient-row { grid-template-columns: minmax(0, 1fr) minmax(12rem, .75fr) auto; border: 1px solid var(--line); border-radius: .85rem; padding: .7rem .75rem; background: #ffffff; }
 .menu-editor-selected-list .menu-ingredient-copy strong { white-space: normal; overflow-wrap: anywhere; line-height: 1.4; }
@@ -439,7 +441,7 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
   .menu-ingredient-row > .danger-text { grid-column: 2; grid-row: 1 / span 2; }
   .menu-editor-modal { padding: 1rem; }
   .menu-editor-basic-fields { grid-template-columns: 1fr; }
-  .menu-editor-alias-field { grid-column: auto; }
+  .menu-editor-alias-field, .menu-editor-memo-field { grid-column: auto; }
   .menu-editor-selected-list .menu-ingredient-row { grid-template-columns: minmax(0, 1fr) auto; gap: .6rem; padding: .75rem; }
   .menu-editor-selected-list .menu-ingredient-copy { grid-column: 1 / -1; }
   .menu-editor-selected-list .menu-ingredient-amount { grid-column: 1; grid-row: 2; grid-template-columns: minmax(0, 1fr) minmax(4.75rem, .8fr); }
@@ -516,6 +518,8 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .menu-management-tabs { margin-top: .2rem; }
 .menu-management-panel { margin-top: 1rem; }
 .menu-management-panel > .section-title { align-items: center; }
+.menu-detail-memo { margin: .85rem 0 1rem; border: 1px solid var(--line); border-radius: .9rem; padding: .8rem .9rem; background: #ffffff; }
+.menu-detail-memo p { margin-top: .35rem; color: var(--ink); font-size: .76rem; font-weight: 500; line-height: 1.65; overflow-wrap: anywhere; white-space: pre-wrap; }
 .menu-category-groups, .menu-set-list { display: grid; gap: .65rem; }
 .menu-set-order-helper { margin: -.35rem 0 .75rem; }
 .menu-set-order-row { min-width: 0; }

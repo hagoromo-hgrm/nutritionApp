@@ -331,6 +331,7 @@ export interface Menu {
   foodIds: string[]
   ingredients?: MenuIngredient[]
   aliases?: string[]
+  memo?: string
   createdAt: string
   updatedAt: string
 }

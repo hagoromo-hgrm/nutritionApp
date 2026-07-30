@@ -229,6 +229,7 @@ function isMenu(value: unknown): value is Menu {
     && Array.isArray(value.foodIds) && value.foodIds.every(isNonEmptyString)
     && (value.ingredients === undefined || (Array.isArray(value.ingredients) && value.ingredients.every(isMenuIngredient)))
     && (value.aliases === undefined || (Array.isArray(value.aliases) && value.aliases.every(isNonEmptyString)))
+    && (value.memo === undefined || isString(value.memo))
     && isIsoDateTime(value.createdAt) && isIsoDateTime(value.updatedAt)
 }
 
