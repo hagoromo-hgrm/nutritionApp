@@ -9,7 +9,7 @@ from .normalize import normalize_ingredients
 from .optimizer import Scenario, optimize
 from .profiles import NON_CONTRIBUTING_ADDITIVES, candidates_for
 
-MODEL_VERSION = "0.3.0"
+MODEL_VERSION = "0.3.1"
 DEFAULT_SEED = 20260725
 DEFAULT_SAMPLES = 900
 COMPOSITION_PARENT_NUTRIENTS = {
@@ -156,13 +156,13 @@ def estimate(
         )
 
     normalized = normalize_ingredients(request.ingredients_text)
-    candidate_sets = []
+    candidate_entries = []
     unresolved: list[str] = []
     additive_names: list[str] = []
     for item in normalized:
         candidates = candidates_for(item.normalizedName)
         if candidates:
-            candidate_sets.append(candidates)
+            candidate_entries.append((item.normalizedName, candidates))
         elif item.normalizedName in NON_CONTRIBUTING_ADDITIVES or item.isAdditive:
             additive_names.append(item.normalizedName)
         else:
@@ -174,7 +174,7 @@ def estimate(
             f"対応する候補プロファイルがない原材料があります: {', '.join(unresolved)}",
             "原材料名を確認するか、対応カテゴリのプロファイル追加後に再実行してください。",
         )
-    if len(candidate_sets) < 2:
+    if len(candidate_entries) < 2:
         return _failed(
             payload,
             "INGREDIENTS_INSUFFICIENT",
@@ -182,6 +182,7 @@ def estimate(
             "パッケージの原材料表示を省略せず入力して再実行してください。",
         )
 
+    candidate_sets = [candidates for _, candidates in candidate_entries]
     scenarios = optimize(
         candidate_sets,
         request.known_nutrients,
@@ -207,8 +208,8 @@ def estimate(
         if request.known_nutrients.get(key) is not None
     )
     ambiguous_names = [
-        normalized[index].normalizedName
-        for index, candidates in enumerate(candidate_sets)
+        ingredient_name
+        for ingredient_name, candidates in candidate_entries
         if len(candidates) > 1
     ]
     global_warnings = ["加工係数が未定義のため、未加工のモデルプロファイルで推計しました。"]

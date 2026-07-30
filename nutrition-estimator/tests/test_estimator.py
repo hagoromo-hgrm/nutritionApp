@@ -191,3 +191,16 @@ def test_component_estimates_and_ranges_do_not_exceed_known_totals(
         assert item["range"]["min"] <= item["value"]
         assert item["range"]["max"] <= 0.25
         assert any(f"{parent_label}（0.25g）を上限" in warning for warning in item["warnings"])
+
+
+def test_ambiguous_ingredient_trace_keeps_name_after_ignored_additive(
+    cookie_request: dict[str, object],
+) -> None:
+    cookie_request["ingredientsText"] = "膨張剤、小麦粉、植物油脂"
+    _rehash(cookie_request)
+
+    result = estimate(cookie_request, seed=42, samples_per_combination=800)
+
+    assert result["status"] == "completed"
+    assert result["candidateTrace"]["ambiguousIngredients"] == ["植物油脂"]
+    assert "膨張剤" not in result["candidateTrace"]["ambiguousIngredients"]
