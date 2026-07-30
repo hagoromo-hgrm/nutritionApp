@@ -119,7 +119,7 @@ function calculateBenchmark(): AccuracyBenchmark {
   }
 }
 
-describe('browser nutrient estimator synthetic accuracy benchmark', () => {
+describe('browser nutrient estimator synthetic recovery regression', () => {
   it('原材料表示順とfixtureの配合比・既知macroを健全に保つ', () => {
     expect(SYNTHETIC_NUTRIENT_ESTIMATOR_CASES.length).toBeGreaterThanOrEqual(10)
     expect(SYNTHETIC_TARGET_NUTRIENTS).toEqual(ESTIMATABLE_NUTRIENT_KEYS)
@@ -139,7 +139,7 @@ describe('browser nutrient estimator synthetic accuracy benchmark', () => {
   it('栄養素別精度・全体MAPE・範囲包含率・available/null整合を計測する', () => {
     const benchmark = calculateBenchmark()
 
-    console.info('[nutrient-estimator synthetic benchmark]')
+    console.info('[nutrient-estimator synthetic recovery regression]')
     console.table(benchmark.byNutrient)
     console.info({
       overallMapePercent: benchmark.overallMapePercent,

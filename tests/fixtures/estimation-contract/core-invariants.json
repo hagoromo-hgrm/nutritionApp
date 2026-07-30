@@ -1,0 +1,52 @@
+{
+  "formatVersion": 1,
+  "roles": {
+    "production": "browser-typescript",
+    "validation": "python-local"
+  },
+  "supportedNutrients": [
+    "saturatedFatG",
+    "fiberG",
+    "calciumMg",
+    "ironMg",
+    "vitaminAMcg",
+    "vitaminEMg",
+    "vitaminB1Mg",
+    "vitaminB2Mg",
+    "vitaminCMg"
+  ],
+  "scenario": {
+    "name": "共有契約クッキー",
+    "categoryId": "cookie",
+    "ingredientsText": "小麦粉、砂糖、バター",
+    "expectedIngredientNames": ["小麦粉", "砂糖", "バター"],
+    "referenceMassG": 60,
+    "knownNutrients": {
+      "energyKcal": 270,
+      "proteinG": 3,
+      "fatG": 0.25,
+      "carbohydrateG": 0.25,
+      "saltG": 0.1
+    }
+  },
+  "invariants": {
+    "seed": 42,
+    "ratioSum": 1,
+    "ratioTolerance": 0.000001,
+    "ratiosAreNonNegative": true,
+    "ratiosAreNonIncreasing": true,
+    "sameInputIsDeterministic": true,
+    "compositionUpperBounds": [
+      {
+        "nutrient": "saturatedFatG",
+        "parent": "fatG",
+        "maximum": 0.25
+      },
+      {
+        "nutrient": "fiberG",
+        "parent": "carbohydrateG",
+        "maximum": 0.25
+      }
+    ]
+  }
+}

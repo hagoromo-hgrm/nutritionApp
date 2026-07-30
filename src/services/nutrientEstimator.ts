@@ -59,7 +59,7 @@ export const ESTIMATE_FIT_NUTRIENT_KEYS = [
 export type EstimateFitNutrientKey = (typeof ESTIMATE_FIT_NUTRIENT_KEYS)[number]
 export type EstimateConfidence = 'high' | 'medium' | 'low' | 'unavailable'
 export type EstimateAdoptability = EstimationAdoptionClass | 'unavailable'
-export const NUTRIENT_ESTIMATOR_MODEL_VERSION = 'browser-rule-0.19.0' as const
+export const NUTRIENT_ESTIMATOR_MODEL_VERSION = 'browser-rule-0.20.0' as const
 const MEXT_SOURCE = '文部科学省 日本食品標準成分表（八訂）増補2023年（2026年3月27日正誤表対応）' as const
 const FDC_SOURCE = 'USDA FoodData Central SR Legacy 04/2018' as const
 const INGREDIENT_SPEC_SOURCE = '原料メーカー・業界団体公式仕様' as const
@@ -724,10 +724,11 @@ function fitIngredientRatios(
         improved = false
         iteration += 1
         for (let from = 0; from < count; from += 1) {
-          const amount = Math.min(step, bestQ[from])
-          if (amount <= 0) continue
           for (let to = 0; to < count; to += 1) {
             if (to === from) continue
+            // 直前の採用でbestQ[from]が減るため、移動ごとに残量を取り直す。
+            const amount = Math.min(step, bestQ[from])
+            if (amount <= 0) continue
             const candidate = [...bestQ]
             candidate[from] -= amount
             candidate[to] += amount
@@ -1371,7 +1372,7 @@ export function estimateNutrients(request: NutrientEstimateRequest): NutrientEst
         trace: {
           ingredientNames: declaration.ingredients.map((ingredient) => ingredient.normalizedName),
           selectedProfileIds: selected.profiles.map((profile) => profile.profileId),
-          ingredientRatios: selected.ratios.map(round),
+          ingredientRatios: [...selected.ratios],
           fitScore: round(selected.score),
           normalizedFitError: selected.normalizedError === null ? null : round(selected.normalizedError),
           candidateCombinationCount: cartesianCandidateCombinationCount(
