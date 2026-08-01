@@ -1453,6 +1453,17 @@ function App() {
     setView('search-input')
   }
 
+  const openMealConfirmationFromSearch = () => {
+    if (searchPurpose !== 'meal' || !requireLoadedDate()) return
+    const targetMealType = recordingMealType ?? mealType
+    for (const group of searchResults) if (group.searchLogId) void markSearchLogUnselected(group.searchLogId)
+    setPendingSearchQuery(null)
+    setSearchResults([])
+    setRecordingMealType(null)
+    setConfirmingMealType(targetMealType)
+    setView('meal-confirmation')
+  }
+
   const loadMoreSearchResults = async (groupIndex: number) => {
     const group = searchResults[groupIndex]
     if (!group?.nextCursor || !foodSearchCategoryIncludesFoods(searchCategory)) return
@@ -1901,7 +1912,7 @@ function App() {
         {view === 'settings' && estimationSettings && <SettingsView settings={settings} estimationSettings={estimationSettings} goalInputs={goalInputs} setGoalInputs={setGoalInputs} onSaveGoals={saveGoals} onToggleExternalApi={toggleExternalApi} onToggleNutrientEstimator={toggleNutrientEstimator} onChangeDefaultMealTimeMode={changeDefaultMealTimeMode} onExportJson={exportJson} onRestoreJson={restoreJson} onExportCsv={exportCsv} onImportCsv={importCsv} onExportUnresolvedIngredients={exportUnresolvedIngredients} csvFrom={csvFrom} csvTo={csvTo} setCsvFrom={setCsvFrom} setCsvTo={setCsvTo} counts={counts} bodyProfileInputs={bodyProfileInputs} setBodyProfileInputs={setBodyProfileInputs} onSaveBodyProfile={saveBodyProfile} onOpenNewFood={() => openFoodForm(undefined, '', 'settings', null, null, '', 'settings')} onOpenFoodMaster={() => { setRecordingMealType(null); setFoodScreenReturnView('settings'); setView('food-screen') }} estimatedGoals={estimateDailyGoals(settings.bodyProfile ?? DEFAULT_BODY_PROFILE)} bmi={calculateBmi(settings.bodyProfile ?? DEFAULT_BODY_PROFILE)} />}
         {view === 'menus' && <MenuView menus={menus} generalMenus={generalMenus} menuSets={menuSets} foods={foods} onNewMenu={() => setMenuDraft({ id: null, name: '', category: '主菜', ingredients: [], aliases: [], memo: '' })} onShowMenuNutrition={setMenuNutritionDetails} onEditMenu={(menu) => setMenuDraft({ id: menu.id, name: menu.name, category: menu.category, ingredients: getMenuIngredients(menu, foods).map((ingredient) => ({ ...ingredient, amount: String(ingredient.amount) })), aliases: menu.aliases ?? [], memo: menu.memo ?? '' })} onDeleteMenu={removeMenu} onNewGeneralMenu={() => setGeneralMenuDraft({ id: null, name: '', category: '主菜', ingredients: [], aliases: [] })} onEditGeneralMenu={(menu) => setGeneralMenuDraft({ id: menu.id, name: menu.name, category: menu.category, ingredients: getMenuIngredients(menu, foods).map((ingredient) => ({ ...ingredient, amount: String(ingredient.amount) })), aliases: menu.aliases ?? [] })} onDeleteGeneralMenu={removeGeneralMenu} onCloneGeneralMenu={(menu) => void cloneGeneralMenuToMyMenu(menu)} onNewMenuSet={() => setMenuSetDraft({ id: null, name: '', menuIds: [], generalMenuIds: [], foodIds: [], foodItems: [] })} onEditMenuSet={(menuSet) => { const foodItems = getMenuSetFoodItems(menuSet, foods); setMenuSetDraft({ id: menuSet.id, name: menuSet.name, menuIds: menuSet.menuIds, generalMenuIds: menuSet.generalMenuIds ?? [], foodIds: foodItems.map((item) => item.foodId), foodItems: foodItems.map((item) => ({ ...item, amount: String(item.amount) })) }) }} onDeleteMenuSet={removeMenuSet} onReorderMenuSets={reorderMenuSetRecords} onBack={() => setView('today')} />}
         {view === 'search-input' && <SearchInputView bars={searchBars} setBars={setSearchBars} onSearch={() => void searchFoodsAndMenus()} onBack={() => setView('food-screen')} />}
-        {view === 'search-results' && <SearchResultsView groups={searchResults} purpose={searchPurpose} category={searchCategory} searching={searchingResults} onCategoryChange={changeSearchCategory} onSelect={handleSearchResultSelect} onAddFood={(query) => openFoodForm(undefined, '', searchPurpose === 'food-master' ? 'search-results' : 'food-screen', searchPurpose === 'meal' ? (recordingMealType ?? mealType) : null, searchPurpose === 'meal' ? (query || null) : null, query, searchPurpose === 'food-master' ? 'settings' : 'meal')} onLoadMore={(index) => void loadMoreSearchResults(index)} onBack={leaveSearchResults} />}
+        {view === 'search-results' && <SearchResultsView groups={searchResults} purpose={searchPurpose} category={searchCategory} searching={searchingResults} onCategoryChange={changeSearchCategory} onSelect={handleSearchResultSelect} onAddFood={(query) => openFoodForm(undefined, '', searchPurpose === 'food-master' ? 'search-results' : 'food-screen', searchPurpose === 'meal' ? (recordingMealType ?? mealType) : null, searchPurpose === 'meal' ? (query || null) : null, query, searchPurpose === 'food-master' ? 'settings' : 'meal')} onLoadMore={(index) => void loadMoreSearchResults(index)} onOpenConfirmation={openMealConfirmationFromSearch} onBack={leaveSearchResults} />}
       </main>
 
       <nav className="bottom-nav" aria-label="メインナビゲーション">
@@ -2519,11 +2530,11 @@ function SearchInputView({ bars, setBars, onSearch, onBack }: { bars: string[]; 
 
 const searchCategoryLabels: Record<FoodSearchCategory, string> = { all: '全て', general: '一般食材', menu: 'メニュー', commercial: '外食・市販' }
 
-function SearchResultsView({ groups, purpose, category, searching, onCategoryChange, onSelect, onAddFood, onLoadMore, onBack }: { groups: SearchResultGroup[]; purpose: SearchPurpose; category: FoodSearchCategory; searching: boolean; onCategoryChange: (category: FoodSearchCategory) => void; onSelect: (query: string, item: SearchResultItem) => void; onAddFood: (query: string) => void; onLoadMore: (index: number) => void; onBack: () => void }) {
+function SearchResultsView({ groups, purpose, category, searching, onCategoryChange, onSelect, onAddFood, onLoadMore, onOpenConfirmation, onBack }: { groups: SearchResultGroup[]; purpose: SearchPurpose; category: FoodSearchCategory; searching: boolean; onCategoryChange: (category: FoodSearchCategory) => void; onSelect: (query: string, item: SearchResultItem) => void; onAddFood: (query: string) => void; onLoadMore: (index: number) => void; onOpenConfirmation: () => void; onBack: () => void }) {
   const categories = purpose === 'meal' ? MEAL_SEARCH_CATEGORIES : FOOD_MASTER_SEARCH_CATEGORIES
   const emptyLabel = category === 'all' ? '一致する食品・メニューがありません。' : category === 'menu' ? '一致するメニューがありません。' : `${searchCategoryLabels[category]}に一致する食品がありません。`
   return <>
-    <section className="page-heading"><div><span className="eyebrow">SEARCH RESULTS</span><h1>検索結果</h1></div><button className="button ghost" type="button" onClick={onBack}>← 検索画面へ</button></section>
+    <section className="page-heading search-results-page-heading"><div><span className="eyebrow">SEARCH RESULTS</span><h1>検索結果</h1></div><div className="search-results-heading-actions">{purpose === 'meal' && <button className="button primary" type="button" onClick={onOpenConfirmation}>確認画面へ→</button>}<button className="button ghost" type="button" onClick={onBack}>← 検索画面へ</button></div></section>
     <div className="search-category-tabs" role="tablist" aria-label="検索結果の分類">{categories.map((value) => <button key={value} id={`search-category-${value}`} role="tab" type="button" aria-selected={category === value} aria-controls="search-category-panel" className={category === value ? 'active' : ''} disabled={searching} onClick={() => onCategoryChange(value)}>{searchCategoryLabels[value]}</button>)}</div>
     <div id="search-category-panel" role="tabpanel" aria-labelledby={`search-category-${category}`} aria-busy={searching} className="search-result-groups">
       {searching ? <div className="empty-state">検索中…</div> : <>

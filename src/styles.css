@@ -32,6 +32,8 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 .offline-dot { width: .45rem; height: .45rem; border-radius: 99px; background: #8bb9d9; }
 .content { width: min(100% - 2rem, 1120px); margin: 0 auto; }
 .page-heading { display: flex; justify-content: space-between; align-items: end; gap: 1rem; padding: 2.5rem 0 1.5rem; }
+.search-results-heading-actions { display: flex; align-items: stretch; flex-direction: column; gap: .45rem; }
+.search-results-heading-actions .button { white-space: nowrap; }
 .eyebrow, .section-kicker { display: block; color: var(--accent); font-size: .68rem; font-weight: 800; letter-spacing: .16em; }
 h1, h2, h3, p { margin: 0; }
 h1 { margin-top: .3rem; font-family: inherit; font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 800; line-height: 1.05; letter-spacing: -.035em; color: var(--ink); }
@@ -725,6 +727,9 @@ legend { padding: 0 .35rem; color: var(--muted); font-size: .75rem; font-weight:
   .content { width: min(100% - 1.2rem, 620px); }
   input, select, textarea, .menu-ingredient-amount input, .menu-ingredient-amount select, select.field-suffix { font-size: 16px; }
   .page-heading { align-items: start; flex-direction: column; padding-top: 1.6rem; }
+  .page-heading.search-results-page-heading { align-items: flex-start; flex-direction: row; }
+  .search-results-heading-actions { flex: 0 0 auto; }
+  .search-results-heading-actions .button { padding: .6rem .7rem; font-size: .72rem; }
   .food-screen-heading { gap: .35rem; padding-top: 1rem; padding-bottom: .55rem; }
   .food-screen-heading .button { align-self: flex-start; padding-top: .42rem; padding-bottom: .42rem; }
   .page-heading .date-picker { align-self: stretch; justify-content: space-between; }
