@@ -1,0 +1,578 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Nutrition PWAの食品検索エンジンを、処理の流れ、採点、グループ化、属性選択に分けて説明する技術ガイドです。">
+  <title>検索エンジンの仕組み | Nutrition PWA 人間向けガイド</title>
+  <link rel="stylesheet" href="human-guide.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">本文へ移動</a>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="food-data-structure.html">
+        <span class="brand-mark" aria-hidden="true">NP</span>
+        <span>Nutrition PWA 技術ガイド</span>
+      </a>
+      <nav class="doc-switcher" aria-label="ガイド切り替え">
+        <a href="food-data-structure.html">食品データ</a>
+        <a href="search-engine.html" aria-current="page">検索エンジン</a>
+        <a href="requirements.md">要件書</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page" id="main">
+    <section class="hero" aria-labelledby="page-title">
+      <p class="eyebrow">Human-readable search guide</p>
+      <h1 id="page-title">検索エンジンの仕組み</h1>
+      <p class="lede">
+        入力された言葉を整え、検索対象を絞り、一般名ごとにまとめ、文字一致と利用履歴を採点し、
+        最後に属性から栄養計算用の食品を確定するまでを説明します。
+      </p>
+      <div class="hero-meta">
+        <span class="badge">人間向け解説</span>
+        <span class="badge">実装確認日 2026-08-01</span>
+        <span class="badge">端末内検索・オフライン対応</span>
+      </div>
+    </section>
+
+    <div class="document-grid">
+      <aside class="toc" aria-label="目次">
+        <p class="toc-title">CONTENTS</p>
+        <ol>
+          <li><a href="#overview">検索の種類</a></li>
+          <li><a href="#pipeline">通常検索の流れ</a></li>
+          <li><a href="#normalize">文字の正規化</a></li>
+          <li><a href="#categories">検索タブの分類</a></li>
+          <li><a href="#grouping">グループ化</a></li>
+          <li><a href="#scoring">一致スコア</a></li>
+          <li><a href="#personalization">利用履歴の加点</a></li>
+          <li><a href="#attributes">属性で食品を確定</a></li>
+          <li><a href="#mext-search">MEXT日常語検索</a></li>
+          <li><a href="#menus">メニュー検索</a></li>
+          <li><a href="#multi-search">複数検索バー</a></li>
+          <li><a href="#logs">ログと安全性</a></li>
+          <li><a href="#example">例で追う</a></li>
+          <li><a href="#boundaries">現在の境界</a></li>
+        </ol>
+      </aside>
+
+      <div class="content">
+        <section class="section" id="overview">
+          <p class="eyebrow">01 / Search paths</p>
+          <h2>用途の違う検索を、1本に混ぜない</h2>
+          <p class="section-intro">
+            通常の文字検索、MEXT食品の日常語検索、メニュー検索、バーコード検索は、
+            同じ「検索」に見えても一致条件が異なります。
+          </p>
+
+          <div class="card-grid">
+            <article class="card">
+              <span class="tag tag-blue">文字検索</span>
+              <h3>食品検索</h3>
+              <p>一般名、別名、メーカー、読み、正式名称、関連語を採点し、食品グループ単位で返します。</p>
+            </article>
+            <article class="card">
+              <span class="tag tag-green">MEXT</span>
+              <h3>日常語グループ検索</h3>
+              <p>「豚肉」「砂糖」などの上位概念を検索し、種類・部位などから成分表グループへ解決します。</p>
+            </article>
+            <article class="card">
+              <span class="tag tag-yellow">メニュー</span>
+              <h3>Myメニュー・一般メニュー・Myセット</h3>
+              <p>メニュー名、分類、別名、構成食品、入れ子メニューをたどって別系統で検索します。</p>
+            </article>
+            <article class="card">
+              <span class="tag tag-rose">JAN / GTIN</span>
+              <h3>バーコード検索</h3>
+              <p>番号を文字列のまま完全一致で端末内検索します。通常の文字正規化や曖昧一致へ渡しません。</p>
+            </article>
+          </div>
+
+          <div class="notice">
+            <strong>検索の正本は端末内</strong>
+            保存済み食品と検索メタデータはIndexedDBから読み、通常の食品検索はオフラインで完結します。
+            外部APIはバーコード候補が端末内にない場合の補助です。
+          </div>
+
+          <p>
+            食事登録では、通常食品検索にMEXTのユーザー向け検索と各種メニュー検索を加え、
+            画面上で同じ検索語の候補としてまとめます。ただし、内部の採点方式は検索種別ごとに独立しています。
+          </p>
+        </section>
+
+        <section class="section" id="pipeline">
+          <p class="eyebrow">02 / Pipeline</p>
+          <h2>通常の食品検索は6段階</h2>
+
+          <div class="flow" aria-label="検索処理の流れ">
+            <div class="flow-step"><strong>1. 正規化</strong><span>表記ゆれをそろえる</span></div>
+            <div class="flow-step"><strong>2. 分類</strong><span>一般 / 市販・外食</span></div>
+            <div class="flow-step"><strong>3. グループ化</strong><span>一般名ごとにまとめる</span></div>
+            <div class="flow-step"><strong>4. 採点</strong><span>文字・代表性・履歴</span></div>
+            <div class="flow-step accent"><strong>5. 表示</strong><span>代表1件と属性候補</span></div>
+          </div>
+          <div class="flow" aria-label="検索後の確定処理">
+            <div class="flow-step"><strong>6. 属性選択</strong><span>存在する組合せだけ</span></div>
+            <div class="flow-step"><strong>食品確定</strong><span>1つのFood ID</span></div>
+            <div class="flow-step"><strong>分量選択</strong><span>既定量または任意量</span></div>
+            <div class="flow-step"><strong>選択記録</strong><span>頻度・最終選択時刻</span></div>
+            <div class="flow-step accent"><strong>食事へ追加</strong><span>スナップショットを作成</span></div>
+          </div>
+
+          <p>
+            検索結果は既定20件、最大100件のページ単位で返せます。次ページ位置はオフセットを表す
+            カーソルとして扱います。
+          </p>
+        </section>
+
+        <section class="section" id="normalize">
+          <p class="eyebrow">03 / Normalization</p>
+          <h2>検索前に表記ゆれをそろえる</h2>
+          <p class="section-intro">
+            人が入力した文字列と保存済み名称の両方へ、同じ正規化を適用してから比較します。
+          </p>
+
+          <div class="data-table-wrap">
+            <table class="data-table compact">
+              <thead>
+                <tr>
+                  <th>処理</th>
+                  <th>目的</th>
+                  <th>例</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>NFKC</td>
+                  <td>全角・半角などの互換文字をそろえる</td>
+                  <td><code>Ａ</code> → <code>A</code></td>
+                </tr>
+                <tr>
+                  <td>小文字化</td>
+                  <td>英字の大小を区別しない</td>
+                  <td><code>COFFEE</code> → <code>coffee</code></td>
+                </tr>
+                <tr>
+                  <td>ひらがな化</td>
+                  <td>カタカナとひらがなの差を吸収する</td>
+                  <td><code>タマゴ</code> → <code>たまご</code></td>
+                </tr>
+                <tr>
+                  <td>区切り除去</td>
+                  <td>空白、句読点、記号、アンダースコアを無視する</td>
+                  <td><code>ビタミン B-1</code> → <code>びたみんb1</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="notice warning">
+            <strong>バーコードは別扱い</strong>
+            JAN/GTINは先頭ゼロを含む識別子です。通常の文字正規化へ渡さず、文字列で完全一致します。
+          </div>
+        </section>
+
+        <section class="section" id="categories">
+          <p class="eyebrow">04 / Categories</p>
+          <h2>タブは検索後の見た目ではなく、候補集合を決める</h2>
+
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>タブ</th>
+                  <th>対象</th>
+                  <th>判定</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>すべて</td>
+                  <td>食品全体。食事登録ではメニュー検索結果も統合可能</td>
+                  <td>分類による除外なし</td>
+                </tr>
+                <tr>
+                  <td>一般食材</td>
+                  <td>MEXT食品などの一般食品</td>
+                  <td>市販・外食の条件に当てはまらない食品</td>
+                </tr>
+                <tr>
+                  <td>料理メニュー</td>
+                  <td>Myメニュー、一般メニュー、Myセット</td>
+                  <td>食品検索とは別のメニュー検索を使用</td>
+                </tr>
+                <tr>
+                  <td>外食・市販</td>
+                  <td>商品や外食として登録した食品</td>
+                  <td><code>isCommercial === true</code>、または有効なバーコードあり</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p>
+            FOODMASTERの一覧・検索には料理メニューを混ぜず、「すべて」「一般食材」「外食・市販」を使います。
+            食事登録では目的に応じてメニューも同じ検索画面へ統合します。
+          </p>
+        </section>
+
+        <section class="section" id="grouping">
+          <p class="eyebrow">05 / Grouping</p>
+          <h2>検索結果は食品レコードではなく、一般名のグループ単位</h2>
+          <p class="section-intro">
+            部位や調理状態を持つ全レコードを平坦に並べると、同じ食品名が大量に表示されます。
+            そこで<code>foodGroupId</code>ごとにまとめ、結果一覧には代表1件を表示します。
+          </p>
+
+          <div class="relationship">
+            <div>
+              <h3>グループ内で行うこと</h3>
+              <ol>
+                <li>その分類に含まれる食品を集める</li>
+                <li>各バリエーションへ文字一致・利用履歴の点を付ける</li>
+                <li>最もよく一致したバリエーションを求める</li>
+                <li>グループ全体の点数を決める</li>
+              </ol>
+            </div>
+            <div>
+              <h3>一覧へ返すもの</h3>
+              <ul>
+                <li>一般名を持つ<code>FoodGroup</code></li>
+                <li>代表として表示する<code>Food</code></li>
+                <li>選択可能な全バリエーション</li>
+                <li>合計点と一致理由</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="notice">
+            <strong>一致した食品と表示代表は同一とは限りません</strong>
+            グループの点数は最もよく一致したバリエーションから計算しますが、
+            表示用食品は<code>defaultVariantId</code>があればそれを優先します。
+            最終的な食品は、その後の属性選択で確定します。
+          </div>
+        </section>
+
+        <section class="section" id="scoring">
+          <p class="eyebrow">06 / Text score</p>
+          <h2>文字一致は、自然な名称を最優先する</h2>
+          <p class="section-intro">
+            1つのバリエーションに対し、上から順に一致を判定し、最初に当たった点を使います。
+            関連語は補助的な一致なので、主要な名称より低く設定されています。
+          </p>
+
+          <div class="score-list" aria-label="代表的な文字一致スコア">
+            <div class="score-row"><span>一般名 完全一致</span><span class="score-track"><span class="score-fill" style="width: 100%"></span></span><span class="score-value">100</span></div>
+            <div class="score-row"><span>別名 完全一致</span><span class="score-track"><span class="score-fill" style="width: 95%"></span></span><span class="score-value">95</span></div>
+            <div class="score-row"><span>メーカー 完全一致</span><span class="score-track"><span class="score-fill" style="width: 90%"></span></span><span class="score-value">90</span></div>
+            <div class="score-row"><span>一般名 前方一致</span><span class="score-track"><span class="score-fill" style="width: 80%"></span></span><span class="score-value">80</span></div>
+            <div class="score-row"><span>別名 前方一致</span><span class="score-track"><span class="score-fill" style="width: 75%"></span></span><span class="score-value">75</span></div>
+            <div class="score-row"><span>メーカー 前方一致</span><span class="score-track"><span class="score-fill" style="width: 70%"></span></span><span class="score-value">70</span></div>
+            <div class="score-row"><span>読み 完全一致</span><span class="score-track"><span class="score-fill" style="width: 70%"></span></span><span class="score-value">70</span></div>
+            <div class="score-row"><span>一般名 部分一致</span><span class="score-track"><span class="score-fill" style="width: 60%"></span></span><span class="score-value">60</span></div>
+            <div class="score-row"><span>別名 部分一致</span><span class="score-track"><span class="score-fill" style="width: 55%"></span></span><span class="score-value">55</span></div>
+            <div class="score-row"><span>メーカー / 読み 部分</span><span class="score-track"><span class="score-fill" style="width: 50%"></span></span><span class="score-value">50</span></div>
+            <div class="score-row"><span>正式名称 部分一致</span><span class="score-track"><span class="score-fill" style="width: 40%"></span></span><span class="score-value">40</span></div>
+            <div class="score-row"><span>関連語</span><span class="score-track"><span class="score-fill" style="width: 25%"></span></span><span class="score-value">≤25</span></div>
+          </div>
+
+          <p>
+            関連語は<code>25 × weight</code>です。どの項目にも一致しないグループは、
+            検索語が空でない限り結果から除外します。
+          </p>
+        </section>
+
+        <section class="section" id="personalization">
+          <p class="eyebrow">07 / Personalization</p>
+          <h2>文字一致を壊さない範囲で、よく使う食品を上げる</h2>
+
+          <div class="formula">
+            合計 ＝ 文字一致 ＋ 代表性 ＋ 使用頻度・お気に入り ＋ 最近の使用
+          </div>
+
+          <div class="card-grid">
+            <article class="card">
+              <h3>使用頻度</h3>
+              <p>
+                選択回数に<code>log2</code>を使って緩やかに加点します。お気に入りは5点を追加し、
+                合わせて最大25点です。
+              </p>
+            </article>
+            <article class="card">
+              <h3>最近の使用</h3>
+              <p>
+                最終選択直後を15点とし、90日かけて直線的に0点へ減らします。
+                30日以内は「最近使った」と判定できます。
+              </p>
+            </article>
+            <article class="card">
+              <h3>代表性</h3>
+              <p>
+                <code>FoodGroup.representativeScore</code>をそのまま加え、
+                同程度の一致なら一般的なグループを上へ出します。
+              </p>
+            </article>
+            <article class="card">
+              <h3>同点時</h3>
+              <p>
+                合計点、代表性、一般名の日本語順、食品IDの順で安定した並びにします。
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section" id="attributes">
+          <p class="eyebrow">08 / Variant resolution</p>
+          <h2>属性選択は、検索後に1つの食品を確定する工程</h2>
+          <p class="section-intro">
+            検索結果の「ご飯」「豚肉」は入口です。種類、部位、調理状態などを選び、
+            実在する組合せに対応した1つの食品IDを確定します。
+          </p>
+
+          <div class="flow" aria-label="属性選択の流れ">
+            <div class="flow-step"><strong>グループ選択</strong><span>一般名</span></div>
+            <div class="flow-step"><strong>候補計算</strong><span>現時点で可能な値</span></div>
+            <div class="flow-step"><strong>属性選択</strong><span>種類・部位・状態</span></div>
+            <div class="flow-step"><strong>再整合</strong><span>無効な後続値を解除</span></div>
+            <div class="flow-step accent"><strong>一意に解決</strong><span>Food ID / source_id</span></div>
+          </div>
+
+          <ul class="check-list">
+            <li>現在の選択と両立する属性値だけを有効にします。</li>
+            <li>前の属性変更で成立しなくなった後続選択は、自動的に解除します。</li>
+            <li>必須属性が不足、値が不正、複数候補が残る場合は、曖昧な食品を推測で保存しません。</li>
+            <li>画面で非表示にした属性は、食品ごとに設定した既定値で解決します。</li>
+          </ul>
+        </section>
+
+        <section class="section" id="mext-search">
+          <p class="eyebrow">09 / MEXT everyday search</p>
+          <h2>MEXTの日常語検索は、専用インデックスを先に使う</h2>
+          <p class="section-intro">
+            成分表の正式名称を直接並べる前に、ユーザー向け食品グループを検索します。
+            検索結果は上位属性の事前選択を持つことができ、部位などを別結果として展開できます。
+          </p>
+
+          <div class="data-table-wrap">
+            <table class="data-table compact">
+              <thead>
+                <tr>
+                  <th>一致</th>
+                  <th>点</th>
+                  <th>意味</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>グループ名の完全一致</td>
+                  <td>600</td>
+                  <td>日常的な親食品名と完全一致</td>
+                </tr>
+                <tr>
+                  <td>ショートカットの完全一致</td>
+                  <td>550</td>
+                  <td>部位・卵種などの直接入口</td>
+                </tr>
+                <tr>
+                  <td>グループ名・検索語の完全/前方一致</td>
+                  <td>500</td>
+                  <td>親概念または登録検索語</td>
+                </tr>
+                <tr>
+                  <td>ショートカットの前方一致</td>
+                  <td>450</td>
+                  <td>属性への近道</td>
+                </tr>
+                <tr>
+                  <td>その他の部分一致</td>
+                  <td>300</td>
+                  <td>補助的な一致</td>
+                </tr>
+                <tr>
+                  <td>成分表グループの正式名</td>
+                  <td>200</td>
+                  <td>下位の正確な名称からも到達可能</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p>
+            検索語の正規化はNFKC・小文字化・空白整理を行い、空白を除いた比較も使います。
+            通常の食品検索より高い点数ですが、これは別の検索経路内での順位であり、
+            通常検索の100点と直接比較する値ではありません。
+          </p>
+        </section>
+
+        <section class="section" id="menus">
+          <p class="eyebrow">10 / Menu search</p>
+          <h2>メニューは構成の中まで検索する</h2>
+          <p class="section-intro">
+            Myメニュー、一般メニュー、Myセットは食品グループではありません。
+            名前だけでなく、構成食材からも見つけられるように別の探索を行います。
+          </p>
+
+          <div class="relationship">
+            <div>
+              <h3>照合する情報</h3>
+              <ul>
+                <li>メニュー名、カテゴリ、登録別名</li>
+                <li>構成食品の一般名・正式名称・メーカー・読み</li>
+                <li>構成食品グループの別名</li>
+                <li>入れ子になったメニューの構成</li>
+              </ul>
+            </div>
+            <div>
+              <h3>安全策</h3>
+              <ul>
+                <li>正規化後の部分一致を使用</li>
+                <li>入れ子を再帰的にたどる</li>
+                <li>同じメニューを再訪しないよう循環を防ぐ</li>
+                <li>食品検索結果とはカテゴリに応じて統合</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="multi-search">
+          <p class="eyebrow">11 / Multiple queries</p>
+          <h2>複数検索バーは、検索ごとの選択状態を保つ</h2>
+          <p class="section-intro">
+            複数の食材を続けて探す場合、入力欄ごとに検索を並列実行し、それぞれの結果と選択状態を分離します。
+          </p>
+
+          <div class="flow" aria-label="複数検索バーの選択フロー">
+            <div class="flow-step"><strong>複数語を入力</strong><span>検索欄ごとに保持</span></div>
+            <div class="flow-step"><strong>並列検索</strong><span>結果グループを分離</span></div>
+            <div class="flow-step"><strong>順に選択</strong><span>未選択結果を残す</span></div>
+            <div class="flow-step"><strong>全件完了</strong><span>最後の選択で確認へ</span></div>
+            <div class="flow-step accent"><strong>確認画面</strong><span>早期移動も可能</span></div>
+          </div>
+
+          <p>
+            通常はすべての検索結果から選択されるまで検索画面に留まります。
+            右上の「確認画面へ」から、未選択の結果を残したまま早く進むこともできます。
+          </p>
+        </section>
+
+        <section class="section" id="logs">
+          <p class="eyebrow">12 / Logs &amp; resilience</p>
+          <h2>検索改善用の記録は、選択操作を止めない</h2>
+          <p class="section-intro">
+            どの候補が何位で表示され、何が選ばれたかを端末内へ記録します。
+            ただし、この補助記録に失敗しても食品選択は成功させます。
+          </p>
+
+          <div class="card-grid">
+            <article class="card">
+              <h3><code>SearchLog</code></h3>
+              <p>入力語、正規化語、処理時間、結果数、候補ごとの順位・点数・一致理由を保持します。</p>
+            </article>
+            <article class="card">
+              <h3>選択結果</h3>
+              <p>選んだグループ・食品・順位・経過時間、または未選択で終わったことを追記します。</p>
+            </article>
+            <article class="card">
+              <h3><code>FoodUsageStat</code></h3>
+              <p>食品ごとの選択回数と最終選択日時を更新し、次回の個人向け順位に使います。</p>
+            </article>
+            <article class="card">
+              <h3>失敗時の方針</h3>
+              <p>ログ記録や利用統計更新の失敗は握りつぶし、食事登録の本処理を妨げません。</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section" id="example">
+          <p class="eyebrow">13 / Walkthrough</p>
+          <h2>「砂糖」と入力した場合を追う</h2>
+
+          <div class="example">
+            <div class="example-header">
+              <span class="example-query">検索語: 砂糖</span>
+              <span class="tag tag-blue">概念例</span>
+            </div>
+            <div class="example-body">
+              <ol>
+                <li><strong>正規化:</strong> 表記ゆれを除き、比較用の「砂糖」にします。</li>
+                <li><strong>日常語グループ:</strong> 上白糖などをまとめるユーザー向け「砂糖」へ完全一致します。</li>
+                <li><strong>結果表示:</strong> 成分表の正式名称を大量に並べず、一般名「砂糖」を入口として見せます。</li>
+                <li><strong>種類選択:</strong> 上白糖、グラニュー糖など、存在する候補から選びます。</li>
+                <li><strong>食品確定:</strong> 選択に対応する成分表グループと食品レコードを一意に解決します。</li>
+                <li><strong>分量入力:</strong> g、小さじなど、明示済み換算のある単位で入力します。</li>
+                <li><strong>記録:</strong> 一般名を表示用に保ちつつ、確定食品の栄養値をスナップショットへ保存します。</li>
+              </ol>
+            </div>
+          </div>
+
+          <div class="notice warning">
+            <strong>ここで示したのは処理の考え方です</strong>
+            実際に表示される種類や既定値は、生成済みMEXTデータとユーザー設定に従います。
+          </div>
+
+          <h3>実装を確認したい場合</h3>
+          <ul class="source-links">
+            <li><a href="../src/services/foodSearch.ts">通常食品検索 — foodSearch.ts</a></li>
+            <li><a href="../src/services/foodClassification.ts">タブ分類 — foodClassification.ts</a></li>
+            <li><a href="../src/services/mextUserFoodData.ts">MEXT日常語検索 — mextUserFoodData.ts</a></li>
+            <li><a href="../src/services/mextFoodData.ts">MEXT属性解決 — mextFoodData.ts</a></li>
+            <li><a href="../src/services/variantConstraints.ts">選択肢の制約 — variantConstraints.ts</a></li>
+            <li><a href="../src/db/db.ts">検索データ読込・ログ — db.ts</a></li>
+          </ul>
+        </section>
+
+        <section class="section" id="boundaries">
+          <p class="eyebrow">14 / Current boundaries</p>
+          <h2>実装済みの範囲と、まだ順位に使っていない情報</h2>
+          <p class="section-intro">
+            データ型に存在する項目が、すべて現在の順位計算へ使われているとは限りません。
+            既存の将来向け設計資料と、現在動いている処理を区別するための一覧です。
+          </p>
+
+          <div class="relationship">
+            <div>
+              <h3>現在の順位には未使用</h3>
+              <ul>
+                <li><code>FoodAlias.priority</code></li>
+                <li><code>FoodAlias.aliasType</code></li>
+                <li>保存済みの<code>normalizedAlias</code></li>
+                <li>他ユーザーを含む全体利用頻度</li>
+              </ul>
+              <p>
+                別名は検索時に再正規化し、現在は同じ重みで評価します。
+              </p>
+            </div>
+            <div>
+              <h3>現在の処理上の境界</h3>
+              <ul>
+                <li>候補はIndexedDBの全文索引ではなく、読込後にメモリ上で採点</li>
+                <li>メニューは食品と共通の点数表では順位付けしない</li>
+                <li>「最近使った食品」は検索ログではなく食事記録から生成</li>
+                <li>選択回数は検索結果から食品を開いた時点で更新</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="notice warning">
+            <strong>将来案を現行仕様として読まない</strong>
+            <a href="features/food-search.md">既存の食品検索設計文書</a>には将来要件も含まれます。
+            デバウンス、全体利用頻度、別名優先度、大量データ向け索引検索などは、
+            このガイドでは現在実装済みとして扱っていません。
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <p>Nutrition PWA — 人間向け技術ガイド</p>
+      <p>前に読む: <a href="food-data-structure.html">食品データの構造</a></p>
+    </div>
+  </footer>
+</body>
+</html>

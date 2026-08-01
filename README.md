@@ -18,6 +18,14 @@ npm test
 npm run build
 ```
 
+## 人間向け技術ガイド
+
+- [食品データの構造](docs/food-data-structure.html)
+- [検索エンジンの仕組み](docs/search-engine.html)
+
+どちらも現在の実装を図と用語で説明するHTMLです。要件の正本は引き続き
+[`docs/requirements.md`](docs/requirements.md)とします。
+
 ## データと安全性
 
 - 食品、食事記録、お気に入り、設定はDexie.js経由のIndexedDBに保存します。

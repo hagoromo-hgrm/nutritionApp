@@ -1,0 +1,588 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Nutrition PWAの食品データ構造を、人間が読める言葉と図で説明する技術ガイドです。">
+  <title>食品データの構造 | Nutrition PWA 人間向けガイド</title>
+  <link rel="stylesheet" href="human-guide.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">本文へ移動</a>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="food-data-structure.html">
+        <span class="brand-mark" aria-hidden="true">NP</span>
+        <span>Nutrition PWA 技術ガイド</span>
+      </a>
+      <nav class="doc-switcher" aria-label="ガイド切り替え">
+        <a href="food-data-structure.html" aria-current="page">食品データ</a>
+        <a href="search-engine.html">検索エンジン</a>
+        <a href="requirements.md">要件書</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page" id="main">
+    <section class="hero" aria-labelledby="page-title">
+      <p class="eyebrow">Human-readable data guide</p>
+      <h1 id="page-title">食品データの構造</h1>
+      <p class="lede">
+        1つの食品レコードだけを見るのではなく、表示名、検索用グループ、入力単位、
+        栄養値、食事に記録した時点の複製までを、役割ごとに読み解くためのガイドです。
+      </p>
+      <div class="hero-meta">
+        <span class="badge">人間向け解説</span>
+        <span class="badge">実装確認日 2026-08-01</span>
+        <span class="badge">IndexedDB schema v8</span>
+      </div>
+    </section>
+
+    <div class="document-grid">
+      <aside class="toc" aria-label="目次">
+        <p class="toc-title">CONTENTS</p>
+        <ol>
+          <li><a href="#overview">全体像</a></li>
+          <li><a href="#food">食品本体</a></li>
+          <li><a href="#names">名前の使い分け</a></li>
+          <li><a href="#grouping">グループと属性</a></li>
+          <li><a href="#mext">MEXTの2階層</a></li>
+          <li><a href="#amounts">量と単位</a></li>
+          <li><a href="#nutrients">栄養値と欠損</a></li>
+          <li><a href="#snapshots">記録とスナップショット</a></li>
+          <li><a href="#sources">データの出所</a></li>
+          <li><a href="#storage">保存とバックアップ</a></li>
+          <li><a href="#reading">読み方の要点</a></li>
+        </ol>
+      </aside>
+
+      <div class="content">
+        <section class="section" id="overview">
+          <p class="eyebrow">01 / Overview</p>
+          <h2>まず、食品データは5つに分けて考える</h2>
+          <p class="section-intro">
+            食品本体は栄養計算の中心ですが、それだけでは自然な検索や過去記録の保全ができません。
+            検索用データと食事用データを分離することで、それぞれを安全に更新できます。
+          </p>
+
+          <div class="flow" aria-label="食品データの流れ">
+            <div class="flow-step">
+              <strong>出典データ</strong>
+              <span>MEXT・商品表示・ユーザー入力</span>
+            </div>
+            <div class="flow-step accent">
+              <strong>Food</strong>
+              <span>基準量・栄養値・出所</span>
+            </div>
+            <div class="flow-step">
+              <strong>検索メタデータ</strong>
+              <span>一般名・別名・グループ・属性</span>
+            </div>
+            <div class="flow-step">
+              <strong>メニュー</strong>
+              <span>食品と分量の再利用可能な構成</span>
+            </div>
+            <div class="flow-step">
+              <strong>食事記録</strong>
+              <span>登録時点の値を固定した複製</span>
+            </div>
+          </div>
+
+          <div class="stat-grid">
+            <div class="stat"><strong>14</strong><span>食品ごとに保持する栄養項目</span></div>
+            <div class="stat"><strong>4</strong><span>食品の出所区分</span></div>
+            <div class="stat"><strong>100g</strong><span>MEXT食品が維持する栄養価の基準</span></div>
+            <div class="stat"><strong>null ≠ 0</strong><span>不明とゼロを明確に区別</span></div>
+          </div>
+
+          <div class="notice">
+            <strong>この文書の位置づけ</strong>
+            現在の実装を理解するための案内です。要件の正本は
+            <a href="requirements.md">requirements.md</a>、重要な設計判断は
+            <a href="decisions.md">decisions.md</a>です。
+          </div>
+        </section>
+
+        <section class="section" id="food">
+          <p class="eyebrow">02 / Core entity</p>
+          <h2>食品本体 <code>Food</code></h2>
+          <p class="section-intro">
+            <code>Food</code>は「栄養計算できる1つの確定した食品」です。同じ一般名で呼ばれる食品でも、
+            部位・調理状態・商品が異なれば別レコードになります。
+          </p>
+
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>まとまり</th>
+                  <th>主なフィールド</th>
+                  <th>役割</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>識別</td>
+                  <td><code>id</code></td>
+                  <td>食品を一意に参照するためのID。表示名を変更しても同じ食品として扱います。</td>
+                </tr>
+                <tr>
+                  <td>名称</td>
+                  <td><code>name</code> / <code>officialName</code> / <code>displayName</code> / <code>reading</code></td>
+                  <td>元レコード名、正式名称、一般向け表示名、読みを目的別に分けます。</td>
+                </tr>
+                <tr>
+                  <td>商品識別</td>
+                  <td><code>maker</code> / <code>barcode</code> / <code>isCommercial</code></td>
+                  <td>メーカー、JAN/GTIN、市販・外食区分を保持します。バーコードは数値ではなく文字列です。</td>
+                </tr>
+                <tr>
+                  <td>出所</td>
+                  <td><code>source</code> / <code>sourceVersion</code></td>
+                  <td>どこから来た値か、どの版かを追跡します。</td>
+                </tr>
+                <tr>
+                  <td>栄養基準</td>
+                  <td><code>baseAmount</code> / <code>baseUnit</code></td>
+                  <td>栄養値が「何量あたり」かを定義します。</td>
+                </tr>
+                <tr>
+                  <td>入力初期値</td>
+                  <td><code>servingAmount</code> / <code>servingUnit</code></td>
+                  <td>食事登録で最初に提示する、普段使いやすい分量と単位です。</td>
+                </tr>
+                <tr>
+                  <td>単位換算</td>
+                  <td><code>inputUnitConversions[]</code></td>
+                  <td>「1個は基準量の何単位か」のような、明示済みの換算だけを保持します。</td>
+                </tr>
+                <tr>
+                  <td>検索・分類</td>
+                  <td><code>foodGroupId</code> / <code>variantAttributes</code></td>
+                  <td>一般名のグループと、その中の部位・状態などを結びます。</td>
+                </tr>
+                <tr>
+                  <td>栄養値</td>
+                  <td><code>nutrients</code> / <code>nutrientMetadata</code></td>
+                  <td>14栄養素の値と、必要に応じて各値の由来・推計情報を保持します。</td>
+                </tr>
+                <tr>
+                  <td>推計補助</td>
+                  <td><code>ingredientsText</code> / <code>estimationReferenceMassG</code> / <code>estimatorGenreId</code></td>
+                  <td>市販食品の欠損栄養素を推計するときの根拠です。食品検索の分類とは分離されています。</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <pre class="code-sample" aria-label="食品データの概念例"><code>{
+  "id": "mext:...",
+  "displayName": "ご飯",
+  "officialName": "水稲精白米 ごはん",
+  "source": "mext",
+  "baseAmount": 100,
+  "baseUnit": "g",
+  "servingAmount": 1,
+  "servingUnit": "杯",
+  "inputUnitConversions": [{ "unit": "杯", "baseAmount": 150 }],
+  "nutrients": { "energyKcal": 156, "...": null }
+}</code></pre>
+          <p>
+            上は構造を説明するための簡略例です。実データの値やIDを保証するサンプルではありません。
+          </p>
+        </section>
+
+        <section class="section" id="names">
+          <p class="eyebrow">03 / Names</p>
+          <h2>名前は「正しさ」と「自然さ」を分担する</h2>
+          <p class="section-intro">
+            成分表の正式名称は確認に必要ですが、日々の記録では「ご飯」「砂糖」のような一般名の方が自然です。
+            そのため、1つの名前をすべての画面へ流用しません。
+          </p>
+
+          <div class="relationship">
+            <div>
+              <h3>食品マスター側</h3>
+              <ul>
+                <li><code>name</code>: 元データまたは食品レコードの基本名</li>
+                <li><code>officialName</code>: 出典に沿った正式名称</li>
+                <li><code>displayName</code>: ユーザーが認識しやすい表示名</li>
+                <li><code>FoodGroup.displayName</code>: 検索結果をまとめる一般名</li>
+              </ul>
+            </div>
+            <div>
+              <h3>食事記録側</h3>
+              <ul>
+                <li><code>FoodSnapshot.userFacingName</code>: 選択入口で見えていた一般名</li>
+                <li>食事内訳や確認画面は、この一般名を優先</li>
+                <li>正式名称は属性選択中の確認材料として使用</li>
+                <li>後日の改名で過去記録の表示を変えない</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="notice warning">
+            <strong>同じ文字列を保存しているだけではありません</strong>
+            「検索で見た名前」と「最終的に栄養計算へ使う食品」は別の役割です。
+            一般名から属性を選び、最後に確定した食品レコードへ到達します。
+          </div>
+        </section>
+
+        <section class="section" id="grouping">
+          <p class="eyebrow">04 / Search metadata</p>
+          <h2>グループ、別名、関連語、バリエーション</h2>
+          <p class="section-intro">
+            自然な検索を成立させるための情報は、栄養値を持つ<code>Food</code>から分けて保存します。
+            これにより、検索語を追加しても栄養値そのものを書き換えずに済みます。
+          </p>
+
+          <div class="card-grid">
+            <article class="card">
+              <span class="card-number">G</span>
+              <h3><code>FoodGroup</code></h3>
+              <p>
+                検索結果に1件として見せるまとまりです。一般名、読み、分類、既定の代表食品、
+                代表性スコア、有効状態を持ちます。
+              </p>
+            </article>
+            <article class="card">
+              <span class="card-number">A</span>
+              <h3><code>FoodAlias</code></h3>
+              <p>
+                同義語、読み、略称です。グループ全体または特定バリエーションへ結び付けられます。
+                保存時には正規化済み文字列も保持します。
+              </p>
+            </article>
+            <article class="card">
+              <span class="card-number">R</span>
+              <h3><code>FoodRelatedTerm</code></h3>
+              <p>
+                完全な別名ではないものの、検索の手掛かりになる語です。
+                0〜1の重みを持ち、別名より弱い一致として扱われます。
+              </p>
+            </article>
+            <article class="card">
+              <span class="card-number">V</span>
+              <h3><code>FoodVariantAttributes</code></h3>
+              <p>
+                種類、部位、栽培、原料豆、皮、調理、加工、品種、名称補足など、
+                同じ一般名の中で食品を区別する属性です。
+              </p>
+            </article>
+          </div>
+
+          <div class="flow" aria-label="一般名から食品レコードまでの関係">
+            <div class="flow-step"><strong>一般名</strong><span>例: 豚肉</span></div>
+            <div class="flow-step"><strong>グループ</strong><span>検索結果のまとまり</span></div>
+            <div class="flow-step"><strong>属性</strong><span>部位・調理状態など</span></div>
+            <div class="flow-step"><strong>バリエーション</strong><span>存在する組合せだけ</span></div>
+            <div class="flow-step accent"><strong>Food</strong><span>栄養計算する実体</span></div>
+          </div>
+        </section>
+
+        <section class="section" id="mext">
+          <p class="eyebrow">05 / MEXT layers</p>
+          <h2>MEXT食品は「日常語」と「成分表」を2階層でつなぐ</h2>
+          <p class="section-intro">
+            日本食品標準成分表の分類は栄養データの正確な参照に必要です。一方で、検索入口は日常語であるべきです。
+            そこで、上位のユーザー向けグループと、下位の確定済み成分表グループを分離しています。
+          </p>
+
+          <div class="lane">
+            <div class="lane-label">ユーザー向け層</div>
+            <div class="lane-body"><strong>日常的な食品名</strong>と、種類・部位などの上位選択肢</div>
+          </div>
+          <div class="lane">
+            <div class="lane-label">成分表グループ層</div>
+            <div class="lane-body"><strong>確定済みの食品グループ</strong>と、調理・皮・品種などの選択可能属性</div>
+          </div>
+          <div class="lane">
+            <div class="lane-label">出典レコード層</div>
+            <div class="lane-body"><strong>MEXT source_id</strong>で特定される、可食部100gあたりの食品レコード</div>
+          </div>
+
+          <div class="stat-grid" aria-label="現在の生成済みMEXTデータ件数">
+            <div class="stat"><strong>1,399</strong><span>ユーザー向け食品グループ</span></div>
+            <div class="stat"><strong>1,494</strong><span>確定済みMEXT食品グループ</span></div>
+            <div class="stat"><strong>2,538</strong><span>MEXT食品バリエーション</span></div>
+            <div class="stat"><strong>3層</strong><span>日常語・成分表グループ・出典レコード</span></div>
+          </div>
+
+          <div class="example">
+            <div class="example-header">
+              <strong>概念的な選択例</strong>
+              <span class="tag tag-blue">一般名 → 実体</span>
+            </div>
+            <div class="example-body">
+              <p>
+                <span class="example-query">ご飯</span>
+                → 種類「白ごはん」
+                → 原料「うるちまい」
+                → 対応する成分表グループ
+                → 属性に一致する食品レコード
+              </p>
+              <p>
+                上位選択で決まらないものだけを下位属性で選びます。存在しない組合せは候補から外し、
+                先の選択によって無効になった後続値は調整されます。
+              </p>
+            </div>
+          </div>
+
+          <p>
+            生成済みMEXTデータは<code>data/mext/app/</code>にあり、UIはJSONを直接走査せず、
+            <code>mextUserFoodData.ts</code>と<code>mextFoodData.ts</code>を通して参照します。
+          </p>
+        </section>
+
+        <section class="section" id="amounts">
+          <p class="eyebrow">06 / Amounts &amp; units</p>
+          <h2>栄養価の基準と、普段入力する単位は別</h2>
+          <p class="section-intro">
+            成分表の100g基準を「1杯」へ置き換えるのではなく、栄養値の基準は維持したまま、
+            入力しやすい単位への換算を追加します。
+          </p>
+
+          <div class="data-table-wrap">
+            <table class="data-table compact">
+              <thead>
+                <tr>
+                  <th>値</th>
+                  <th>意味</th>
+                  <th>例</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>baseAmount / baseUnit</code></td>
+                  <td>登録済み栄養価が対応する基準量</td>
+                  <td>100 g</td>
+                </tr>
+                <tr>
+                  <td><code>servingAmount / servingUnit</code></td>
+                  <td>食事入力で優先する既定分量</td>
+                  <td>1 杯</td>
+                </tr>
+                <tr>
+                  <td><code>inputUnitConversions</code></td>
+                  <td>1入力単位が基準単位で何量か</td>
+                  <td>1 杯 = 150 g</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="formula">
+            摂取栄養値 ＝ 基準量あたりの栄養値 × 換算後の摂取量 ÷ 基準量
+          </div>
+
+          <ul class="check-list">
+            <li>基準単位と同じ単位は、そのまま計算できます。</li>
+            <li>異なる単位は、食品に明示登録された換算がある場合だけ計算できます。</li>
+            <li>「個」「杯」「袋」などのユーザー定義単位を、名前だけでgへ推測しません。</li>
+            <li>MEXT食品は可食部100g基準を維持し、日常単位は別フィールドへ持ちます。</li>
+          </ul>
+        </section>
+
+        <section class="section" id="nutrients">
+          <p class="eyebrow">07 / Nutrients</p>
+          <h2>14栄養素と「分からない」の扱い</h2>
+          <p class="section-intro">
+            すべての栄養素は数値または<code>null</code>です。<code>null</code>は未収載・未入力などの欠損であり、
+            0ではありません。
+          </p>
+
+          <ul class="nutrient-list">
+            <li>エネルギー <code>kcal</code></li>
+            <li>たんぱく質 <code>g</code></li>
+            <li>脂質 <code>g</code></li>
+            <li>炭水化物 <code>g</code></li>
+            <li>食物繊維 <code>g</code></li>
+            <li>食塩相当量 <code>g</code></li>
+            <li>カルシウム <code>mg</code></li>
+            <li>鉄 <code>mg</code></li>
+            <li>ビタミンA <code>μg</code></li>
+            <li>ビタミンE <code>mg</code></li>
+            <li>ビタミンB1 <code>mg</code></li>
+            <li>ビタミンB2 <code>mg</code></li>
+            <li>ビタミンC <code>mg</code></li>
+            <li>飽和脂肪酸 <code>g</code></li>
+          </ul>
+
+          <div class="relationship">
+            <div>
+              <h3><code>nutrients</code></h3>
+              <p>
+                計算に使う値です。出典に数値がなければ<code>null</code>を維持します。
+                単位換算後も、元が<code>null</code>なら結果は<code>null</code>です。
+              </p>
+            </div>
+            <div>
+              <h3><code>nutrientMetadata</code></h3>
+              <p>
+                メーカー表示、外部情報、ユーザー入力、推計、導出などの由来と、
+                推計時の信頼度・範囲・手法を栄養素ごとに保持できます。
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="snapshots">
+          <p class="eyebrow">08 / Historical integrity</p>
+          <h2>食事へ登録した瞬間に、必要な値を複製する</h2>
+          <p class="section-intro">
+            食事記録は食品IDだけを参照し続けません。登録時点の名称、基準量、換算、栄養値を
+            <code>FoodSnapshot</code>へコピーします。
+          </p>
+
+          <div class="flow" aria-label="食品マスターから食事記録への複製">
+            <div class="flow-step"><strong>Food</strong><span>現在のマスター</span></div>
+            <div class="flow-step"><strong>分量入力</strong><span>amount + unit</span></div>
+            <div class="flow-step"><strong>栄養計算</strong><span>calculatedNutrients</span></div>
+            <div class="flow-step accent"><strong>FoodSnapshot</strong><span>登録時点を固定</span></div>
+            <div class="flow-step"><strong>MealEntry</strong><span>日時・区分・順序と保存</span></div>
+          </div>
+
+          <div class="card-grid">
+            <article class="card">
+              <h3>食品マスターを後で編集した場合</h3>
+              <p>新しい記録には更新後の値を使えますが、過去記録の栄養集計は勝手に変わりません。</p>
+            </article>
+            <article class="card">
+              <h3>食品マスターを削除した場合</h3>
+              <p>食事記録は残り、スナップショットを使って表示できます。削除済みであることも保持できます。</p>
+            </article>
+            <article class="card">
+              <h3>Myメニューを食事へ追加した場合</h3>
+              <p>構成食材を再帰的に複製した<code>MealMenuSnapshot</code>を持ち、その食事だけのアレンジを保存します。</p>
+            </article>
+            <article class="card">
+              <h3>Myセットの場合</h3>
+              <p>メニュー参照に加え、確定した食品ID・分量・単位を<code>foodItems</code>として一括登録に使います。</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section" id="sources">
+          <p class="eyebrow">09 / Provenance</p>
+          <h2>4つの出所を同じ形へそろえる</h2>
+          <p class="section-intro">
+            保存後は同じ<code>Food</code>として扱いますが、正確性や再配布条件が異なるため、
+            <code>source</code>と版情報は失いません。
+          </p>
+
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th><code>source</code></th>
+                  <th>用途</th>
+                  <th>扱い</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>mext</code></td>
+                  <td>日本食品標準成分表の一般食品</td>
+                  <td>食品番号を保ち、可食部100g基準で変換。欠損はゼロ補完しません。</td>
+                </tr>
+                <tr>
+                  <td><code>user</code></td>
+                  <td>ユーザーが登録・編集した食品</td>
+                  <td>パッケージ表示または入力内容を正として端末内に保存します。</td>
+                </tr>
+                <tr>
+                  <td><code>imported</code></td>
+                  <td>事前検証済みDBからの食品</td>
+                  <td>元ファイルを直接同梱せず、検証・正規化した生成物だけを投入します。</td>
+                </tr>
+                <tr>
+                  <td><code>open_food_facts</code></td>
+                  <td>バーコード検索で得る補助候補</td>
+                  <td>ユーザー確認後に保存します。外部情報を無条件の正解として扱いません。</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="notice warning">
+            <strong>市販・外食の判定</strong>
+            <code>isCommercial</code>が明示的に有効、または有効なバーコードを持つ食品を
+            「外食・市販」として分類します。食品成分の出所区分とは別の軸です。
+          </div>
+
+          <p>
+            現在の<code>imported</code>生成物は、ユーザー提供DB 255件を検証し、
+            基準量と栄養値を持たない名称候補を除いた144件を採用しています。
+            採否基準と再生成方法は<a href="../data/imported/README.md">imported食品データの説明</a>に記録しています。
+          </p>
+        </section>
+
+        <section class="section" id="storage">
+          <p class="eyebrow">10 / Storage &amp; backup</p>
+          <h2>端末内のIndexedDBを正本にする</h2>
+          <p class="section-intro">
+            実行時データはDexie.jsを通してIndexedDBへ保存します。アプリ更新時の初期食品投入と、
+            ユーザーが作ったデータの保存を区別しています。
+          </p>
+
+          <div class="card-grid">
+            <article class="card">
+              <h3>食品・記録</h3>
+              <p><code>foods</code>、<code>meal_entries</code>、<code>favorites</code>、<code>settings</code></p>
+            </article>
+            <article class="card">
+              <h3>メニュー</h3>
+              <p><code>menus</code>、<code>general_menus</code>、<code>menu_sets</code></p>
+            </article>
+            <article class="card">
+              <h3>検索</h3>
+              <p><code>food_groups</code>、<code>food_aliases</code>、<code>food_related_terms</code>、利用統計、検索ログ</p>
+            </article>
+            <article class="card">
+              <h3>栄養推計</h3>
+              <p>推計リクエスト、結果、採否、設定、未解決原材料統計を別テーブルで管理します。</p>
+            </article>
+          </div>
+
+          <p>
+            JSONバックアップは食品、食事記録、設定、お気に入り、検索メタデータ、Myメニュー、
+            一般メニュー、Myセット、推計関連データを含みます。復元では形式検証後に1つの
+            トランザクションで入れ替え、検索メタデータを再整合します。
+          </p>
+        </section>
+
+        <section class="section" id="reading">
+          <p class="eyebrow">11 / Reading checklist</p>
+          <h2>構造を読むときの5つの要点</h2>
+
+          <ol class="check-list">
+            <li><strong>一般名は食品そのものではない。</strong> グループと属性を経て、栄養値を持つ食品へ到達します。</li>
+            <li><strong>既定入力分量は栄養価の基準を変えない。</strong> 入力しやすくする別レイヤーです。</li>
+            <li><strong><code>null</code>は0ではない。</strong> 欠損を隠さず、集計でも区別します。</li>
+            <li><strong>メニューは再利用する構成、食事は固定した記録。</strong> 食事ごとの編集は原本へ戻りません。</li>
+            <li><strong>出所と分類は別。</strong> MEXTかユーザー入力かと、一般食品か市販・外食かは独立しています。</li>
+          </ol>
+
+          <h3>実装を確認したい場合</h3>
+          <ul class="source-links">
+            <li><a href="../src/types/index.ts">型定義 — src/types/index.ts</a></li>
+            <li><a href="../src/db/db.ts">IndexedDB — src/db/db.ts</a></li>
+            <li><a href="../src/services/nutrition.ts">栄養計算 — src/services/nutrition.ts</a></li>
+            <li><a href="../src/services/mextFoodData.ts">MEXTデータ層 — mextFoodData.ts</a></li>
+            <li><a href="../src/services/mextUserFoodData.ts">日常語グループ層 — mextUserFoodData.ts</a></li>
+            <li><a href="../data/mext/README.md">MEXT変換手順 — data/mext/README.md</a></li>
+          </ul>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <p>Nutrition PWA — 人間向け技術ガイド</p>
+      <p>次に読む: <a href="search-engine.html">検索エンジンの仕組み</a></p>
+    </div>
+  </footer>
+</body>
+</html>
