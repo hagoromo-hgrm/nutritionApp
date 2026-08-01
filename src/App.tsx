@@ -82,6 +82,7 @@ import { createMenuSetMealBatch, getMenuSetCalorieSummary, getMenuSetFoodItems }
 import { normalizeMealEntryOrder, sortMealEntries, sortMealEntryGroup } from './services/mealEntryOrder'
 import { buildDailyNutrientTrend } from './services/trend'
 import { shouldShowTrendDate } from './services/trendDateLabels'
+import { consumeSearchSelectionGroup } from './services/searchSelection'
 import {
   buildTodayDetailSummary,
   resolveTodayDetailPeriod,
@@ -1100,6 +1101,7 @@ function App() {
     entryToEdit: MealEntry | null = editingEntry,
     menuSnapshot: MealMenuSnapshot | null = null,
     userFacingName?: string,
+    returnSearchQuery: string | null = pendingSearchQuery,
   ) => {
     if (!requireLoadedDate()) return false
     if (mealSaveInFlightRef.current) return false
@@ -1151,6 +1153,12 @@ function App() {
     }
     mealSaveInFlightRef.current = true
     try {
+      const searchProgress = entryToEdit
+        ? { matched: false, remainingGroups: searchResults }
+        : consumeSearchSelectionGroup(searchResults, returnSearchQuery)
+      const continueSearchSelection = searchPurpose === 'meal'
+        && searchProgress.matched
+        && searchProgress.remainingGroups.length > 0
       const currentGroup = sortMealEntryGroup(currentEntries.filter((current) => current.mealType === mealType))
       const previousIndex = entryToEdit?.mealType === mealType
         ? currentGroup.findIndex((current) => current.id === entry.id)
@@ -1161,29 +1169,29 @@ function App() {
         mealType === '間食' ? current : { ...current, eatenAt }
       ))
       await saveMealEntries(entriesToSave)
-      if (pendingSearchQuery) {
-        setSearchResults((current) => current.filter((group) => group.query !== pendingSearchQuery))
-        setPendingSearchQuery(null)
-      }
+      if (searchProgress.matched) setSearchResults(searchProgress.remainingGroups)
+      setPendingSearchQuery(null)
       setMealFood(null)
       setMealUserFacingName(null)
       setEditingEntry(null)
       setMealMenuSnapshot(null)
-      setRecordingMealType(null)
+      setRecordingMealType(continueSearchSelection ? mealType : null)
       const refreshed = await load()
       if (selectedDateRef.current !== targetDate) {
+        setRecordingMealType(null)
         notify(`${targetDate}の食事を保存しました。`)
         return true
       }
       if (!refreshed) {
+        setRecordingMealType(null)
         setConfirmingMealType(null)
         setView('today')
         showError('食事は保存しましたが、画面を更新できませんでした。再読み込みしてください。')
         return true
       }
-      if (entryToEdit) {
-        setConfirmingMealType(mealType)
-        setView('meal-confirmation')
+      if (continueSearchSelection) {
+        setConfirmingMealType(null)
+        setView('search-results')
       } else {
         setConfirmingMealType(mealType)
         setView('meal-confirmation')
@@ -1226,24 +1234,33 @@ function App() {
         targetMealType === '間食' ? entry : { ...entry, eatenAt }
       ))
       await saveMealEntries(orderedGroup)
-      if (returnSearchQuery !== null) {
-        setSearchResults((current) => current.filter((group) => group.query !== returnSearchQuery))
-      }
+      const searchProgress = consumeSearchSelectionGroup(searchResults, returnSearchQuery)
+      const continueSearchSelection = searchPurpose === 'meal'
+        && searchProgress.matched
+        && searchProgress.remainingGroups.length > 0
+      if (searchProgress.matched) setSearchResults(searchProgress.remainingGroups)
       setPendingSearchQuery(null)
-      setRecordingMealType(null)
+      setRecordingMealType(continueSearchSelection ? targetMealType : null)
       const refreshed = await load()
       if (selectedDateRef.current !== targetDate) {
+        setRecordingMealType(null)
         notify(`${targetDate}の${targetMealType}へ「${menuSet.name}」の内容${batch.entries.length}件を登録しました。`)
         return true
       }
       if (!refreshed) {
+        setRecordingMealType(null)
         setConfirmingMealType(null)
         setView('today')
         showError(`「${menuSet.name}」の内容は登録しましたが、画面を更新できませんでした。再読み込みしてください。`)
         return true
       }
-      setConfirmingMealType(targetMealType)
-      setView('meal-confirmation')
+      if (continueSearchSelection) {
+        setConfirmingMealType(null)
+        setView('search-results')
+      } else {
+        setConfirmingMealType(targetMealType)
+        setView('meal-confirmation')
+      }
       notify(`「${menuSet.name}」の内容${batch.entries.length}件を${targetMealType}へ一括登録しました。${missingCount > 0 ? `削除済みの${missingCount}件は除外しました。` : ''}`)
       return true
     } catch {
@@ -1897,7 +1914,7 @@ function App() {
       {view === 'today' && <button className="floating-add" type="button" onClick={openMealTypePicker} aria-label="食事を追加">＋</button>}
 
       {mealTypePicker && <MealTypePickerModal food={mealTypePicker.food} recordedMealTypes={recordedMealTypes} onSelect={chooseMealType} />}
-      {variantPicker && <FoodVariantPickerModal result={variantPicker.result} userFoodResult={variantPicker.userFoodResult} foods={foods} foodGroups={foodGroups} foodAttributePreferences={settings.foodAttributePreferences} onSaveFoodAttributePreference={saveFoodAttributePreference} mealMode={searchPurpose === 'meal'} onSubmitMeal={async (food, amount, amountUnit) => { if (await saveMealRecord(food, amount, amountUnit, null, null, getSearchResultUserFacingName(variantPicker.item))) setVariantPicker(null) }} onSelect={(food) => { setVariantPicker(null); selectSearchFood(variantPicker.query, variantPicker.item, food) }} onClose={() => setVariantPicker(null)} />}
+      {variantPicker && <FoodVariantPickerModal result={variantPicker.result} userFoodResult={variantPicker.userFoodResult} foods={foods} foodGroups={foodGroups} foodAttributePreferences={settings.foodAttributePreferences} onSaveFoodAttributePreference={saveFoodAttributePreference} mealMode={searchPurpose === 'meal'} onSubmitMeal={async (food, amount, amountUnit) => { if (await saveMealRecord(food, amount, amountUnit, null, null, getSearchResultUserFacingName(variantPicker.item), variantPicker.query)) setVariantPicker(null) }} onSelect={(food) => { setVariantPicker(null); selectSearchFood(variantPicker.query, variantPicker.item, food) }} onClose={() => setVariantPicker(null)} />}
       {mealVariantEdit && <FoodVariantPickerModal
         result={mealVariantEdit.result}
         userFoodResult={mealVariantEdit.userFoodResult}
