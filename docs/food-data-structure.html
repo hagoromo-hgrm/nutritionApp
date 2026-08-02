@@ -34,7 +34,7 @@
       </p>
       <div class="hero-meta">
         <span class="badge">人間向け解説</span>
-        <span class="badge">実装確認日 2026-08-01</span>
+        <span class="badge">実装確認日 2026-08-02</span>
         <span class="badge">IndexedDB schema v8</span>
       </div>
     </section>
@@ -381,6 +381,7 @@
             <li>異なる単位は、食品に明示登録された換算がある場合だけ計算できます。</li>
             <li>「個」「杯」「袋」などのユーザー定義単位を、名前だけでgへ推測しません。</li>
             <li>MEXT食品は可食部100g基準を維持し、日常単位は別フィールドへ持ちます。</li>
+            <li>食事分量の「＋1」は数値へ1を足すのではなく、既定入力分量1回分を現在の単位へ換算して加えます。</li>
           </ul>
         </section>
 

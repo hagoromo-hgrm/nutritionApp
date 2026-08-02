@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { calculateBmi, calculateNutrients, estimateDailyEnergyTarget, estimateDailyGoals, formatGraphNutrient, formatNutrient, getFoodDefaultServing, getFoodDefaultServingNutrition, goalRate, incrementByBaseAmount, mealDetailNutritionGoals, nutrientGraphMax, nutrientRangeForGoals, scaleNutrientReference, scaleNutritionGoals, sumAvailableNutrients, sumByMealType, sumEntries, sumNutrients } from '../src/services/nutrition'
+import { calculateBmi, calculateNutrients, estimateDailyEnergyTarget, estimateDailyGoals, formatGraphNutrient, formatNutrient, getFoodDefaultServing, getFoodDefaultServingNutrition, goalRate, incrementByBaseAmount, incrementByQuantityUnit, mealDetailNutritionGoals, nutrientGraphMax, nutrientRangeForGoals, scaleNutrientReference, scaleNutritionGoals, sumAvailableNutrients, sumByMealType, sumEntries, sumNutrients } from '../src/services/nutrition'
 import { isValidQuantityUnit } from '../src/utils/validation'
 import type { BodyProfile, Food, MealEntry, Nutrients } from '../src/types'
 
@@ -33,6 +33,23 @@ describe('nutrition calculation', () => {
     expect(incrementByBaseAmount(100, 100)).toBe(200)
     expect(incrementByBaseAmount(1, 1)).toBe(2)
     expect(incrementByBaseAmount(Number.NaN, 1)).toBe(1)
+  })
+
+  it('＋1は既定入力分量を選択中の単位へ換算して増やす', () => {
+    expect(incrementByQuantityUnit(0, foodWithInputUnit, '個')).toBe(2)
+    expect(incrementByQuantityUnit(10, foodWithInputUnit, 'g')).toBe(130)
+  })
+
+  it('既定入力分量が未設定または無効なら基準量1回分へ戻す', () => {
+    expect(incrementByQuantityUnit(0, food, 'g')).toBe(100)
+    expect(incrementByQuantityUnit(0, { ...foodWithInputUnit, servingAmount: null }, '個')).toBeCloseTo(100 / 60)
+    expect(incrementByQuantityUnit(0, { ...foodWithInputUnit, servingUnit: '未登録' }, '個')).toBeCloseTo(100 / 60)
+    expect(incrementByQuantityUnit(0, foodWithInputUnit, '未登録')).toBe(1)
+  })
+
+  it('NaNは0から既定分量を増やし、上限を超えない', () => {
+    expect(incrementByQuantityUnit(Number.NaN, foodWithInputUnit, 'g')).toBe(120)
+    expect(incrementByQuantityUnit(190, foodWithInputUnit, 'g', 200)).toBe(200)
   })
 
   it('単位が異なる場合は推測変換しない', () => {

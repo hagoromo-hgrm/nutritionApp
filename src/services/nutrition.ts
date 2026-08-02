@@ -53,7 +53,26 @@ export function incrementByBaseAmount(amount: number, baseAmount: number, maximu
 }
 
 export function incrementByQuantityUnit(amount: number, food: Food, unit: QuantityUnit, maximum = 100000): number {
-  return incrementByBaseAmount(amount, unit === food.baseUnit ? food.baseAmount : 1, maximum)
+  const fallbackIncrement = unit === food.baseUnit ? food.baseAmount : 1
+  const quantityUnits = getFoodQuantityUnits(food)
+  if (!quantityUnits.includes(unit)) return incrementByBaseAmount(amount, fallbackIncrement, maximum)
+
+  // 既定入力値が無効な場合も、getFoodDefaultServingが返す基準量1回分を明示換算する。
+  const serving = getFoodDefaultServing(food)
+  const servingBaseAmount = resolveAmountInBaseUnits(food, serving.amount, serving.unit)
+  if (servingBaseAmount === null) return incrementByBaseAmount(amount, fallbackIncrement, maximum)
+
+  const increment = unit === food.baseUnit
+    ? servingBaseAmount
+    : (() => {
+        const conversion = quantityUnitConversionFor(food, unit)
+        return conversion && Number.isFinite(conversion.baseAmount) && conversion.baseAmount > 0
+          ? servingBaseAmount / conversion.baseAmount
+          : null
+      })()
+  return increment === null || !Number.isFinite(increment) || increment <= 0
+    ? incrementByBaseAmount(amount, fallbackIncrement, maximum)
+    : incrementByBaseAmount(amount, increment, maximum)
 }
 
 export function sumNutrients(values: Nutrients[]): Nutrients {
