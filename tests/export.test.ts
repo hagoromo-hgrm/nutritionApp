@@ -187,6 +187,15 @@ describe('export formats', () => {
     expect(() => validateBackup({ ...backup, foods: [{ ...classifiedFood, estimatorGenreId: 'bread' }] })).toThrow('形式が不正')
   })
 
+  it('お気に入りの任意sortOrderを保持し、重複や混在した順序を拒否する', () => {
+    const favorite = { foodId: 'food_1', createdAt: '2026-07-15T00:00:00.000Z', sortOrder: 0 }
+    expect(validateBackup({ ...backup, favorites: [favorite] }).favorites[0]).toEqual(favorite)
+    expect(validateBackup({ ...backup, favorites: [{ foodId: 'food_1', createdAt: favorite.createdAt }, { foodId: 'food_2', createdAt: favorite.createdAt }] }).favorites).toHaveLength(2)
+    expect(() => validateBackup({ ...backup, favorites: [favorite, { ...favorite, foodId: 'food_2' }] })).toThrow('重複')
+    expect(() => validateBackup({ ...backup, favorites: [favorite, { foodId: 'food_2', createdAt: favorite.createdAt }] })).toThrow('並び順')
+    expect(() => validateBackup({ ...backup, favorites: [{ ...favorite, sortOrder: -1 }] })).toThrow('お気に入り')
+  })
+
   it('v2バックアップは推計設定と履歴ストアを含めて検証し、v1も引き続き読み込める', () => {
     const estimatedAt = '2026-07-25T00:00:00.000Z'
     const traceFood: Food = {

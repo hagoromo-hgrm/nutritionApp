@@ -216,6 +216,12 @@ function isMealEntry(value: unknown): value is MealEntry {
     && (value.menuSnapshot === undefined || isMealMenuSnapshot(value.menuSnapshot))
 }
 
+function isFavorite(value: unknown): boolean {
+  if (!isRecord(value)) return false
+  return isNonEmptyString(value.foodId) && isIsoDateTime(value.createdAt)
+    && (value.sortOrder === undefined || (Number.isSafeInteger(value.sortOrder) && Number(value.sortOrder) >= 0))
+}
+
 function isMenuIngredient(value: unknown): value is MenuIngredient {
   if (!isRecord(value)) return false
   return (value.kind === 'food' || value.kind === 'menu') && isString(value.itemId) && value.itemId.length > 0
@@ -495,9 +501,16 @@ export function validateBackup(value: unknown): BackupData {
   if (value.menuSets !== undefined && menuSetsWithUnsupportedFoodUnits(value.menuSets as MenuSet[], value.foods as Food[]).length > 0) {
     throw new Error('メニューセットに、食品の換算設定と一致しない入力単位があります。')
   }
-  if (!value.favorites.every((favorite) => isRecord(favorite) && isNonEmptyString(favorite.foodId) && isIsoDateTime(favorite.createdAt))
+  if (!value.favorites.every(isFavorite)
     || !hasUniqueValues(value.favorites as Array<{ foodId: string }>, (favorite) => favorite.foodId)) {
     throw new Error('お気に入り情報の形式が不正です。')
+  }
+  const favoriteOrders = value.favorites.map((favorite) => (favorite as { sortOrder?: unknown }).sortOrder).filter((sortOrder): sortOrder is number => sortOrder !== undefined)
+  if (favoriteOrders.length > 0 && favoriteOrders.length !== value.favorites.length) {
+    throw new Error('お気に入りの並び順が不正です。')
+  }
+  if (new Set(favoriteOrders).size !== favoriteOrders.length) {
+    throw new Error('お気に入りの並び順が重複しています。')
   }
   if ((value.foodGroups !== undefined && (!Array.isArray(value.foodGroups) || !value.foodGroups.every(isFoodGroup)))
     || (value.foodAliases !== undefined && (!Array.isArray(value.foodAliases) || !value.foodAliases.every(isFoodAlias)))

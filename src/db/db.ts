@@ -813,14 +813,67 @@ export async function getFavoriteIds(): Promise<Set<string>> {
 }
 
 export async function setFavorite(foodId: string, favorite: boolean): Promise<void> {
-  if (favorite) await db.favorites.put({ foodId, createdAt: new Date().toISOString() })
-  else await db.favorites.delete(foodId)
+  await db.transaction('rw', [db.favorites, db.foods], async () => {
+    if (!favorite) {
+      await db.favorites.delete(foodId)
+      return
+    }
+    const records = await db.favorites.toArray()
+    if (records.some((record) => record.foodId === foodId)) return
+    const existingFoods = await db.foods.bulkGet(records.map((record) => record.foodId))
+    const foodNames = new Map(existingFoods.filter((food): food is Food => Boolean(food)).map((food) => [food.id, food.name]))
+    const ordered = records
+      .map((record) => ({ record, index: records.indexOf(record) }))
+      .sort((left, right) => {
+        const leftOrder = left.record.sortOrder
+        const rightOrder = right.record.sortOrder
+        if (leftOrder !== undefined && rightOrder !== undefined && leftOrder !== rightOrder) return leftOrder - rightOrder
+        if (leftOrder !== undefined && rightOrder === undefined) return -1
+        if (leftOrder === undefined && rightOrder !== undefined) return 1
+        return (foodNames.get(left.record.foodId) ?? left.record.foodId).localeCompare(foodNames.get(right.record.foodId) ?? right.record.foodId, 'ja') || left.index - right.index
+      })
+      .map(({ record }) => record)
+    const normalized = ordered.map((record, sortOrder) => ({ ...record, sortOrder }))
+    normalized.push({ foodId, createdAt: new Date().toISOString(), sortOrder: normalized.length })
+    if (normalized.length > 1) await db.favorites.bulkPut(normalized)
+    else await db.favorites.put(normalized[0])
+  })
 }
 
 export async function getFavoriteFoods(): Promise<Food[]> {
-  const favoriteIds = await getFavoriteIds()
-  const foods = await getAllFoods()
-  return foods.filter((food) => favoriteIds.has(food.id))
+  const [records, foods] = await Promise.all([db.favorites.toArray(), getAllFoods()])
+  const recordsByFoodId = new Map(records.map((record) => [record.foodId, record]))
+  return foods
+    .filter((food) => recordsByFoodId.has(food.id))
+    .sort((left, right) => {
+      const leftRecord = recordsByFoodId.get(left.id)
+      const rightRecord = recordsByFoodId.get(right.id)
+      const leftOrder = leftRecord?.sortOrder
+      const rightOrder = rightRecord?.sortOrder
+      if (leftOrder !== undefined && rightOrder !== undefined && leftOrder !== rightOrder) return leftOrder - rightOrder
+      if (leftOrder !== undefined && rightOrder === undefined) return -1
+      if (leftOrder === undefined && rightOrder !== undefined) return 1
+      return left.name.localeCompare(right.name, 'ja') || left.id.localeCompare(right.id)
+    })
+}
+
+/** 全お気に入りを検証してから、1トランザクションで0始まりの順序を保存する。 */
+export async function reorderFavorites(orderedFoodIds: string[]): Promise<void> {
+  if (new Set(orderedFoodIds).size !== orderedFoodIds.length) throw new Error('並び順に重複したお気に入りがあります。')
+  await db.transaction('rw', db.favorites, async () => {
+    const records = await db.favorites.toArray()
+    const currentIds = new Set(records.map((record) => record.foodId))
+    if (records.length !== orderedFoodIds.length || orderedFoodIds.some((id) => !currentIds.has(id))) {
+      throw new Error('お気に入りが変更されたため、並び替えを再試行してください。')
+    }
+    const recordsByFoodId = new Map(records.map((record) => [record.foodId, record]))
+    const reordered = orderedFoodIds.map((foodId, sortOrder) => {
+      const record = recordsByFoodId.get(foodId)
+      if (!record) throw new Error('並び替えるお気に入りが見つかりません。')
+      return { ...record, sortOrder }
+    })
+    if (reordered.length > 0) await db.favorites.bulkPut(reordered)
+  })
 }
 
 export async function getRecentFoods(limit = 20): Promise<Food[]> {

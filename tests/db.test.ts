@@ -1,6 +1,6 @@
 import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { db, deleteFood, deleteGeneralMenu, deleteMenu, exportBackup, getEntriesForDate, getFoodByBarcode, getRecentFoods, getSettings, initializeDatabase, recordFoodSelection, reorderMealEntries, replaceAllData, saveFood, saveFoodWithMetadata, saveGeneralMenu, saveMealEntries, saveMealEntry, saveMenu, saveMenuSet, searchFoodResults, searchGeneralMenus, searchMenus } from '../src/db/db'
+import { db, deleteFood, deleteGeneralMenu, deleteMenu, exportBackup, getEntriesForDate, getFavoriteFoods, getFoodByBarcode, getRecentFoods, getSettings, initializeDatabase, recordFoodSelection, reorderFavorites, reorderMealEntries, replaceAllData, saveFood, saveFoodWithMetadata, saveGeneralMenu, saveMealEntries, saveMealEntry, saveMenu, saveMenuSet, searchFoodResults, searchGeneralMenus, searchMenus, setFavorite } from '../src/db/db'
 import { validateBackup } from '../src/services/backup'
 import { getFoodVariantBySourceId, hasFoodGroup as hasMextFoodGroup } from '../src/services/mextFoodData'
 import type { BackupData, Food, FoodAlias, FoodGroup, FoodRelatedTerm, GeneralMenu, MealEntry, Menu } from '../src/types'
@@ -19,6 +19,43 @@ beforeEach(async () => {
 })
 
 describe('IndexedDB data safety', () => {
+  it('お気に入りは旧データを食品名順にし、新規追加を末尾へ置く', async () => {
+    const alpha = { ...userFood, id: 'favorite_alpha', name: 'あ食品' }
+    const beta = { ...userFood, id: 'favorite_beta', name: 'い食品' }
+    const gamma = { ...userFood, id: 'favorite_gamma', name: 'う食品' }
+    await db.foods.bulkPut([alpha, beta, gamma])
+    const createdAt = '2026-07-15T00:00:00.000Z'
+    await db.favorites.bulkPut([{ foodId: beta.id, createdAt }, { foodId: alpha.id, createdAt }])
+
+    expect((await getFavoriteFoods()).map((food) => food.id)).toEqual([alpha.id, beta.id])
+    await setFavorite(gamma.id, true)
+    expect((await getFavoriteFoods()).map((food) => food.id)).toEqual([alpha.id, beta.id, gamma.id])
+    expect((await db.favorites.toArray()).every((record) => record.sortOrder !== undefined)).toBe(true)
+  })
+
+  it('明示したお気に入り順を読み込み、正常な並び替えを0始まりで保存する', async () => {
+    const foods = ['a', 'b', 'c'].map((id) => ({ ...userFood, id: `favorite_${id}`, name: id }))
+    await db.foods.bulkPut(foods)
+    const createdAt = '2026-07-15T00:00:00.000Z'
+    await db.favorites.bulkPut(foods.map((food, sortOrder) => ({ foodId: food.id, createdAt, sortOrder })))
+
+    await reorderFavorites(['favorite_c', 'favorite_a', 'favorite_b'])
+    expect((await getFavoriteFoods()).map((food) => food.id)).toEqual(['favorite_c', 'favorite_a', 'favorite_b'])
+    expect((await db.favorites.toArray()).sort((left, right) => (left.sortOrder ?? 0) - (right.sortOrder ?? 0)).map((record) => record.sortOrder)).toEqual([0, 1, 2])
+  })
+
+  it('重複・不明・不足の並び替えは既存順を変更しない', async () => {
+    const foods = ['a', 'b', 'c'].map((id) => ({ ...userFood, id: `favorite_${id}`, name: id }))
+    await db.foods.bulkPut(foods)
+    const createdAt = '2026-07-15T00:00:00.000Z'
+    await db.favorites.bulkPut(foods.map((food, sortOrder) => ({ foodId: food.id, createdAt, sortOrder })))
+    const before = await db.favorites.toArray()
+    await expect(reorderFavorites(['favorite_a', 'favorite_a', 'favorite_c'])).rejects.toThrow('重複')
+    await expect(reorderFavorites(['favorite_a', 'unknown', 'favorite_c'])).rejects.toThrow('変更')
+    await expect(reorderFavorites(['favorite_a', 'favorite_c'])).rejects.toThrow('変更')
+    expect(await db.favorites.toArray()).toEqual(before)
+  })
+
   it('MEXTの100g基準と食品ごとの入力単位初期値を分離する', async () => {
     const rice = await db.foods.get('mext_01088')
     const riceGrain = await db.foods.get('mext_01083')

@@ -413,6 +413,8 @@ export interface AppSettings {
 export interface FavoriteRecord {
   foodId: string
   createdAt: string
+  /** 食品管理画面と食事登録画面で共有するユーザー指定順。旧データでは未設定。 */
+  sortOrder?: number
 }
 
 export interface MetadataRecord {
