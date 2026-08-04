@@ -7,14 +7,16 @@ import {
   type BarcodeCameraCapabilities,
   type CameraZoomRange,
 } from '../services/barcodeCamera'
+import { barcodePurposeLabel, type BarcodePurpose } from '../services/barcodeFlow'
 import { isValidBarcode } from '../utils/validation'
 
 interface BarcodeScannerProps {
+  purpose: BarcodePurpose
   onDetected: (barcode: string) => void
   onClose: () => void
 }
 
-export function BarcodeScanner({ onDetected, onClose }: BarcodeScannerProps) {
+export function BarcodeScanner({ purpose, onDetected, onClose }: BarcodeScannerProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const controlsRef = useRef<IScannerControls | null>(null)
   const trackRef = useRef<MediaStreamTrack | null>(null)
@@ -149,10 +151,10 @@ export function BarcodeScanner({ onDetected, onClose }: BarcodeScannerProps) {
   }
 
   return (
-    <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="バーコードで追加">
+    <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label={barcodePurposeLabel(purpose)}>
       <section className="modal-card scanner-card">
         <div className="modal-heading">
-          <div><span className="eyebrow">BARCODE</span><h2>バーコードで追加</h2></div>
+          <div><span className="eyebrow">BARCODE</span><h2>{barcodePurposeLabel(purpose)}</h2></div>
           <button className="icon-button" type="button" onClick={onClose} aria-label="閉じる">×</button>
         </div>
         <div className="scanner-preview">
@@ -168,7 +170,7 @@ export function BarcodeScanner({ onDetected, onClose }: BarcodeScannerProps) {
         <div className="divider-label"><span>または番号を入力</span></div>
         <div className="inline-form">
           <input inputMode="numeric" value={manualBarcode} onChange={(event) => setManualBarcode(event.target.value)} placeholder="例: 4900000000000" aria-label="バーコード番号" />
-          <button className="button primary" type="button" onClick={submitManual}>検索</button>
+          <button className="button primary" type="button" onClick={submitManual}>{purpose === 'register' ? '登録' : '検索'}</button>
         </div>
         <button className="button ghost full-width" type="button" onClick={onClose}>キャンセル</button>
       </section>

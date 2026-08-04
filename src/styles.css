@@ -163,7 +163,7 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .trend-chart-legend .meal-color-legend { justify-content: start; }
 .trend-goal-legend { display: inline-flex; align-items: center; gap: .3rem; white-space: nowrap; }
 .trend-legend-line { display: inline-block; width: 1rem; border-top: 1px dashed var(--accent-deep); }
-.trend-chart-body { display: grid; grid-template-columns: 2.75rem minmax(0, 1fr); align-items: start; gap: .35rem; margin-top: .45rem; }
+.trend-chart-body { display: grid; grid-template-columns: minmax(0, 1fr) 2.75rem; align-items: start; gap: .35rem; margin-top: .45rem; }
 .trend-chart-scroll { min-width: 0; overflow-x: auto; padding-bottom: .3rem; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; }
 .trend-chart { min-width: 100%; padding: .15rem 0 0; }
 .trend-chart-plot { display: grid; grid-template-rows: 1rem minmax(0, 1fr) .7rem; gap: .3rem; height: 22rem; }
@@ -180,10 +180,10 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .trend-bar-fill .meal-segment { width: 100%; min-height: 0; }
 .trend-bar-date { overflow: hidden; color: var(--muted); font-size: .58rem; text-align: center; white-space: nowrap; }
 .trend-chart-y-axis { display: grid; grid-template-rows: 1rem minmax(0, 1fr) .7rem; gap: .3rem; height: 22rem; padding-top: .15rem; color: var(--muted); }
-.trend-chart-y-unit { overflow: hidden; padding-right: .25rem; font-size: .52rem; line-height: 1rem; text-align: right; white-space: nowrap; }
-.trend-chart-y-scale { position: relative; min-height: 0; border-right: 1px solid #b8cce0; }
-.trend-chart-y-scale span { position: absolute; right: .3rem; max-width: 2.15rem; transform: translateY(50%); color: var(--muted); font-size: .52rem; line-height: 1; text-align: right; white-space: nowrap; }
-.trend-chart-y-scale span::after { position: absolute; top: 50%; left: calc(100% + .18rem); width: .25rem; border-top: 1px solid #b8cce0; content: ''; }
+.trend-chart-y-unit { overflow: hidden; padding-left: .25rem; font-size: .52rem; line-height: 1rem; text-align: left; white-space: nowrap; }
+.trend-chart-y-scale { position: relative; min-height: 0; border-left: 1px solid #b8cce0; }
+.trend-chart-y-scale span { position: absolute; left: .3rem; max-width: 2.15rem; transform: translateY(50%); color: var(--muted); font-size: .52rem; line-height: 1; text-align: left; white-space: nowrap; }
+.trend-chart-y-scale span::after { position: absolute; top: 50%; right: calc(100% + .18rem); width: .25rem; border-top: 1px solid #b8cce0; content: ''; }
 .trend-load-status { margin: .45rem 0 0; color: var(--muted); font-size: .65rem; text-align: center; }
 .trend-empty { margin-top: 1.2rem; border: 1px solid var(--line); border-radius: 1rem; padding: 1rem; color: var(--muted); background: #ffffff; font-size: .78rem; text-align: center; }
 
@@ -602,8 +602,10 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .estimate-info { margin-top: 0; }
 .settings-info { align-self: center; margin-top: 0; }
 .food-master-title .button { margin: 0; padding: .48rem .72rem; font-size: .7rem; }
-.food-master-actions { display: flex; flex-wrap: wrap; gap: .6rem; }
-.food-master-actions .button { flex: 1 1 0; min-width: 0; margin: 0; text-align: center; }
+.food-registration-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .6rem; }
+.food-registration-actions .button { min-width: 0; width: 100%; margin: 0; text-align: center; }
+.food-master-management { margin-top: .45rem; }
+.food-master-management .button { padding-left: 0; }
 
 .settings-card { margin-top: 1.2rem; border: 1px solid var(--line); border-radius: 1.2rem; padding: 1.2rem; background: white; }
 .settings-goals-collapsible > summary .count-label { margin-left: auto; }
@@ -774,8 +776,8 @@ legend { padding: 0 .35rem; color: var(--muted); font-size: .75rem; font-weight:
   .meal-entry-actions b { font-size: .67rem; }
   .meal-entry-actions button { min-width: 2.25rem; padding-right: .2rem; padding-left: .2rem; }
   .settings-action-buttons .button { flex: 1 1 auto; padding-right: .65rem; padding-left: .65rem; }
-  .food-master-actions { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: .45rem; }
-  .food-master-actions .button { min-width: 0; padding: .72rem .4rem; font-size: .62rem; line-height: 1.35; white-space: normal; }
+  .food-registration-actions { gap: .45rem; }
+  .food-registration-actions .button { min-width: 0; padding: .72rem .4rem; font-size: .68rem; line-height: 1.35; white-space: normal; }
   .two-fields, .nutrient-input-grid, .goal-form { grid-template-columns: 1fr; }
   .goal-form .button { grid-column: auto; }
   .data-stats strong { font-size: 1rem; }
