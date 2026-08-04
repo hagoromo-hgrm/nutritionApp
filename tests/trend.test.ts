@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildDailyNutrientTrend } from '../src/services/trend'
+import { buildDailyNutrientTrend, buildTrendAxisTicks } from '../src/services/trend'
 import type { MealEntry } from '../src/types'
 
 const entry: MealEntry = {
@@ -9,6 +9,16 @@ const entry: MealEntry = {
 }
 
 describe('daily nutrient trend', () => {
+  it('グラフ上限を4等分した5目盛を返す', () => {
+    expect(buildTrendAxisTicks(2400)).toEqual([
+      { value: 0, position: 0 },
+      { value: 600, position: 25 },
+      { value: 1200, position: 50 },
+      { value: 1800, position: 75 },
+      { value: 2400, position: 100 },
+    ])
+  })
+
   it('指定期間の日付ごとに記録を集計し、記録がない日も含める', () => {
     const points = buildDailyNutrientTrend([entry], '2026-07-15', '2026-07-16')
     expect(points).toHaveLength(2)

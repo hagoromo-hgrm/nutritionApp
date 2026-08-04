@@ -73,4 +73,31 @@ describe('today details period and summary', () => {
     expect(summary.availableSubtotals.昼食.energyKcal).toBe(200)
     expect(Object.keys(summary.availableSubtotals)).toEqual(['朝食', '昼食', '夕食', '間食'])
   })
+
+  it.each([7, 30])('%i日では記録ゼロの日も含む1日平均を作る', (days) => {
+    const breakfast = entry('breakfast-average', '朝食', { energyKcal: 700, proteinG: 70 })
+    const dinner = entry('dinner-average', '夕食', { energyKcal: 350, proteinG: 35 })
+
+    const summary = buildTodayDetailSummary([breakfast, dinner], days)
+
+    expect(summary.nutrients.energyKcal).toBe(1050 / days)
+    expect(summary.availableNutrients.proteinG).toBe(105 / days)
+    expect(summary.subtotals.朝食.energyKcal).toBe(700 / days)
+    expect(summary.availableSubtotals.夕食.energyKcal).toBe(350 / days)
+    expect(summary.subtotals.昼食.energyKcal).toBe(0)
+    expect(summary.availableSubtotals.間食.energyKcal).toBe(0)
+  })
+
+  it('日平均でも正規集計の欠損を維持し、既知分だけを日数で割る', () => {
+    const missingBreakfast = entry('missing-average', '朝食', { energyKcal: null })
+    const knownLunch = entry('known-average', '昼食', { energyKcal: 700 })
+
+    const summary = buildTodayDetailSummary([missingBreakfast, knownLunch], 7)
+
+    expect(summary.nutrients.energyKcal).toBeNull()
+    expect(summary.availableNutrients.energyKcal).toBe(100)
+    expect(summary.subtotals.朝食.energyKcal).toBeNull()
+    expect(summary.availableSubtotals.朝食.energyKcal).toBeNull()
+    expect(summary.availableSubtotals.昼食.energyKcal).toBe(100)
+  })
 })

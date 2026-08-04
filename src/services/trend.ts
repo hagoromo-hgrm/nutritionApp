@@ -9,6 +9,20 @@ export interface DailyNutrientTrendPoint {
   availableNutrientsByMealType: Record<MealType, Nutrients>
 }
 
+export interface TrendAxisTick {
+  value: number
+  position: number
+}
+
+export function buildTrendAxisTicks(chartMax: number, divisions = 4): TrendAxisTick[] {
+  const safeMax = Number.isFinite(chartMax) && chartMax > 0 ? chartMax : 1
+  const safeDivisions = Number.isInteger(divisions) && divisions > 0 ? divisions : 4
+  return Array.from({ length: safeDivisions + 1 }, (_, index) => ({
+    value: (safeMax * index) / safeDivisions,
+    position: (index / safeDivisions) * 100,
+  }))
+}
+
 export function buildDailyNutrientTrend(entries: MealEntry[], from: string, to: string, maxDays = 31): DailyNutrientTrendPoint[] {
   if (!from || !to || from > to || maxDays < 1) return []
 

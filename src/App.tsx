@@ -80,7 +80,8 @@ import {
 } from './services/mealMenuSnapshots'
 import { createMenuSetMealBatch, getMenuSetCalorieSummary, getMenuSetFoodItems } from './services/menuSetMeals'
 import { normalizeMealEntryOrder, sortMealEntries, sortMealEntryGroup } from './services/mealEntryOrder'
-import { buildDailyNutrientTrend } from './services/trend'
+import { resolveMealEntryTime } from './services/mealTime'
+import { buildDailyNutrientTrend, buildTrendAxisTicks } from './services/trend'
 import { shouldShowTrendDate } from './services/trendDateLabels'
 import { consumeSearchSelectionGroup } from './services/searchSelection'
 import {
@@ -1124,10 +1125,15 @@ function App() {
     const calculated = menuSnapshot
       ? calculateMealMenuEntryNutrients(menuSnapshot, amount, amountUnit)
       : calculateNutrients(food, amount, amountUnit)
-    const currentMealTime = currentEntries.find((current) => current.mealType === mealType)?.eatenAt
-    const eatenAt = entryToEdit
-      ? (mealType === '間食' ? entryToEdit.eatenAt : (currentMealTime ?? entryToEdit.eatenAt))
-      : isoForDate(targetDate)
+    const currentMealTime = currentEntries.find((current) => (
+      current.mealType === mealType && current.id !== entryToEdit?.id
+    ))?.eatenAt
+    const eatenAt = resolveMealEntryTime({
+      mealType,
+      proposedEatenAt: isoForDate(targetDate),
+      existingMealTime: currentMealTime,
+      editingEatenAt: entryToEdit?.eatenAt,
+    })
     const menuDisplayName = menuSnapshot?.sourceMenuName.trim()
     const resolvedUserFacingName = menuDisplayName
       || userFacingName?.trim()
@@ -1165,9 +1171,7 @@ function App() {
         : -1
       const orderedGroup = currentGroup.filter((current) => current.id !== entry.id)
       orderedGroup.splice(previousIndex >= 0 ? Math.min(previousIndex, orderedGroup.length) : orderedGroup.length, 0, entry)
-      const entriesToSave = normalizeMealEntryOrder(orderedGroup).map((current) => (
-        mealType === '間食' ? current : { ...current, eatenAt }
-      ))
+      const entriesToSave = normalizeMealEntryOrder(orderedGroup)
       await saveMealEntries(entriesToSave)
       if (searchProgress.matched) setSearchResults(searchProgress.remainingGroups)
       setPendingSearchQuery(null)
@@ -1220,7 +1224,11 @@ function App() {
     const targetMealType = recordingMealType ?? mealType
     try {
       const currentMealTime = currentEntries.find((entry) => entry.mealType === targetMealType)?.eatenAt
-      const eatenAt = targetMealType === '間食' ? isoForDate(targetDate) : (currentMealTime ?? isoForDate(targetDate))
+      const eatenAt = resolveMealEntryTime({
+        mealType: targetMealType,
+        proposedEatenAt: isoForDate(targetDate),
+        existingMealTime: currentMealTime,
+      })
       const batch = createMenuSetMealBatch({
         menuSet, menus, generalMenus, foods, mealType: targetMealType, eatenAt, createId: createNewMealId,
       })
@@ -1230,9 +1238,7 @@ function App() {
         return false
       }
       const existingGroup = sortMealEntryGroup(currentEntries.filter((entry) => entry.mealType === targetMealType))
-      const orderedGroup = normalizeMealEntryOrder([...existingGroup, ...batch.entries]).map((entry) => (
-        targetMealType === '間食' ? entry : { ...entry, eatenAt }
-      ))
+      const orderedGroup = normalizeMealEntryOrder([...existingGroup, ...batch.entries])
       await saveMealEntries(orderedGroup)
       const searchProgress = consumeSearchSelectionGroup(searchResults, returnSearchQuery)
       const continueSearchSelection = searchPurpose === 'meal'
@@ -2071,10 +2077,15 @@ function GraphsView({ range, goals, onRangeChange }: GraphsViewProps) {
   const goal = goals[metric]
   const values = points.map((point) => point.availableNutrients[metric] ?? 0)
   const chartMax = Math.max(goal ?? 0, ...values, 1) * 1.15
+  const axisTicks = buildTrendAxisTicks(chartMax)
   const goalPosition = goal !== null && goal > 0 ? Math.min(100, (goal / chartMax) * 100) : null
   const dayStep = Math.max(1, (chartViewportWidth || 320) / rangeDays)
   const dayGap = dayStep / 5
   const chartWidth = Math.max(chartViewportWidth, points.length * dayStep)
+  const chartGridStyle = {
+    gridTemplateColumns: `repeat(${Math.max(points.length, 1)}, minmax(0, 1fr))`,
+    gap: `${dayGap}px`,
+  }
 
   useEffect(() => {
     let active = true
@@ -2176,7 +2187,54 @@ function GraphsView({ range, goals, onRangeChange }: GraphsViewProps) {
   return <>
     <section className="page-heading"><div><span className="eyebrow">GRAPHS</span><h1>グラフ</h1></div></section>
     <section className="settings-card trend-toolbar-card"><div className="trend-range-tabs" role="tablist" aria-label="1画面に表示する期間">{TREND_RANGE_OPTIONS.map((option) => <button key={option.id} type="button" role="tab" aria-selected={range === option.id} className={range === option.id ? 'active' : ''} onClick={() => changeRange(option.id)}>{option.label}</button>)}</div><select className="trend-metric-select" aria-label="表示する栄養素" value={metric} onChange={(event) => setMetric(event.target.value as NutrientKey)}>{TREND_NUTRIENT_KEYS.map((key) => <option key={key} value={key}>{NUTRIENT_LABELS[key]}</option>)}</select></section>
-    <section className="trend-chart-card" aria-busy={!historyReady || loadingOlder}><div className="trend-chart-legend"><MealColorLegend />{goalPosition !== null && <span className="trend-goal-legend"><i className="trend-legend-line" />目標 {formatGraphNutrient(goal)}{NUTRIENT_UNITS[metric]}</span>}</div>{historyError && <p className="trend-load-status error-text">{historyError}</p>}<div ref={scrollRef} className="trend-chart-scroll" onScroll={handleScroll}><div className="trend-chart" style={{ width: `${chartWidth}px` }}><div className="trend-chart-plot">{goalPosition !== null && <span className="trend-chart-goal-line" style={{ bottom: `${goalPosition}%` }} />}<div className="trend-chart-bars" style={{ gridTemplateColumns: `repeat(${Math.max(points.length, 1)}, minmax(0, 1fr))`, gap: `${dayGap}px` }}>{points.map((point) => { const availableValue = point.availableNutrients[metric]; const height = availableValue === null ? 0 : Math.min(100, Math.max(0, (availableValue / chartMax) * 100)); const segments = MEAL_TYPES.map((type) => ({ type, value: point.availableNutrientsByMealType[type]?.[metric] ?? 0 })).filter((segment) => segment.value > 0); const segmentTotal = segments.reduce((sum, segment) => sum + segment.value, 0); const showLabel = shouldShowTrendDate(point.date, range); return <div className="trend-bar-column" key={point.date} title={`${point.date} ${NUTRIENT_LABELS[metric]} ${formatGraphNutrient(availableValue)}${NUTRIENT_UNITS[metric]}`}><span className={`trend-bar-value${availableValue === null ? ' is-missing' : ''}${showLabel ? '' : ' is-hidden'}`}>{formatGraphNutrient(availableValue)}<small>{NUTRIENT_UNITS[metric]}</small></span><div className="trend-bar-track">{availableValue !== null && segmentTotal > 0 && <span className="trend-bar-fill" style={{ height: `${height}%` }}>{segments.map((segment) => <i key={segment.type} className={`meal-segment meal-segment-${mealTone(segment.type)}`} style={{ height: `${(segment.value / segmentTotal) * 100}%` }} />)}</span>}</div><span className={`trend-bar-date${showLabel ? '' : ' is-hidden'}`}>{formatTrendDate(point.date)}</span></div> })}</div></div></div></div>{loadingOlder && <p className="trend-load-status">過去の記録を読み込んでいます…</p>}</section>
+    <section className="trend-chart-card" aria-busy={!historyReady || loadingOlder}>
+      <div className="trend-chart-legend">
+        <MealColorLegend />
+        {goalPosition !== null && <span className="trend-goal-legend"><i className="trend-legend-line" />目標 {formatGraphNutrient(goal)}{NUTRIENT_UNITS[metric]}</span>}
+      </div>
+      {historyError && <p className="trend-load-status error-text">{historyError}</p>}
+      <div className="trend-chart-body">
+        <div className="trend-chart-y-axis" aria-label={`${NUTRIENT_LABELS[metric]}の縦軸、単位${NUTRIENT_UNITS[metric]}`}>
+          <span className="trend-chart-y-unit">{NUTRIENT_UNITS[metric]}</span>
+          <div className="trend-chart-y-scale">
+            {axisTicks.map((tick) => <span key={tick.position} style={{ bottom: `${tick.position}%` }}>{formatGraphNutrient(tick.value)}</span>)}
+          </div>
+          <span aria-hidden="true" />
+        </div>
+        <div ref={scrollRef} className="trend-chart-scroll" onScroll={handleScroll}>
+          <div className="trend-chart" style={{ width: `${chartWidth}px` }}>
+            <div className="trend-chart-plot">
+              <div className="trend-chart-values" style={chartGridStyle}>
+                {points.map((point) => {
+                  const availableValue = point.availableNutrients[metric]
+                  const showLabel = shouldShowTrendDate(point.date, range)
+                  return <span key={point.date} className={`trend-bar-value${availableValue === null ? ' is-missing' : ''}${showLabel ? '' : ' is-hidden'}`}>{formatGraphNutrient(availableValue)}<small>{NUTRIENT_UNITS[metric]}</small></span>
+                })}
+              </div>
+              <div className="trend-chart-track-area">
+                {goalPosition !== null && <span className="trend-chart-goal-line" style={{ bottom: `${goalPosition}%` }} />}
+                <div className="trend-chart-bars" style={chartGridStyle}>
+                {points.map((point) => {
+                  const availableValue = point.availableNutrients[metric]
+                  const height = availableValue === null ? 0 : Math.min(100, Math.max(0, (availableValue / chartMax) * 100))
+                  const segments = MEAL_TYPES.map((type) => ({ type, value: point.availableNutrientsByMealType[type]?.[metric] ?? 0 })).filter((segment) => segment.value > 0)
+                  const segmentTotal = segments.reduce((sum, segment) => sum + segment.value, 0)
+                  return <div className="trend-bar-track" key={point.date} title={`${point.date} ${NUTRIENT_LABELS[metric]} ${formatGraphNutrient(availableValue)}${NUTRIENT_UNITS[metric]}`}>{availableValue !== null && segmentTotal > 0 && <span className="trend-bar-fill" style={{ height: `${height}%` }}>{segments.map((segment) => <i key={segment.type} className={`meal-segment meal-segment-${mealTone(segment.type)}`} style={{ height: `${(segment.value / segmentTotal) * 100}%` }} />)}</span>}</div>
+                })}
+                </div>
+              </div>
+              <div className="trend-chart-dates" style={chartGridStyle}>
+                {points.map((point) => {
+                  const showLabel = shouldShowTrendDate(point.date, range)
+                  return <span key={point.date} className={`trend-bar-date${showLabel ? '' : ' is-hidden'}`}>{formatTrendDate(point.date)}</span>
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {loadingOlder && <p className="trend-load-status">過去の記録を読み込んでいます…</p>}
+    </section>
   </>
 }
 
@@ -2426,14 +2484,14 @@ function TodayDetailsModal({ selectedDate, goals, entries, onClose }: { selected
     ? entries
     : loadedPeriod?.key === periodKey ? loadedPeriod.entries : null
   const summary = useMemo(
-    () => displayedEntries ? buildTodayDetailSummary(displayedEntries) : null,
-    [displayedEntries],
+    () => displayedEntries ? buildTodayDetailSummary(displayedEntries, period.days) : null,
+    [displayedEntries, period.days],
   )
   const currentLoadError = loadError?.key === periodKey ? loadError.message : null
   const waitingForPeriod = rangeId !== 'day' && loadedPeriod?.key !== periodKey && currentLoadError === null
   const periodLabel = period.from === period.to ? period.to : `${period.from}〜${period.to}`
 
-  return <div className="modal-backdrop nutrient-detail-backdrop" role="dialog" aria-modal="true" aria-label="今日の栄養詳細"><section className="modal-card nutrient-detail-modal today-details-modal" aria-busy={loading || waitingForPeriod}><div className="modal-heading"><div><span className="eyebrow">TODAY DETAILS</span><h2>今日の詳細</h2></div><button className="icon-button" type="button" onClick={onClose} aria-label="閉じる">×</button></div><div className="today-detail-range-control"><div className="today-detail-range-tabs" role="tablist" aria-label="今日の詳細の集計期間">{TODAY_DETAIL_RANGE_OPTIONS.map((option) => <button key={option.id} id={`today-detail-range-${option.id}`} type="button" role="tab" aria-selected={rangeId === option.id} aria-controls="today-detail-period-panel" className={rangeId === option.id ? 'active' : ''} onClick={() => setRangeId(option.id)}>{option.label}</button>)}</div><div className="today-detail-range-summary"><span>{periodLabel}</span><strong>{period.days}日合計</strong></div></div><div id="today-detail-period-panel" role="tabpanel" aria-labelledby={`today-detail-range-${rangeId}`}>{(loading || waitingForPeriod) && !summary ? <p className="today-detail-load-status" role="status">期間の食事記録を読み込んでいます…</p> : currentLoadError ? <div className="today-detail-load-status error-text" role="alert"><p>{currentLoadError}</p><button className="button secondary" type="button" onClick={() => setReloadToken((current) => current + 1)}>再試行</button></div> : summary && <NutrientGoalGraphs nutrients={summary.nutrients} availableNutrients={summary.availableNutrients} goals={goals} subtotals={summary.subtotals} availableSubtotals={summary.availableSubtotals} colorByMeal referenceMultiplier={period.days} />}</div></section></div>
+  return <div className="modal-backdrop nutrient-detail-backdrop" role="dialog" aria-modal="true" aria-label="詳細"><section className="modal-card nutrient-detail-modal today-details-modal" aria-busy={loading || waitingForPeriod}><div className="modal-heading"><div><span className="eyebrow">DETAILS</span><h2>詳細</h2></div><button className="icon-button" type="button" onClick={onClose} aria-label="閉じる">×</button></div><div className="today-detail-range-control"><div className="today-detail-range-tabs" role="tablist" aria-label="詳細の集計期間">{TODAY_DETAIL_RANGE_OPTIONS.map((option) => <button key={option.id} id={`today-detail-range-${option.id}`} type="button" role="tab" aria-selected={rangeId === option.id} aria-controls="today-detail-period-panel" className={rangeId === option.id ? 'active' : ''} onClick={() => setRangeId(option.id)}>{option.label}</button>)}</div><div className="today-detail-range-summary"><span>{periodLabel}</span><strong>{period.days === 1 ? '当日' : '1日平均'}</strong></div></div><div id="today-detail-period-panel" role="tabpanel" aria-labelledby={`today-detail-range-${rangeId}`}>{(loading || waitingForPeriod) && !summary ? <p className="today-detail-load-status" role="status">期間の食事記録を読み込んでいます…</p> : currentLoadError ? <div className="today-detail-load-status error-text" role="alert"><p>{currentLoadError}</p><button className="button secondary" type="button" onClick={() => setReloadToken((current) => current + 1)}>再試行</button></div> : summary && <NutrientGoalGraphs nutrients={summary.nutrients} availableNutrients={summary.availableNutrients} goals={goals} subtotals={summary.subtotals} availableSubtotals={summary.availableSubtotals} colorByMeal />}</div></section></div>
 }
 
 function MenuNutritionDetailsModal({ menu, menus, foods, goals, onClose }: { menu: Menu; menus: Menu[]; foods: Food[]; goals: NutritionGoals; onClose: () => void }) {
@@ -3042,8 +3100,10 @@ function MenuView({ menus, generalMenus, menuSets, foods, onNewMenu, onShowMenuN
   const menuList = (items: Array<Menu | GeneralMenu>, kind: 'my' | 'general') => <div className="menu-category-groups">{MENU_CATEGORIES.map((category) => {
     const categoryMenus = items.filter((menu) => menu.category === category)
     return <details className="menu-category-group" key={category}><summary><span className="menu-picker-summary-label"><i aria-hidden="true" />{category}</span><small>{categoryMenus.length > 0 ? `${categoryMenus.length}件` : '登録なし'}</small></summary>{categoryMenus.length > 0 ? <div className="menu-list">{categoryMenus.map((menu) => {
-      const ingredients = getMenuIngredients(menu, foods)
-      return <div className="menu-card" key={menu.id}><div><strong>{menu.name}</strong><small>{ingredients.length ? ingredients.map((ingredient) => ingredient.kind === 'food' ? foodName(ingredient.itemId) : menuName(ingredient.itemId)).join('・') : '食材未選択'}</small></div><div className="menu-card-actions">{kind === 'my' && <button type="button" className="small-action" onClick={() => onShowMenuNutrition(menu)}>詳細</button>}{kind === 'general' && <button type="button" className="small-action" onClick={() => onCloneGeneralMenu(menu)}>Myメニューに複製</button>}<button type="button" className="small-action" onClick={() => kind === 'general' ? onEditGeneralMenu(menu) : onEditMenu(menu)}>編集</button><button type="button" className="small-action danger-text" onClick={() => kind === 'general' ? onDeleteGeneralMenu(menu) : onDeleteMenu(menu)}>削除</button></div></div>
+      const menuFood = kind === 'general'
+        ? generalMenuToFood(menu, menus, foods)
+        : menuToFood(menu, menus, foods)
+      return <div className="menu-card" key={menu.id}><div><strong>{menu.name}</strong><small>{formatGraphNutrient(menuFood.nutrients.energyKcal)}kcal</small></div><div className="menu-card-actions">{kind === 'my' && <button type="button" className="small-action" onClick={() => onShowMenuNutrition(menu)}>詳細</button>}{kind === 'general' && <button type="button" className="small-action" onClick={() => onCloneGeneralMenu(menu)}>Myメニューに複製</button>}<button type="button" className="small-action" onClick={() => kind === 'general' ? onEditGeneralMenu(menu) : onEditMenu(menu)}>編集</button><button type="button" className="small-action danger-text" onClick={() => kind === 'general' ? onDeleteGeneralMenu(menu) : onDeleteMenu(menu)}>削除</button></div></div>
     })}</div> : <p className="menu-picker-empty">この区分に登録された{kind === 'general' ? '一般メニュー' : 'Myメニュー'}はありません。</p>}</details>
   })}</div>
   return <>

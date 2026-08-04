@@ -1,4 +1,4 @@
-import { MEAL_TYPES, type MealEntry, type MealType, type Nutrients } from '../types'
+import { MEAL_TYPES, NUTRIENT_KEYS, type MealEntry, type MealType, type Nutrients } from '../types'
 import { addDays } from '../utils/date'
 import { sumAvailableNutrients, sumByMealType, sumEntries } from './nutrition'
 
@@ -20,7 +20,7 @@ export interface TodayDetailPeriod {
 export interface TodayDetailSummary {
   nutrients: Nutrients
   availableNutrients: Nutrients
-  subtotals: ReturnType<typeof sumByMealType>
+  subtotals: Record<MealType, Nutrients>
   availableSubtotals: Record<MealType, Nutrients>
 }
 
@@ -38,15 +38,31 @@ export function resolveTodayDetailPeriod(rangeId: TodayDetailRangeId, selectedDa
   }
 }
 
-export function buildTodayDetailSummary(entries: MealEntry[]): TodayDetailSummary {
+function averageNutrients(nutrients: Nutrients, days: number): Nutrients {
+  const divisor = Number.isFinite(days) && days > 0 ? days : 1
+  return Object.fromEntries(
+    NUTRIENT_KEYS.map((key) => [key, nutrients[key] === null ? null : nutrients[key] / divisor]),
+  ) as Nutrients
+}
+
+export function buildTodayDetailSummary(entries: MealEntry[], days = 1): TodayDetailSummary {
+  const subtotals = sumByMealType(entries)
   return {
-    nutrients: sumEntries(entries),
-    availableNutrients: sumAvailableNutrients(entries),
-    subtotals: sumByMealType(entries),
+    nutrients: averageNutrients(sumEntries(entries), days),
+    availableNutrients: averageNutrients(sumAvailableNutrients(entries), days),
+    subtotals: Object.fromEntries(
+      MEAL_TYPES.map((mealType) => [
+        mealType,
+        averageNutrients(subtotals[mealType] ?? sumEntries([]), days),
+      ]),
+    ) as Record<MealType, Nutrients>,
     availableSubtotals: Object.fromEntries(
       MEAL_TYPES.map((mealType) => [
         mealType,
-        sumAvailableNutrients(entries.filter((entry) => entry.mealType === mealType)),
+        averageNutrients(
+          sumAvailableNutrients(entries.filter((entry) => entry.mealType === mealType)),
+          days,
+        ),
       ]),
     ) as Record<MealType, Nutrients>,
   }
