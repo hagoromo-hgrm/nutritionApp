@@ -1,6 +1,6 @@
 import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { db, deleteFood, deleteGeneralMenu, deleteMenu, exportBackup, getEntriesForDate, getFavoriteFoods, getFoodByBarcode, getRecentFoods, getSettings, initializeDatabase, recordFoodSelection, reorderFavorites, reorderMealEntries, replaceAllData, saveFood, saveFoodWithMetadata, saveGeneralMenu, saveMealEntries, saveMealEntry, saveMenu, saveMenuSet, searchFoodResults, searchGeneralMenus, searchMenus, setFavorite } from '../src/db/db'
+import { db, deleteFood, deleteGeneralMenu, deleteMenu, exportBackup, getEntriesForDate, getFavoriteFoods, getFoodByBarcode, getRecentFoods, getSettings, getWeightRecords, getWeightRecordsBetween, initializeDatabase, recordFoodSelection, reorderFavorites, reorderMealEntries, replaceAllData, saveBodyProfileSettings, saveFood, saveFoodWithMetadata, saveGeneralMenu, saveMealEntries, saveMealEntry, saveMenu, saveMenuSet, searchFoodResults, searchGeneralMenus, searchMenus, setFavorite } from '../src/db/db'
 import { validateBackup } from '../src/services/backup'
 import { getFoodVariantBySourceId, hasFoodGroup as hasMextFoodGroup } from '../src/services/mextFoodData'
 import type { BackupData, Food, FoodAlias, FoodGroup, FoodRelatedTerm, GeneralMenu, MealEntry, Menu } from '../src/types'
@@ -370,7 +370,71 @@ describe('IndexedDB data safety', () => {
     const settings = await getSettings()
     expect(settings.bodyProfile?.sex).toBe('unspecified')
     expect(settings.bodyProfile?.activityLevel).toBe('moderate')
+    expect((await db.metadata.get('schema-version'))?.value).toBe(9)
   })
+
+  it('身体情報保存と体重履歴追加を一括し、同値・他項目変更では重複記録しない', async () => {
+    const current = await getSettings()
+    await saveBodyProfileSettings({ ...current, bodyProfile: { ...current.bodyProfile!, weightKg: 65 } }, '2026-08-01T00:00:00.000Z')
+    await saveBodyProfileSettings({ ...current, bodyProfile: { ...current.bodyProfile!, weightKg: 65 } }, '2026-08-02T00:00:00.000Z')
+    await saveBodyProfileSettings({ ...current, bodyProfile: { ...current.bodyProfile!, heightCm: 170, weightKg: 65 } }, '2026-08-03T00:00:00.000Z')
+    await saveBodyProfileSettings({ ...current, goals: { ...current.goals, energyKcal: 2000 }, bodyProfile: { ...current.bodyProfile!, weightKg: 66 } }, '2026-08-04T00:00:00.000Z')
+
+    expect((await getSettings()).bodyProfile?.weightKg).toBe(66)
+    expect((await getSettings()).goals.energyKcal).toBe(2000)
+    expect((await getWeightRecords()).map((record) => record.weightKg)).toEqual([65, 66])
+    expect((await getWeightRecordsBetween('2026-08-02', '2026-08-04')).map((record) => record.weightKg)).toEqual([66])
+  })
+
+  it('体重履歴の保存に失敗した場合は身体情報も更新しない', async () => {
+    const current = await getSettings()
+    const addFailure = vi.spyOn(db.weightRecords, 'add').mockRejectedValueOnce(new Error('weight history failure'))
+    await expect(saveBodyProfileSettings({ ...current, bodyProfile: { ...current.bodyProfile!, weightKg: 65 } }, '2026-08-01T00:00:00.000Z')).rejects.toThrow('weight history failure')
+    addFailure.mockRestore()
+
+    expect((await getSettings()).bodyProfile?.weightKg).toBeNull()
+    expect(await getWeightRecords()).toEqual([])
+  })
+
+  it('体重履歴をバックアップへ含め、全置換で復元する', async () => {
+    const current = await getSettings()
+    await saveBodyProfileSettings({ ...current, bodyProfile: { ...current.bodyProfile!, weightKg: 65 } }, '2026-08-01T00:00:00.000Z')
+    const backup = await exportBackup()
+    expect(backup.dataFormatVersion).toBe(3)
+    expect(backup.weightRecords?.map((record) => record.weightKg)).toEqual([65])
+
+    await db.weightRecords.clear()
+    await replaceAllData(backup)
+    expect((await getWeightRecords()).map((record) => record.weightKg)).toEqual([65])
+  })
+
+  it('v1/v2バックアップの復元では体重履歴を空にする', async () => {
+    const current = await getSettings()
+    await saveBodyProfileSettings({ ...current, bodyProfile: { ...current.bodyProfile!, weightKg: 65 } }, '2026-08-01T00:00:00.000Z')
+    const exported = await exportBackup()
+    const v2: BackupData = {
+      ...exported,
+      dataFormatVersion: 2,
+      settings: { ...exported.settings, dataFormatVersion: 2 },
+      weightRecords: undefined,
+    }
+    await replaceAllData(v2)
+    expect(await getWeightRecords()).toEqual([])
+
+    await saveBodyProfileSettings({ ...v2.settings, bodyProfile: { ...v2.settings.bodyProfile!, weightKg: 66 } }, '2026-08-02T00:00:00.000Z')
+    const v1: BackupData = {
+      ...v2,
+      dataFormatVersion: 1,
+      settings: { ...v2.settings, dataFormatVersion: 1 },
+      estimationDataFormatVersion: undefined,
+      estimationSettings: undefined,
+      estimationRequests: undefined,
+      estimationResults: undefined,
+      estimationDecisions: undefined,
+    }
+    await replaceAllData(v1)
+    expect(await getWeightRecords()).toEqual([])
+  }, 15000)
 
   it('食事区分の時刻を複数記録へ一括保存できる', async () => {
     const first: MealEntry = {

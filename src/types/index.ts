@@ -386,6 +386,13 @@ export interface BodyProfile {
   activityLevel: ActivityLevel
 }
 
+export interface WeightRecord {
+  id: string
+  recordedAt: string
+  date: string
+  weightKg: number
+}
+
 export type FoodAttributePreferenceMode = 'prefill' | 'auto'
 
 export interface FoodAttributePreference {
@@ -619,6 +626,8 @@ export interface BackupData {
   menus?: Menu[]
   generalMenus?: GeneralMenu[]
   menuSets?: MenuSet[]
+  /** v3から必須。v1/v2バックアップには存在しない。 */
+  weightRecords?: WeightRecord[]
   settings: AppSettings
   /** v2からの推計関連データ。v1バックアップには存在しない。 */
   estimationDataFormatVersion?: number
@@ -660,7 +669,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   goals: DEFAULT_GOALS,
   displayUnit: 'default',
   lastBackupAt: null,
-  dataFormatVersion: 2,
+  dataFormatVersion: 3,
   externalApiEnabled: false,
   externalApiEndpoint: 'https://world.openfoodfacts.org/api/v3/product',
   mealTimeMode: 'auto',

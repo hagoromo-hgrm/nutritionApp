@@ -1,7 +1,8 @@
-import { ESTIMATION_LIMITATION_REASONS, ESTIMATOR_GENRE_IDS, NUTRIENT_KEYS, type AppSettings, type BackupData, type EstimationDecision, type EstimationRequest, type EstimationResult, type EstimationSettings, type Food, type FoodAlias, type FoodGroup, type FoodRelatedTerm, type FoodSnapshot, type FoodUsageStat, type GeneralMenu, type MealEntry, type Menu, type MenuIngredient, type MenuSet, type NutrientKey, type NutrientMetadataMap, type Nutrients, type SearchLog } from '../types'
+import { ESTIMATION_LIMITATION_REASONS, ESTIMATOR_GENRE_IDS, NUTRIENT_KEYS, type AppSettings, type BackupData, type EstimationDecision, type EstimationRequest, type EstimationResult, type EstimationSettings, type Food, type FoodAlias, type FoodGroup, type FoodRelatedTerm, type FoodSnapshot, type FoodUsageStat, type GeneralMenu, type MealEntry, type Menu, type MenuIngredient, type MenuSet, type NutrientKey, type NutrientMetadataMap, type Nutrients, type SearchLog, type WeightRecord } from '../types'
 import { isFoodAttributePreference } from './foodAttributePreferences'
 import { hasMenuCycles, menusWithUnsupportedIngredientUnits } from './menuIngredients'
 import { isMealMenuSnapshot } from './mealMenuSnapshots'
+import { isValidWeightRecord } from './weightHistory'
 import { isFoodUnitConversion, isNutrients, isValidBarcode, isValidQuantityUnit, isValidUnit } from '../utils/validation'
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -283,7 +284,7 @@ function isSettings(value: unknown): value is AppSettings {
   const goals = value.goals
   return NUTRIENT_KEYS.every((key) => isNullableNumber(goals[key]))
     && value.displayUnit === 'default' && (value.lastBackupAt === null || isIsoDateTime(value.lastBackupAt))
-    && (value.dataFormatVersion === 1 || value.dataFormatVersion === 2) && typeof value.externalApiEnabled === 'boolean'
+    && (value.dataFormatVersion === 1 || value.dataFormatVersion === 2 || value.dataFormatVersion === 3) && typeof value.externalApiEnabled === 'boolean'
     && isNonEmptyString(value.externalApiEndpoint)
     && (value.mealTimeMode === undefined || value.mealTimeMode === 'auto' || value.mealTimeMode === 'manual')
     && (value.bodyProfile === undefined || isBodyProfile(value.bodyProfile))
@@ -463,7 +464,7 @@ function isEstimationSettings(value: unknown): value is EstimationSettings {
 
 export function validateBackup(value: unknown): BackupData {
   if (!isRecord(value)) throw new Error('JSONのトップレベルがオブジェクトではありません。')
-  if (value.format !== 'nutrition-pwa-backup' || (value.dataFormatVersion !== 1 && value.dataFormatVersion !== 2)) {
+  if (value.format !== 'nutrition-pwa-backup' || (value.dataFormatVersion !== 1 && value.dataFormatVersion !== 2 && value.dataFormatVersion !== 3)) {
     throw new Error('対応していないバックアップ形式またはバージョンです。')
   }
   if (!isIsoDateTime(value.exportedAt) || !Array.isArray(value.foods) || !Array.isArray(value.mealEntries)
@@ -472,6 +473,15 @@ export function validateBackup(value: unknown): BackupData {
   }
   if (!value.foods.every(isFood) || !value.mealEntries.every(isMealEntry)) {
     throw new Error('食品または食事記録の形式が不正です。')
+  }
+  if (value.dataFormatVersion === 3 && !Array.isArray(value.weightRecords)) {
+    throw new Error('v3バックアップには体重履歴が必要です。')
+  }
+  if (value.weightRecords !== undefined && (!Array.isArray(value.weightRecords) || !value.weightRecords.every(isValidWeightRecord))) {
+    throw new Error('体重履歴の形式が不正です。')
+  }
+  if (value.weightRecords !== undefined && !hasUniqueValues(value.weightRecords as WeightRecord[], (record) => record.id)) {
+    throw new Error('体重履歴に重複したIDがあります。')
   }
   if (!hasUniqueValues(value.foods as Food[], (food) => food.id) || !hasUniqueValues(value.mealEntries as MealEntry[], (entry) => entry.id)) {
     throw new Error('食品または食事記録に重複したIDがあります。')
@@ -528,15 +538,15 @@ export function validateBackup(value: unknown): BackupData {
   }
   const hasEstimationFields = value.estimationDataFormatVersion !== undefined || value.estimationSettings !== undefined
     || value.estimationRequests !== undefined || value.estimationResults !== undefined || value.estimationDecisions !== undefined
-  if (value.dataFormatVersion === 2 && (!hasEstimationFields || value.estimationDataFormatVersion !== 1
+  if ((value.dataFormatVersion === 2 || value.dataFormatVersion === 3) && (!hasEstimationFields || value.estimationDataFormatVersion !== 1
     || !isEstimationSettings(value.estimationSettings) || !Array.isArray(value.estimationRequests)
     || !Array.isArray(value.estimationResults) || !Array.isArray(value.estimationDecisions))) {
     throw new Error('推計関連データの形式またはバージョンが不正です。')
   }
   if (hasEstimationFields && value.dataFormatVersion === 1) {
-    throw new Error('推計関連データを含むバックアップはデータ形式バージョン2である必要があります。')
+    throw new Error('推計関連データを含むバックアップはデータ形式バージョン2以上である必要があります。')
   }
-  if (value.dataFormatVersion === 2) {
+  if (value.dataFormatVersion === 2 || value.dataFormatVersion === 3) {
     const requests = value.estimationRequests as unknown[]
     const results = value.estimationResults as unknown[]
     const decisions = value.estimationDecisions as unknown[]

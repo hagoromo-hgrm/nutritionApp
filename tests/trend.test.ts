@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildDailyNutrientTrend, buildTrendAxisTicks } from '../src/services/trend'
+import { buildDailyNutrientTrend, buildTrendAxisTicks, buildTrendAxisTicksForRange } from '../src/services/trend'
 import type { MealEntry } from '../src/types'
 
 const entry: MealEntry = {
@@ -16,6 +16,16 @@ describe('daily nutrient trend', () => {
       { value: 1200, position: 50 },
       { value: 1800, position: 75 },
       { value: 2400, position: 100 },
+    ])
+  })
+
+  it('ゼロ始まりでない体重用の5目盛を返す', () => {
+    expect(buildTrendAxisTicksForRange(64, 66)).toEqual([
+      { value: 64, position: 0 },
+      { value: 64.5, position: 25 },
+      { value: 65, position: 50 },
+      { value: 65.5, position: 75 },
+      { value: 66, position: 100 },
     ])
   })
 

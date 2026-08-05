@@ -23,6 +23,16 @@ export function buildTrendAxisTicks(chartMax: number, divisions = 4): TrendAxisT
   }))
 }
 
+export function buildTrendAxisTicksForRange(chartMin: number, chartMax: number, divisions = 4): TrendAxisTick[] {
+  const safeMin = Number.isFinite(chartMin) ? chartMin : 0
+  const safeMax = Number.isFinite(chartMax) && chartMax > safeMin ? chartMax : safeMin + 1
+  const safeDivisions = Number.isInteger(divisions) && divisions > 0 ? divisions : 4
+  return Array.from({ length: safeDivisions + 1 }, (_, index) => ({
+    value: safeMin + ((safeMax - safeMin) * index) / safeDivisions,
+    position: (index / safeDivisions) * 100,
+  }))
+}
+
 export function buildDailyNutrientTrend(entries: MealEntry[], from: string, to: string, maxDays = 31): DailyNutrientTrendPoint[] {
   if (!from || !to || from > to || maxDays < 1) return []
 

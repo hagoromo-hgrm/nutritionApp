@@ -25,6 +25,7 @@ import {
   type Nutrients,
   type SearchLog,
   type UnresolvedIngredientStat,
+  type WeightRecord,
 } from '../types'
 import { createId } from '../utils/id'
 import { estimateDailyGoals } from '../services/nutrition'
@@ -35,6 +36,7 @@ import { normalizeSearchText, searchFoodResults as searchFoodResultsPure, type F
 import { normalizeMealEntryGroups, normalizeMealEntryOrder, sortMealEntries, sortMealEntryGroup } from '../services/mealEntryOrder'
 import type { FoodSearchCategory } from '../services/foodClassification'
 import { formatDateKey } from '../utils/date'
+import { createWeightRecord, isValidTokyoDateKey, isValidWeightKg, sortWeightRecords } from '../services/weightHistory'
 import {
   getFoodGroup as getMextFoodGroup,
   getFoodVariantBySourceId,
@@ -77,6 +79,7 @@ export class NutritionDatabase extends Dexie {
   estimationDecisions!: Table<EstimationDecision, string>
   estimationSettings!: Table<EstimationSettings, string>
   unresolvedIngredientStats!: Table<UnresolvedIngredientStat, string>
+  weightRecords!: Table<WeightRecord, string>
 
   constructor() {
     super('nutrition-pwa')
@@ -199,6 +202,34 @@ export class NutritionDatabase extends Dexie {
       estimation_settings: 'id, updatedAt',
       unresolved_ingredient_stats: 'id, estimatorGenreId, count, lastSeenAt, [estimatorGenreId+lastSeenAt]',
     })
+    this.version(9).stores({
+      foods: 'id, name, maker, barcode, source, foodGroupId, estimatorGenreId, updatedAt',
+      meal_entries: 'id, eatenAt, mealType, foodId',
+      favorites: 'foodId, createdAt',
+      settings: 'id',
+      metadata: 'key',
+      menus: 'id, name, category, updatedAt',
+      general_menus: 'id, name, category, updatedAt',
+      menu_sets: 'id, name, updatedAt',
+      food_groups: 'id, displayName, category, updatedAt',
+      food_aliases: 'id, foodGroupId, foodVariantId, normalizedAlias, isActive',
+      food_related_terms: 'id, foodGroupId, normalizedTerm, isActive',
+      food_usage_stats: 'foodId, selectionCount, lastSelectedAt, updatedAt',
+      search_logs: 'id, createdAt, normalizedQuery, selectedFoodGroupId, selectedFoodVariantId, unselected',
+      estimation_requests: 'requestId, foodId, status, createdAt, updatedAt, [foodId+createdAt], [foodId+status]',
+      estimation_results: 'requestId, foodId, status, estimatedAt, [foodId+estimatedAt]',
+      estimation_decisions: 'decisionId, requestId, foodId, nutrientKey, decision, decidedAt, [foodId+decidedAt], [requestId+decidedAt]',
+      estimation_settings: 'id, updatedAt',
+      unresolved_ingredient_stats: 'id, estimatorGenreId, count, lastSeenAt, [estimatorGenreId+lastSeenAt]',
+      weight_records: 'id, date, recordedAt, [date+recordedAt]',
+    }).upgrade(async (transaction) => {
+      const settings = await transaction.table('settings').get('app') as AppSettings | undefined
+      const weightKg = settings?.bodyProfile?.weightKg
+      if (isValidWeightKg(weightKg)) {
+        await transaction.table('weight_records').add(createWeightRecord(weightKg))
+      }
+      await transaction.table('metadata').put({ key: 'schema-version', value: 9 })
+    })
     this.mealEntries = this.table('meal_entries')
     this.menus = this.table('menus')
     this.generalMenus = this.table('general_menus')
@@ -213,6 +244,7 @@ export class NutritionDatabase extends Dexie {
     this.estimationDecisions = this.table('estimation_decisions')
     this.estimationSettings = this.table('estimation_settings')
     this.unresolvedIngredientStats = this.table('unresolved_ingredient_stats')
+    this.weightRecords = this.table('weight_records')
   }
 }
 
@@ -333,7 +365,7 @@ export async function initializeDatabase(): Promise<void> {
       if (existing === 0) await db.foods.bulkAdd(initialFoods.map(enrichFoodForSearch))
       await db.metadata.put({ key: 'initial-foods-seeded', value: true })
       await db.metadata.put({ key: 'initial-foods-version', value: INITIAL_FOODS_VERSION })
-      await db.metadata.put({ key: 'schema-version', value: 8 })
+      await db.metadata.put({ key: 'schema-version', value: 9 })
     })
   } else if (seedVersion?.value !== INITIAL_FOODS_VERSION) {
     await db.transaction('rw', [db.foods, db.metadata], async () => {
@@ -373,10 +405,11 @@ export async function initializeDatabase(): Promise<void> {
         .map((food) => food.id)
       if (legacyIdsToDelete.length > 0) await db.foods.bulkDelete(legacyIdsToDelete)
       await db.metadata.put({ key: 'initial-foods-version', value: INITIAL_FOODS_VERSION })
-      await db.metadata.put({ key: 'schema-version', value: 8 })
+      await db.metadata.put({ key: 'schema-version', value: 9 })
     })
   }
   await ensureSearchMetadata()
+  await db.metadata.put({ key: 'schema-version', value: 9 })
 }
 
 export async function getSettings(): Promise<AppSettings> {
@@ -403,6 +436,34 @@ export async function getSettings(): Promise<AppSettings> {
 
 export async function saveSettings(settings: AppSettings): Promise<void> {
   await db.settings.put(settings)
+}
+
+/** 身体情報・再計算済み目標・体重履歴を同一トランザクションで更新する。 */
+export async function saveBodyProfileSettings(settings: AppSettings, recordedAt = new Date().toISOString()): Promise<void> {
+  const nextBodyProfile = { ...DEFAULT_BODY_PROFILE, ...settings.bodyProfile }
+  if (nextBodyProfile.weightKg !== null && !isValidWeightKg(nextBodyProfile.weightKg)) {
+    throw new Error('体重は正の有限値で入力してください。')
+  }
+  await db.transaction('rw', [db.settings, db.weightRecords], async () => {
+    const stored = await db.settings.get('app')
+    const currentBodyProfile = { ...DEFAULT_BODY_PROFILE, ...stored?.bodyProfile }
+    await db.settings.put({ ...settings, bodyProfile: nextBodyProfile })
+    if (isValidWeightKg(nextBodyProfile.weightKg) && nextBodyProfile.weightKg !== currentBodyProfile.weightKg) {
+      await db.weightRecords.add(createWeightRecord(nextBodyProfile.weightKg, recordedAt))
+    }
+  })
+}
+
+export async function getWeightRecords(): Promise<WeightRecord[]> {
+  return sortWeightRecords(await db.weightRecords.orderBy('recordedAt').toArray())
+}
+
+export async function getWeightRecordsBetween(from: string, to: string): Promise<WeightRecord[]> {
+  if (!isValidTokyoDateKey(from) || !isValidTokyoDateKey(to) || from > to) {
+    throw new Error('体重履歴の日付範囲が不正です。')
+  }
+  const records = await db.weightRecords.where('date').between(from, to, true, true).toArray()
+  return sortWeightRecords(records)
 }
 
 export async function searchFoods(query: string): Promise<Food[]> {
@@ -902,17 +963,18 @@ export async function getRecentFoods(limit = 20): Promise<Food[]> {
 
 export async function exportBackup(): Promise<BackupData> {
   await getSettings()
-  return db.transaction('r', [db.foods, db.mealEntries, db.favorites, db.settings, db.menus, db.generalMenus, db.menuSets, db.foodGroups, db.foodAliases, db.foodRelatedTerms, db.foodUsageStats, db.searchLogs, db.estimationSettings, db.estimationRequests, db.estimationResults, db.estimationDecisions], async () => {
+  return db.transaction('r', [db.foods, db.mealEntries, db.favorites, db.settings, db.menus, db.generalMenus, db.menuSets, db.foodGroups, db.foodAliases, db.foodRelatedTerms, db.foodUsageStats, db.searchLogs, db.estimationSettings, db.estimationRequests, db.estimationResults, db.estimationDecisions, db.weightRecords], async () => {
     const settings = await db.settings.get('app')
     if (!settings) throw new Error('設定を読み込めませんでした。')
-    const [foods, mealEntries, favorites, foodGroups, foodAliases, foodRelatedTerms, foodUsageStats, searchLogs, menus, generalMenus, menuSets, estimationSettings, estimationRequests, estimationResults, estimationDecisions] = await Promise.all([
+    const [foods, mealEntries, favorites, foodGroups, foodAliases, foodRelatedTerms, foodUsageStats, searchLogs, menus, generalMenus, menuSets, estimationSettings, estimationRequests, estimationResults, estimationDecisions, weightRecords] = await Promise.all([
       db.foods.toArray(), db.mealEntries.toArray(), db.favorites.toArray(), db.foodGroups.toArray(), db.foodAliases.toArray(),
       db.foodRelatedTerms.toArray(), db.foodUsageStats.toArray(), db.searchLogs.toArray(), db.menus.toArray(), db.generalMenus.toArray(), db.menuSets.toArray(),
-      db.estimationSettings.get('default'), db.estimationRequests.toArray(), db.estimationResults.toArray(), db.estimationDecisions.toArray(),
+      db.estimationSettings.get('default'), db.estimationRequests.toArray(), db.estimationResults.toArray(), db.estimationDecisions.toArray(), db.weightRecords.toArray(),
     ])
+    const exportSettings = { ...settings, dataFormatVersion: 3 as const }
     return {
       format: 'nutrition-pwa-backup',
-      dataFormatVersion: settings.dataFormatVersion,
+      dataFormatVersion: 3,
       exportedAt: new Date().toISOString(),
       foods,
       mealEntries,
@@ -925,7 +987,8 @@ export async function exportBackup(): Promise<BackupData> {
       menus,
       generalMenus,
       menuSets,
-      settings,
+      weightRecords,
+      settings: exportSettings,
       estimationDataFormatVersion: 1,
       estimationSettings,
       estimationRequests,
@@ -943,7 +1006,7 @@ export interface ReplaceAllDataResult {
 export async function replaceAllData(backup: BackupData): Promise<ReplaceAllDataResult> {
   // UI以外の呼び出しでも、不正なバックアップで既存データを消さない。
   const validatedBackup = validateBackup(backup)
-  await db.transaction('rw', [db.foods, db.mealEntries, db.favorites, db.settings, db.metadata, db.menus, db.generalMenus, db.menuSets, db.foodGroups, db.foodAliases, db.foodRelatedTerms, db.foodUsageStats, db.searchLogs, db.estimationSettings, db.estimationRequests, db.estimationResults, db.estimationDecisions], async () => {
+  await db.transaction('rw', [db.foods, db.mealEntries, db.favorites, db.settings, db.metadata, db.menus, db.generalMenus, db.menuSets, db.foodGroups, db.foodAliases, db.foodRelatedTerms, db.foodUsageStats, db.searchLogs, db.estimationSettings, db.estimationRequests, db.estimationResults, db.estimationDecisions, db.weightRecords], async () => {
     await db.foods.clear()
     await db.mealEntries.clear()
     await db.favorites.clear()
@@ -961,6 +1024,7 @@ export async function replaceAllData(backup: BackupData): Promise<ReplaceAllData
     await db.estimationRequests.clear()
     await db.estimationResults.clear()
     await db.estimationDecisions.clear()
+    await db.weightRecords.clear()
     if (validatedBackup.foods.length) await db.foods.bulkAdd(validatedBackup.foods)
     if (validatedBackup.mealEntries.length) await db.mealEntries.bulkAdd(normalizeMealEntryGroups(validatedBackup.mealEntries))
     if (validatedBackup.favorites.length) await db.favorites.bulkAdd(validatedBackup.favorites)
@@ -976,8 +1040,9 @@ export async function replaceAllData(backup: BackupData): Promise<ReplaceAllData
     if (validatedBackup.estimationRequests?.length) await db.estimationRequests.bulkAdd(validatedBackup.estimationRequests)
     if (validatedBackup.estimationResults?.length) await db.estimationResults.bulkAdd(validatedBackup.estimationResults)
     if (validatedBackup.estimationDecisions?.length) await db.estimationDecisions.bulkAdd(validatedBackup.estimationDecisions)
+    if (validatedBackup.weightRecords?.length) await db.weightRecords.bulkAdd(validatedBackup.weightRecords)
     await db.settings.put(validatedBackup.settings)
-    await db.metadata.put({ key: 'schema-version', value: 8 })
+    await db.metadata.put({ key: 'schema-version', value: 9 })
     await db.metadata.put({ key: 'initial-foods-seeded', value: true })
     await db.metadata.put({ key: 'initial-foods-version', value: INITIAL_FOODS_VERSION })
     if (validatedBackup.foodAliases !== undefined && validatedBackup.foodRelatedTerms !== undefined) {

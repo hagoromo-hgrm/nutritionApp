@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { validateBackup } from '../src/services/backup'
+import { backupToJson, parseBackupText, validateBackup } from '../src/services/backup'
 import { CSV_HEADERS, LEGACY_CSV_HEADERS, PREVIOUS_CSV_HEADERS, SORTED_CSV_HEADERS, USER_FACING_CSV_HEADERS, mealsToCsv, parseMealsCsv } from '../src/services/csv'
 import { createEstimationRequest } from '../src/services/nutrientEstimationStore'
 import { estimateNutrients, toStoredNutrientEstimateResult } from '../src/services/nutrientEstimator'
+import { DEFAULT_ESTIMATION_SETTINGS } from '../src/types'
 import type { BackupData, Food, MealEntry } from '../src/types'
 
 const addedNutrients = { calciumMg: null, ironMg: null, vitaminAMcg: null, vitaminEMg: null, vitaminB1Mg: null, vitaminB2Mg: null, vitaminCMg: null, saturatedFatG: null }
@@ -48,6 +49,24 @@ describe('export formats', () => {
     expect(csv.split('\r\n')[0].slice(1).split(',')).toEqual(CSV_HEADERS)
     expect(csv).toContain('"米, 白米"')
     expect(csv).toContain('"メーカー""A"""')
+  })
+
+  it('v3バックアップは体重履歴を検証し、JSON roundtripできる', () => {
+    const weightRecord = { id: 'weight_1', recordedAt: '2026-08-04T15:00:00.000Z', date: '2026-08-05', weightKg: 65.4 }
+    const v3: BackupData = {
+      ...backup,
+      dataFormatVersion: 3,
+      settings: { ...backup.settings, dataFormatVersion: 3 },
+      weightRecords: [weightRecord],
+      estimationDataFormatVersion: 1,
+      estimationSettings: { ...DEFAULT_ESTIMATION_SETTINGS, updatedAt: '2026-07-15T00:00:00.000Z' },
+      estimationRequests: [], estimationResults: [], estimationDecisions: [],
+    }
+    expect(parseBackupText(backupToJson(v3)).weightRecords).toEqual([weightRecord])
+    expect(() => validateBackup({ ...v3, weightRecords: [{ ...weightRecord, date: '2026-08-04' }] })).toThrow('体重履歴')
+    expect(() => validateBackup({ ...v3, weightRecords: [weightRecord, weightRecord] })).toThrow('重複')
+    expect(() => validateBackup({ ...v3, weightRecords: [{ ...weightRecord, weightKg: Number.NaN }] })).toThrow('体重履歴')
+    expect(() => validateBackup({ ...v3, weightRecords: undefined })).toThrow('体重履歴')
   })
 
   it('このPWAで出力したCSVから食事スナップショットを復元できる', () => {
