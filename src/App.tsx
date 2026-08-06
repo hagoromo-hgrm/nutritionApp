@@ -186,7 +186,7 @@ import {
   searchUserFoodGroups,
   type UserFoodSearchResult,
 } from './services/mextUserFoodData'
-import { getFoodSnapshotDisplayName, getMealEntryDisplayName, getMextUserFacingFoodName } from './services/mealEntryDisplay'
+import { getFoodSnapshotDisplayName, getMealEntryDisplayName, getMextUserFacingFoodName, isMealEntryDeleted } from './services/mealEntryDisplay'
 import { addDays, currentDateKey, currentMonthRange, formatDateTime, formatFileTimestamp, isoFromTokyoTimeInput, toTokyoTimeInput, formatTime } from './utils/date'
 import { isPositiveFinite, isValidBarcode, isValidQuantityUnit, isValidUnit } from './utils/validation'
 import './styles.css'
@@ -2836,7 +2836,7 @@ function MenuFoodPicker({ menus, generalMenus, menuSets, foods, onSelect, onSele
 
 function MealGroup({ type, entries, subtotal, existingFoodIds, onShowDetails, onOpenConfirmation }: { type: MealType; entries: MealEntry[]; subtotal?: Nutrients; existingFoodIds: Set<string>; onShowDetails: (type: MealType, entries: MealEntry[], subtotal: Nutrients) => void; onOpenConfirmation: (type: MealType) => void }) {
   const sharedTime = entries[0]?.eatenAt
-  return <div className="meal-group"><div className="meal-heading"><h3><img className="meal-icon" src={MEAL_ICON_ASSETS[type]} alt="" aria-hidden="true" />{type}</h3><div className="meal-heading-actions"><span>{entries.length ? `${formatNutrient(subtotal?.energyKcal ?? null)} kcal` : '記録なし'}</span>{entries.length > 0 && <button type="button" className="small-action" onClick={() => onShowDetails(type, entries, subtotal ?? EMPTY_NUTRIENTS)}>詳細</button>}<button type="button" className="meal-record-button" onClick={() => onOpenConfirmation(type)}>編集</button></div></div>{entries.length > 0 && type !== '間食' && <div className="meal-shared-time">食事時刻：{sharedTime ? formatTime(sharedTime) : '未設定'}</div>}{entries.map((entry) => <div className="meal-entry" key={entry.id}><div className="meal-entry-copy"><strong>{getMealEntryDisplayName(entry)}{entry.foodSnapshot.maker ? `（${entry.foodSnapshot.maker}）` : ''}</strong><span>{entry.amount}{entry.amountUnit}{type === '間食' ? ` · ${formatTime(entry.eatenAt)}` : ''}{existingFoodIds.has(entry.foodId) ? '' : ' · 削除済み食品'}</span></div><div className="meal-entry-actions"><b>{formatNutrient(entry.calculatedNutrients.energyKcal)} kcal</b></div></div>)}</div>
+  return <div className="meal-group"><div className="meal-heading"><h3><img className="meal-icon" src={MEAL_ICON_ASSETS[type]} alt="" aria-hidden="true" />{type}</h3><div className="meal-heading-actions"><span>{entries.length ? `${formatNutrient(subtotal?.energyKcal ?? null)} kcal` : '記録なし'}</span>{entries.length > 0 && <button type="button" className="small-action" onClick={() => onShowDetails(type, entries, subtotal ?? EMPTY_NUTRIENTS)}>詳細</button>}<button type="button" className="meal-record-button" onClick={() => onOpenConfirmation(type)}>編集</button></div></div>{entries.length > 0 && type !== '間食' && <div className="meal-shared-time">食事時刻：{sharedTime ? formatTime(sharedTime) : '未設定'}</div>}{entries.map((entry) => <div className="meal-entry" key={entry.id}><div className="meal-entry-copy"><strong>{getMealEntryDisplayName(entry)}{entry.foodSnapshot.maker ? `（${entry.foodSnapshot.maker}）` : ''}</strong><span>{entry.amount}{entry.amountUnit}{type === '間食' ? ` · ${formatTime(entry.eatenAt)}` : ''}{isMealEntryDeleted(entry, existingFoodIds) ? ' · 削除済み食品' : ''}</span></div><div className="meal-entry-actions"><b>{formatNutrient(entry.calculatedNutrients.energyKcal)} kcal</b></div></div>)}</div>
 }
 
 interface FoodsViewProps { recordingMealType: MealType | null; recordingEntryCount: number; foods: Food[]; foodGroups: FoodGroup[]; menus: Menu[]; generalMenus: GeneralMenu[]; menuSets: MenuSet[]; recentFoods: Food[]; favoriteFoods: Food[]; favoriteIds: Set<string>; onSelectFood: (food: Food) => void; onSelectMenuSet: (menuSet: MenuSet) => void; onCreateTemporaryMenu: () => void; onToggleFavorite: (food: Food) => void; onReorderFavorites: (orderedFoodIds: string[]) => Promise<void>; onEditFood: (food: Food) => void; onDeleteFood: (food: Food) => void; onOpenSearch?: () => void; onOpenScanner: () => void; onOpenConfirmation: () => void; onBack: () => void; backLabel: string; copyMealType: 'すべて' | MealType; setCopyMealType: (value: 'すべて' | MealType) => void; onCopyPrevious: () => void }
@@ -2858,7 +2858,7 @@ function FoodsView({ recordingMealType, recordingEntryCount, foods, foodGroups, 
   const tabs: Array<{ id: 'favorites' | 'history' | 'foods' | 'menus'; label: string }> = selectable
     ? [{ id: 'favorites', label: 'お気に入り' }, { id: 'history', label: '履歴' }, { id: 'menus', label: 'メニュー' }]
     : []
-  return <><section className="page-heading food-screen-heading"><div><span className="eyebrow">{recordingMealType ? 'SELECT FOOD' : 'FOOD MASTER'}</span><h1>{recordingMealType ? `${recordingMealType}の食品を選ぶ` : '食品を登録・管理'}</h1></div><div className="food-screen-heading-actions">{recordingMealType && <button className="button primary" type="button" onClick={onOpenConfirmation} disabled={recordingEntryCount === 0}>確認</button>}<button className="button ghost" type="button" onClick={onBack}>{backLabel}</button></div></section><div className="action-row">{onOpenSearch && <button className="button primary" type="button" onClick={onOpenSearch}>⌕ 食品を検索</button>}<button className="button secondary" type="button" onClick={onOpenScanner}>{recordingMealType ? '▦ バーコードで追加' : '▦ バーコード検索'}</button></div><div className="search-category-tabs food-screen-tabs" role="tablist" aria-label="食品登録方法">{tabs.map((tab) => <button key={tab.id} id={`food-screen-tab-${tab.id}`} className={activeTab === tab.id ? 'active' : ''} type="button" role="tab" aria-selected={activeTab === tab.id} aria-controls="food-screen-tab-panel" onClick={() => setActiveTab(tab.id)}>{tab.label}</button>)}</div><div id="food-screen-tab-panel" role="tabpanel" aria-labelledby={`food-screen-tab-${activeTab}`} className="food-screen-sections">{activeTab === 'menus' && selectable && <MenuFoodPicker menus={menus} generalMenus={generalMenus} menuSets={menuSets} foods={foods} onSelect={onSelectFood} onSelectMenuSet={onSelectMenuSet} onCreateTemporaryMenu={onCreateTemporaryMenu} />}{activeTab === 'favorites' && selectable && <section className="section-block food-section-card food-quick-section"><div className="section-title"><div><span className="eyebrow">FAVORITES</span><h2>お気に入り</h2></div><span className="count-label quick-count">{favoriteFoods.length}件</span></div><QuickFoodGroup title="お気に入りの食品" foods={favoriteFoods.slice(0, 20)} favoriteIds={favoriteIds} onSelect={onSelectFood} onToggleFavorite={onToggleFavorite} /></section>}{activeTab === 'history' && selectable && <section className="section-block food-section-card food-quick-section"><div className="section-title"><div><span className="eyebrow">HISTORY</span><h2>履歴</h2></div><span className="count-label quick-count">{recentFoods.length}件</span></div><QuickFoodGroup title="最近使った食品" foods={recentFoods.slice(0, 20)} favoriteIds={favoriteIds} onSelect={onSelectFood} onToggleFavorite={onToggleFavorite} emptyText="食事を記録すると、最近使った食品がここに表示されます。" />{recordingMealType && <section className="copy-panel quick-copy-panel"><div><strong>前日の食事をコピー</strong><span>当日の現在時刻で登録します</span></div><select value={copyMealType} onChange={(event) => setCopyMealType(event.target.value as 'すべて' | MealType)}><option>すべて</option>{MEAL_TYPES.map((type) => <option key={type}>{type}</option>)}</select><button className="button ghost" type="button" onClick={onCopyPrevious}>コピー</button></section>}</section>}{activeTab === 'foods' && <section className="section-block food-section-card"><div className="section-title"><div><span className="eyebrow">FOODS</span><h2>食品</h2></div><span className="count-label">{visibleFoods.length}件</span></div>{!selectable && <div className="search-category-tabs food-master-list-tabs" role="tablist" aria-label="食品一覧の分類"><button className={foodMasterCategory === 'all' ? 'active' : ''} type="button" role="tab" aria-selected={foodMasterCategory === 'all'} onClick={() => setFoodMasterCategory('all')}>すべて</button><button className={foodMasterCategory === 'favorites' ? 'active' : ''} type="button" role="tab" aria-selected={foodMasterCategory === 'favorites'} onClick={() => setFoodMasterCategory('favorites')}>お気に入り</button><button className={foodMasterCategory === 'commercial' ? 'active' : ''} type="button" role="tab" aria-selected={foodMasterCategory === 'commercial'} onClick={() => setFoodMasterCategory('commercial')}>外食・市販</button></div>}{!selectable && foodMasterCategory === 'favorites' ? <FavoriteFoodsManager foods={favoriteFoods} favoriteIds={favoriteIds} onToggleFavorite={onToggleFavorite} onEditFood={onEditFood} onReorder={onReorderFavorites} /> : <div className="menu-picker-groups">{indexedFoodGroups.map((group) => { const open = openFoodGroups.has(group.key); return <details className="menu-picker-group" key={group.key} open={open} onToggle={(event) => { const isOpen = event.currentTarget.open; setOpenFoodGroups((current) => { const next = new Set(current); if (isOpen) next.add(group.key); else next.delete(group.key); return next }) }}><summary><span className="menu-picker-summary-label"><i aria-hidden="true" />{group.label}</span><small>{group.foods.length > 0 ? `${group.foods.length}件` : '登録なし'}</small></summary>{open && <div className="food-results">{group.foods.length > 0 ? group.foods.map((food) => <FoodRow key={food.id} food={food} favorite={favoriteIds.has(food.id)} onToggleFavorite={onToggleFavorite} onEdit={onEditFood} onDelete={onDeleteFood} />) : <p className="menu-picker-empty">この行に登録された食品はありません。</p>}</div>}</details> })}</div>}</section>}</div></>
+  return <><section className="page-heading food-screen-heading"><div><span className="eyebrow">{recordingMealType ? 'SELECT FOOD' : 'FOOD MASTER'}</span><h1>{recordingMealType ? `${recordingMealType}の食品を選ぶ` : '食品を登録・管理'}</h1></div><div className="food-screen-heading-actions"><button className="button ghost" type="button" onClick={onBack}>{backLabel}</button></div></section><div className="action-row">{onOpenSearch && <button className="button primary" type="button" onClick={onOpenSearch}>⌕ 食品を検索</button>}<button className="button secondary" type="button" onClick={onOpenScanner}>{recordingMealType ? '▦ バーコードで追加' : '▦ バーコード検索'}</button></div><div className="search-category-tabs food-screen-tabs" role="tablist" aria-label="食品登録方法">{tabs.map((tab) => <button key={tab.id} id={`food-screen-tab-${tab.id}`} className={activeTab === tab.id ? 'active' : ''} type="button" role="tab" aria-selected={activeTab === tab.id} aria-controls="food-screen-tab-panel" onClick={() => setActiveTab(tab.id)}>{tab.label}</button>)}</div><div id="food-screen-tab-panel" role="tabpanel" aria-labelledby={`food-screen-tab-${activeTab}`} className="food-screen-sections">{activeTab === 'menus' && selectable && <MenuFoodPicker menus={menus} generalMenus={generalMenus} menuSets={menuSets} foods={foods} onSelect={onSelectFood} onSelectMenuSet={onSelectMenuSet} onCreateTemporaryMenu={onCreateTemporaryMenu} />}{activeTab === 'favorites' && selectable && <section className="section-block food-section-card food-quick-section"><div className="section-title"><div><span className="eyebrow">FAVORITES</span><h2>お気に入り</h2></div><span className="count-label quick-count">{favoriteFoods.length}件</span></div><QuickFoodGroup title="お気に入りの食品" foods={favoriteFoods.slice(0, 20)} favoriteIds={favoriteIds} onSelect={onSelectFood} onToggleFavorite={onToggleFavorite} /></section>}{activeTab === 'history' && selectable && <section className="section-block food-section-card food-quick-section"><div className="section-title"><div><span className="eyebrow">HISTORY</span><h2>履歴</h2></div><span className="count-label quick-count">{recentFoods.length}件</span></div><QuickFoodGroup title="最近使った食品" foods={recentFoods.slice(0, 20)} favoriteIds={favoriteIds} onSelect={onSelectFood} onToggleFavorite={onToggleFavorite} emptyText="食事を記録すると、最近使った食品がここに表示されます。" />{recordingMealType && <section className="copy-panel quick-copy-panel"><div><strong>前日の食事をコピー</strong><span>当日の現在時刻で登録します</span></div><select value={copyMealType} onChange={(event) => setCopyMealType(event.target.value as 'すべて' | MealType)}><option>すべて</option>{MEAL_TYPES.map((type) => <option key={type}>{type}</option>)}</select><button className="button ghost" type="button" onClick={onCopyPrevious}>コピー</button></section>}</section>}{activeTab === 'foods' && <section className="section-block food-section-card"><div className="section-title"><div><span className="eyebrow">FOODS</span><h2>食品</h2></div><span className="count-label">{visibleFoods.length}件</span></div>{!selectable && <div className="search-category-tabs food-master-list-tabs" role="tablist" aria-label="食品一覧の分類"><button className={foodMasterCategory === 'all' ? 'active' : ''} type="button" role="tab" aria-selected={foodMasterCategory === 'all'} onClick={() => setFoodMasterCategory('all')}>すべて</button><button className={foodMasterCategory === 'favorites' ? 'active' : ''} type="button" role="tab" aria-selected={foodMasterCategory === 'favorites'} onClick={() => setFoodMasterCategory('favorites')}>お気に入り</button><button className={foodMasterCategory === 'commercial' ? 'active' : ''} type="button" role="tab" aria-selected={foodMasterCategory === 'commercial'} onClick={() => setFoodMasterCategory('commercial')}>外食・市販</button></div>}{!selectable && foodMasterCategory === 'favorites' ? <FavoriteFoodsManager foods={favoriteFoods} favoriteIds={favoriteIds} onToggleFavorite={onToggleFavorite} onEditFood={onEditFood} onReorder={onReorderFavorites} /> : <div className="menu-picker-groups">{indexedFoodGroups.map((group) => { const open = openFoodGroups.has(group.key); return <details className="menu-picker-group" key={group.key} open={open} onToggle={(event) => { const isOpen = event.currentTarget.open; setOpenFoodGroups((current) => { const next = new Set(current); if (isOpen) next.add(group.key); else next.delete(group.key); return next }) }}><summary><span className="menu-picker-summary-label"><i aria-hidden="true" />{group.label}</span><small>{group.foods.length > 0 ? `${group.foods.length}件` : '登録なし'}</small></summary>{open && <div className="food-results">{group.foods.length > 0 ? group.foods.map((food) => <FoodRow key={food.id} food={food} favorite={favoriteIds.has(food.id)} onToggleFavorite={onToggleFavorite} onEdit={onEditFood} onDelete={onDeleteFood} />) : <p className="menu-picker-empty">この行に登録された食品はありません。</p>}</div>}</details> })}</div>}</section>}</div>{recordingMealType && <button className="floating-next" type="button" onClick={onOpenConfirmation} disabled={recordingEntryCount === 0}>確認<span aria-hidden="true">→</span></button>}</>
 }
 
 function SearchInputView({ bars, setBars, onSearch, onBack }: { bars: string[]; setBars: React.Dispatch<React.SetStateAction<string[]>>; onSearch: () => void; onBack: () => void }) {
@@ -2887,7 +2887,7 @@ function SearchResultsView({ groups, purpose, category, searching, onCategoryCha
   const categories = purpose === 'meal' ? MEAL_SEARCH_CATEGORIES : FOOD_MASTER_SEARCH_CATEGORIES
   const emptyLabel = category === 'all' ? '一致する食品・メニューがありません。' : category === 'menu' ? '一致するメニューがありません。' : `${searchCategoryLabels[category]}に一致する食品がありません。`
   return <>
-    <section className="page-heading search-results-page-heading"><div><span className="eyebrow">SEARCH RESULTS</span><h1>検索結果</h1></div><div className="search-results-heading-actions">{purpose === 'meal' && <button className="button primary" type="button" onClick={onOpenConfirmation}>確認</button>}<button className="button ghost" type="button" onClick={onBack}>← 検索画面へ</button></div></section>
+    <section className="page-heading search-results-page-heading"><div><span className="eyebrow">SEARCH RESULTS</span><h1>検索結果</h1></div><div className="search-results-heading-actions"><button className="button ghost" type="button" onClick={onBack}>← 検索画面へ</button></div></section>
     <div className="search-category-tabs" role="tablist" aria-label="検索結果の分類">{categories.map((value) => <button key={value} id={`search-category-${value}`} role="tab" type="button" aria-selected={category === value} aria-controls="search-category-panel" className={category === value ? 'active' : ''} disabled={searching} onClick={() => onCategoryChange(value)}>{searchCategoryLabels[value]}</button>)}</div>
     <div id="search-category-panel" role="tabpanel" aria-labelledby={`search-category-${category}`} aria-busy={searching} className="search-result-groups">
       {searching ? <div className="empty-state">検索中…</div> : <>
@@ -2902,6 +2902,7 @@ function SearchResultsView({ groups, purpose, category, searching, onCategoryCha
         {groups.length === 0 && <div className="empty-state">検索結果はありません。検索画面へ戻って再検索してください。</div>}
       </>}
     </div>
+    {purpose === 'meal' && <button className="floating-next" type="button" onClick={onOpenConfirmation}>確認<span aria-hidden="true">→</span></button>}
   </>
 }
 
@@ -3453,6 +3454,8 @@ interface MenuFoodSelectionProps {
   onSaveFoodAttributePreference?: (foodGroupId: string, attributeId: string, preference: FoodAttributePreference | null) => Promise<boolean>
 }
 
+const MENU_FOOD_SEARCH_PAGE_SIZE = 20
+
 function MenuFoodChoiceRow({ food, selected, favorite, onAdd, onToggleFavorite }: { food: Food; selected: boolean; favorite: boolean; onAdd: (food: Food) => void; onToggleFavorite: (food: Food) => void }) {
   return <div className="food-row"><div className="food-main static"><strong>{displayFoodName(food)}</strong><span>{food.maker || '一般食品'} · {foodListNutritionLabel(food)}</span></div><button type="button" className="small-action food-add-button" onClick={() => onAdd(food)} disabled={selected}>{selected ? '追加済み' : '追加'}</button><button type="button" className={`favorite-button${favorite ? ' is-favorite' : ''}`} onClick={() => onToggleFavorite(food)} aria-label={favorite ? 'お気に入りを解除' : 'お気に入りに追加'}>{favorite ? '★' : '☆'}</button></div>
 }
@@ -3490,8 +3493,12 @@ function MenuFoodSelection({ selectedIds, selectedIngredients, selectedMenuIds =
   const [searchedQuery, setSearchedQuery] = useState('')
   const [foodCategory, setFoodCategory] = useState<'all' | 'commercial'>('all')
   const [userSearchResults, setUserSearchResults] = useState<UserFoodSearchResult[]>([])
+  const [userSearchResultOffset, setUserSearchResultOffset] = useState(0)
+  const [userSearchResultTotal, setUserSearchResultTotal] = useState(0)
   const [searchResults, setSearchResults] = useState<FoodSearchResult[]>([])
+  const [searchNextCursor, setSearchNextCursor] = useState<string | null>(null)
   const [searching, setSearching] = useState(false)
+  const [loadingMoreSearchResults, setLoadingMoreSearchResults] = useState(false)
   const [variantResult, setVariantResult] = useState<FoodVariantPickerState | null>(null)
   const normalizedQuery = normalizeSearchText(foodQuery)
   const selectedFoods = selectedIds.map((id) => foods.find((food) => food.id === id)).filter((food): food is Food => Boolean(food))
@@ -3515,10 +3522,17 @@ function MenuFoodSelection({ selectedIds, selectedIngredients, selectedMenuIds =
     .filter((food, index, all) => all.findIndex((item) => item.id === food.id) === index)
     .slice(0, 8)
 
-  useEffect(() => {
+  const resetSearchResults = () => {
     setSearchedQuery('')
     setUserSearchResults([])
+    setUserSearchResultOffset(0)
+    setUserSearchResultTotal(0)
     setSearchResults([])
+    setSearchNextCursor(null)
+  }
+
+  useEffect(() => {
+    resetSearchResults()
   }, [foodCategory])
 
   const startFoodAdd = (food: Food) => {
@@ -3539,15 +3553,19 @@ function MenuFoodSelection({ selectedIds, selectedIngredients, selectedMenuIds =
 
   const runSearch = async () => {
     const query = foodQuery.trim()
-    if (!query) { setSearchedQuery(''); setUserSearchResults([]); setSearchResults([]); return }
+    resetSearchResults()
+    if (!query) return
     setSearching(true)
     try {
       const requestedCategory = allowFoodCategoryFilter ? foodCategory : 'all'
       const allUserResults = requestedCategory === 'all' ? searchUserFoodGroups(query, { expandPartShortcuts: true }) : []
       const coveredFoodGroupIds = new Set(allUserResults.flatMap((result) => result.group.memberFoodGroupIds))
-      const { page } = await searchFoodResults(query, { limit: 20, category: requestedCategory })
-      setUserSearchResults(allUserResults.slice(0, 20))
+      const { page } = await searchFoodResults(query, { limit: MENU_FOOD_SEARCH_PAGE_SIZE, category: requestedCategory })
+      setUserSearchResults(allUserResults.slice(0, MENU_FOOD_SEARCH_PAGE_SIZE))
+      setUserSearchResultOffset(Math.min(MENU_FOOD_SEARCH_PAGE_SIZE, allUserResults.length))
+      setUserSearchResultTotal(allUserResults.length)
       setSearchResults(requestedCategory === 'commercial' ? page.results : page.results.filter((result) => !coveredFoodGroupIds.has(result.group.id)))
+      setSearchNextCursor(page.nextCursor)
       setSearchedQuery(normalizeSearchText(query))
     } catch {
       setUserSearchResults([])
@@ -3559,6 +3577,7 @@ function MenuFoodSelection({ selectedIds, selectedIngredients, selectedMenuIds =
   }
 
   const showSearchResults = normalizedQuery.length > 0 && searchedQuery === normalizedQuery
+  const canLoadMoreSearchResults = userSearchResultOffset < userSearchResultTotal || searchNextCursor !== null
   const chooseSearchResult = (result: FoodSearchResult) => {
     if (result.variants.length > 1) setVariantResult({ result })
     else startFoodAdd(result.food)
@@ -3585,6 +3604,35 @@ function MenuFoodSelection({ selectedIds, selectedIngredients, selectedMenuIds =
     }
   }
 
+  const loadMoreSearchResults = async () => {
+    if (!canLoadMoreSearchResults || loadingMoreSearchResults) return
+    setLoadingMoreSearchResults(true)
+    try {
+      const query = foodQuery.trim()
+      const requestedCategory = allowFoodCategoryFilter ? foodCategory : 'all'
+      const allUserResults = requestedCategory === 'all' ? searchUserFoodGroups(query, { expandPartShortcuts: true }) : []
+      const additionalUserResults = allUserResults.slice(userSearchResultOffset, userSearchResultOffset + MENU_FOOD_SEARCH_PAGE_SIZE)
+      const nextUserOffset = Math.min(userSearchResultOffset + MENU_FOOD_SEARCH_PAGE_SIZE, allUserResults.length)
+      let additionalSearchResults: FoodSearchResult[] = []
+      let nextCursor = searchNextCursor
+      if (searchNextCursor !== null) {
+        const coveredFoodGroupIds = new Set(allUserResults.flatMap((result) => result.group.memberFoodGroupIds))
+        const { page } = await searchFoodResults(query, { limit: MENU_FOOD_SEARCH_PAGE_SIZE, cursor: searchNextCursor, category: requestedCategory })
+        additionalSearchResults = requestedCategory === 'commercial' ? page.results : page.results.filter((result) => !coveredFoodGroupIds.has(result.group.id))
+        nextCursor = page.nextCursor
+      }
+      setUserSearchResults((current) => [...current, ...additionalUserResults])
+      setUserSearchResultOffset(nextUserOffset)
+      setUserSearchResultTotal(allUserResults.length)
+      setSearchResults((current) => [...current, ...additionalSearchResults])
+      setSearchNextCursor(nextCursor)
+    } catch {
+      // 追加読み込みに失敗しても、既に表示中の検索結果は維持する。
+    } finally {
+      setLoadingMoreSearchResults(false)
+    }
+  }
+
   return (
     <div className="menu-food-selection">
       {showSelectedList && <><div className="menu-selected-heading"><span>選択中の食材</span><span>{selectedCount}件</span></div>
@@ -3599,7 +3647,7 @@ function MenuFoodSelection({ selectedIds, selectedIngredients, selectedMenuIds =
           {allowFoodCategoryFilter && <div className="search-category-tabs menu-food-category-tabs" role="tablist" aria-label="追加する食品の分類"><button className={foodCategory === 'all' ? 'active' : ''} type="button" role="tab" aria-selected={foodCategory === 'all'} onClick={() => setFoodCategory('all')}>すべて</button><button className={foodCategory === 'commercial' ? 'active' : ''} type="button" role="tab" aria-selected={foodCategory === 'commercial'} onClick={() => setFoodCategory('commercial')}>外食・市販</button></div>}
           <div className="menu-food-search-row">
             <label className="menu-food-search">食材を検索
-              <input value={foodQuery} onChange={(event) => { setFoodQuery(event.target.value); setSearchedQuery('') }} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); void runSearch() } }} placeholder={onAddMenu ? '食品名・メーカー・メニュー名' : '食品名・メーカー'} />
+              <input value={foodQuery} onChange={(event) => { setFoodQuery(event.target.value); resetSearchResults() }} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); void runSearch() } }} placeholder={onAddMenu ? '食品名・メーカー・メニュー名' : '食品名・メーカー'} />
             </label>
             <button className="button secondary menu-food-search-button" type="button" onClick={() => void runSearch()} disabled={searching}>{searching ? '検索中…' : '検索する'}</button>
           </div>
@@ -3611,6 +3659,7 @@ function MenuFoodSelection({ selectedIds, selectedIngredients, selectedMenuIds =
                   ? <>{onAddMenu && matchingMenus.map((menu) => <button className="menu-food-search-result" type="button" key={`menu:${menu.id}`} disabled={selectedIngredientKeys.has(`menu:${menu.id}`)} onClick={() => onAddMenu(menu)}><span className="source-badge">My</span><span><strong>{menu.name}</strong><small>{menu.category} · 1食単位</small></span><b>{selectedIngredientKeys.has(`menu:${menu.id}`) ? '追加済み' : '›'}</b></button>)}{onAddGeneralMenu && matchingGeneralMenus.map((menu) => <button className="menu-food-search-result" type="button" key={`general-menu:${menu.id}`} disabled={selectedIngredientKeys.has(`general-menu:${menu.id}`)} onClick={() => onAddGeneralMenu(menu)}><span className="source-badge">一般</span><span><strong>{menu.name}</strong><small>{menu.category} · 1食単位</small></span><b>{selectedIngredientKeys.has(`general-menu:${menu.id}`) ? '追加済み' : '›'}</b></button>)}{userSearchResults.map((result) => { const label = selectedUserFoodLabel(result); return <button className="menu-food-search-result" type="button" key={`user:${result.group.id}:${result.foodGroupId ?? 'group'}`} onClick={() => chooseUserSearchResult(result)}><span className="source-badge">食品</span><span><strong>{label ?? result.group.displayName}</strong><small>{label ? `${result.group.displayName} > ${selectedUserFoodDimensionLabel(result) ?? '種類'}` : `${result.group.category} · ${result.group.memberCount > 1 ? `${result.group.memberCount}種類` : '直接選択'}`}</small></span><b>›</b></button> })}{searchResults.map((result) => { const selected = result.variants.length === 1 && selectedIngredientKeys.has(`food:${result.food.id}`); return <button className="menu-food-search-result" type="button" key={result.group.id} disabled={selected} onClick={() => chooseSearchResult(result)}><span className="source-badge">食品</span><span><strong>{displaySearchFoodName(result.group, result.food)}</strong><small>{result.group.category ?? '食品'} · {result.variants.length > 1 ? `${result.variants.length}バリエーション · ${foodListNutritionLabel(result.food, false)}` : foodListNutritionLabel(result.food)}</small></span><b>{selected ? '追加済み' : '›'}</b></button> })}</>
                   : <p className="menu-food-empty">検索に一致する食品・メニューがありません。</p>}
               </div>
+              {canLoadMoreSearchResults && <button className="button ghost menu-food-load-more" type="button" onClick={() => void loadMoreSearchResults()} disabled={loadingMoreSearchResults}>{loadingMoreSearchResults ? '読み込み中…' : 'さらに表示'}</button>}
             </>
           ) : (
             <>

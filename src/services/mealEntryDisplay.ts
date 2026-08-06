@@ -36,3 +36,8 @@ export function getMealEntryDisplayName(entry: Pick<MealEntry, 'foodId' | 'foodS
   if (mextUserFacingName) return mextUserFacingName
   return getFoodSnapshotDisplayName(entry.foodSnapshot)
 }
+
+/** メニュー記録は構成スナップショットだけで表示・計算できるため、仮想foodIdの欠落を削除済み扱いにしない。 */
+export function isMealEntryDeleted(entry: Pick<MealEntry, 'foodId' | 'foodSnapshot' | 'menuSnapshot'>, existingFoodIds: ReadonlySet<string>): boolean {
+  return !entry.menuSnapshot && !existingFoodIds.has(entry.foodId)
+}

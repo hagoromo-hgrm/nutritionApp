@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getFoodSnapshotDisplayName, getMealEntryDisplayName, getMextUserFacingFoodName } from '../src/services/mealEntryDisplay'
+import { getFoodSnapshotDisplayName, getMealEntryDisplayName, getMextUserFacingFoodName, isMealEntryDeleted } from '../src/services/mealEntryDisplay'
 import type { MealEntry } from '../src/types'
 
 describe('meal entry display name', () => {
@@ -35,5 +35,13 @@ describe('meal entry display name', () => {
     const chickenEgg = { foodId: 'mext_12004', foodSnapshot: { name: '鶏卵全卵生' } } as MealEntry
     expect(getMealEntryDisplayName(beef)).toBe('牛かたロース肉')
     expect(getMealEntryDisplayName(chickenEgg)).toBe('鶏卵')
+  })
+
+  it('メニュースナップショットは仮想foodIdが未登録でも削除済み扱いにしない', () => {
+    const menuEntry = { foodId: 'temporary-menu:1', foodSnapshot: { name: '一時メニュー' }, menuSnapshot: { sourceMenuId: '1', sourceMenuName: '一時メニュー', sourceKind: 'temporary', ingredients: [] } } as unknown as MealEntry
+    const deletedFoodEntry = { foodId: 'deleted-food', foodSnapshot: { name: '食品' } } as unknown as MealEntry
+    expect(isMealEntryDeleted(menuEntry, new Set())).toBe(false)
+    expect(isMealEntryDeleted(deletedFoodEntry, new Set())).toBe(true)
+    expect(isMealEntryDeleted({ ...deletedFoodEntry, foodId: 'existing-food' }, new Set(['existing-food']))).toBe(false)
   })
 })
