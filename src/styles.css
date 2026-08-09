@@ -652,8 +652,10 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .menu-grid-table i { display: block; border: 1px solid currentColor; border-radius: .12rem; background: transparent; }
 .nav-item.active { color: var(--accent); font-weight: 800; }
 .floating-add { position: fixed; z-index: 6; right: max(1rem, env(safe-area-inset-right)); bottom: calc(4.8rem + env(safe-area-inset-bottom)); display: grid; place-items: center; width: 3.5rem; height: 3.5rem; border: 0; border-radius: 50%; color: white; background: var(--accent); box-shadow: 0 .6rem 1.4rem rgba(69, 111, 159, .3); font-size: 1.8rem; line-height: 1; }
-.floating-next { position: fixed; z-index: 6; right: max(1rem, env(safe-area-inset-right)); bottom: calc(4.8rem + env(safe-area-inset-bottom)); display: flex; align-items: center; justify-content: center; gap: .35rem; min-width: 5.5rem; height: 3.5rem; border: 0; border-radius: 99px; padding: 0 1.1rem; color: white; background: var(--accent); box-shadow: 0 .6rem 1.4rem rgba(69, 111, 159, .3); font-size: .82rem; font-weight: 800; line-height: 1; }
-.floating-next span { font-size: 1rem; }
+.floating-next, .floating-back { position: fixed; z-index: 6; bottom: calc(4.8rem + env(safe-area-inset-bottom)); display: flex; align-items: center; justify-content: center; gap: .35rem; min-width: 5.5rem; height: 3.5rem; border: 0; border-radius: 99px; padding: 0 1.1rem; color: white; background: var(--accent); box-shadow: 0 .6rem 1.4rem rgba(69, 111, 159, .3); font-size: .82rem; font-weight: 800; line-height: 1; }
+.floating-next { right: max(1rem, env(safe-area-inset-right)); }
+.floating-back { left: max(1rem, env(safe-area-inset-left)); }
+.floating-next span, .floating-back span { font-size: 1rem; }
 .floating-next:disabled { cursor: default; opacity: .45; box-shadow: none; }
 
 .modal-backdrop { position: fixed; z-index: 10; inset: 0; display: grid; place-items: end center; overflow: hidden; padding: 1rem; overscroll-behavior: contain; background: rgba(47, 65, 84, .35); }
@@ -758,12 +760,7 @@ legend { padding: 0 .35rem; color: var(--muted); font-size: .75rem; font-weight:
   .content { width: min(100% - 1.2rem, 620px); }
   input, select, textarea, .menu-ingredient-amount input, .menu-ingredient-amount select, select.field-suffix { font-size: 16px; }
   .page-heading { align-items: start; flex-direction: column; padding-top: 1.6rem; }
-  .page-heading.search-results-page-heading { align-items: flex-start; flex-direction: row; }
-  .search-results-heading-actions { flex: 0 0 auto; }
-  .search-results-heading-actions .button { padding: .6rem .7rem; font-size: .72rem; }
-  .food-screen-heading { align-items: flex-start; flex-direction: row; gap: .35rem; padding-top: 1rem; padding-bottom: .55rem; }
-  .food-screen-heading-actions { flex: 0 0 auto; align-items: flex-end; }
-  .food-screen-heading-actions .button { align-self: flex-end; padding-top: .42rem; padding-bottom: .42rem; }
+  .food-screen-heading { padding-top: 1rem; padding-bottom: .55rem; }
   .page-heading .date-picker { align-self: stretch; justify-content: space-between; }
   .page-heading .date-picker input { flex: 1; }
   .hero-summary { padding: 1rem; border-radius: 1.2rem; }
