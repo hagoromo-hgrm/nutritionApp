@@ -45,6 +45,7 @@ import {
 } from '../services/mextFoodData'
 
 const INITIAL_FOODS_VERSION = 11
+const INITIAL_FOOD_IDS_METADATA_KEY = 'initial-food-ids'
 const SEARCH_METADATA_VERSION = 8
 const LEGACY_INITIAL_FOOD_IDS = [
   'mext_rice_white',
@@ -351,6 +352,17 @@ async function ensureSearchMetadata(): Promise<void> {
 
 export async function initializeDatabase(): Promise<void> {
   const { initialFoods } = await import('../data/initialFoods')
+  const bundledFoodIds = initialFoods.map((food) => food.id)
+  const bundledFoodIdRecord = await db.metadata.get(INITIAL_FOOD_IDS_METADATA_KEY)
+  let previousBundledFoodIds: Set<string> | null = null
+  if (typeof bundledFoodIdRecord?.value === 'string') {
+    try {
+      const parsed = JSON.parse(bundledFoodIdRecord.value) as unknown
+      if (Array.isArray(parsed) && parsed.every((id) => typeof id === 'string')) previousBundledFoodIds = new Set(parsed)
+    } catch {
+      previousBundledFoodIds = null
+    }
+  }
   const settings = await db.settings.get('app')
   if (!settings) await db.settings.put({ ...DEFAULT_SETTINGS, goals: { ...DEFAULT_SETTINGS.goals } })
   if (!await db.estimationSettings.get('default')) {
@@ -369,7 +381,6 @@ export async function initializeDatabase(): Promise<void> {
     })
   } else if (seedVersion?.value !== INITIAL_FOODS_VERSION) {
     await db.transaction('rw', [db.foods, db.metadata], async () => {
-      const bundledFoodIds = initialFoods.map((food) => food.id)
       const existingFoods = new Map(
         (await db.foods.bulkGet(bundledFoodIds))
           .filter((food): food is Food => Boolean(food))
@@ -380,7 +391,8 @@ export async function initializeDatabase(): Promise<void> {
         const enrichedFood = enrichFoodForSearch(bundledFood)
         const existing = existingFoods.get(bundledFood.id)
         if (!existing) {
-          foodsToPut.push(enrichedFood)
+          // 以前の同梱版に存在したIDが欠けている場合は、ユーザーによる削除として維持する。
+          if (!previousBundledFoodIds?.has(bundledFood.id)) foodsToPut.push(enrichedFood)
         } else if (
           existing.createdAt === existing.updatedAt
           && (
@@ -409,6 +421,7 @@ export async function initializeDatabase(): Promise<void> {
     })
   }
   await ensureSearchMetadata()
+  await db.metadata.put({ key: INITIAL_FOOD_IDS_METADATA_KEY, value: JSON.stringify(bundledFoodIds) })
   await db.metadata.put({ key: 'schema-version', value: 9 })
 }
 
@@ -937,7 +950,7 @@ export async function reorderFavorites(orderedFoodIds: string[]): Promise<void> 
   })
 }
 
-export async function getRecentFoods(limit = 20): Promise<Food[]> {
+export async function getRecentFoods(limit = 20, mealType?: MealType): Promise<Food[]> {
   if (limit <= 0) return []
   const recent: Food[] = []
   const seen = new Set<string>()
@@ -947,7 +960,7 @@ export async function getRecentFoods(limit = 20): Promise<Food[]> {
     const entries = await db.mealEntries.orderBy('eatenAt').reverse().offset(offset).limit(batchSize).toArray()
     if (entries.length === 0) break
     offset += entries.length
-    const ids = entries.map((entry) => entry.foodId).filter((id) => {
+    const ids = entries.filter((entry) => mealType === undefined || entry.mealType === mealType).map((entry) => entry.foodId).filter((id) => {
       if (seen.has(id)) return false
       seen.add(id)
       return true

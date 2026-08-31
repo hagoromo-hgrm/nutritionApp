@@ -243,6 +243,17 @@ describe('IndexedDB data safety', () => {
     expect(await db.foods.get(userFood.id)).toBeUndefined()
   })
 
+  it('削除した初期収録食品は食品DBの更新後も再投入しない', async () => {
+    const bundledFood = await db.foods.where('source').equals('mext').first()
+    if (!bundledFood) throw new Error('初期収録食品がありません')
+
+    await deleteFood(bundledFood.id)
+    await db.metadata.put({ key: 'initial-foods-version', value: 10 })
+    await initializeDatabase()
+
+    expect(await db.foods.get(bundledFood.id)).toBeUndefined()
+  }, 30000)
+
   it('最近使った食品は削除済み食品や料理メニューを除外して指定件数を返す', async () => {
     const secondFood: Food = { ...userFood, id: 'user_food_2', name: 'テスト食品2' }
     await saveFood(userFood)
@@ -259,6 +270,30 @@ describe('IndexedDB data safety', () => {
     ])
 
     expect((await getRecentFoods(2)).map((food) => food.id)).toEqual([secondFood.id, userFood.id])
+  })
+
+  it('最近使った食品を食事区分ごとに取得し、区分をまたぐ重複を混同しない', async () => {
+    const breakfastFood: Food = { ...userFood, id: 'breakfast_food', name: '朝食食品' }
+    const sharedFood: Food = { ...userFood, id: 'shared_food', name: '共通食品' }
+    const lunchFood: Food = { ...userFood, id: 'lunch_food', name: '昼食食品' }
+    await db.foods.bulkPut([breakfastFood, sharedFood, lunchFood])
+    const meal = (id: string, mealType: MealEntry['mealType'], foodId: string, eatenAt: string): MealEntry => ({
+      id, eatenAt, mealType, foodId,
+      foodSnapshot: { name: foodId, maker: '', barcode: '', baseAmount: 100, baseUnit: 'g', nutrients: { ...userFood.nutrients } },
+      amount: 100, amountUnit: 'g', calculatedNutrients: { ...userFood.nutrients },
+    })
+    await saveMealEntries([
+      meal('breakfast_missing', '朝食', 'menu:missing', '2026-07-20T05:00:00.000Z'),
+      meal('breakfast_shared', '朝食', sharedFood.id, '2026-07-19T05:00:00.000Z'),
+      meal('breakfast_food', '朝食', breakfastFood.id, '2026-07-18T05:00:00.000Z'),
+      meal('lunch_shared', '昼食', sharedFood.id, '2026-07-21T05:00:00.000Z'),
+      meal('lunch_food', '昼食', lunchFood.id, '2026-07-20T05:00:00.000Z'),
+    ])
+
+    expect((await getRecentFoods(2, '朝食')).map((food) => food.id)).toEqual([sharedFood.id, breakfastFood.id])
+    expect((await getRecentFoods(2, '昼食')).map((food) => food.id)).toEqual([sharedFood.id, lunchFood.id])
+    expect((await getRecentFoods(3, '朝食')).map((food) => food.id)).toEqual([sharedFood.id, breakfastFood.id])
+    expect((await getRecentFoods(3)).map((food) => food.id)).toEqual([sharedFood.id, lunchFood.id, breakfastFood.id])
   })
 
   it('手動食品のfamily・別名・属性を一括保存して検索できる', async () => {
