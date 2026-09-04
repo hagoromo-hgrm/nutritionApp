@@ -614,6 +614,11 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .food-registration-actions .button { min-width: 0; width: 100%; margin: 0; text-align: center; }
 .food-master-management { margin-top: .45rem; }
 .food-master-management .button { padding-left: 0; }
+.food-registration-method-modal { width: min(100%, 22rem); }
+.food-registration-method-modal .modal-heading { align-items: center; margin-bottom: .6rem; }
+.food-registration-method-modal .modal-heading h2 { font-size: 1.2rem; }
+.food-registration-method-actions { display: grid; gap: .55rem; }
+.food-registration-method-actions .button { min-height: 3.2rem; margin-top: 0; }
 
 .settings-card { margin-top: 1.2rem; border: 1px solid var(--line); border-radius: 1.2rem; padding: 1.2rem; background: white; }
 .settings-goals-collapsible > summary .count-label { margin-left: auto; }

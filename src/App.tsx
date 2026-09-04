@@ -643,6 +643,7 @@ function App() {
   const searchRequestIdRef = useRef(0)
   const mealSaveInFlightRef = useRef(false)
   const menuSetRegistrationRef = useRef(false)
+  const foodFormSavedFoodRef = useRef<Food | null>(null)
 
   const notify = useCallback((message: string) => {
     setNotice(message)
@@ -869,6 +870,7 @@ function App() {
     setFoodFormSearchQuery(returnSearchQuery)
     setFoodFormReturnView(returnView)
     setFoodFormOrigin(origin)
+    foodFormSavedFoodRef.current = null
     setView('food-form')
     setError(null)
   }, [foodAliases, foodGroups, foodRelatedTerms])
@@ -906,6 +908,7 @@ function App() {
             setFoodFormSearchQuery(null)
             setFoodFormReturnView(purpose === 'register' ? 'settings' : 'food-screen')
             setFoodFormOrigin('barcode')
+            foodFormSavedFoodRef.current = null
             setView('food-form')
             notify(preview.ingredientsText
               ? '外部商品情報と原材料を入力しました。内容を確認して保存してください。'
@@ -923,8 +926,7 @@ function App() {
     }
   }, [barcodePurpose, notify, openFoodForm, openMealForm, recordingMealType, settings])
 
-  const saveFoodDraft = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
+  const saveFoodDraft = async () => {
     if (!foodDraft || !foodDraft.name.trim()) { showError('食品名を入力してください。'); return }
     const baseAmount = Number(foodDraft.baseAmount)
     if (!isPositiveFinite(baseAmount) || !isValidUnit(foodDraft.baseUnit)) { showError('基準量は正の数値で入力してください。'); return }
@@ -1057,8 +1059,6 @@ function App() {
         .map((term) => ({
         id: `manual:related:${groupId}:${normalizeSearchText(term)}`, foodGroupId: groupId, term, normalizedTerm: normalizeSearchText(term), weight: 0.5, isActive: true, metadataSource: 'manual',
         }))
-      const returnMealType = foodFormMealType
-      const returnSearchQuery = foodFormSearchQuery
       const pendingEstimation = foodDraft.pendingEstimation
       const evaluated = pendingEstimation?.evaluation.request
       const referenceMassG = food.baseUnit === 'g' ? food.baseAmount : (food.estimationReferenceMassG ?? null)
@@ -1104,17 +1104,8 @@ function App() {
           }
         }
       }
-      setFoodDraft(null)
-      setFoodFormMealType(null)
-      setFoodFormSearchQuery(null)
-      if (returnMealType) {
-        if (returnSearchQuery) {
-          setPendingSearchQuery(returnSearchQuery)
-          await searchFoodsAndMenus()
-        }
-        openMealForm(savedFood, undefined, returnMealType)
-        setView(returnSearchQuery ? 'search-results' : 'food-screen')
-      } else setView(foodFormReturnView)
+      foodFormSavedFoodRef.current = savedFood
+      setFoodDraft(foodToDraft(savedFood, group, aliases, related))
       const savedMessage = pendingAdoptionKeys.length > 0
         ? '推計値を採用して食品を保存しました。保存済みの食事記録は変更していません。'
         : (foodDraft.pendingEstimation?.rejectedKeys.length ?? 0) > 0
@@ -1976,8 +1967,26 @@ function App() {
       }),
     })))
     setFoodDraft(null)
+    foodFormSavedFoodRef.current = null
     setFoodFormMealType(null)
     setFoodFormSearchQuery(null)
+    setView(foodFormReturnView)
+  }
+
+  const closeFoodForm = () => {
+    const draft = foodDraft
+    const savedFood = foodFormSavedFoodRef.current ?? (draft?.id ? foods.find((item) => item.id === draft.id) : undefined)
+    const returnMealType = foodFormMealType
+    const returnSearchQuery = foodFormSearchQuery
+    setFoodDraft(null)
+    setFoodFormMealType(null)
+    setFoodFormSearchQuery(null)
+    foodFormSavedFoodRef.current = null
+    if (returnMealType && savedFood) {
+      openMealForm(savedFood, undefined, returnMealType)
+      setView(returnSearchQuery ? 'search-results' : 'food-screen')
+      return
+    }
     setView(foodFormReturnView)
   }
 
@@ -2013,7 +2022,7 @@ function App() {
         />}
         {view === 'graphs' && <GraphsView range={graphRange} onRangeChange={setGraphRange} goals={settings.goals} />}
         {view === 'food-screen' && <FoodsView recordingMealType={recordingMealType} recordingEntryCount={recordingMealType ? entries.filter((entry) => entry.mealType === recordingMealType).length : 0} foods={foods} foodGroups={foodGroups} menus={menus} generalMenus={generalMenus} menuSets={menuSets} recentFoods={recordingMealType ? recentFoodsByMealType[recordingMealType] : recentFoods} favoriteFoods={favoriteFoods} favoriteIds={favoriteIds} onSelectFood={handleFoodSelection} onSelectMenuSet={(menuSet) => void registerMenuSet(menuSet)} onCreateTemporaryMenu={() => setTemporaryMenuDraft({ id: null, name: '', category: 'その他', ingredients: [], aliases: [] })} onToggleFavorite={toggleFavorite} onReorderFavorites={reorderFavoriteFoods} onEditFood={(food) => openFoodForm(food, '', 'food-screen', null, null, '', foodScreenReturnView === 'settings' ? 'settings' : 'meal')} onDeleteFood={(food) => void removeFood(food)} onOpenSearch={() => openSearchInput(recordingMealType ? 'meal' : 'food-master')} onOpenScanner={() => openBarcodeScanner(recordingMealType ? 'meal' : 'lookup')} onOpenConfirmation={openMealConfirmationFromFoodSelection} onBack={() => { setRecordingMealType(null); setView(foodScreenReturnView) }} backLabel={foodScreenReturnView === 'settings' ? '← 設定' : '← 記録'} copyMealType={copyMealType} setCopyMealType={setCopyMealType} onCopyPrevious={copyPreviousMeals} />}
-        {view === 'food-form' && foodDraft && <FoodFormView draft={foodDraft} returnView={foodFormReturnView} allowCommercialClassification={foodFormOrigin === 'settings'} estimationEnabled={estimationSettings?.enabled === true} setDraft={setFoodDraft} foodGroups={foodGroups} foodAliases={foodAliases} foodRelatedTerms={foodRelatedTerms} externalNote={externalNote} onRevertEstimate={(foodId, nutrientKey) => void revertFoodEstimate(foodId, nutrientKey)} onSubmit={saveFoodDraft} onDelete={foodDraft.id ? () => void removeFoodFromForm() : undefined} onClose={() => { setFoodDraft(null); setFoodFormMealType(null); setFoodFormSearchQuery(null); setView(foodFormReturnView) }} />}
+        {view === 'food-form' && foodDraft && <FoodFormView draft={foodDraft} returnView={foodFormReturnView} allowCommercialClassification={foodFormOrigin === 'settings'} estimationEnabled={estimationSettings?.enabled === true} setDraft={setFoodDraft} foodGroups={foodGroups} foodAliases={foodAliases} foodRelatedTerms={foodRelatedTerms} externalNote={externalNote} onRevertEstimate={(foodId, nutrientKey) => void revertFoodEstimate(foodId, nutrientKey)} onSubmit={saveFoodDraft} onDelete={foodDraft.id ? () => void removeFoodFromForm() : undefined} onClose={closeFoodForm} />}
         {view === 'settings' && estimationSettings && <SettingsView settings={settings} estimationSettings={estimationSettings} goalInputs={goalInputs} setGoalInputs={setGoalInputs} onSaveGoals={saveGoals} onToggleExternalApi={toggleExternalApi} onToggleNutrientEstimator={toggleNutrientEstimator} onChangeDefaultMealTimeMode={changeDefaultMealTimeMode} onExportJson={exportJson} onRestoreJson={restoreJson} onExportCsv={exportCsv} onImportCsv={importCsv} onExportUnresolvedIngredients={exportUnresolvedIngredients} csvFrom={csvFrom} csvTo={csvTo} setCsvFrom={setCsvFrom} setCsvTo={setCsvTo} counts={counts} bodyProfileInputs={bodyProfileInputs} setBodyProfileInputs={setBodyProfileInputs} onSaveBodyProfile={saveBodyProfile} onOpenNewFood={() => openFoodForm(undefined, '', 'settings', null, null, '', 'settings')} onOpenBarcodeRegister={() => openBarcodeScanner('register')} onOpenFoodMaster={() => { setRecordingMealType(null); setFoodScreenReturnView('settings'); setView('food-screen') }} estimatedGoals={estimateDailyGoals(settings.bodyProfile ?? DEFAULT_BODY_PROFILE)} bmi={calculateBmi(settings.bodyProfile ?? DEFAULT_BODY_PROFILE)} />}
         {view === 'menus' && <MenuView menus={menus} generalMenus={generalMenus} menuSets={menuSets} foods={foods} onNewMenu={() => setMenuDraft({ id: null, name: '', category: '主菜', ingredients: [], aliases: [], memo: '' })} onShowMenuNutrition={setMenuNutritionDetails} onEditMenu={(menu) => setMenuDraft({ id: menu.id, name: menu.name, category: menu.category, ingredients: getMenuIngredients(menu, foods).map((ingredient) => ({ ...ingredient, amount: String(ingredient.amount) })), aliases: menu.aliases ?? [], memo: menu.memo ?? '' })} onDeleteMenu={removeMenu} onNewGeneralMenu={() => setGeneralMenuDraft({ id: null, name: '', category: '主菜', ingredients: [], aliases: [] })} onEditGeneralMenu={(menu) => setGeneralMenuDraft({ id: menu.id, name: menu.name, category: menu.category, ingredients: getMenuIngredients(menu, foods).map((ingredient) => ({ ...ingredient, amount: String(ingredient.amount) })), aliases: menu.aliases ?? [] })} onDeleteGeneralMenu={removeGeneralMenu} onCloneGeneralMenu={(menu) => void cloneGeneralMenuToMyMenu(menu)} onNewMenuSet={() => setMenuSetDraft({ id: null, name: '', menuIds: [], generalMenuIds: [], foodIds: [], foodItems: [] })} onEditMenuSet={(menuSet) => { const foodItems = getMenuSetFoodItems(menuSet, foods); setMenuSetDraft({ id: menuSet.id, name: menuSet.name, menuIds: menuSet.menuIds, generalMenuIds: menuSet.generalMenuIds ?? [], foodIds: foodItems.map((item) => item.foodId), foodItems: foodItems.map((item) => ({ ...item, amount: String(item.amount) })) }) }} onDeleteMenuSet={removeMenuSet} onReorderMenuSets={reorderMenuSetRecords} onBack={() => setView('today')} />}
         {view === 'search-input' && <SearchInputView bars={searchBars} setBars={setSearchBars} onSearch={() => void searchFoodsAndMenus()} onBack={() => setView('food-screen')} />}
@@ -3865,6 +3874,12 @@ interface SettingsViewProps {
 
 function SettingsView({ settings, estimationSettings, goalInputs, setGoalInputs, onSaveGoals, onToggleExternalApi, onToggleNutrientEstimator, onChangeDefaultMealTimeMode, onExportJson, onRestoreJson, onExportCsv, onImportCsv, onExportUnresolvedIngredients, csvFrom, csvTo, setCsvFrom, setCsvTo, counts, bodyProfileInputs, setBodyProfileInputs, onSaveBodyProfile, onOpenNewFood, onOpenBarcodeRegister, onOpenFoodMaster, estimatedGoals, bmi }: SettingsViewProps) {
   const configuredGoalCount = NUTRIENT_KEYS.filter((key) => settings.goals[key] !== null).length
+  const [showFoodRegistrationMethods, setShowFoodRegistrationMethods] = useState(false)
+  const chooseFoodRegistrationMethod = (method: 'manual' | 'barcode') => {
+    setShowFoodRegistrationMethods(false)
+    if (method === 'manual') onOpenNewFood()
+    else onOpenBarcodeRegister()
+  }
   return <>
     <section className="page-heading"><div><span className="eyebrow">SETTINGS</span><h1>設定・データ管理</h1></div></section>
     <details className="settings-card food-collapsible settings-goals-collapsible">
@@ -3876,8 +3891,7 @@ function SettingsView({ settings, estimationSettings, goalInputs, setGoalInputs,
     </details>
     <section className="settings-card">
       <div className="section-title"><div><span className="eyebrow">FOOD MASTER</span><h2>食品登録</h2></div></div>
-      <div className="food-registration-actions"><button className="button primary" type="button" onClick={onOpenNewFood}>手動で登録</button><button className="button secondary" type="button" onClick={onOpenBarcodeRegister}>バーコードで登録</button></div>
-      <div className="food-master-management"><button className="button ghost" type="button" onClick={onOpenFoodMaster}>登録済み食品を確認・検索</button></div>
+      <div className="food-registration-actions"><button className="button primary" type="button" onClick={() => setShowFoodRegistrationMethods(true)}>食品を登録</button><button className="button secondary" type="button" onClick={onOpenFoodMaster}>食品を検索</button></div>
       <div className="settings-info-row settings-inline-row nutrient-estimate-setting">
         <label className="toggle-row"><input type="checkbox" checked={estimationSettings.enabled} onChange={(event) => onToggleNutrientEstimator(event.target.checked)} />欠損した飽和脂肪酸・食物繊維・ビタミン・ミネラルの参考推計を使う</label>
         <InfoPopover className="settings-info" label="参考推計について" text="確認済みの原材料表示と重量を使い、端末内だけで参考候補を計算します。未対応原材料、参照値欠損、栄養添加物の寄与割合不明がある場合は、該当分を加算しない既知原材料分の部分参考値を低信頼度で表示します。部分参考値は商品の保証下限ではありません。初期値は無効で、結果は確認後に手動採用し、既存値を上書きしません。" />
@@ -3890,6 +3904,7 @@ function SettingsView({ settings, estimationSettings, goalInputs, setGoalInputs,
         <InfoPopover className="settings-info" label="未対応原材料の出力について" text="推計できなかった原材料名を端末内で件数集計し、手動で出力します。商品名、メーカー、バーコード、食品・食事記録との紐付けは含みません。" />
       </div>
     </section>
+    {showFoodRegistrationMethods && <div className="modal-backdrop food-registration-method-backdrop" role="dialog" aria-modal="true" aria-label="食品を登録"><section className="modal-card food-registration-method-modal"><div className="modal-heading"><h2>食品の登録方法</h2><button className="icon-button" type="button" onClick={() => setShowFoodRegistrationMethods(false)} aria-label="閉じる">×</button></div><div className="food-registration-method-actions"><button className="button primary full-width" type="button" onClick={() => chooseFoodRegistrationMethod('manual')}>手入力</button><button className="button secondary full-width" type="button" onClick={() => chooseFoodRegistrationMethod('barcode')}>バーコード</button></div></section></div>}
     <section className="settings-card">
       <div className="section-title"><div><span className="eyebrow">MEAL TIME</span><h2>食事時刻</h2></div></div>
       <label>既定の時刻入力<select value={settings.mealTimeMode ?? 'auto'} onChange={(event) => onChangeDefaultMealTimeMode(event.target.value as MealTimeMode)}><option value="auto">現在時刻を自動挿入</option><option value="manual">自分で入力</option></select></label>
@@ -4008,7 +4023,7 @@ function MealDetailsModal({ details, goals, onUpdateTimes, onClose }: { details:
   return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label={`${details.type}の栄養詳細`}><section className="modal-card"><div className="modal-heading"><div><span className="eyebrow">NUTRIENTS</span><h2>{details.type}の詳細</h2></div><button className="icon-button" type="button" onClick={onClose} aria-label="閉じる">×</button></div><div className="detail-total"><span>合計カロリー</span><strong>{formatNutrient(details.subtotal.energyKcal)}<small> kcal</small></strong></div><NutrientGoalGraphs nutrients={details.subtotal} availableNutrients={availableNutrients} goals={goals} /><section className="meal-time-editor"><div className="section-title"><div><span className="eyebrow">MEAL TIME</span><h3>食事時刻</h3></div></div>{details.type !== '間食' ? <form className="inline-time-form" onSubmit={(event) => { event.preventDefault(); onUpdateTimes(sharedEntryIds, sharedTime) }}><label><input aria-label="食事時刻" type="time" value={sharedTime} onChange={(event) => setSharedTime(event.target.value)} required /></label><button className="button secondary" type="submit">時刻を保存</button></form> : <div className="snack-time-list">{details.entries.map((entry) => <div className="snack-time-row" key={entry.id}><span>{getMealEntryDisplayName(entry)}</span><input type="time" value={snackTimes[entry.id] ?? ''} onChange={(event) => setSnackTimes((current) => ({ ...current, [entry.id]: event.target.value }))} /><button className="small-action" type="button" onClick={() => onUpdateTimes([entry.id], snackTimes[entry.id] ?? '')}>保存</button></div>)}</div>}</section><div className="detail-entry-list">{details.entries.map((entry) => <div className="detail-entry" key={entry.id}><span>{getMealEntryDisplayName(entry)} · {entry.amount}{entry.amountUnit}</span><strong>{formatNutrient(entry.calculatedNutrients.energyKcal)} kcal</strong></div>)}</div><button className="button ghost full-width" type="button" onClick={onClose}>閉じる</button></section></div>
 }
 
-function FoodFormView({ draft, returnView, allowCommercialClassification, estimationEnabled, setDraft, foodGroups, foodAliases, foodRelatedTerms, externalNote, onRevertEstimate, onSubmit, onDelete, onClose }: { draft: FoodDraft; returnView: FoodFormReturnView; allowCommercialClassification: boolean; estimationEnabled: boolean; setDraft: React.Dispatch<React.SetStateAction<FoodDraft | null>>; foodGroups: FoodGroup[]; foodAliases: FoodAlias[]; foodRelatedTerms: FoodRelatedTerm[]; externalNote: string | null; onRevertEstimate: (foodId: string, nutrientKey: NutrientKey) => void; onSubmit: (event: React.FormEvent<HTMLFormElement>) => void; onDelete?: () => void; onClose: () => void }) {
+function FoodFormView({ draft, returnView, allowCommercialClassification, estimationEnabled, setDraft, foodGroups, foodAliases, foodRelatedTerms, externalNote, onRevertEstimate, onSubmit, onDelete, onClose }: { draft: FoodDraft; returnView: FoodFormReturnView; allowCommercialClassification: boolean; estimationEnabled: boolean; setDraft: React.Dispatch<React.SetStateAction<FoodDraft | null>>; foodGroups: FoodGroup[]; foodAliases: FoodAlias[]; foodRelatedTerms: FoodRelatedTerm[]; externalNote: string | null; onRevertEstimate: (foodId: string, nutrientKey: NutrientKey) => void; onSubmit: () => void | Promise<void>; onDelete?: () => void; onClose: () => void }) {
   const [activeTab, setActiveTab] = useState<'basic' | 'nutrition' | 'search'>('basic')
   const withoutPendingEstimation = (current: FoodDraft): FoodDraft => {
     const nutrients = { ...current.nutrients }
@@ -4129,7 +4144,7 @@ function FoodFormView({ draft, returnView, allowCommercialClassification, estima
     <section className="page-heading food-form-heading"><div><span className="eyebrow">FOOD MASTER</span><h1>{draft.id ? '食品を編集' : '新しい食品を登録'}</h1></div><button className="button ghost" type="button" onClick={onClose}>{returnView === 'settings' ? '← 設定へ' : returnView === 'search-results' ? '← 検索結果へ' : '← 食品画面へ'}</button></section>
     <section className="settings-card food-form-card">
       {externalNote && <div className="external-warning">{externalNote}</div>}
-      <form onSubmit={(event) => { if (!draft.name.trim() || !isPositiveFinite(Number(draft.baseAmount))) setActiveTab('basic'); onSubmit(event) }}>
+      <form onSubmit={(event) => { event.preventDefault() }}>
         <div className="search-category-tabs food-form-tabs" role="tablist" aria-label="食品登録項目">
           <button className={activeTab === 'basic' ? 'active' : ''} type="button" role="tab" aria-selected={activeTab === 'basic'} onClick={() => setActiveTab('basic')}>基本情報</button>
           <button className={activeTab === 'nutrition' ? 'active' : ''} type="button" role="tab" aria-selected={activeTab === 'nutrition'} onClick={() => setActiveTab('nutrition')}>栄養値</button>
@@ -4205,7 +4220,7 @@ function FoodFormView({ draft, returnView, allowCommercialClassification, estima
           <div className="food-form-subsection"><h3>バリエーション属性</h3><div className="two-fields variant-attribute-inputs">{variantAttributeKeys.map((key) => <label key={key}>{variantAttributeLabels[key]}<input value={draft.variantAttributes[key]} onChange={(event) => update('variantAttributes', { ...draft.variantAttributes, [key]: event.target.value })} placeholder="任意" /></label>)}</div></div>
         </div>}
 
-        <div className="food-form-actions"><button className="button primary full-width" type="submit">保存する</button>{onDelete && <button className="button ghost full-width danger-text" type="button" onClick={onDelete}>食品を削除</button>}<button className="button ghost full-width" type="button" onClick={onClose}>キャンセル</button></div>
+        <div className="food-form-actions"><button className="button primary full-width" type="button" onClick={() => { if (!draft.name.trim() || !isPositiveFinite(Number(draft.baseAmount))) setActiveTab('basic'); void onSubmit() }}>保存する</button>{onDelete && <button className="button ghost full-width danger-text" type="button" onClick={onDelete}>食品を削除</button>}<button className="button ghost full-width" type="button" onClick={onClose}>閉じる</button></div>
       </form>
     </section>
   </>
