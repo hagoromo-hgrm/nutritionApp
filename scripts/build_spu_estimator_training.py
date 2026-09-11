@@ -446,24 +446,34 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def build_dataset(input_dir: Path) -> tuple[dict[str, Any], dict[str, Any]]:
+def _input_csv_files(input_dir: Path) -> list[Path]:
     files = sorted(input_dir.glob("*.csv"))
     if not files:
         raise SpuDataError(f"No CSV files found in {input_dir}")
+    return files
+
+
+def _source_config_for(path: Path) -> tuple[dict[str, str], str]:
+    match = FILENAME_RE.fullmatch(path.name)
+    if not match:
+        raise SpuDataError(f"{path.name}: expected maker_source_YYMMDD.csv")
+    maker_key = match.group("maker").casefold()
+    source_config = SOURCE_CONFIG.get(maker_key)
+    if source_config is None:
+        raise SpuDataError(f"{path.name}: unknown maker key {maker_key}")
+    return source_config, match.group("date")
+
+
+def build_dataset(input_dir: Path) -> tuple[dict[str, Any], dict[str, Any]]:
+    files = _input_csv_files(input_dir)
     records: list[dict[str, Any]] = []
     exclusions = Counter()
     category_genre_counts = Counter()
     file_reports: list[dict[str, Any]] = []
     seen_records: set[str] = set()
     for path in files:
-        match = FILENAME_RE.fullmatch(path.name)
-        if not match:
-            raise SpuDataError(f"{path.name}: expected maker_source_YYMMDD.csv")
-        maker_key = match.group("maker").casefold()
-        source_config = SOURCE_CONFIG.get(maker_key)
-        if source_config is None:
-            raise SpuDataError(f"{path.name}: unknown maker key {maker_key}")
-        verified_at = parse_verified_at(match.group("date"))
+        source_config, date = _source_config_for(path)
+        verified_at = parse_verified_at(date)
         file_counts = Counter()
         with path.open("r", encoding="utf-8-sig", newline="") as handle:
             reader = csv.DictReader(handle)
@@ -536,21 +546,13 @@ def build_dataset(input_dir: Path) -> tuple[dict[str, Any], dict[str, Any]]:
 
 
 def build_ingredient_coverage_dataset(input_dir: Path) -> tuple[dict[str, Any], dict[str, Any]]:
-    files = sorted(input_dir.glob("*.csv"))
-    if not files:
-        raise SpuDataError(f"No CSV files found in {input_dir}")
+    files = _input_csv_files(input_dir)
     records: list[dict[str, Any]] = []
     exclusions = Counter()
     file_reports: list[dict[str, Any]] = []
     seen_records: set[str] = set()
     for path in files:
-        match = FILENAME_RE.fullmatch(path.name)
-        if not match:
-            raise SpuDataError(f"{path.name}: expected maker_source_YYMMDD.csv")
-        maker_key = match.group("maker").casefold()
-        source_config = SOURCE_CONFIG.get(maker_key)
-        if source_config is None:
-            raise SpuDataError(f"{path.name}: unknown maker key {maker_key}")
+        source_config, _ = _source_config_for(path)
         file_counts = Counter()
         with path.open("r", encoding="utf-8-sig", newline="") as handle:
             reader = csv.DictReader(handle)

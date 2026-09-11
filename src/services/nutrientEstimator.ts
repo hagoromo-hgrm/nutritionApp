@@ -1356,6 +1356,48 @@ function resultStatus(
   return availableCount === requestedKeys.length ? 'completed' : 'partial'
 }
 
+function unavailableEstimatesForInvalidRequest(
+  request: NutrientEstimateRequest,
+): Record<EstimatableNutrientKey, NutrientEstimate> | null {
+  if (!Number.isFinite(request.baseAmount) || request.baseAmount <= 0 || request.baseUnit.trim() === '') {
+    return unavailableAll(
+      '推計の基準量または基準単位が正しくありません。',
+      '食品の基準量と単位を確認するか、推計せず食品登録を続けてください。',
+      [],
+      ['invalid_basis'],
+    )
+  } else if (request.referenceMassG === null || !Number.isFinite(request.referenceMassG) || request.referenceMassG <= 0) {
+    return unavailableAll(
+      '基準量に対応する内容物重量が確認できないため推計できません。',
+      'パッケージで内容物重量を確認してg単位で入力するか、推計せず食品登録を続けてください。',
+      [],
+      ['reference_mass_missing'],
+    )
+  } else if (!request.referenceMassSource?.trim()) {
+    return unavailableAll(
+      '基準重量の根拠が入力されていないため推計できません。',
+      '「パッケージ表示」など重量を確認した根拠を入力するか、推計せず食品登録を続けてください。',
+      [],
+      ['reference_mass_source_missing'],
+    )
+  } else if (!request.ingredientsText?.trim()) {
+    return unavailableAll(
+      '原材料情報が存在しないため推計できません。',
+      'パッケージの原材料表示を確認して手入力するか、推計せず食品登録を続けてください。',
+      [],
+      ['ingredients_missing'],
+    )
+  } else if (!request.ingredientsSource?.provider.trim() || request.ingredientsSource.verified !== true) {
+    return unavailableAll(
+      '原材料表示の取得元が確認されていないため推計できません。',
+      '原材料の取得元を選び、内容を確認済みにしてから再実行してください。',
+      [],
+      ['ingredients_unverified'],
+    )
+  }
+  return null
+}
+
 /**
  * 原材料表示順、商品名の弱い事前確率、入力済み主要栄養値を使う、外部通信を行わない決定的な参考推計。
  * referenceMassG は request の baseAmount/baseUnit に対応する明示的な内容物重量でなければならない。
@@ -1369,43 +1411,11 @@ export function estimateNutrients(
   let estimates: Record<EstimatableNutrientKey, NutrientEstimate>
   let optimization: EstimationOptimization | undefined
 
-  if (!Number.isFinite(request.baseAmount) || request.baseAmount <= 0 || request.baseUnit.trim() === '') {
-    estimates = unavailableAll(
-      '推計の基準量または基準単位が正しくありません。',
-      '食品の基準量と単位を確認するか、推計せず食品登録を続けてください。',
-      [],
-      ['invalid_basis'],
-    )
-  } else if (request.referenceMassG === null || !Number.isFinite(request.referenceMassG) || request.referenceMassG <= 0) {
-    estimates = unavailableAll(
-      '基準量に対応する内容物重量が確認できないため推計できません。',
-      'パッケージで内容物重量を確認してg単位で入力するか、推計せず食品登録を続けてください。',
-      [],
-      ['reference_mass_missing'],
-    )
-  } else if (!request.referenceMassSource?.trim()) {
-    estimates = unavailableAll(
-      '基準重量の根拠が入力されていないため推計できません。',
-      '「パッケージ表示」など重量を確認した根拠を入力するか、推計せず食品登録を続けてください。',
-      [],
-      ['reference_mass_source_missing'],
-    )
-  } else if (!request.ingredientsText?.trim()) {
-    estimates = unavailableAll(
-      '原材料情報が存在しないため推計できません。',
-      'パッケージの原材料表示を確認して手入力するか、推計せず食品登録を続けてください。',
-      [],
-      ['ingredients_missing'],
-    )
-  } else if (!request.ingredientsSource?.provider.trim() || request.ingredientsSource.verified !== true) {
-    estimates = unavailableAll(
-      '原材料表示の取得元が確認されていないため推計できません。',
-      '原材料の取得元を選び、内容を確認済みにしてから再実行してください。',
-      [],
-      ['ingredients_unverified'],
-    )
+  const invalidRequestEstimates = unavailableEstimatesForInvalidRequest(request)
+  if (invalidRequestEstimates) {
+    estimates = invalidRequestEstimates
   } else {
-    const declaration = parseIngredientDeclaration(request.ingredientsText)
+    const declaration = parseIngredientDeclaration(request.ingredientsText!)
     const resolved: ResolvedIngredient[] = declaration.ingredients.map((ingredient) => ({
       ingredient,
       candidates: candidatesForIngredient(ingredient, request.productName, request.estimatorGenreId),

@@ -9,14 +9,17 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import re
-import tempfile
-import unicodedata
 from collections import defaultdict
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
+
+
+if __package__:
+    from .mext_build_utils import compact_search_text, normalize_search_text, write_json_atomic as _write_json_atomic
+else:
+    from mext_build_utils import compact_search_text, normalize_search_text, write_json_atomic as _write_json_atomic
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -199,15 +202,6 @@ def validate_input_mappings(mappings: Any) -> list[dict[str, Any]]:
             raise AppDataBuildError(f"source_idが重複しています: {source_id}")
         seen_ids.add(source_id)
     return mappings
-
-
-def normalize_search_text(value: str) -> str:
-    normalized = unicodedata.normalize("NFKC", value).lower().strip()
-    return re.sub(r"\s+", " ", normalized)
-
-
-def compact_search_text(value: str) -> str:
-    return normalize_search_text(value).replace(" ", "")
 
 
 def _deduplicate_strings(values: Sequence[str]) -> list[str]:
@@ -447,22 +441,8 @@ def validate_output(
 
 
 def write_json_atomic(output_path: Path, data: Any) -> None:
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    temporary_path: Path | None = None
-    try:
-        with tempfile.NamedTemporaryFile(
-            mode="w",
-            encoding="utf-8",
-            dir=output_path.parent,
-            delete=False,
-        ) as temporary_file:
-            json.dump(data, temporary_file, ensure_ascii=False, indent=2, sort_keys=False)
-            temporary_file.write("\n")
-            temporary_path = Path(temporary_file.name)
-        os.replace(temporary_path, output_path)
-    finally:
-        if temporary_path is not None and temporary_path.exists():
-            temporary_path.unlink()
+    # Preserve the existing keyword argument while sharing the atomic writer.
+    _write_json_atomic(output_path, data)
 
 
 def build_all(

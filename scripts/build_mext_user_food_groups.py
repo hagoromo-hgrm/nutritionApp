@@ -5,13 +5,15 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
-import re
-import tempfile
-import unicodedata
 from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
+
+
+if __package__:
+    from .mext_build_utils import compact_search_text, normalize_search_text, write_json_atomic
+else:
+    from mext_build_utils import compact_search_text, normalize_search_text, write_json_atomic
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -53,34 +55,6 @@ def load_json(path: Path) -> Any:
             return json.load(file)
     except (OSError, json.JSONDecodeError) as error:
         raise UserFoodGroupBuildError(f"JSONを読み込めません: path={path}: {error}") from error
-
-
-def write_json_atomic(path: Path, data: Any) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary_path: Path | None = None
-    try:
-        with tempfile.NamedTemporaryFile(
-            mode="w",
-            encoding="utf-8",
-            dir=path.parent,
-            delete=False,
-        ) as temporary_file:
-            json.dump(data, temporary_file, ensure_ascii=False, indent=2, sort_keys=False)
-            temporary_file.write("\n")
-            temporary_path = Path(temporary_file.name)
-        os.replace(temporary_path, path)
-    finally:
-        if temporary_path is not None and temporary_path.exists():
-            temporary_path.unlink()
-
-
-def normalize_search_text(value: str) -> str:
-    normalized = unicodedata.normalize("NFKC", value).lower().strip()
-    return re.sub(r"\s+", " ", normalized)
-
-
-def compact_search_text(value: str) -> str:
-    return normalize_search_text(value).replace(" ", "")
 
 
 def unique_strings(values: Iterable[str]) -> list[str]:

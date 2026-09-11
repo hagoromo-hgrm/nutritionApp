@@ -537,16 +537,19 @@ export async function getFoodByBarcode(barcode: string): Promise<Food | undefine
   return matches.sort((left, right) => right.updatedAt.localeCompare(left.updatedAt) || right.id.localeCompare(left.id))[0]
 }
 
-export async function saveFood(food: Food): Promise<void> {
-  const previous = await db.foods.get(food.id)
-  const merged: Food = {
+function mergeFoodForSave(food: Food, previous: Food | undefined): Food {
+  return enrichFoodForSearch({
     ...previous,
     ...food,
     foodGroupId: food.foodGroupId ?? previous?.foodGroupId,
     displayName: food.displayName ?? previous?.displayName,
     officialName: food.officialName ?? previous?.officialName,
-  }
-  const enriched = enrichFoodForSearch(merged)
+  })
+}
+
+export async function saveFood(food: Food): Promise<void> {
+  const previous = await db.foods.get(food.id)
+  const enriched = mergeFoodForSave(food, previous)
   const existingGroup = await db.foodGroups.get(enriched.foodGroupId ?? '')
   await db.transaction('rw', [db.foods, db.foodGroups], async () => {
     await db.foods.put(enriched)
@@ -565,14 +568,7 @@ export interface FoodMetadataUpdate {
 /** 食品と検索メタデータを一緒に保存し、途中状態を検索対象へ公開しない。 */
 export async function saveFoodWithMetadata(food: Food, metadata: FoodMetadataUpdate): Promise<void> {
   const previous = await db.foods.get(food.id)
-  const merged: Food = {
-    ...previous,
-    ...food,
-    foodGroupId: food.foodGroupId ?? previous?.foodGroupId,
-    displayName: food.displayName ?? previous?.displayName,
-    officialName: food.officialName ?? previous?.officialName,
-  }
-  const enriched = enrichFoodForSearch(merged)
+  const enriched = mergeFoodForSave(food, previous)
   const group = { ...metadata.group, defaultVariantId: metadata.group.defaultVariantId ?? enriched.id }
   await db.transaction('rw', [db.foods, db.foodGroups, db.foodAliases, db.foodRelatedTerms], async () => {
     await db.foods.put(enriched)
@@ -603,27 +599,40 @@ export async function getAllFoods(): Promise<Food[]> {
   return db.foods.orderBy('name').toArray()
 }
 
+function createMenuSearchMatchers(normalizedQuery: string, ingredientFoods: (Food | undefined)[], aliases: FoodAlias[]) {
+  const foodsById = new Map(ingredientFoods.filter((food): food is Food => Boolean(food)).map((food) => [food.id, food]))
+  const aliasesByGroup = new Map<string, string[]>()
+  for (const alias of aliases) {
+    aliasesByGroup.set(alias.foodGroupId, [...(aliasesByGroup.get(alias.foodGroupId) ?? []), alias.alias])
+  }
+  const textMatches = (field: string) => normalizeSearchText(field).includes(normalizedQuery)
+  const foodMatches = (foodId: string): boolean => {
+    const food = foodsById.get(foodId)
+    if (!food) return false
+    return [
+      food.displayName ?? food.name,
+      food.officialName ?? food.name,
+      food.maker,
+      food.reading ?? '',
+      ...(food.foodGroupId ? aliasesByGroup.get(food.foodGroupId) ?? [] : []),
+    ].some(textMatches)
+  }
+  return { foodMatches, textMatches }
+}
+
 export async function searchMenus(query: string): Promise<Menu[]> {
   const normalized = normalizeSearchText(query)
   const menus = await db.menus.orderBy('name').toArray()
   if (!normalized) return menus
   const ingredientFoods = await db.foods.bulkGet([...new Set(menus.flatMap(getMenuFoodIds))])
-  const foodsById = new Map(ingredientFoods.filter((food): food is Food => Boolean(food)).map((food) => [food.id, food]))
   const menusById = new Map(menus.map((menu) => [menu.id, menu]))
   const aliases = await db.foodAliases.toArray()
-  const aliasesByGroup = new Map<string, string[]>()
-  for (const alias of aliases) aliasesByGroup.set(alias.foodGroupId, [...(aliasesByGroup.get(alias.foodGroupId) ?? []), alias.alias])
-  const foodMatches = (food: Food) => [food.displayName ?? food.name, food.officialName ?? food.name, food.maker, food.reading ?? '', ...(food.foodGroupId ? aliasesByGroup.get(food.foodGroupId) ?? [] : [])]
-    .some((field) => normalizeSearchText(field).includes(normalized))
-  const textMatches = (field: string) => normalizeSearchText(field).includes(normalized)
+  const { foodMatches, textMatches } = createMenuSearchMatchers(normalized, ingredientFoods, aliases)
   const menuMatches = (menu: Menu, visited: Set<string>): boolean => {
     if (visited.has(menu.id)) return false
     const nextVisited = new Set(visited).add(menu.id)
     return [menu.name, menu.category, ...(menu.aliases ?? [])].some(textMatches)
-      || getMenuFoodIds(menu).some((foodId) => {
-        const food = foodsById.get(foodId)
-        return food ? foodMatches(food) : false
-      })
+      || getMenuFoodIds(menu).some(foodMatches)
       || getNestedMenuIds(menu).some((menuId) => {
         const nested = menusById.get(menuId)
         return nested ? menuMatches(nested, nextVisited) : false
@@ -647,15 +656,8 @@ export async function searchMenuSets(query: string): Promise<MenuSet[]> {
     ...generalMenus.flatMap(getMenuFoodIds),
   ])]
   const ingredientFoods = await db.foods.bulkGet(foodIds)
-  const foodsById = new Map(ingredientFoods.filter((food): food is Food => Boolean(food)).map((food) => [food.id, food]))
   const aliases = await db.foodAliases.toArray()
-  const aliasesByGroup = new Map<string, string[]>()
-  for (const alias of aliases) aliasesByGroup.set(alias.foodGroupId, [...(aliasesByGroup.get(alias.foodGroupId) ?? []), alias.alias])
-  const foodMatches = (foodId: string) => {
-    const food = foodsById.get(foodId)
-    return food ? [food.displayName ?? food.name, food.officialName ?? food.name, food.maker, food.reading ?? '', ...(food.foodGroupId ? aliasesByGroup.get(food.foodGroupId) ?? [] : [])].some((field) => normalizeSearchText(field).includes(normalized)) : false
-  }
-  const textMatches = (field: string) => normalizeSearchText(field).includes(normalized)
+  const { foodMatches, textMatches } = createMenuSearchMatchers(normalized, ingredientFoods, aliases)
   const menuMatches = (menuId: string, visited = new Set<string>()): boolean => {
     const menu = menuById.get(menuId)
     if (!menu || visited.has(menuId)) return false
@@ -693,29 +695,18 @@ export async function searchGeneralMenus(query: string): Promise<GeneralMenu[]> 
   const myMenus = await db.menus.toArray()
   const menusById = new Map(myMenus.map((menu) => [menu.id, menu]))
   const ingredientFoods = await db.foods.bulkGet([...new Set([...menus.flatMap(getMenuFoodIds), ...myMenus.flatMap(getMenuFoodIds)])])
-  const foodsById = new Map(ingredientFoods.filter((food): food is Food => Boolean(food)).map((food) => [food.id, food]))
   const aliases = await db.foodAliases.toArray()
-  const aliasesByGroup = new Map<string, string[]>()
-  for (const alias of aliases) aliasesByGroup.set(alias.foodGroupId, [...(aliasesByGroup.get(alias.foodGroupId) ?? []), alias.alias])
-  const foodMatches = (food: Food) => [food.displayName ?? food.name, food.officialName ?? food.name, food.maker, food.reading ?? '', ...(food.foodGroupId ? aliasesByGroup.get(food.foodGroupId) ?? [] : [])]
-    .some((field) => normalizeSearchText(field).includes(normalized))
-  const textMatches = (field: string) => normalizeSearchText(field).includes(normalized)
+  const { foodMatches, textMatches } = createMenuSearchMatchers(normalized, ingredientFoods, aliases)
   const myMenuMatches = (menuId: string, visited = new Set<string>()): boolean => {
     const menu = menusById.get(menuId)
     if (!menu || visited.has(menuId)) return false
     const nextVisited = new Set(visited).add(menuId)
     return [menu.name, menu.category, ...(menu.aliases ?? [])].some(textMatches)
-      || getMenuFoodIds(menu).some((foodId) => {
-        const food = foodsById.get(foodId)
-        return food ? foodMatches(food) : false
-      })
+      || getMenuFoodIds(menu).some(foodMatches)
       || getNestedMenuIds(menu).some((nestedMenuId) => myMenuMatches(nestedMenuId, nextVisited))
   }
   const menuMatches = (menu: GeneralMenu) => [menu.name, menu.category, ...(menu.aliases ?? [])].some(textMatches)
-    || getMenuFoodIds(menu).some((foodId) => {
-      const food = foodsById.get(foodId)
-      return food ? foodMatches(food) : false
-    })
+    || getMenuFoodIds(menu).some(foodMatches)
     || getNestedMenuIds(menu).some((menuId) => myMenuMatches(menuId))
   return menus.filter(menuMatches)
 }

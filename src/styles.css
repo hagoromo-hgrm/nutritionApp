@@ -69,17 +69,6 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .hero-breakdown > div span { color: #dcefe2; font-size: .68rem; }
 .hero-breakdown strong { color: white; font-size: .9rem; }
 .hero-breakdown small { margin-left: .15rem; color: #c5ded0; font-size: .6rem; font-weight: 500; }
-.nutrient-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: .7rem; margin-top: 1.2rem; }
-.nutrient-card { min-width: 0; border-radius: .9rem; padding: .8rem; background: rgba(255,255,255,.11); }
-.nutrient-label { display: block; color: #c5ded0; font-size: .67rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.nutrient-card strong { display: block; margin-top: .35rem; color: white; font-size: 1.15rem; }
-.nutrient-card small { margin-left: .2rem; color: #c5ded0; font-size: .65rem; font-weight: 500; }
-.nutrient-goal { display: block; margin-top: .28rem; color: #dcefe2; font-size: .62rem; white-space: nowrap; }
-.nutrient-grid.compact { grid-template-columns: repeat(6, minmax(0, 1fr)); margin: .55rem 0 0; gap: .35rem; }
-.nutrient-grid.compact .nutrient-card { background: var(--soft); padding: .45rem .55rem; }
-.nutrient-grid.compact .nutrient-label { color: var(--muted); font-size: .57rem; }
-.nutrient-grid.compact .nutrient-card strong { color: var(--ink); font-size: .78rem; margin-top: .15rem; }
-.nutrient-grid.compact .nutrient-card small, .nutrient-grid.compact .nutrient-goal { color: var(--muted); font-size: .55rem; }
 
 .goal-progress-list { display: grid; gap: .7rem; margin-top: 1rem; }
 .goal-progress-card { border-radius: .9rem; padding: .8rem; background: #eaf2fb; }
@@ -698,7 +687,6 @@ select.field-suffix { pointer-events: auto; border: 0; background: transparent; 
 .amount-increment:disabled { cursor: not-allowed; opacity: .45; }
 .quick-empty-inline { padding: .5rem 0 .1rem; color: var(--muted); font-size: .72rem; line-height: 1.5; }
 .preview-box { border-radius: .9rem; padding: .8rem; background: #eef6fc; }
-.preview-box .nutrient-grid { margin-top: .6rem; }
 .calorie-preview { display: flex; align-items: center; justify-content: space-between; }
 .calorie-preview strong { color: var(--accent-deep); font-family: inherit; font-size: 1.5rem; font-weight: 800; }
 .calorie-preview small, .detail-total small { margin-left: .2rem; color: var(--muted); font: 500 .72rem system-ui, sans-serif; }
@@ -769,9 +757,6 @@ legend { padding: 0 .35rem; color: var(--muted); font-size: .75rem; font-weight:
   .page-heading .date-picker { align-self: stretch; justify-content: space-between; }
   .page-heading .date-picker input { flex: 1; }
   .hero-summary { padding: 1rem; border-radius: 1.2rem; }
-  .nutrient-grid { grid-template-columns: repeat(3, 1fr); gap: .45rem; }
-  .nutrient-card { padding: .65rem; }
-  .nutrient-grid.compact { grid-template-columns: repeat(3, 1fr); }
   .hero-breakdown > div { grid-template-columns: repeat(2, 1fr); row-gap: .65rem; }
   .quick-groups { grid-template-columns: 1fr; }
   .copy-panel { align-items: stretch; flex-wrap: wrap; }
