@@ -110,7 +110,7 @@ import {
 } from './services/mealMenuSnapshots'
 import { resolveMealRegistrationTransition } from './services/mealRegistrationFlow'
 import { resolveMealEntryTime } from './services/mealTime'
-import { getMenuIngredients, menusWithUnsupportedIngredientUnits, menuToFood, wouldCreateMenuCycle } from './services/menuIngredients'
+import { getMenuIngredients, menuToFood, wouldCreateMenuCycle } from './services/menuIngredients'
 import { createMenuSetMealBatch, getMenuSetFoodItems } from './services/menuSetMeals'
 import {
   getFoodVariantBySourceId,
@@ -644,13 +644,6 @@ function App() {
         estimatorGenreSource: foodDraft.estimatorGenreSource,
         nutrientMetadata: persistedMetadata,
         createdAt: foodDraft.id ? (foods.find((item) => item.id === foodDraft.id)?.createdAt ?? now) : now, updatedAt: now,
-      }
-      const foodsAfterSave = [...foods.filter((item) => item.id !== food.id), food]
-      const incompatibleMenus = menusWithUnsupportedIngredientUnits(menus, foodsAfterSave)
-        .filter((menu) => menu.ingredients?.some((ingredient) => ingredient.kind === 'food' && ingredient.itemId === food.id))
-      if (incompatibleMenus.length > 0) {
-        showError(`入力用単位を変更する前に、Myメニュー「${incompatibleMenus[0].name}」の該当食材を基準単位などへ変更してください。`)
-        return
       }
       const group: FoodGroup = {
         id: groupId,

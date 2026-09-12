@@ -2,6 +2,8 @@ import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { db, deleteFood, deleteGeneralMenu, deleteMenu, exportBackup, getEntriesForDate, getFavoriteFoods, getFoodByBarcode, getRecentFoods, getSettings, getWeightRecords, getWeightRecordsBetween, initializeDatabase, recordFoodSelection, reorderFavorites, reorderMealEntries, replaceAllData, saveBodyProfileSettings, saveFood, saveFoodWithMetadata, saveGeneralMenu, saveMealEntries, saveMealEntry, saveMenu, saveMenuSet, searchFoodResults, searchGeneralMenus, searchMenus, setFavorite } from '../src/db/db'
 import { validateBackup } from '../src/services/backup'
+import { createMenuSetMealBatch } from '../src/services/menuSetMeals'
+import { mealsToCsv, parseMealsCsv } from '../src/services/csv'
 import { getFoodVariantBySourceId, hasFoodGroup as hasMextFoodGroup } from '../src/services/mextFoodData'
 import type { BackupData, Food, FoodAlias, FoodGroup, FoodRelatedTerm, GeneralMenu, MealEntry, Menu } from '../src/types'
 
@@ -19,6 +21,53 @@ beforeEach(async () => {
 })
 
 describe('IndexedDB data safety', () => {
+  it.each([
+    ['saveFood', 'Myメニュー'], ['saveFood', '一般メニュー'], ['saveFood', 'Myセット'],
+    ['saveFoodWithMetadata', 'Myメニュー'], ['saveFoodWithMetadata', '一般メニュー'], ['saveFoodWithMetadata', 'Myセット'],
+  ] as const)('%sは%sが使う換算の削除を原子的に拒否する', async (saveMethod, catalog) => {
+    const food: Food = { ...userFood, inputUnitConversions: [{ unit: '杯', baseAmount: 140 }] }
+    const group: FoodGroup = {
+      id: 'unit_guard_group', displayName: '変更前', reading: null, category: null,
+      representativeScore: 0, defaultVariantId: food.id, isActive: true, metadataSource: 'manual',
+      generationVersion: 'test', needsReview: false, createdAt: food.createdAt, updatedAt: food.updatedAt,
+    }
+    const alias: FoodAlias = { id: 'unit_guard_alias', foodGroupId: group.id, foodVariantId: food.id, alias: '元の別名', normalizedAlias: '元の別名', aliasType: 'synonym', priority: 1, isActive: true, metadataSource: 'manual' }
+    const related: FoodRelatedTerm = { id: 'unit_guard_related', foodGroupId: group.id, term: '元の関連語', normalizedTerm: '元の関連語', weight: 0.5, isActive: true, metadataSource: 'manual' }
+    await saveFoodWithMetadata(food, { group, aliases: [alias], relatedTerms: [related] })
+    const menu: Menu = { id: 'unit_guard_menu', name: '換算を使う料理', category: '主食', foodIds: [food.id], ingredients: [{ kind: 'food', itemId: food.id, amount: 1, unit: '杯' }], createdAt: food.createdAt, updatedAt: food.updatedAt }
+    if (catalog === 'Myメニュー') await saveMenu(menu)
+    if (catalog === '一般メニュー') await saveGeneralMenu(menu)
+    if (catalog === 'Myセット') await saveMenuSet({ id: 'unit_guard_set', name: '換算を使うセット', menuIds: [], foodItems: [{ foodId: food.id, amount: 1, unit: '杯' }], createdAt: food.createdAt, updatedAt: food.updatedAt })
+    const beforeFood = await db.foods.get(food.id)
+    const changed: Food = { ...food, name: '保存してはいけない名称', inputUnitConversions: [] }
+    const save = saveMethod === 'saveFood'
+      ? saveFood(changed)
+      : saveFoodWithMetadata(changed, { group: { ...group, displayName: '保存してはいけないグループ' }, aliases: [], relatedTerms: [] })
+    await expect(save).rejects.toThrow(catalog)
+    expect(await db.foods.get(food.id)).toEqual(beforeFood)
+    expect(await db.foodGroups.get(group.id)).toEqual(group)
+    expect(await db.foodAliases.get(alias.id)).toEqual(alias)
+    expect(await db.foodRelatedTerms.get(related.id)).toEqual(related)
+    expect(validateBackup(await exportBackup()).foods.find((item) => item.id === food.id)?.inputUnitConversions).toEqual(food.inputUnitConversions)
+  })
+
+  it('使用中の換算量変更と、明細を基準単位へ修正した後の換算削除を許可して過去の食事を保つ', async () => {
+    const food: Food = { ...userFood, inputUnitConversions: [{ unit: '杯', baseAmount: 140 }] }
+    await saveFood(food)
+    const menuSet = { id: 'unit_guard_history_set', name: 'セット', menuIds: [], foodItems: [{ foodId: food.id, amount: 1, unit: '杯' }], createdAt: food.createdAt, updatedAt: food.updatedAt }
+    await saveMenuSet(menuSet)
+    const originalEntries = createMenuSetMealBatch({ menuSet, menus: [], foods: [food], mealType: '朝食', eatenAt: food.createdAt, createId: () => 'unit_guard_history_entry' }).entries
+    await saveMealEntries(originalEntries)
+    await saveFood({ ...food, inputUnitConversions: [{ unit: '杯', baseAmount: 150 }] })
+    expect((await db.foods.get(food.id))?.inputUnitConversions?.[0].baseAmount).toBe(150)
+    await saveMenuSet({ ...menuSet, foodItems: [{ foodId: food.id, amount: 140, unit: 'g' }] })
+    await saveFood({ ...food, inputUnitConversions: [] })
+    expect(await db.mealEntries.get(originalEntries[0].id)).toMatchObject(originalEntries[0])
+    const restored = validateBackup(await exportBackup())
+    expect(restored.mealEntries).toMatchObject(originalEntries)
+    expect(parseMealsCsv(mealsToCsv(restored.mealEntries))).toMatchObject(originalEntries.map(({ foodSnapshot, ...entry }) => ({ ...entry, foodSnapshot: { name: foodSnapshot.name, maker: foodSnapshot.maker, barcode: foodSnapshot.barcode, baseAmount: foodSnapshot.baseAmount, baseUnit: foodSnapshot.baseUnit, inputUnitConversions: foodSnapshot.inputUnitConversions, nutrients: foodSnapshot.nutrients } })))
+  })
+
   it('お気に入りは旧データを食品名順にし、新規追加を末尾へ置く', async () => {
     const alpha = { ...userFood, id: 'favorite_alpha', name: 'あ食品' }
     const beta = { ...userFood, id: 'favorite_beta', name: 'い食品' }

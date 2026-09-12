@@ -28,7 +28,7 @@ import {
   type WeightRecord,
 } from '../types'
 import { createId } from '../utils/id'
-import { estimateDailyGoals } from '../services/nutrition'
+import { estimateDailyGoals, getFoodQuantityUnits } from '../services/nutrition'
 import { normalizeFoodAttributePreferences } from '../services/foodAttributePreferences'
 import { validateBackup } from '../services/backup'
 import { getMenuFoodIds, getNestedMenuIds, wouldCreateMenuCycle } from '../services/menuIngredients'
@@ -547,11 +547,28 @@ function mergeFoodForSave(food: Food, previous: Food | undefined): Food {
   })
 }
 
+/** 原本の明細は換算を持たないため、使用中の単位を失う食品変更を保存前に拒否する。 */
+async function assertFoodReferenceUnits(food: Food): Promise<void> {
+  const supportedUnits = new Set(getFoodQuantityUnits(food))
+  const hasUnsupportedIngredient = (menu: Menu): boolean => (menu.ingredients ?? []).some((ingredient) => (
+    ingredient.kind === 'food' && ingredient.itemId === food.id && !supportedUnits.has(ingredient.unit)
+  ))
+  const menu = await db.menus.filter(hasUnsupportedIngredient).first()
+  if (menu) throw new Error(`入力用単位を変更する前に、Myメニュー「${menu.name}」の該当食材を基準単位などへ変更してください。`)
+  const generalMenu = await db.generalMenus.filter(hasUnsupportedIngredient).first()
+  if (generalMenu) throw new Error(`入力用単位を変更する前に、一般メニュー「${generalMenu.name}」の該当食材を基準単位などへ変更してください。`)
+  const menuSet = await db.menuSets.filter((set) => (set.foodItems ?? []).some((item) => (
+    item.foodId === food.id && !supportedUnits.has(item.unit)
+  ))).first()
+  if (menuSet) throw new Error(`入力用単位を変更する前に、Myセット「${menuSet.name}」の該当食品を基準単位などへ変更してください。`)
+}
+
 export async function saveFood(food: Food): Promise<void> {
-  const previous = await db.foods.get(food.id)
-  const enriched = mergeFoodForSave(food, previous)
-  const existingGroup = await db.foodGroups.get(enriched.foodGroupId ?? '')
-  await db.transaction('rw', [db.foods, db.foodGroups], async () => {
+  await db.transaction('rw', [db.foods, db.foodGroups, db.menus, db.generalMenus, db.menuSets], async () => {
+    const previous = await db.foods.get(food.id)
+    const enriched = mergeFoodForSave(food, previous)
+    await assertFoodReferenceUnits(enriched)
+    const existingGroup = await db.foodGroups.get(enriched.foodGroupId ?? '')
     await db.foods.put(enriched)
     if (!existingGroup && enriched.foodGroupId) {
       await db.foodGroups.put({ id: enriched.foodGroupId, displayName: enriched.displayName ?? enriched.name, reading: enriched.reading ?? null, category: null, representativeScore: 0, defaultVariantId: enriched.id, isActive: true, metadataSource: 'rule', generationVersion: 'runtime-fallback', needsReview: true, createdAt: enriched.createdAt, updatedAt: enriched.updatedAt })
@@ -567,10 +584,11 @@ export interface FoodMetadataUpdate {
 
 /** 食品と検索メタデータを一緒に保存し、途中状態を検索対象へ公開しない。 */
 export async function saveFoodWithMetadata(food: Food, metadata: FoodMetadataUpdate): Promise<void> {
-  const previous = await db.foods.get(food.id)
-  const enriched = mergeFoodForSave(food, previous)
-  const group = { ...metadata.group, defaultVariantId: metadata.group.defaultVariantId ?? enriched.id }
-  await db.transaction('rw', [db.foods, db.foodGroups, db.foodAliases, db.foodRelatedTerms], async () => {
+  await db.transaction('rw', [db.foods, db.foodGroups, db.foodAliases, db.foodRelatedTerms, db.menus, db.generalMenus, db.menuSets], async () => {
+    const previous = await db.foods.get(food.id)
+    const enriched = mergeFoodForSave(food, previous)
+    const group = { ...metadata.group, defaultVariantId: metadata.group.defaultVariantId ?? enriched.id }
+    await assertFoodReferenceUnits(enriched)
     await db.foods.put(enriched)
     await db.foodGroups.put(group)
     const currentAliases = await db.foodAliases.where('foodGroupId').equals(group.id).toArray()
