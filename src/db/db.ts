@@ -29,7 +29,7 @@ import {
   type WeightRecord,
 } from '../types'
 import { createId } from '../utils/id'
-import { estimateDailyGoals, getFoodQuantityUnits } from '../services/nutrition'
+import { getFoodQuantityUnits } from '../services/nutrition'
 import { normalizeFoodAttributePreferences } from '../services/foodAttributePreferences'
 import { validateBackup } from '../services/backup'
 import { getMenuFoodIds, getNestedMenuIds, wouldCreateMenuCycle } from '../services/menuIngredients'
@@ -436,14 +436,7 @@ export async function getSettings(): Promise<AppSettings> {
       foodAttributePreferences: normalizeFoodAttributePreferences(stored.foodAttributePreferences),
     }
     : { ...DEFAULT_SETTINGS, goals: { ...DEFAULT_SETTINGS.goals }, bodyProfile: { ...DEFAULT_BODY_PROFILE }, foodAttributePreferences: {} }
-  const estimated = estimateDailyGoals(normalized.bodyProfile)
-  const goals = { ...normalized.goals }
-  if (estimated) {
-    for (const key of NUTRIENT_KEYS) {
-      if (goals[key] === null && estimated[key] !== null) goals[key] = estimated[key]
-    }
-  }
-  const next = { ...normalized, goals }
+  const next = normalized
   if (stored && (stored.dataFormatVersion !== next.dataFormatVersion || NUTRIENT_KEYS.some((key) => stored.goals[key] !== next.goals[key]))) await db.settings.put(next)
   return next
 }

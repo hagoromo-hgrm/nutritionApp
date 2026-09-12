@@ -64,3 +64,15 @@ describe('atomic food and estimation save', () => {
     expect(await db.estimationDecisions.count()).toBe(1)
   })
 })
+
+
+it('身体情報があっても空欄にした目標を再読込で推定値に置換しない', async () => {
+  const { getSettings, saveSettings } = await import('../src/db/db')
+  const original = await getSettings()
+  await saveSettings({ ...original, goals: { ...original.goals, energyKcal: 2000, proteinG: null }, bodyProfile: { heightCm: 170, weightKg: 65, ageYears: 35, sex: 'male', activityLevel: 'low' } })
+  expect((await getSettings()).goals.proteinG).toBeNull()
+  await db.close(); await db.open()
+  expect((await getSettings()).goals.proteinG).toBeNull()
+  expect((await getSettings()).goals.energyKcal).toBe(2000)
+  expect((await db.settings.get('app'))?.goals.proteinG).toBeNull()
+})
