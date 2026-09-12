@@ -1,4 +1,6 @@
 import 'fake-indexeddb/auto'
+import { saveFoodAndEstimation } from '../src/services/foodEstimationSave'
+import { createEstimationRequest } from '../src/services/nutrientEstimationStore'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { db, saveFoodWithMetadata, type FoodMetadataUpdate } from '../src/db/db'
 import { createEstimationInputHash } from '../src/services/foodRevision'
@@ -34,5 +36,31 @@ describe('food save conflict protection', () => {
     const original = (await db.foods.get(food.id))!
     await saveFoodWithMetadata({ ...original, name: '編集後' }, metadata, createEstimationInputHash(original))
     expect((await db.foods.get(food.id))?.name).toBe('編集後')
+  })
+})
+
+
+describe('atomic food and estimation save', () => {
+  it.each(['result', 'decision'] as const)('%sの保存失敗で食品・検索情報・推計履歴をすべて戻し、再試行できる', async (failurePoint) => {
+    const request = createEstimationRequest(food, { requestId: 'request' })
+    const decision = {
+      request,
+      result: { requestId: request.requestId, foodId: food.id, inputHash: request.inputHash, status: 'completed' as const,
+        basis: { baseAmount: 100, baseUnit: 'g' as const },
+        estimates: { fiberG: { value: 1.234, range: { min: 1, max: 2 }, confidence: 'low' as const, method: 'test', warnings: [] } },
+        globalWarnings: [], modelVersion: 'test', estimatedAt: now },
+      adoptedKeys: ['fiberG' as const], rejectedKeys: [],
+    }
+    const fail = () => { throw new Error('書き込み失敗') }
+    const table = failurePoint === 'result' ? db.estimationResults : db.estimationDecisions
+    table.hook('creating', fail)
+    await expect(saveFoodAndEstimation(food, metadata, decision, null)).rejects.toThrow('書き込み失敗')
+    table.hook('creating').unsubscribe(fail)
+    for (const table of [db.foods, db.foodGroups, db.estimationRequests, db.estimationResults, db.estimationDecisions]) expect(await table.count()).toBe(0)
+    const saved = await saveFoodAndEstimation(food, metadata, decision, null)
+    expect(saved.nutrients.fiberG).toBe(1.234)
+    expect(saved.nutrientMetadata?.fiberG?.origin).toBe('estimated')
+    expect(await db.foods.count()).toBe(1)
+    expect(await db.estimationDecisions.count()).toBe(1)
   })
 })

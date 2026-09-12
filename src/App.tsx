@@ -1,3 +1,4 @@
+import { saveFoodAndEstimation } from './services/foodEstimationSave'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { registerSW } from 'virtual:pwa-register'
 import { FoodFormView } from './components/FoodFormView'
@@ -125,14 +126,10 @@ import {
   type UserFoodSearchResult,
 } from './services/mextUserFoodData'
 import {
-  adoptEstimatedNutrients,
   createEstimationRequest,
   getEstimationDecisionsForFood,
   getEstimationSettings,
-  rejectEstimatedNutrients,
   revertEstimatedNutrient,
-  saveEstimationRequest,
-  saveEstimationResult,
   saveEstimationSettings,
 } from './services/nutrientEstimationStore'
 import { ESTIMATE_FIT_NUTRIENT_KEYS, toStoredNutrientEstimateResult } from './services/nutrientEstimator'
@@ -706,29 +703,22 @@ function App() {
         showError('推計後に原材料、基準量または確認済み重量が変更されています。もう一度推計してから保存してください。')
         return
       }
-      await saveFoodWithMetadata(food, { group, aliases, relatedTerms: related }, pendingEstimation ? foodDraft.originalInputHash : undefined)
       let savedFood = food
-      if (pendingEstimation) {
-        if (evaluationStillCurrent) {
-          const request = createEstimationRequest(food, {
-            requestId: evaluated!.requestId,
-            now: evaluated!.requestedAt,
-          })
-          await saveEstimationRequest(request)
-          await saveEstimationResult(toStoredNutrientEstimateResult(pendingEstimation.evaluation.result, {
-            foodId: food.id,
-            inputHash: request.inputHash,
-            baseAmount: food.baseAmount,
-            baseUnit: food.baseUnit,
-          }))
-          if (pendingEstimation.rejectedKeys.length > 0) {
-            await rejectEstimatedNutrients(request.requestId, pendingEstimation.rejectedKeys)
-          }
-          if (pendingAdoptionKeys.length > 0) {
-            await adoptEstimatedNutrients(request.requestId, pendingAdoptionKeys)
-            savedFood = await db.foods.get(food.id) ?? food
-          }
-        }
+      if (pendingEstimation && evaluationStillCurrent) {
+        const request = createEstimationRequest(food, {
+          requestId: evaluated!.requestId,
+          now: evaluated!.requestedAt,
+        })
+        savedFood = await saveFoodAndEstimation(food, { group, aliases, relatedTerms: related }, {
+          request,
+          result: toStoredNutrientEstimateResult(pendingEstimation.evaluation.result, {
+            foodId: food.id, inputHash: request.inputHash, baseAmount: food.baseAmount, baseUnit: food.baseUnit,
+          }),
+          adoptedKeys: pendingAdoptionKeys,
+          rejectedKeys: pendingEstimation.rejectedKeys,
+        }, foodDraft.originalInputHash)
+      } else {
+        await saveFoodWithMetadata(food, { group, aliases, relatedTerms: related })
       }
       foodFormSavedFoodRef.current = savedFood
       setFoodDraft(foodToDraft(savedFood, group, aliases, related))
