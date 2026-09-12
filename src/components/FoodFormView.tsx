@@ -27,17 +27,10 @@ import {
   type Nutrients,
 } from '../types'
 import { isPositiveFinite } from '../utils/validation'
-import { formatEstimateInput, variantAttributeKeys, variantAttributeLabels, type FoodDraft, type FoodFormReturnView } from './formDrafts'
+import { queueFoodEstimateAdoption, queueFoodEstimateEvaluation, queueFoodEstimateRejection, withoutPendingEstimation, variantAttributeKeys, variantAttributeLabels, type FoodDraft, type FoodFormReturnView } from './formDrafts'
 
 export function FoodFormView({ draft, returnView, allowCommercialClassification, estimationEnabled, setDraft, foodGroups, foodAliases, foodRelatedTerms, externalNote, onRevertEstimate, onSubmit, onDelete, onClose }: { draft: FoodDraft; returnView: FoodFormReturnView; allowCommercialClassification: boolean; estimationEnabled: boolean; setDraft: React.Dispatch<React.SetStateAction<FoodDraft | null>>; foodGroups: FoodGroup[]; foodAliases: FoodAlias[]; foodRelatedTerms: FoodRelatedTerm[]; externalNote: string | null; onRevertEstimate: (foodId: string, nutrientKey: NutrientKey) => void; onSubmit: () => void | Promise<void>; onDelete?: () => void; onClose: () => void }) {
   const [activeTab, setActiveTab] = useState<'basic' | 'nutrition' | 'search'>('basic')
-  const withoutPendingEstimation = (current: FoodDraft): FoodDraft => {
-    const nutrients = { ...current.nutrients }
-    for (const [key, value] of Object.entries(current.pendingEstimation?.adoption?.values ?? {}) as Array<[NutrientKey, number]>) {
-      if (nutrients[key] === formatEstimateInput(value)) nutrients[key] = ''
-    }
-    return { ...current, nutrients, pendingEstimation: null }
-  }
   const update = <K extends keyof FoodDraft>(key: K, value: FoodDraft[K]) => setDraft((current) => {
     if (!current) return current
     return { ...withoutPendingEstimation(current), [key]: value }
@@ -118,26 +111,16 @@ export function FoodFormView({ draft, returnView, allowCommercialClassification,
     }
     setDraft((current) => {
       if (!current) return current
-      return {
-        ...withoutPendingEstimation(current),
-        estimatorGenreSource: 'user',
-        pendingEstimation: { evaluation, adoption: null, rejectedKeys: [] },
-      }
+      return queueFoodEstimateEvaluation(current, evaluation)
     })
   }
   const queueAdoption = (adoption: NutrientEstimateAdoption) => setDraft((current) => {
     if (!current) return current
-    const nutrients = { ...current.nutrients }
-    for (const [key, value] of Object.entries(adoption.values) as Array<[NutrientKey, number]>) nutrients[key] = formatEstimateInput(value)
-    return {
-      ...current,
-      nutrients,
-      pendingEstimation: { evaluation: { request: adoption.request, result: adoption.result }, adoption, rejectedKeys: [] },
-    }
+    return queueFoodEstimateAdoption(current, adoption)
   })
   const queueRejection = (evaluation: NutrientEstimateEvaluation, nutrientKeys: NutrientKey[]) => setDraft((current) => {
     if (!current) return current
-    return { ...withoutPendingEstimation(current), pendingEstimation: { evaluation, adoption: null, rejectedKeys: nutrientKeys } }
+    return queueFoodEstimateRejection(current, evaluation, nutrientKeys)
   })
   const updateNutrientValue = (key: NutrientKey, value: string) => setDraft((current) => {
     if (!current) return current

@@ -104,6 +104,46 @@ export interface FoodDraft {
 export const nutrientKeys = [...NUTRIENT_KEYS]
 export const emptyNutrientInputs = (): Record<NutrientKey, string> => Object.fromEntries(nutrientKeys.map((key) => [key, ''])) as Record<NutrientKey, string>
 export const formatEstimateInput = (value: number): string => value.toFixed(1)
+// Only untouched staged displays are cleared; explicit edits remain user input.
+export function withoutPendingEstimation(current: FoodDraft): FoodDraft {
+  const nutrients = { ...current.nutrients }
+  for (const [key, value] of Object.entries(current.pendingEstimation?.adoption?.values ?? {}) as Array<[NutrientKey, number]>) {
+    if (nutrients[key] === formatEstimateInput(value)) nutrients[key] = ''
+  }
+  return { ...current, nutrients, pendingEstimation: null }
+}
+
+export function queueFoodEstimateEvaluation(current: FoodDraft, evaluation: NutrientEstimateEvaluation): FoodDraft {
+  return {
+    ...withoutPendingEstimation(current),
+    estimatorGenreSource: 'user',
+    pendingEstimation: { evaluation, adoption: null, rejectedKeys: [] },
+  }
+}
+
+export function queueFoodEstimateAdoption(current: FoodDraft, adoption: NutrientEstimateAdoption): FoodDraft {
+  const previous = current.pendingEstimation?.adoption
+  const sameRequest = previous?.requestId === adoption.requestId
+  const cleared = sameRequest ? current : withoutPendingEstimation(current)
+  // Retain unrounded values for every adoption from this evaluation until save.
+  const values = { ...(sameRequest ? previous.values : {}), ...adoption.values }
+  const nutrients = { ...cleared.nutrients }
+  for (const [key, value] of Object.entries(adoption.values) as Array<[NutrientKey, number]>) nutrients[key] = formatEstimateInput(value)
+  return {
+    ...cleared,
+    nutrients,
+    pendingEstimation: {
+      evaluation: { request: adoption.request, result: adoption.result },
+      adoption: { ...adoption, values },
+      rejectedKeys: [],
+    },
+  }
+}
+
+export function queueFoodEstimateRejection(current: FoodDraft, evaluation: NutrientEstimateEvaluation, rejectedKeys: NutrientKey[]): FoodDraft {
+  return { ...withoutPendingEstimation(current), pendingEstimation: { evaluation, adoption: null, rejectedKeys } }
+}
+
 export const variantAttributeKeys: Array<keyof FoodVariantAttributes> = ['species', 'part', 'variety', 'nameSpecification', 'cultivation', 'sourceBean', 'skin', 'preparation', 'processing']
 export const variantAttributeLabels: Record<keyof FoodVariantAttributes, string> = {
   species: '種類', part: '部位', variety: '品種・区分', nameSpecification: '名称仕様', cultivation: '栽培方法', sourceBean: '原料豆', skin: '皮の状態', preparation: '調理方法', processing: '加工状態',
