@@ -59,3 +59,32 @@ it('検索分類で除外された同一familyの食品を再選択候補へ追�
   expect(refreshed?.variants.map((variant) => variant.id)).toEqual([food.id])
   expect(refreshSearchFoodItem(item, [], [group])).toBeNull()
 })
+
+
+async function startBreakfastAddition() {
+  await act(async () => { host.querySelector<HTMLButtonElement>('.meal-record-button')!.click() })
+  await act(async () => { host.querySelector<HTMLButtonElement>('.meal-confirmation-actions button')!.click() })
+}
+async function submitMeal() {
+  await act(async () => {
+    host.querySelector('.modal-card form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
+    await new Promise((resolve) => setTimeout(resolve, 30))
+  })
+}
+it.each(['food', 'set'] as const)('確認画面から%sを追加して戻ると同じ区分の保存済み一覧を表示する', async (kind) => {
+  await startBreakfastAddition()
+  const food = (await db.foods.get('test-food'))!
+  if (kind === 'food') {
+    await act(async () => screens.foods!.onSelectFood!(food))
+    await submitMeal()
+  } else {
+    await act(async () => {
+      screens.foods!.onSelectMenuSet!({ id: 'set', name: 'セット', menuIds: [], foodItems: [{ foodId: food.id, amount: 100, unit: 'g' }], createdAt: food.createdAt, updatedAt: food.updatedAt })
+      await new Promise((resolve) => setTimeout(resolve, 30))
+    })
+  }
+  expect(await db.mealEntries.count()).toBe(1)
+  await act(async () => screens.foods!.onBack!())
+  expect(host.querySelector('.meal-confirmation-heading h1')?.textContent).toBe('朝食の確認')
+  expect(host.querySelectorAll('.meal-confirmation-entry')).toHaveLength(1)
+})
