@@ -1,3 +1,4 @@
+import { createEstimationInputHash } from '../services/foodRevision'
 import {
   type NutrientEstimateAdoption,
   type NutrientEstimateEvaluation,
@@ -69,6 +70,7 @@ interface PendingEstimationDecision {
 }
 
 export interface FoodDraft {
+  originalInputHash: string | null
   id: string | null
   name: string
   maker: string
@@ -153,7 +155,7 @@ const emptyVariantInputs = (): Record<keyof FoodVariantAttributes, string> => Ob
 export function emptyFoodDraft(barcode = '', initialName = ''): FoodDraft {
   const genre = inferEstimatorGenre({ productName: initialName })
   return {
-    id: null, name: initialName, maker: '', barcode, isCommercial: Boolean(barcode.trim()), source: 'user', sourceVersion: 'ユーザー入力',
+    originalInputHash: null, id: null, name: initialName, maker: '', barcode, isCommercial: Boolean(barcode.trim()), source: 'user', sourceVersion: 'ユーザー入力',
     baseAmount: '100', baseUnit: 'g', inputUnit: '', inputUnitBaseAmount: '', servingAmount: '', servingUnit: 'g', menuIds: [], foodGroupId: '', groupDisplayName: initialName,
     groupReading: '', groupCategory: '', aliases: [], relatedTerms: [], variantAttributes: emptyVariantInputs(), nutrients: emptyNutrientInputs(),
     ingredientsText: '', ingredientsSourceProvider: '', estimationReferenceMassG: '', estimationReferenceMassSource: '',
@@ -174,7 +176,7 @@ export function foodToDraft(food: Food, group: FoodGroup | undefined, aliases: F
   const conversion = food.inputUnitConversions?.[0]
   const inferredGenre = inferEstimatorGenre({ productName: food.name, ingredientsText: food.ingredientsText })
   return {
-    id: food.id, name: food.name, maker: food.maker, barcode: food.barcode, isCommercial: food.isCommercial === true, source: food.source,
+    originalInputHash: createEstimationInputHash(food), id: food.id, name: food.name, maker: food.maker, barcode: food.barcode, isCommercial: food.isCommercial === true, source: food.source,
     sourceVersion: food.sourceVersion, baseAmount: String(food.baseAmount), baseUnit: food.baseUnit,
     inputUnit: conversion?.unit ?? '', inputUnitBaseAmount: conversion ? String(conversion.baseAmount) : '',
     servingAmount: food.servingAmount === null ? '' : String(food.servingAmount), servingUnit: food.servingUnit ?? food.baseUnit,

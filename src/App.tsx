@@ -706,7 +706,7 @@ function App() {
         showError('推計後に原材料、基準量または確認済み重量が変更されています。もう一度推計してから保存してください。')
         return
       }
-      await saveFoodWithMetadata(food, { group, aliases, relatedTerms: related })
+      await saveFoodWithMetadata(food, { group, aliases, relatedTerms: related }, pendingEstimation ? foodDraft.originalInputHash : undefined)
       let savedFood = food
       if (pendingEstimation) {
         if (evaluationStillCurrent) {

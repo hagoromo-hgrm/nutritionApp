@@ -1,3 +1,4 @@
+import { createEstimationInputHash } from '../services/foodRevision'
 import Dexie, { type Table } from 'dexie'
 import {
   DEFAULT_SETTINGS,
@@ -583,9 +584,12 @@ export interface FoodMetadataUpdate {
 }
 
 /** 食品と検索メタデータを一緒に保存し、途中状態を検索対象へ公開しない。 */
-export async function saveFoodWithMetadata(food: Food, metadata: FoodMetadataUpdate): Promise<void> {
+export async function saveFoodWithMetadata(food: Food, metadata: FoodMetadataUpdate, expectedInputHash?: string | null): Promise<void> {
   await db.transaction('rw', [db.foods, db.foodGroups, db.foodAliases, db.foodRelatedTerms, db.menus, db.generalMenus, db.menuSets], async () => {
     const previous = await db.foods.get(food.id)
+    if (expectedInputHash !== undefined && (previous ? createEstimationInputHash(previous) : null) !== expectedInputHash) {
+      throw new Error('食品情報が別の操作で変更されています。食品を読み直して再推計してください。')
+    }
     const enriched = mergeFoodForSave(food, previous)
     const group = { ...metadata.group, defaultVariantId: metadata.group.defaultVariantId ?? enriched.id }
     await assertFoodReferenceUnits(enriched)

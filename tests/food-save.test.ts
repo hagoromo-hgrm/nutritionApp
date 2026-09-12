@@ -1,0 +1,38 @@
+import 'fake-indexeddb/auto'
+import { beforeEach, describe, expect, it } from 'vitest'
+import { db, saveFoodWithMetadata, type FoodMetadataUpdate } from '../src/db/db'
+import { createEstimationInputHash } from '../src/services/foodRevision'
+import { EMPTY_NUTRIENTS, type Food } from '../src/types'
+
+const now = '2026-09-12T00:00:00.000Z'
+const food: Food = { id: 'food', name: '食品', maker: '', barcode: '', source: 'user', sourceVersion: 'test', baseAmount: 100, baseUnit: 'g', servingAmount: null, servingUnit: null, nutrients: { ...EMPTY_NUTRIENTS }, createdAt: now, updatedAt: now }
+const metadata: FoodMetadataUpdate = { group: { id: 'group', displayName: '食品', reading: null, category: null, representativeScore: 0, defaultVariantId: food.id, isActive: true, metadataSource: 'manual', generationVersion: 'test', needsReview: false, createdAt: now, updatedAt: now }, aliases: [], relatedTerms: [] }
+
+beforeEach(async () => { await db.delete(); await db.open() })
+
+describe('food save conflict protection', () => {
+  it('同じ更新日時でも、推計画面を開いた後の栄養値変更を保存前に検出する', async () => {
+    await saveFoodWithMetadata(food, metadata)
+    const original = (await db.foods.get(food.id))!
+    const edited = { ...original, nutrients: { ...original.nutrients, fiberG: 99 } }
+    await db.foods.put(edited)
+    await expect(saveFoodWithMetadata(original, { ...metadata, group: { ...metadata.group, displayName: '古い編集' } }, createEstimationInputHash(original))).rejects.toThrow('別の操作')
+    expect(await db.foods.get(food.id)).toEqual(edited)
+    expect((await db.foodGroups.get('group'))?.displayName).toBe('食品')
+  })
+
+  it('削除された食品を古い推計画面の保存で復活させない', async () => {
+    await saveFoodWithMetadata(food, metadata)
+    const original = (await db.foods.get(food.id))!
+    await db.foods.delete(food.id)
+    await expect(saveFoodWithMetadata(original, metadata, createEstimationInputHash(original))).rejects.toThrow('別の操作')
+    expect(await db.foods.get(food.id)).toBeUndefined()
+  })
+
+  it('新規食品と、変更されていない食品への編集は保存できる', async () => {
+    await saveFoodWithMetadata(food, metadata, null)
+    const original = (await db.foods.get(food.id))!
+    await saveFoodWithMetadata({ ...original, name: '編集後' }, metadata, createEstimationInputHash(original))
+    expect((await db.foods.get(food.id))?.name).toBe('編集後')
+  })
+})
