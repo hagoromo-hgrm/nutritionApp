@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { applyConstrainedMextFoodAttributePreferences, applyConstrainedUserFoodSelectionPreferences, getFoodAttributePreferencesForGroup } from '../services/foodAttributePreferences'
 import { type FoodSearchResult } from '../services/foodSearch'
 import { filterVariantsBySelection, getAvailableVariantOptionValues, getVariantOptionGroups, getVariantSelection, reconcileVariantSelection, resolveVariantForSelection, variantOptionText, type VariantOptionGroup } from '../services/foodVariants'
@@ -145,19 +145,20 @@ function MextFoodVariantPickerModal({ result, userFoodResult, foods = [], foodGr
   const supplementalFoods = useMemo(() => (activeResult?.variants ?? []).filter((food) => !getFoodVariantBySourceId(food.id)), [activeResult?.variants])
   const [selection, setSelection] = useState<Record<string, string>>(() => initialAttributeSelection ?? appliedPreferences.selection)
   const [selectionFoodGroupId, setSelectionFoodGroupId] = useState<string | null>(activeFoodGroupId)
-  const [supplementalFoodId, setSupplementalFoodId] = useState<string | null>(null)
+  const initialSupplementalFoodId = supplementalFoods.find((food) => food.id === initialFoodId)?.id ?? null
+  const [supplementalFoodId, setSupplementalFoodId] = useState<string | null>(initialSupplementalFoodId)
   const selectionForActiveGroup = selectionFoodGroupId === activeFoodGroupId ? selection : appliedPreferences.selection
   useEffect(() => {
     setSelection(initialAttributeSelection ?? appliedPreferences.selection)
     setSelectionFoodGroupId(activeFoodGroupId)
-    setSupplementalFoodId(null)
+    setSupplementalFoodId(initialSupplementalFoodId)
     setTemporarilyVisibleAttributeIds(new Set(appliedPreferences.incompatibleAttributeIds))
     if (appliedPreferences.incompatibleAttributeIds.size > 0) {
       setConstraintMessage('保存済みの既定値の組み合わせに該当する食品がないため、選択し直してください。')
     } else {
       setConstraintMessage(null)
     }
-  }, [activeFoodGroupId, appliedPreferences, initialAttributeSelection])
+  }, [activeFoodGroupId, appliedPreferences, initialAttributeSelection, initialSupplementalFoodId])
   const resolution = useMemo(() => {
     if (!resolvedUserFoodGroupId) {
       return { variant: null, error: '種類を選択すると、属性を指定できます。', requiresHiddenSelection: false }
@@ -294,17 +295,17 @@ export function FoodAmountPickerModal({ food, amount, unit, onChangeAmount, onCh
   return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="食品の分量を設定"><section className="modal-card variant-picker-modal"><div className="modal-heading"><div><span className="eyebrow">FOOD AMOUNT</span><h2>{displayFoodName(food)}</h2></div><button className="icon-button" type="button" onClick={onClose} aria-label="閉じる">×</button></div><div className="selected-food"><strong>{displayFoodName(food)}</strong><span>{food.maker || '一般食品'} · 基準量 {food.baseAmount}{food.baseUnit}</span></div><label>分量<div className="amount-input-row"><div className="amount-input"><input type="number" min="0.01" max="100000" step="any" value={amount} onChange={(event) => onChangeAmount(event.target.value)} required /><select className="field-suffix" value={unit} onChange={(event) => onChangeUnit(event.target.value)} aria-label="入力単位">{getFoodQuantityUnits(food).map((option) => <option key={option} value={option}>{option}</option>)}</select></div></div></label><button className="button primary variant-picker-confirm" type="button" onClick={() => onSubmit?.(food, amount, unit)}>追加する</button><button className="button ghost full-width" type="button" onClick={onClose}>キャンセル</button></section></div>
 }
 
-function LegacyFoodVariantPickerModal({ result, onSelect, onClose, mealMode = false, onSubmitMeal, submitLabel = '食事として登録' }: Omit<FoodVariantPickerModalProps, 'result'> & { result: FoodSearchResult }) {
+function LegacyFoodVariantPickerModal({ result, onSelect, onClose, mealMode = false, onSubmitMeal, initialFoodId, initialAmount, initialAmountUnit, submitLabel = '食事として登録' }: Omit<FoodVariantPickerModalProps, 'result'> & { result: FoodSearchResult }) {
   const optionGroups = useMemo(() => getVariantOptionGroups(result.variants), [result.variants])
-  const defaultVariant = result.variants.find((food) => food.id === result.group.defaultVariantId) ?? result.food
+  const defaultVariant = result.variants.find((food) => food.id === initialFoodId) ?? result.variants.find((food) => food.id === result.group.defaultVariantId) ?? result.food
   const [selection, setSelection] = useState(() => getVariantSelection(defaultVariant, optionGroups))
   const [fallbackVariantId, setFallbackVariantId] = useState(defaultVariant.id)
-  const [amount, setAmount] = useState(String(defaultVariant.servingAmount ?? defaultVariant.baseAmount))
+  const [amount, setAmount] = useState(initialAmount ?? String(defaultVariant.servingAmount ?? defaultVariant.baseAmount))
   const [constraintMessage, setConstraintMessage] = useState<string | null>(null)
   const fallbackGroup: VariantOptionGroup = useMemo(() => ({ key: 'variant', label: 'バリエーション', options: result.variants.map((food) => ({ value: food.id, label: variantOptionText(food) })) }), [result.variants])
   const groups = optionGroups.length > 0 ? optionGroups : [fallbackGroup]
   const matchingVariants = optionGroups.length > 0 ? filterVariantsBySelection(result.variants, selection) : result.variants.filter((food) => food.id === fallbackVariantId)
-  const selectedFood = optionGroups.length > 0 ? resolveVariantForSelection(result.variants, selection, result.group.defaultVariantId) : matchingVariants[0] ?? null
+  const selectedFood = optionGroups.length > 0 ? resolveVariantForSelection(result.variants, selection, fallbackVariantId) : matchingVariants[0] ?? null
   const availableOptionValues = useMemo(() => new Map(optionGroups.flatMap((group) => group.key === 'variant' ? [] : [[
     group.key,
     getAvailableVariantOptionValues(result.variants, optionGroups, selection, group.key),
@@ -312,13 +313,14 @@ function LegacyFoodVariantPickerModal({ result, onSelect, onClose, mealMode = fa
   const selectedFoodId = selectedFood?.id
   const selectedFoodDefaultAmount = selectedFood ? String(selectedFood.servingAmount ?? selectedFood.baseAmount) : ''
   const selectedFoodDefaultUnit = selectedFood ? (selectedFood.servingUnit ?? selectedFood.baseUnit) : ''
+  const [amountUnit, setAmountUnit] = useState<QuantityUnit>(initialAmountUnit ?? selectedFoodDefaultUnit)
+  const previousFoodId = useRef(selectedFoodId)
   useEffect(() => {
-    if (selectedFoodId) setAmount(selectedFoodDefaultAmount)
-  }, [selectedFoodDefaultAmount, selectedFoodId])
-  const [amountUnit, setAmountUnit] = useState<QuantityUnit>(selectedFoodDefaultUnit)
-  useEffect(() => {
+    if (previousFoodId.current === selectedFoodId) return
+    previousFoodId.current = selectedFoodId
+    setAmount(selectedFoodDefaultAmount)
     setAmountUnit(selectedFoodDefaultUnit)
-  }, [selectedFoodDefaultUnit, selectedFoodId])
+  }, [selectedFoodDefaultAmount, selectedFoodDefaultUnit, selectedFoodId])
   const isSelected = (group: VariantOptionGroup, value: string | null) => group.key === 'variant' ? fallbackVariantId === value : selection[group.key] === value
   const chooseOption = (group: VariantOptionGroup, value: string | null) => {
     if (group.key === 'variant') setFallbackVariantId(value ?? '')

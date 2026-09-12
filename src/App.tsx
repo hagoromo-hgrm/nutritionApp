@@ -451,6 +451,19 @@ function App() {
       setError(null)
       return
     }
+    const existingFood = entry.menuSnapshot ? undefined : foods.find((food) => food.id === entry.foodId)
+    const group = existingFood?.foodGroupId ? foodGroups.find((item) => item.id === existingFood.foodGroupId) : undefined
+    if (existingFood && group) {
+      const variants = foods.filter((food) => food.foodGroupId === group.id)
+      const familyResult = (hasMextFoodGroup(group.id) ? buildMextFoodSearchResult(group.id, foods, foodGroups) : null) ?? {
+        group, food: existingFood, variants, score: 0, matchedBy: 'none', recentlyUsed: false,
+        scoreBreakdown: { text: 0, representative: 0, personalFrequency: 0, recent: 0, total: 0 },
+      }
+      setMealType(entry.mealType)
+      setMealVariantEdit({ entry, result: familyResult })
+      setError(null)
+      return
+    }
     openMealForm(snapshotToFood(entry), entry)
   }, [foodGroups, foods, openMealForm])
 

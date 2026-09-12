@@ -105,3 +105,32 @@ it('検索0件から食品を新規登録して食事保存した後も未選択
   await act(async () => screens.results!.onOpenConfirmation!())
   expect(host.querySelector('.meal-confirmation-heading h1')?.textContent).toBe('朝食の確認')
 })
+
+it('手動familyの既存食事は登録時の属性と分量を開き、属性変更で同じ記録を更新する', async () => {
+  await act(async () => root.unmount())
+  const first = (await db.foods.get('test-food'))!
+  await db.foods.update(first.id, { variantAttributes: { preparation: '生' } })
+  const second = { ...first, id: 'test-cooked', officialName: 'テスト専用食品 ゆで', variantAttributes: { preparation: 'ゆで' }, servingAmount: 80, servingUnit: 'g' }
+  await db.foods.put(second)
+  root = createRoot(host)
+  await act(async () => root.render(createElement(App)))
+  await vi.waitFor(async () => { await act(async () => { await new Promise((resolve) => setTimeout(resolve, 10)) }); expect(host.querySelector('nav')).not.toBeNull() })
+  await startBreakfastAddition()
+  await act(async () => screens.foods!.onSelectFood!({ ...second, servingAmount: 37 }))
+  await submitMeal()
+  const saved = (await db.mealEntries.toArray())[0]
+  await act(async () => screens.foods!.onBack!())
+  await act(async () => { Array.from(host.querySelectorAll<HTMLButtonElement>('.meal-confirmation-entry button')).find((button) => button.textContent === '編集')!.click() })
+  expect(host.querySelector<HTMLButtonElement>('button[aria-pressed="true"]')?.textContent).toBe('ゆで')
+  expect(host.querySelector<HTMLInputElement>('.variant-picker-modal input')?.value).toBe('37')
+  expect(host.querySelector<HTMLSelectElement>('.variant-picker-modal select')?.value).toBe('g')
+  await act(async () => { Array.from(host.querySelectorAll<HTMLButtonElement>('.variant-choice-button')).find((button) => button.textContent === '生')!.click() })
+  expect(host.querySelector<HTMLInputElement>('.variant-picker-modal input')?.value).toBe('100')
+  await act(async () => { host.querySelector<HTMLButtonElement>('.variant-picker-confirm')!.click(); await new Promise((resolve) => setTimeout(resolve, 30)) })
+  const updated = (await db.mealEntries.toArray())[0]
+  expect(updated.id).toBe(saved.id)
+  expect(updated.sortOrder).toBe(saved.sortOrder)
+  expect(updated.foodId).toBe(first.id)
+  expect(updated.foodSnapshot.name).toBe(first.name)
+  expect(await db.mealEntries.count()).toBe(1)
+})
