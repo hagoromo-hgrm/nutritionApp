@@ -1612,6 +1612,7 @@ function App() {
     setFoodFormSearchQuery(null)
     foodFormSavedFoodRef.current = null
     if (returnMealType && savedFood) {
+      setPendingSearchQuery(returnSearchQuery)
       openMealForm(savedFood, undefined, returnMealType)
       setView(returnSearchQuery ? 'search-results' : 'food-screen')
       return

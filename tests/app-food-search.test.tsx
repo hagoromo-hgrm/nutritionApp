@@ -88,3 +88,20 @@ it.each(['food', 'set'] as const)('確認画面から%sを追加して戻ると�
   expect(host.querySelector('.meal-confirmation-heading h1')?.textContent).toBe('朝食の確認')
   expect(host.querySelectorAll('.meal-confirmation-entry')).toHaveLength(1)
 })
+
+
+it('検索0件から食品を新規登録して食事保存した後も未選択の検索結果を維持する', async () => {
+  await startBreakfastAddition()
+  await act(async () => screens.foods!.onOpenSearch!())
+  await act(async () => screens.input!.setBars(['未登録専用食品', 'テスト専用食品']))
+  await act(async () => { screens.input!.onSearch(); await new Promise((resolve) => setTimeout(resolve, 30)) })
+  expect(screens.results!.groups).toHaveLength(2)
+  await act(async () => screens.results!.onAddFood('未登録専用食品'))
+  await act(async () => { await screens.form!.onSubmit() })
+  await act(async () => screens.form!.onClose())
+  await submitMeal()
+  expect(await db.mealEntries.count()).toBe(1)
+  expect(screens.results!.groups.map((group) => group.query)).toEqual(['テスト専用食品'])
+  await act(async () => screens.results!.onOpenConfirmation!())
+  expect(host.querySelector('.meal-confirmation-heading h1')?.textContent).toBe('朝食の確認')
+})
