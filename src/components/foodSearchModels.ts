@@ -1,3 +1,4 @@
+import { displaySearchFoodName, foodListNutritionLabel } from './foodPresentation'
 import type { FoodSearchResult } from '../services/foodSearch'
 import { getFoodGroup as getMextFoodGroup } from '../services/mextFoodData'
 import type { UserFoodSearchResult } from '../services/mextUserFoodData'
@@ -26,6 +27,25 @@ export interface SearchResultGroup {
   items: SearchResultItem[]
   searchLogId: string | null
   nextCursor: string | null
+}
+
+// Retained search pages keep their ordering and cursors, but never own food snapshots.
+export function refreshSearchFoodItem(item: SearchResultItem, foods: Food[], groups: FoodGroup[]): SearchResultItem | null {
+  if (item.kind !== 'food') return item
+  const group = groups.find((candidate) => candidate.id === item.group?.id) ?? null
+  const variants = item.variants.flatMap((variant) => {
+    const current = foods.find((food) => food.id === variant.id)
+    return current ? [current] : []
+  })
+  const food = foods.find((candidate) => candidate.id === item.food.id)
+    ?? variants.find((candidate) => candidate.id === group?.defaultVariantId)
+    ?? variants[0]
+  if (!food) return null
+  return {
+    ...item, food, group, variants,
+    title: group ? displaySearchFoodName(group, food) : food.name,
+    subtitle: `${group?.category ?? '食品'} · ${variants.length > 1 ? `${variants.length}バリエーション · ${foodListNutritionLabel(food, false)}` : foodListNutritionLabel(food)}`,
+  }
 }
 
 export function getSearchResultUserFacingName(item: SearchResultItem): string {

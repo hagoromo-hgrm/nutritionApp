@@ -5,6 +5,7 @@ import { FoodFormView } from './components/FoodFormView'
 import { displayFoodName, displaySearchFoodName, foodListNutritionLabel, generalMenuToFood, menuIngredientNames, menuSetPreviewFood, snapshotToFood, temporaryMenuToFood } from './components/foodPresentation'
 import {
   buildMextFoodSearchResult,
+  refreshSearchFoodItem,
   getSearchResultUserFacingName,
   selectedUserFoodDimensionLabel,
   selectedUserFoodLabel,
@@ -291,6 +292,13 @@ function App() {
       ])
       if (requestId !== loadRequestIdRef.current || requestedDate !== selectedDateRef.current) return false
       setEntries(dateEntries)
+      setSearchResults((current) => current.map((group) => ({
+        ...group,
+        items: group.items.flatMap((item) => {
+          const refreshed = refreshSearchFoodItem(item, resultFoods, resultGroups)
+          return refreshed ? [refreshed] : []
+        }),
+      })))
       setFoods(resultFoods)
       setFoodGroups(resultGroups)
       setFoodAliases(resultAliases)
@@ -1192,7 +1200,12 @@ function App() {
     selectSearchFood(groupQuery, item, result.food)
   }
 
-  const handleSearchResultSelect = (groupQuery: string, item: SearchResultItem) => {
+  const handleSearchResultSelect = (groupQuery: string, retainedItem: SearchResultItem) => {
+    const item = refreshSearchFoodItem(retainedItem, foods, foodGroups)
+    if (!item) {
+      showError('食品が見つかりません。検索し直してください。')
+      return
+    }
     if (item.kind === 'set') {
       const menuSet = menuSets.find((candidate) => candidate.id === item.id)
       if (!menuSet) {
