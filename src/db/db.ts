@@ -34,7 +34,8 @@ import { normalizeFoodAttributePreferences } from '../services/foodAttributePref
 import { validateBackup } from '../services/backup'
 import { isRegistrationTimestamp, withLegacyRegistrationTime } from '../services/mealRegistrationTime'
 import { getMenuFoodIds, getNestedMenuIds, wouldCreateMenuCycle } from '../services/menuIngredients'
-import { normalizeSearchText, searchFoodResults as searchFoodResultsPure, type FoodSearchPage } from '../services/foodSearch'
+import { normalizeSearchText, type FoodSearchPage } from '../services/foodSearch'
+import { searchStoredFoodPage } from './foodSearch'
 import { normalizeMealEntryGroups, normalizeMealEntryOrder, sortMealEntries, sortMealEntryGroup } from '../services/mealEntryOrder'
 import type { FoodSearchCategory } from '../services/foodClassification'
 import { formatDateKey } from '../utils/date'
@@ -489,10 +490,7 @@ export async function searchFoods(query: string): Promise<Food[]> {
 
 export async function searchFoodResults(query: string, options: { limit?: number; cursor?: string | null; category?: FoodSearchCategory } = {}): Promise<{ page: FoodSearchPage; logId: string }> {
   const startedAt = performance.now()
-  const [foods, groups, aliases, relatedTerms, usageStats, favoriteIds] = await Promise.all([
-    db.foods.toArray(), db.foodGroups.toArray(), db.foodAliases.toArray(), db.foodRelatedTerms.toArray(), db.foodUsageStats.toArray(), getFavoriteIds(),
-  ])
-  const page = searchFoodResultsPure(query, { foods, groups, aliases, relatedTerms, usageStats, favoriteIds }, options)
+  const page = await searchStoredFoodPage(db, query, options)
   const log: SearchLog = {
     id: createId('search'), createdAt: new Date().toISOString(), query, normalizedQuery: page.normalizedQuery,
     resultCount: page.results.length, processingMs: Math.max(0, performance.now() - startedAt),

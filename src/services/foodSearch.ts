@@ -161,3 +161,68 @@ export function searchFoodResults(query: string, data: FoodSearchData, options: 
   const nextOffset = offset + limit < results.length ? String(offset + limit) : null
   return { results: page, normalizedQuery, nextCursor: nextOffset }
 }
+
+export type FoodSearchCandidate = Omit<FoodSearchResult, 'variants'>
+
+export interface FoodSearchOrderKey {
+  score: number
+  representativeScore: number
+  displayName: string
+  foodId: string
+}
+
+export function foodSearchOrderKey(result: FoodSearchCandidate): FoodSearchOrderKey {
+  return { score: result.score, representativeScore: result.group.representativeScore, displayName: result.group.displayName, foodId: result.food.id }
+}
+
+export function compareFoodSearchOrder(left: FoodSearchOrderKey, right: FoodSearchOrderKey): number {
+  return right.score - left.score || right.representativeScore - left.representativeScore || left.displayName.localeCompare(right.displayName, 'ja') || left.foodId.localeCompare(right.foodId)
+}
+
+export function compareFoodSearchVariants(left: Food, right: Food): number {
+  return variantLabel(left).localeCompare(variantLabel(right), 'ja') || left.id.localeCompare(right.id)
+}
+
+export function fallbackFoodSearchGroup(food: Food): FoodGroup {
+  return { id: food.foodGroupId ?? `food:${food.id}`, displayName: food.displayName ?? food.name, reading: food.reading ?? null, category: null, representativeScore: 0, defaultVariantId: food.id, isActive: true, metadataSource: 'rule', generationVersion: 'runtime-fallback', needsReview: true, createdAt: food.createdAt, updatedAt: food.updatedAt }
+}
+
+/** 検索時は各familyの最良一致と既定食品だけを保持し、全variantは表示ページで取得する。 */
+export function createFoodSearchGroupAccumulator(normalizedQuery: string, group: FoodGroup, now: Date) {
+  let strongestAlias = ''
+  let aliasStrength = -1
+  let strongestRelated: { term: string; weight: number } | undefined
+  let best: { food: Food; match: { score: number; matchedBy: string }; personal: number; recent: { score: number; recentlyUsed: boolean } } | undefined
+  let defaultFood: Food | undefined
+  return {
+    addAlias(alias: FoodAlias): void {
+      if (!alias.isActive) return
+      const normalized = normalizeSearchText(alias.alias)
+      const strength = !normalized ? -1 : normalized === normalizedQuery ? 3 : normalized.startsWith(normalizedQuery) ? 2 : normalized.includes(normalizedQuery) ? 1 : -1
+      if (strength > aliasStrength) {
+        strongestAlias = alias.alias
+        aliasStrength = strength
+      }
+    },
+    addRelatedTerm(term: FoodRelatedTerm): void {
+      if (term.isActive && normalizeSearchText(term.term).includes(normalizedQuery) && (!strongestRelated || term.weight > strongestRelated.weight)) {
+        strongestRelated = { term: term.term, weight: term.weight }
+      }
+    },
+    addFood(food: Food, stat: FoodUsageStat | undefined, favorite: boolean): void {
+      const match = textScore(normalizedQuery, group.displayName, strongestAlias ? [strongestAlias] : [], food.maker, group.reading, food.officialName ?? food.name, strongestRelated ? [strongestRelated] : [])
+      const personal = personalScore(stat, favorite)
+      const recent = recentScore(stat, now)
+      if (!best || match.score > best.match.score || (match.score === best.match.score && (personal > best.personal || (personal === best.personal && (recent.score > best.recent.score || (recent.score === best.recent.score && food.id.localeCompare(best.food.id) < 0)))))) {
+        best = { food, match, personal, recent }
+      }
+      if (food.id === group.defaultVariantId) defaultFood = food
+    },
+    result(): FoodSearchCandidate | null {
+      if (!group.isActive || !best || (normalizedQuery && best.match.score < 0)) return null
+      const text = Math.max(0, best.match.score)
+      const scoreBreakdown = { text, representative: group.representativeScore, personalFrequency: best.personal, recent: best.recent.score, total: text + group.representativeScore + best.personal + best.recent.score }
+      return { group, food: defaultFood ?? best.food, score: scoreBreakdown.total, matchedBy: best.match.matchedBy, recentlyUsed: best.recent.recentlyUsed, scoreBreakdown }
+    },
+  }
+}
