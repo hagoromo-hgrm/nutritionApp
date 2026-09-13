@@ -4,7 +4,7 @@ import {
   getWeightRecordsBetween,
 } from '../db/db'
 import { sortMealEntries } from '../services/mealEntryOrder'
-import { formatGraphNutrient } from '../services/nutrition'
+import { formatGraphNutrient, isNutrientWithinGoalRange } from '../services/nutrition'
 import { buildDailyNutrientTrend, buildTrendAxisTicks, buildTrendAxisTicksForRange } from '../services/trend'
 import { shouldShowTrendDate } from '../services/trendDateLabels'
 import { buildDailyWeightTrend, buildWeightChartRange } from '../services/weightHistory'
@@ -242,7 +242,7 @@ export function GraphsView({ range, goals, onRangeChange }: GraphsViewProps) {
                   : nutrientMetric && nutrientPoints.map((point) => {
                     const availableValue = point.availableNutrients[nutrientMetric]
                     const showLabel = shouldShowTrendDate(point.date, range)
-                    return <span key={point.date} className={`trend-bar-value${availableValue === null ? ' is-missing' : ''}${showLabel ? '' : ' is-hidden'}`}>{formatGraphNutrient(availableValue)}<small>{metricUnit}</small></span>
+                    return <span key={point.date} className={`trend-bar-value${isNutrientWithinGoalRange(point.nutrients[nutrientMetric], goals, nutrientMetric) ? ' is-within-goal' : ''}${availableValue === null ? ' is-missing' : ''}${showLabel ? '' : ' is-hidden'}`}>{formatGraphNutrient(availableValue)}<small>{metricUnit}</small></span>
                   })}
               </div>
               <div className={`trend-chart-track-area${weightMode ? ' weight-trend-track-area' : ''}`}>

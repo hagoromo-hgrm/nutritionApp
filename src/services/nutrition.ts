@@ -190,6 +190,13 @@ export function nutrientRangeForGoals(goals: NutritionGoals, key: NutrientKey): 
   return { min: goal, max: null }
 }
 
+export function isNutrientWithinGoalRange(value: number | null, goals: NutritionGoals, key: NutrientKey): boolean {
+  const goal = goals[key]
+  if (value === null || !Number.isFinite(value) || goal === null || !Number.isFinite(goal) || goal <= 0) return false
+  const range = nutrientRangeForGoals(goals, key)
+  return (range.min === null || value >= range.min) && (range.max === null || value <= range.max)
+}
+
 export function scaleNutrientReference(
   goals: NutritionGoals,
   key: NutrientKey,

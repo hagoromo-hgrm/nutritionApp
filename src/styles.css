@@ -126,6 +126,7 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .nutrient-graph-heading span:last-child { text-align: right; }
 .nutrient-graph-rows { display: grid; gap: .3rem; }
 .nutrient-graph-row { min-height: 1.9rem; }
+.nutrient-graph-reference { grid-column: 2 / -1; margin-top: -.2rem; color: var(--muted); font-size: .6rem; text-align: right; }
 .nutrient-graph-label { overflow: hidden; color: var(--ink); text-overflow: ellipsis; white-space: nowrap; font-size: .7rem; font-weight: 800; }
 .nutrient-graph-track { position: relative; height: 1.15rem; overflow: hidden; border: 1px solid #dce8f4; border-radius: .35rem; background: #f8fbff; }
 .nutrient-graph-range { position: absolute; z-index: 1; top: .08rem; bottom: .08rem; border-radius: .22rem; background: rgba(109, 158, 214, .24); }
@@ -167,7 +168,8 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .weight-trend-points { position: absolute; z-index: 3; inset: 0; }
 .weight-trend-point { position: absolute; width: .58rem; height: .58rem; transform: translate(-50%, 50%); border: 2px solid var(--accent-deep); border-radius: 50%; background: #ffffff; box-shadow: 0 .15rem .35rem rgba(69, 111, 159, .2); }
 .trend-chart-goal-line { position: absolute; z-index: 1; right: 0; left: 0; border-top: 1px dashed var(--accent-deep); opacity: .72; pointer-events: none; }
-.trend-bar-value { overflow: hidden; min-height: 1rem; color: var(--accent-deep); font-size: .56rem; line-height: 1.2; text-align: center; white-space: nowrap; }
+.trend-bar-value { overflow: hidden; min-height: 1rem; color: var(--muted); font-size: .56rem; line-height: 1.2; text-align: center; white-space: nowrap; }
+.trend-bar-value.is-within-goal { color: #6d9ed6; }
 .trend-bar-value.is-missing { color: var(--muted); }
 .trend-bar-value.is-hidden, .trend-bar-date.is-hidden { visibility: hidden; }
 .trend-bar-value small { margin-left: .1rem; color: var(--muted); font-size: .5rem; }
