@@ -1,6 +1,7 @@
 import { formatDateKey } from '../utils/date'
 import { NUTRIENT_KEYS, type MealEntry, type NutrientKey, type NutrientMetadataMap, type Nutrients } from '../types'
 import { isMealMenuSnapshot } from './mealMenuSnapshots'
+import { isRegistrationTimestamp } from './mealRegistrationTime'
 import { isFoodUnitConversion, isValidQuantityUnit, isValidUnit } from '../utils/validation'
 
 const NUTRIENT_COLUMNS: ReadonlyArray<readonly [NutrientKey, string]> = [
@@ -53,9 +54,14 @@ export const USER_FACING_CSV_HEADERS = [
   'user_facing_name',
 ] as const
 
-export const CSV_HEADERS = [
+export const NUTRIENT_METADATA_CSV_HEADERS = [
   ...USER_FACING_CSV_HEADERS,
   'food_snapshot_nutrient_metadata_json',
+] as const
+
+export const CSV_HEADERS = [
+  ...NUTRIENT_METADATA_CSV_HEADERS,
+  'registered_at',
 ] as const
 
 function escapeCsv(value: string | number | null): string {
@@ -76,6 +82,7 @@ export function mealsToCsv(entries: MealEntry[]): string {
     entry.sortOrder ?? '',
     entry.foodSnapshot.userFacingName ?? '',
     entry.foodSnapshot.nutrientMetadata ? JSON.stringify(entry.foodSnapshot.nutrientMetadata) : '',
+    entry.registeredAt ?? '',
   ])
   return `\uFEFF${[CSV_HEADERS, ...rows].map((row) => row.map(escapeCsv).join(',')).join('\r\n')}\r\n`
 }
@@ -194,11 +201,12 @@ export function parseMealsCsv(text: string): MealEntry[] {
   const rows = parseCsvRows(text)
   const headers = rows[0] ?? []
   const isCurrentHeader = headers.length === CSV_HEADERS.length && headers.every((header, index) => header === CSV_HEADERS[index])
+  const isNutrientMetadataHeader = headers.length === NUTRIENT_METADATA_CSV_HEADERS.length && headers.every((header, index) => header === NUTRIENT_METADATA_CSV_HEADERS[index])
   const isUserFacingHeader = headers.length === USER_FACING_CSV_HEADERS.length && headers.every((header, index) => header === USER_FACING_CSV_HEADERS[index])
   const isSortedHeader = headers.length === SORTED_CSV_HEADERS.length && headers.every((header, index) => header === SORTED_CSV_HEADERS[index])
   const isPreviousHeader = headers.length === PREVIOUS_CSV_HEADERS.length && headers.every((header, index) => header === PREVIOUS_CSV_HEADERS[index])
   const isLegacyHeader = headers.length === LEGACY_CSV_HEADERS.length && headers.every((header, index) => header === LEGACY_CSV_HEADERS[index])
-  if (rows.length === 0 || (!isCurrentHeader && !isUserFacingHeader && !isSortedHeader && !isPreviousHeader && !isLegacyHeader)) {
+  if (rows.length === 0 || (!isCurrentHeader && !isNutrientMetadataHeader && !isUserFacingHeader && !isSortedHeader && !isPreviousHeader && !isLegacyHeader)) {
     throw new Error('このPWAで出力した食事履歴CSVではありません。列名と順序を確認してください。')
   }
   const headerIndex = new Map<string, number>(headers.map((header, index) => [header, index]))
@@ -209,6 +217,8 @@ export function parseMealsCsv(text: string): MealEntry[] {
     const value = (header: string) => row[headerIndex.get(header) ?? -1] ?? ''
     const id = value('id')
     const eatenAt = value('eaten_at')
+    const registeredAt = value('registered_at')
+    if (registeredAt !== '' && !isRegistrationTimestamp(registeredAt)) throw new Error(`${rowNumber}行目の登録日時が不正です。`)
     const date = value('date')
     const mealType = value('meal_type')
     const foodId = value('food_id')
@@ -252,6 +262,7 @@ export function parseMealsCsv(text: string): MealEntry[] {
     return {
       id,
       eatenAt,
+      ...(registeredAt ? { registeredAt } : {}),
       mealType: mealType as MealEntry['mealType'],
       foodId,
       foodSnapshot: {

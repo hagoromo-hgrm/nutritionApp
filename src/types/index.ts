@@ -304,6 +304,8 @@ export interface MealMenuSnapshot {
 export interface MealEntry {
   id: string
   eatenAt: string
+  /** 初回登録順。旧データは摂取日時を代用し、編集や表示順変更では更新しない。 */
+  registeredAt?: string
   mealType: MealType
   /** 同じ日・食事区分内の表示順。時刻とは独立して扱う。 */
   sortOrder?: number

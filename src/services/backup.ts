@@ -2,6 +2,7 @@ import { ESTIMATION_LIMITATION_REASONS, ESTIMATOR_GENRE_IDS, NUTRIENT_KEYS, type
 import { isFoodAttributePreference } from './foodAttributePreferences'
 import { hasMenuCycles, menusWithUnsupportedIngredientUnits } from './menuIngredients'
 import { isMealMenuSnapshot } from './mealMenuSnapshots'
+import { isRegistrationTimestamp } from './mealRegistrationTime'
 import { isValidWeightRecord } from './weightHistory'
 import { isFoodUnitConversion, isNutrients, isValidBarcode, isValidQuantityUnit, isValidUnit } from '../utils/validation'
 
@@ -212,6 +213,7 @@ function isMealEntry(value: unknown): value is MealEntry {
   if (!isRecord(value)) return false
   return isNonEmptyString(value.id) && isIsoDateTime(value.eatenAt) && ['朝食', '昼食', '夕食', '間食'].includes(String(value.mealType))
     && (value.sortOrder === undefined || (Number.isSafeInteger(value.sortOrder) && Number(value.sortOrder) >= 0))
+    && (value.registeredAt === undefined || isRegistrationTimestamp(value.registeredAt))
     && isNonEmptyString(value.foodId) && isSnapshot(value.foodSnapshot) && typeof value.amount === 'number' && Number.isFinite(value.amount) && value.amount > 0 && value.amount <= 100000
     && isValidQuantityUnit(String(value.amountUnit)) && (value.foodSnapshot.missing === true || hasQuantityUnitConversion(value.foodSnapshot.baseUnit, value.foodSnapshot.inputUnitConversions, String(value.amountUnit))) && isNutrients(value.calculatedNutrients)
     && (value.menuSnapshot === undefined || isMealMenuSnapshot(value.menuSnapshot))

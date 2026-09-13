@@ -108,7 +108,8 @@ describe('export formats', () => {
       },
     }
     const csv = mealsToCsv([estimatedEntry])
-    expect(CSV_HEADERS.at(-1)).toBe('food_snapshot_nutrient_metadata_json')
+    expect(CSV_HEADERS.at(-2)).toBe('food_snapshot_nutrient_metadata_json')
+    expect(CSV_HEADERS.at(-1)).toBe('registered_at')
     expect(parseMealsCsv(csv)).toEqual([estimatedEntry])
   })
 
@@ -179,8 +180,7 @@ describe('export formats', () => {
   })
 
   it('CSVの表示順は非負整数だけを受け入れる', () => {
-    const csv = mealsToCsv([{ ...entry, sortOrder: 0 }])
-    const invalid = csv.replace(/,0,,\r\n$/, ',-1,,\r\n')
+    const invalid = mealsToCsv([{ ...entry, sortOrder: -1 }])
     expect(() => parseMealsCsv(invalid)).toThrow('表示順')
   })
 

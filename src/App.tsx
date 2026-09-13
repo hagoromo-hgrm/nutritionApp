@@ -967,7 +967,7 @@ function App() {
         const existingGroup = sortMealEntryGroup(entries.filter((entry) => entry.mealType === type))
         return normalizeMealEntryOrder([
           ...existingGroup,
-          ...copies.map((entry) => ({ ...entry, id: createNewMealId(), eatenAt: copiedAt })),
+          ...copies.map((entry) => ({ ...entry, id: createNewMealId(), eatenAt: copiedAt, registeredAt: undefined })),
         ])
       })
       await saveMealEntries(copiedEntries)
@@ -1572,7 +1572,7 @@ function App() {
       const overwriteCount = existing.filter((entry): entry is MealEntry => Boolean(entry)).length
       const overwriteNotice = overwriteCount > 0 ? `同じIDの${overwriteCount}件は上書きされます。` : ''
       if (!window.confirm(`${imported.length}件の食事履歴を取り込みます。${overwriteNotice}\n続けますか？`)) return
-      await saveMealEntries(imported)
+      await saveMealEntries(imported.map((entry) => ({ ...entry, registeredAt: entry.registeredAt ?? new Date(entry.eatenAt).toISOString() })))
       await reloadAfterMutation(`${imported.length}件の食事履歴を取り込みました。`)
     } catch (caught) {
       showError(caught instanceof Error ? caught.message : 'CSVを取り込めませんでした。既存データは変更していません。')

@@ -327,7 +327,7 @@ describe('IndexedDB data safety', () => {
     const lunchFood: Food = { ...userFood, id: 'lunch_food', name: '昼食食品' }
     await db.foods.bulkPut([breakfastFood, sharedFood, lunchFood])
     const meal = (id: string, mealType: MealEntry['mealType'], foodId: string, eatenAt: string): MealEntry => ({
-      id, eatenAt, mealType, foodId,
+      id, eatenAt, registeredAt: eatenAt, mealType, foodId,
       foodSnapshot: { name: foodId, maker: '', barcode: '', baseAmount: 100, baseUnit: 'g', nutrients: { ...userFood.nutrients } },
       amount: 100, amountUnit: 'g', calculatedNutrients: { ...userFood.nutrients },
     })
@@ -454,7 +454,7 @@ describe('IndexedDB data safety', () => {
     const settings = await getSettings()
     expect(settings.bodyProfile?.sex).toBe('unspecified')
     expect(settings.bodyProfile?.activityLevel).toBe('moderate')
-    expect((await db.metadata.get('schema-version'))?.value).toBe(9)
+    expect((await db.metadata.get('schema-version'))?.value).toBe(10)
   })
 
   it('身体情報保存と体重履歴追加を一括し、同値・他項目変更では重複記録しない', async () => {

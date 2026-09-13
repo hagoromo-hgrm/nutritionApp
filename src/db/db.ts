@@ -32,6 +32,7 @@ import { createId } from '../utils/id'
 import { getFoodQuantityUnits } from '../services/nutrition'
 import { normalizeFoodAttributePreferences } from '../services/foodAttributePreferences'
 import { validateBackup } from '../services/backup'
+import { isRegistrationTimestamp, withLegacyRegistrationTime } from '../services/mealRegistrationTime'
 import { getMenuFoodIds, getNestedMenuIds, wouldCreateMenuCycle } from '../services/menuIngredients'
 import { normalizeSearchText, searchFoodResults as searchFoodResultsPure, type FoodSearchPage } from '../services/foodSearch'
 import { normalizeMealEntryGroups, normalizeMealEntryOrder, sortMealEntries, sortMealEntryGroup } from '../services/mealEntryOrder'
@@ -232,6 +233,14 @@ export class NutritionDatabase extends Dexie {
       }
       await transaction.table('metadata').put({ key: 'schema-version', value: 9 })
     })
+    this.version(10).stores({
+      meal_entries: 'id, eatenAt, registeredAt, mealType, foodId',
+    }).upgrade(async (transaction) => {
+      await transaction.table('meal_entries').toCollection().modify((entry: MealEntry) => {
+        entry.registeredAt = withLegacyRegistrationTime(entry).registeredAt
+      })
+      await transaction.table('metadata').put({ key: 'schema-version', value: 10 })
+    })
     this.mealEntries = this.table('meal_entries')
     this.menus = this.table('menus')
     this.generalMenus = this.table('general_menus')
@@ -378,7 +387,7 @@ export async function initializeDatabase(): Promise<void> {
       if (existing === 0) await db.foods.bulkAdd(initialFoods.map(enrichFoodForSearch))
       await db.metadata.put({ key: 'initial-foods-seeded', value: true })
       await db.metadata.put({ key: 'initial-foods-version', value: INITIAL_FOODS_VERSION })
-      await db.metadata.put({ key: 'schema-version', value: 9 })
+      await db.metadata.put({ key: 'schema-version', value: 10 })
     })
   } else if (seedVersion?.value !== INITIAL_FOODS_VERSION) {
     await db.transaction('rw', [db.foods, db.metadata], async () => {
@@ -418,12 +427,12 @@ export async function initializeDatabase(): Promise<void> {
         .map((food) => food.id)
       if (legacyIdsToDelete.length > 0) await db.foods.bulkDelete(legacyIdsToDelete)
       await db.metadata.put({ key: 'initial-foods-version', value: INITIAL_FOODS_VERSION })
-      await db.metadata.put({ key: 'schema-version', value: 9 })
+      await db.metadata.put({ key: 'schema-version', value: 10 })
     })
   }
   await ensureSearchMetadata()
   await db.metadata.put({ key: INITIAL_FOOD_IDS_METADATA_KEY, value: JSON.stringify(bundledFoodIds) })
-  await db.metadata.put({ key: 'schema-version', value: 9 })
+  await db.metadata.put({ key: 'schema-version', value: 10 })
 }
 
 export async function getSettings(): Promise<AppSettings> {
@@ -844,7 +853,28 @@ export async function saveMealEntries(entries: MealEntry[]): Promise<void> {
   await db.transaction('rw', db.mealEntries, async () => {
     const previousEntries = (await db.mealEntries.bulkGet(entries.map((entry) => entry.id)))
       .filter((entry): entry is MealEntry => Boolean(entry))
-    await db.mealEntries.bulkPut(entries)
+    const previousById = new Map(previousEntries.map((entry) => [entry.id, entry]))
+    const latestEntry = await db.mealEntries.orderBy('registeredAt').last()
+    let latestRegistrationMs = latestEntry?.registeredAt ? new Date(latestEntry.registeredAt).getTime() : -Infinity
+    const now = Date.now()
+    const registeredEntries = entries.map((entry): MealEntry => {
+      const previous = previousById.get(entry.id)
+      let registeredAt = previous ? withLegacyRegistrationTime(previous).registeredAt : entry.registeredAt
+      if (registeredAt !== undefined && !isRegistrationTimestamp(registeredAt)) {
+        throw new Error('食事記録の登録日時が不正です。食事履歴の入力内容を確認してください。')
+      }
+      if (registeredAt === undefined) {
+        // 同時刻の登録や端末時計の巻き戻りでも、後から追加した項目を先頭にする。
+        latestRegistrationMs = Math.max(now, latestRegistrationMs + 1)
+        registeredAt = new Date(latestRegistrationMs).toISOString()
+      } else {
+        latestRegistrationMs = Math.max(latestRegistrationMs, new Date(registeredAt).getTime())
+      }
+      const saved = { ...entry, registeredAt }
+      previousById.set(saved.id, saved)
+      return saved
+    })
+    await db.mealEntries.bulkPut(registeredEntries)
 
     const affectedGroups = new Map<string, { dateKey: string; mealType: MealType }>()
     for (const entry of [...previousEntries, ...entries]) {
@@ -963,7 +993,7 @@ export async function getRecentFoods(limit = 20, mealType?: MealType): Promise<F
   const batchSize = Math.max(20, limit * 2)
   let offset = 0
   while (recent.length < limit) {
-    const entries = await db.mealEntries.orderBy('eatenAt').reverse().offset(offset).limit(batchSize).toArray()
+    const entries = await db.mealEntries.orderBy('registeredAt').reverse().offset(offset).limit(batchSize).toArray()
     if (entries.length === 0) break
     offset += entries.length
     const ids = entries.filter((entry) => mealType === undefined || entry.mealType === mealType).map((entry) => entry.foodId).filter((id) => {
@@ -1045,7 +1075,7 @@ export async function replaceAllData(backup: BackupData): Promise<ReplaceAllData
     await db.estimationDecisions.clear()
     await db.weightRecords.clear()
     if (validatedBackup.foods.length) await db.foods.bulkAdd(validatedBackup.foods)
-    if (validatedBackup.mealEntries.length) await db.mealEntries.bulkAdd(normalizeMealEntryGroups(validatedBackup.mealEntries))
+    if (validatedBackup.mealEntries.length) await db.mealEntries.bulkAdd(normalizeMealEntryGroups(validatedBackup.mealEntries.map(withLegacyRegistrationTime)))
     if (validatedBackup.favorites.length) await db.favorites.bulkAdd(validatedBackup.favorites)
     if (validatedBackup.menus?.length) await db.menus.bulkAdd(validatedBackup.menus)
     if (validatedBackup.generalMenus?.length) await db.generalMenus.bulkAdd(validatedBackup.generalMenus)
@@ -1061,7 +1091,7 @@ export async function replaceAllData(backup: BackupData): Promise<ReplaceAllData
     if (validatedBackup.estimationDecisions?.length) await db.estimationDecisions.bulkAdd(validatedBackup.estimationDecisions)
     if (validatedBackup.weightRecords?.length) await db.weightRecords.bulkAdd(validatedBackup.weightRecords)
     await db.settings.put(validatedBackup.settings)
-    await db.metadata.put({ key: 'schema-version', value: 9 })
+    await db.metadata.put({ key: 'schema-version', value: 10 })
     await db.metadata.put({ key: 'initial-foods-seeded', value: true })
     await db.metadata.put({ key: 'initial-foods-version', value: INITIAL_FOODS_VERSION })
     if (validatedBackup.foodAliases !== undefined && validatedBackup.foodRelatedTerms !== undefined) {
