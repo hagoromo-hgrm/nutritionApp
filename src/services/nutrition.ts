@@ -117,7 +117,7 @@ export function sumByMealType(entries: MealEntry[]): Record<string, Nutrients> {
 export function formatNutrient(value: number | null, digits = 1): string {
   if (value === null) return '未集計'
   const rounded = Number(value.toFixed(digits))
-  return Math.abs(rounded) >= 1000 ? String(Math.round(rounded)) : rounded.toFixed(digits)
+  return rounded.toFixed(digits)
 }
 
 export function formatGraphNutrient(value: number | null, digits = 1): string {

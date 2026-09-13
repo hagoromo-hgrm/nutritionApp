@@ -218,9 +218,13 @@ describe('nutrition calculation', () => {
     expect(snackGoals.proteinG).toBeNull()
   })
 
-  it('4桁以上の表示値は小数点以下を丸める', () => {
+  it('4桁以上も指定された小数桁で表示する', () => {
     expect(formatNutrient(999.94)).toBe('999.9')
-    expect(formatNutrient(1234.56)).toBe('1235')
+    expect(formatNutrient(1234.56)).toBe('1234.6')
+    expect(formatNutrient(999.96)).toBe('1000.0')
+    expect(formatNutrient(1000)).toBe('1000.0')
+    expect(formatNutrient(1234.567, 2)).toBe('1234.57')
+    expect(formatNutrient(null)).toBe('未集計')
   })
 
   it('グラフの未集計値はプレースホルダーで表示する', () => {
