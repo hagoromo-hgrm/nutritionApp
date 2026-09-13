@@ -126,7 +126,6 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .nutrient-graph-heading span:last-child { text-align: right; }
 .nutrient-graph-rows { display: grid; gap: .3rem; }
 .nutrient-graph-row { min-height: 1.9rem; }
-.nutrient-graph-reference { grid-column: 2 / -1; margin-top: -.2rem; color: var(--muted); font-size: .6rem; text-align: right; }
 .nutrient-graph-label { overflow: hidden; color: var(--ink); text-overflow: ellipsis; white-space: nowrap; font-size: .7rem; font-weight: 800; }
 .nutrient-graph-track { position: relative; height: 1.15rem; overflow: hidden; border: 1px solid #dce8f4; border-radius: .35rem; background: #f8fbff; }
 .nutrient-graph-range { position: absolute; z-index: 1; top: .08rem; bottom: .08rem; border-radius: .22rem; background: rgba(109, 158, 214, .24); }

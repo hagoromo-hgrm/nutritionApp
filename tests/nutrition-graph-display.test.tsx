@@ -7,15 +7,19 @@ import { EMPTY_NUTRIENTS } from '../src/types'
 const goals = { ...EMPTY_NUTRIENTS, energyKcal: 2000, saltG: 6, fiberG: 20 }
 
 describe('nutrition graph display', () => {
-  it('shows the scaled reference and canonical achievement rate', () => {
+  it('keeps scaled graph references without showing target amounts or rates in each nutrient row', () => {
     const html = renderToStaticMarkup(<NutrientGoalGraphs nutrients={{ ...EMPTY_NUTRIENTS, energyKcal: 500 }} goals={goals} referenceMultiplier={0.5} />)
-    expect(html).toMatch(/目標 1000(?:\.0)?kcal · 50%/)
+    expect(html).toContain('nutrient-graph-target')
+    expect(html).not.toContain('nutrient-graph-reference')
+    expect(html).not.toMatch(/目標 1000(?:\.0)?kcal/)
+    expect(html).not.toContain(' · 50%')
   })
 
-  it('keeps a known subtotal but marks achievement as insufficient', () => {
+  it('keeps a known subtotal without showing reference text when the complete total is missing', () => {
     const html = renderToStaticMarkup(<NutrientGoalGraphs nutrients={EMPTY_NUTRIENTS} availableNutrients={{ ...EMPTY_NUTRIENTS, energyKcal: 500 }} goals={goals} />)
     expect(html).toContain('500.0')
-    expect(html).toMatch(/目標 2000(?:\.0)?kcal · データ不足/)
+    expect(html).not.toMatch(/目標 2000(?:\.0)?kcal/)
+    expect(html).not.toContain('データ不足')
     expect(html).not.toContain('25%')
   })
 
