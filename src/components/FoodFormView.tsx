@@ -150,7 +150,6 @@ export function FoodFormView({ draft, returnView, allowCommercialClassification,
           <div className="two-fields"><label>既定の入力分量<input type="number" min="0.01" step="any" value={draft.servingAmount} onChange={(event) => update('servingAmount', event.target.value)} placeholder="任意" /></label><label>既定の入力単位<select value={draft.servingUnit} onChange={(event) => update('servingUnit', event.target.value)}>{servingUnitOptions.map((unit) => <option key={unit} value={unit}>{unit}</option>)}</select></label></div>
           <div className="food-form-subsection ingredient-source-editor">
             <h3>原材料と推計用の確認情報</h3>
-            <p className="helper-text">パッケージ等で確認した内容だけを保存します。Open Food Factsからの自動入力はパッケージと照合し、単位から重量を推測しません。</p>
             <label>原材料表示<textarea rows={4} value={draft.ingredientsText} onChange={(event) => updateIngredientsText(event.target.value)} placeholder="例：小麦粉、砂糖、バター、ココアパウダー" /></label>
             <label>原材料の取得元<select value={draft.ingredientsSourceProvider} onChange={(event) => update('ingredientsSourceProvider', event.target.value)}>
               <option value="">未選択</option>

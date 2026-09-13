@@ -66,7 +66,7 @@ export function SettingsView({ settings, estimationSettings, goalInputs, setGoal
       <div className="section-title"><div><span className="eyebrow">FOOD MASTER</span><h2>食品登録</h2></div></div>
       <div className="food-registration-actions"><button className="button primary" type="button" onClick={() => setShowFoodRegistrationMethods(true)}>食品を登録</button><button className="button secondary" type="button" onClick={onOpenFoodMaster}>食品を検索</button></div>
       <div className="settings-info-row settings-inline-row nutrient-estimate-setting">
-        <label className="toggle-row"><input type="checkbox" checked={estimationSettings.enabled} onChange={(event) => onToggleNutrientEstimator(event.target.checked)} />欠損した飽和脂肪酸・食物繊維・ビタミン・ミネラルの参考推計を使う</label>
+        <label className="toggle-row"><input type="checkbox" checked={estimationSettings.enabled} onChange={(event) => onToggleNutrientEstimator(event.target.checked)} />欠損した栄養素の参考推計を使う</label>
         <InfoPopover className="settings-info" label="参考推計について" text="確認済みの原材料表示と重量を使い、端末内だけで参考候補を計算します。未対応原材料、参照値欠損、栄養添加物の寄与割合不明がある場合は、該当分を加算しない既知原材料分の部分参考値を低信頼度で表示します。部分参考値は商品の保証下限ではありません。初期値は無効で、結果は確認後に手動採用し、既存値を上書きしません。" />
       </div>
       <div className="settings-info-row">

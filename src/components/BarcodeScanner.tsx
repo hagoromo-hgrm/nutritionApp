@@ -166,7 +166,6 @@ export function BarcodeScanner({ purpose, onDetected, onClose }: BarcodeScannerP
           {torchAvailable && <button className="button ghost scanner-torch" type="button" aria-pressed={torchOn} onClick={() => void toggleTorch()}>{torchOn ? 'ライトを消す' : 'ライトを点ける'}</button>}
         </div>}
         <p className="helper-text">{cameraMessage}</p>
-        <p className="scanner-tip">端末を15〜25cmほど離し、バーコード全体が枠に入るようにしてください。</p>
         <div className="divider-label"><span>または番号を入力</span></div>
         <div className="inline-form">
           <input inputMode="numeric" value={manualBarcode} onChange={(event) => setManualBarcode(event.target.value)} placeholder="例: 4900000000000" aria-label="バーコード番号" />
