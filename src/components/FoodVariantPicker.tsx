@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { applyConstrainedMextFoodAttributePreferences, applyConstrainedUserFoodSelectionPreferences, getFoodAttributePreferencesForGroup } from '../services/foodAttributePreferences'
+import { applicableMextSearchAttributeHints, reconcileMextSearchAttributeHints } from '../services/mextSearchAttributeHints'
 import { type FoodSearchResult } from '../services/foodSearch'
 import { filterVariantsBySelection, getAvailableVariantOptionValues, getVariantOptionGroups, getVariantSelection, reconcileVariantSelection, resolveVariantForSelection, variantOptionText, type VariantOptionGroup } from '../services/foodVariants'
 import {
@@ -128,14 +129,28 @@ function MextFoodVariantPickerModal({ result, userFoodResult, foods = [], foodGr
   const appliedPreferences = useMemo(() => activeFoodGroupId
     ? applyConstrainedMextFoodAttributePreferences(activeFoodGroupId, attributes, getDefaultSelectedAttributes(activeFoodGroupId), groupPreferences)
     : { selection: {}, autoHiddenAttributeIds: new Set<string>(), invalidAttributeIds: new Set<string>(), incompatibleAttributeIds: new Set<string>() }, [activeFoodGroupId, attributes, groupPreferences])
-  const initialAttributeSelection = useMemo(() => initialFoodVariant && initialFoodVariant.foodGroupId === activeFoodGroupId
-    ? { ...initialFoodVariant.attributes }
-    : null, [activeFoodGroupId, initialFoodVariant])
   const attributeSelectionOrder = useMemo(() => [
     ...attributes.filter((attribute) => attribute.visibility !== 'hidden' && !appliedPreferences.autoHiddenAttributeIds.has(attribute.id)),
     ...attributes.filter((attribute) => appliedPreferences.autoHiddenAttributeIds.has(attribute.id)),
     ...attributes.filter((attribute) => attribute.visibility === 'hidden'),
   ].map((attribute) => attribute.id), [appliedPreferences.autoHiddenAttributeIds, attributes])
+  const searchAttributeSelection = applicableMextSearchAttributeHints(
+    userFoodResult?.foodGroupId,
+    activeFoodGroupId,
+    userFoodResult?.attributeSelection,
+  )
+  const initialAttributeState = useMemo(() => {
+    if (!activeFoodGroupId) {
+      return { selection: appliedPreferences.selection, appliedHintAttributeIds: new Set<string>() }
+    }
+    return reconcileMextSearchAttributeHints(
+      activeFoodGroupId,
+      appliedPreferences.selection,
+      searchAttributeSelection,
+      attributeSelectionOrder,
+      initialFoodVariant?.foodGroupId === activeFoodGroupId ? initialFoodVariant.attributes : undefined,
+    )
+  }, [activeFoodGroupId, appliedPreferences.selection, attributeSelectionOrder, initialFoodVariant, searchAttributeSelection])
   const hasAutoHiddenPreference = appliedPreferences.autoHiddenAttributeIds.size > 0
   const visibleAttributeIds = useMemo(() => new Set(attributes.filter((attribute) => {
     return attribute.visibility !== 'hidden' && (!appliedPreferences.autoHiddenAttributeIds.has(attribute.id) || temporarilyVisibleAttributeIds.has(attribute.id))
@@ -143,22 +158,25 @@ function MextFoodVariantPickerModal({ result, userFoodResult, foods = [], foodGr
   const visibleAttributes = useMemo(() => attributes.filter((attribute) => visibleAttributeIds.has(attribute.id)), [attributes, visibleAttributeIds])
   const hiddenAttributes = useMemo(() => attributes.filter((attribute) => attribute.visibility === 'hidden'), [attributes])
   const supplementalFoods = useMemo(() => (activeResult?.variants ?? []).filter((food) => !getFoodVariantBySourceId(food.id)), [activeResult?.variants])
-  const [selection, setSelection] = useState<Record<string, string>>(() => initialAttributeSelection ?? appliedPreferences.selection)
+  const [selection, setSelection] = useState<Record<string, string>>(() => initialAttributeState.selection)
   const [selectionFoodGroupId, setSelectionFoodGroupId] = useState<string | null>(activeFoodGroupId)
   const initialSupplementalFoodId = supplementalFoods.find((food) => food.id === initialFoodId)?.id ?? null
   const [supplementalFoodId, setSupplementalFoodId] = useState<string | null>(initialSupplementalFoodId)
-  const selectionForActiveGroup = selectionFoodGroupId === activeFoodGroupId ? selection : appliedPreferences.selection
+  const selectionForActiveGroup = selectionFoodGroupId === activeFoodGroupId ? selection : initialAttributeState.selection
   useEffect(() => {
-    setSelection(initialAttributeSelection ?? appliedPreferences.selection)
+    setSelection(initialAttributeState.selection)
     setSelectionFoodGroupId(activeFoodGroupId)
     setSupplementalFoodId(initialSupplementalFoodId)
-    setTemporarilyVisibleAttributeIds(new Set(appliedPreferences.incompatibleAttributeIds))
+    setTemporarilyVisibleAttributeIds(new Set([
+      ...appliedPreferences.incompatibleAttributeIds,
+      ...initialAttributeState.appliedHintAttributeIds,
+    ]))
     if (appliedPreferences.incompatibleAttributeIds.size > 0) {
       setConstraintMessage('保存済みの既定値の組み合わせに該当する食品がないため、選択し直してください。')
     } else {
       setConstraintMessage(null)
     }
-  }, [activeFoodGroupId, appliedPreferences, initialAttributeSelection, initialSupplementalFoodId])
+  }, [activeFoodGroupId, appliedPreferences, initialAttributeState, initialSupplementalFoodId])
   const resolution = useMemo(() => {
     if (!resolvedUserFoodGroupId) {
       return { variant: null, error: '種類を選択すると、属性を指定できます。', requiresHiddenSelection: false }

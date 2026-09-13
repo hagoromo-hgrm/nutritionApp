@@ -1,5 +1,6 @@
-import type { Food, FoodAlias, FoodGroup, FoodRelatedTerm, FoodUsageStat, SearchScoreBreakdown } from '../types'
+import type { Food, FoodAlias, FoodGroup, FoodRelatedTerm, FoodUsageStat, MealType, SearchScoreBreakdown } from '../types'
 import { foodMatchesSearchCategory, type FoodSearchCategory } from './foodClassification'
+import { compareSearchCandidates, compareSearchRelevance, compactSearchText, matchParsedSearchText, parseSearchText, type SearchableTextField, type SearchRelevance } from './searchText'
 
 export interface FoodSearchResult {
   group: FoodGroup
@@ -9,6 +10,8 @@ export interface FoodSearchResult {
   matchedBy: string
   recentlyUsed: boolean
   scoreBreakdown: SearchScoreBreakdown
+  /** Always populated by searchFoodResults; optional for legacy/manual wrappers. */
+  relevance?: SearchRelevance
 }
 
 export interface FoodSearchPage {
@@ -31,67 +34,64 @@ export interface FoodSearchOptions {
   cursor?: string | null
   now?: Date
   category?: FoodSearchCategory
+  mealType?: MealType
 }
 
-const EXACT_DISPLAY = 100
-const EXACT_ALIAS = 95
-const EXACT_MAKER = 90
-const PREFIX_DISPLAY = 80
-const PREFIX_ALIAS = 75
-const PREFIX_MAKER = 70
-const EXACT_READING = 70
-const PARTIAL_DISPLAY = 60
-const PARTIAL_ALIAS = 55
-const PARTIAL_MAKER = 50
-const PARTIAL_READING = 50
-const PARTIAL_OFFICIAL = 40
-const RELATED = 25
+const FIELD_PRIORITY = {
+  display: 60,
+  alias: 50,
+  maker: 40,
+  reading: 30,
+  official: 20,
+  related: 10,
+} as const
 
 /** 日本語検索向けに幅・大小・かな・区切りをそろえる。バーコードはここへ渡さない。 */
 export function normalizeSearchText(value: string): string {
-  const normalized = value.normalize('NFKC').toLocaleLowerCase('ja-JP')
-  const hiragana = [...normalized].map((character) => {
-    const codePoint = character.codePointAt(0) ?? 0
-    return codePoint >= 0x30a1 && codePoint <= 0x30f6 ? String.fromCodePoint(codePoint - 0x60) : character
-  }).join('')
-  return hiragana.replace(/[\p{White_Space}\p{Punctuation}\p{Symbol}_]+/gu, '')
+  return compactSearchText(value)
 }
 
-function textScore(query: string, displayName: string, aliases: string[], maker: string, reading: string | null, officialName: string, related: Array<{ term: string; weight: number }>): { score: number; matchedBy: string } {
-  if (!query) return { score: 0, matchedBy: 'empty' }
-  const display = normalizeSearchText(displayName)
-  const normalizedAliases = aliases.map(normalizeSearchText).filter(Boolean)
-  const normalizedMaker = normalizeSearchText(maker)
-  const normalizedReading = reading ? normalizeSearchText(reading) : ''
-  const official = normalizeSearchText(officialName)
-  if (display === query) return { score: EXACT_DISPLAY, matchedBy: 'display-exact' }
-  if (normalizedAliases.includes(query)) return { score: EXACT_ALIAS, matchedBy: 'alias-exact' }
-  if (normalizedMaker === query) return { score: EXACT_MAKER, matchedBy: 'maker-exact' }
-  if (display.startsWith(query)) return { score: PREFIX_DISPLAY, matchedBy: 'display-prefix' }
-  if (normalizedAliases.some((alias) => alias.startsWith(query))) return { score: PREFIX_ALIAS, matchedBy: 'alias-prefix' }
-  if (normalizedMaker.startsWith(query)) return { score: PREFIX_MAKER, matchedBy: 'maker-prefix' }
-  if (normalizedReading === query) return { score: EXACT_READING, matchedBy: 'reading-exact' }
-  if (display.includes(query)) return { score: PARTIAL_DISPLAY, matchedBy: 'display-partial' }
-  if (normalizedAliases.some((alias) => alias.includes(query))) return { score: PARTIAL_ALIAS, matchedBy: 'alias-partial' }
-  if (normalizedMaker.includes(query)) return { score: PARTIAL_MAKER, matchedBy: 'maker-partial' }
-  if (normalizedReading.includes(query)) return { score: PARTIAL_READING, matchedBy: 'reading-partial' }
-  if (official.includes(query)) return { score: PARTIAL_OFFICIAL, matchedBy: 'official-partial' }
-  const matchingRelated = related.filter((item) => normalizeSearchText(item.term).includes(query))
-  if (matchingRelated.length > 0) return { score: RELATED * Math.max(...matchingRelated.map((item) => item.weight)), matchedBy: 'related' }
-  return { score: -1, matchedBy: 'none' }
-}
-
-function personalScore(stat: FoodUsageStat | undefined, favorite: boolean): number {
-  if (!stat && !favorite) return 0
-  const countScore = stat ? Math.min(25, Math.log2(stat.selectionCount + 1) * 7) : 0
-  return Math.min(25, countScore + (favorite ? 5 : 0))
+export interface FoodPersonalizationScore {
+  frequency: number
+  recent: number
+  mealType: number
+  favorite: number
+  total: number
+  recentlyUsed: boolean
 }
 
 function recentScore(stat: FoodUsageStat | undefined, now: Date): { score: number; recentlyUsed: boolean } {
   if (!stat?.lastSelectedAt) return { score: 0, recentlyUsed: false }
   const elapsedDays = Math.max(0, (now.getTime() - new Date(stat.lastSelectedAt).getTime()) / 86_400_000)
-  if (!Number.isFinite(elapsedDays) || elapsedDays > 90) return { score: 0, recentlyUsed: false }
-  return { score: Math.max(0, 15 * (1 - elapsedDays / 90)), recentlyUsed: elapsedDays <= 30 }
+  if (!Number.isFinite(elapsedDays)) return { score: 0, recentlyUsed: false }
+  return { score: 4 * 2 ** (-elapsedDays / 45), recentlyUsed: elapsedDays <= 30 }
+}
+
+/** Secondary ranking signal. Apply only after shared relevance compares equal. */
+export function scoreFoodPersonalization(
+  stat: FoodUsageStat | undefined,
+  favorite: boolean,
+  now: Date = new Date(),
+  mealType?: MealType,
+): FoodPersonalizationScore {
+  const count = Math.max(0, stat?.selectionCount ?? 0)
+  const distinctDays = Math.max(0, stat?.distinctUsageDays ?? 0)
+  const countScore = Math.min(8, Math.log2(count + 1) * 2)
+  const dayScore = Math.min(7, Math.log2(distinctDays + 1) * 2)
+  const mealTypeScore = mealType
+    ? Math.min(4, Math.log2(Math.max(0, stat?.mealTypeCounts?.[mealType] ?? 0) + 1) * 1.5)
+    : 0
+  const favoriteScore = favorite ? 2 : 0
+  const frequency = countScore + dayScore + mealTypeScore + favoriteScore
+  const recent = recentScore(stat, now)
+  return {
+    frequency,
+    recent: recent.score,
+    mealType: mealTypeScore,
+    favorite: favoriteScore,
+    total: Math.min(25, frequency + recent.score),
+    recentlyUsed: recent.recentlyUsed,
+  }
 }
 
 function variantLabel(food: Food): string {
@@ -100,10 +100,11 @@ function variantLabel(food: Food): string {
 }
 
 export function searchFoodResults(query: string, data: FoodSearchData, options: FoodSearchOptions = {}): FoodSearchPage {
-  const normalizedQuery = normalizeSearchText(query)
+  const parsedQuery = parseSearchText(query)
+  const normalizedQuery = parsedQuery.compact
   const now = options.now ?? new Date()
   const category = options.category ?? 'all'
-  const limit = Math.max(1, Math.min(100, options.limit ?? 20))
+  const limit = Math.max(1, Math.floor(options.limit ?? 20))
   const offset = Math.max(0, Number.parseInt(options.cursor ?? '0', 10) || 0)
   const foodsByGroup = new Map<string, Food[]>()
   const fallbackGroups = new Map<string, FoodGroup>()
@@ -140,12 +141,24 @@ export function searchFoodResults(query: string, data: FoodSearchData, options: 
     const aliases = aliasesByGroup.get(groupId) ?? []
     const related = (relatedByGroup.get(groupId) ?? []).map((term) => ({ term: term.term, weight: term.weight }))
     const rankedVariants = variants.map((food) => {
-      const match = textScore(normalizedQuery, group.displayName, aliases.map((alias) => alias.alias), food.maker, group.reading, food.officialName ?? food.name, related)
+      const applicableAliases = aliases.filter((alias) => alias.foodVariantId === null || alias.foodVariantId === food.id)
+      const fields: SearchableTextField[] = [
+        { value: normalizeSearchText(group.displayName), name: 'display', priority: FIELD_PRIORITY.display, variantSpecific: false },
+        ...applicableAliases.map((alias) => ({ value: normalizeSearchText(alias.alias), name: 'alias', priority: FIELD_PRIORITY.alias + Math.max(0, Math.min(9, Math.round(alias.priority / 20))), variantSpecific: alias.foodVariantId !== null })),
+        { value: normalizeSearchText(food.maker), name: 'maker', priority: FIELD_PRIORITY.maker, variantSpecific: true },
+        { value: group.reading ? normalizeSearchText(group.reading) : '', name: 'reading', priority: FIELD_PRIORITY.reading, variantSpecific: false },
+        { value: normalizeSearchText(food.officialName ?? food.name), name: 'official', priority: FIELD_PRIORITY.official, variantSpecific: true },
+        ...related.map((item) => ({ value: normalizeSearchText(item.term), name: 'related', priority: FIELD_PRIORITY.related, variantSpecific: false, relatedWeight: item.weight })),
+      ]
+      const match = matchParsedSearchText(parsedQuery, fields)
       const favorite = data.favoriteIds?.has(food.id) ?? false
-      const personal = personalScore(usageByFood.get(food.id), favorite)
-      const recent = recentScore(usageByFood.get(food.id), now)
+      const personalization = scoreFoodPersonalization(usageByFood.get(food.id), favorite, now, options.mealType)
+      const personal = personalization.frequency
+      const recent = { score: personalization.recent, recentlyUsed: personalization.recentlyUsed }
       return { food, match, personal, recent }
-    }).sort((left, right) => right.match.score - left.match.score || right.personal - left.personal || right.recent.score - left.recent.score || left.food.id.localeCompare(right.food.id))
+    }).sort((left, right) => compareSearchRelevance(left.match.relevance, right.match.relevance)
+      || (right.personal + right.recent.score) - (left.personal + left.recent.score)
+      || left.food.id.localeCompare(right.food.id))
     const best = rankedVariants[0]
     if (!best) continue
     if (normalizedQuery && best.match.score < 0) continue
@@ -153,10 +166,17 @@ export function searchFoodResults(query: string, data: FoodSearchData, options: 
       text: Math.max(0, best.match.score), representative: group.representativeScore, personalFrequency: best.personal, recent: best.recent.score,
       total: Math.max(0, best.match.score) + group.representativeScore + best.personal + best.recent.score,
     }
-    const selectedFood = variants.find((food) => food.id === group.defaultVariantId) ?? best.food
-    results.push({ group, food: selectedFood, variants: [...variants].sort((left, right) => variantLabel(left).localeCompare(variantLabel(right), 'ja') || left.id.localeCompare(right.id)), score: breakdown.total, matchedBy: best.match.matchedBy, recentlyUsed: best.recent.recentlyUsed, scoreBreakdown: breakdown })
+    const selectedFood = best.match.variantSpecific
+      ? best.food
+      : variants.find((food) => food.id === group.defaultVariantId) ?? best.food
+    results.push({ group, food: selectedFood, variants: [...variants].sort((left, right) => variantLabel(left).localeCompare(variantLabel(right), 'ja') || left.id.localeCompare(right.id)), score: breakdown.total, matchedBy: best.match.matchedBy, recentlyUsed: best.recent.recentlyUsed, scoreBreakdown: breakdown, relevance: best.match.relevance })
   }
-  results.sort((left, right) => right.score - left.score || right.group.representativeScore - left.group.representativeScore || left.group.displayName.localeCompare(right.group.displayName, 'ja') || left.food.id.localeCompare(right.food.id))
+  results.sort((left, right) => compareSearchCandidates(left, right)
+    || (right.scoreBreakdown.personalFrequency + right.scoreBreakdown.recent)
+      - (left.scoreBreakdown.personalFrequency + left.scoreBreakdown.recent)
+    || right.group.representativeScore - left.group.representativeScore
+    || left.group.displayName.localeCompare(right.group.displayName, 'ja')
+    || left.food.id.localeCompare(right.food.id))
   const page = results.slice(offset, offset + limit)
   const nextOffset = offset + limit < results.length ? String(offset + limit) : null
   return { results: page, normalizedQuery, nextCursor: nextOffset }

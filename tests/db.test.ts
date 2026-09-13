@@ -1,6 +1,6 @@
 import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { db, deleteFood, deleteGeneralMenu, deleteMenu, exportBackup, getEntriesForDate, getFavoriteFoods, getFoodByBarcode, getRecentFoods, getSettings, getWeightRecords, getWeightRecordsBetween, initializeDatabase, recordFoodSelection, reorderFavorites, reorderMealEntries, replaceAllData, saveBodyProfileSettings, saveFood, saveFoodWithMetadata, saveGeneralMenu, saveMealEntries, saveMealEntry, saveMenu, saveMenuSet, searchFoodResults, searchGeneralMenus, searchMenus, setFavorite } from '../src/db/db'
+import { db, deleteFood, deleteGeneralMenu, deleteMealEntry, deleteMenu, exportBackup, getEntriesForDate, getFavoriteFoods, getFoodByBarcode, getFoodUsageProfiles, getRecentFoods, getSettings, getWeightRecords, getWeightRecordsBetween, initializeDatabase, recordFoodSelection, reorderFavorites, reorderMealEntries, replaceAllData, saveBodyProfileSettings, saveFood, saveFoodWithMetadata, saveGeneralMenu, saveMealEntries, saveMealEntry, saveMenu, saveMenuSet, saveNewDirectFoodMealEntry, searchFoodResults, searchGeneralMenus, searchMenus, setFavorite } from '../src/db/db'
 import { validateBackup } from '../src/services/backup'
 import { createMenuSetMealBatch } from '../src/services/menuSetMeals'
 import { mealsToCsv, parseMealsCsv } from '../src/services/csv'
@@ -12,6 +12,14 @@ const addedNutrients = { calciumMg: null, ironMg: null, vitaminAMcg: null, vitam
 const userFood: Food = {
   id: 'user_food', name: 'テスト食品', maker: '', barcode: '', source: 'user', sourceVersion: 'test', baseAmount: 100, baseUnit: 'g',
   servingAmount: null, servingUnit: null, nutrients: { energyKcal: 100, proteinG: 1, fatG: 1, carbohydrateG: 1, fiberG: 1, saltG: 0, ...addedNutrients }, createdAt: '2026-07-15T00:00:00.000Z', updatedAt: '2026-07-15T00:00:00.000Z',
+}
+
+function createMealEntry(id: string, foodId = userFood.id, eatenAt = '2026-07-15T03:00:00.000Z', mealType: MealEntry['mealType'] = '朝食'): MealEntry {
+  return {
+    id, eatenAt, mealType, foodId,
+    foodSnapshot: { name: userFood.name, maker: userFood.maker, barcode: userFood.barcode, baseAmount: userFood.baseAmount, baseUnit: userFood.baseUnit, nutrients: { ...userFood.nutrients } },
+    amount: 50, amountUnit: 'g', calculatedNutrients: { energyKcal: 50, proteinG: 0.5, fatG: 0.5, carbohydrateG: 0.5, fiberG: 0.5, saltG: 0, ...addedNutrients },
+  }
 }
 
 beforeEach(async () => {
@@ -264,18 +272,151 @@ describe('IndexedDB data safety', () => {
     expect(result?.variants).toHaveLength(8)
   }, 25000)
 
-  it('食品グループ単位の関連度検索と個人利用統計を保存できる', async () => {
+  it('検索結果の選択はログだけを更新し、利用実績にはしない', async () => {
     const searched = await searchFoodResults('塩')
     expect(searched.page.results.length).toBeGreaterThan(0)
     expect(hasMextFoodGroup(searched.page.results[0].group.id)).toBe(true)
     expect(searched.page.results[0].variants.length).toBeGreaterThan(0)
+    await db.foodUsageStats.put({ foodId: searched.page.results[0].food.id, selectionCount: 99, lastSelectedAt: '2026-08-31T00:00:00.000Z', updatedAt: '2026-08-31T00:00:00.000Z' })
     await recordFoodSelection(searched.logId, searched.page.results[0].group.id, searched.page.results[0].food.id, 1)
-    expect((await db.foodUsageStats.get(searched.page.results[0].food.id))?.selectionCount).toBe(1)
+    expect((await db.foodUsageStats.toArray())[0].selectionCount).toBe(99)
+    expect(await getFoodUsageProfiles({ asOf: '2026-09-01T00:00:00.000Z' })).toEqual([])
     const backup = await exportBackup()
     expect(backup.foodGroups?.filter((group) => group.generationVersion === 'mext-app-v2')).toHaveLength(1494)
     expect(backup.searchLogs?.[0].selectedFoodGroupId).toBe(searched.page.results[0].group.id)
-    expect(backup.foodUsageStats?.[0].foodId).toBe(searched.page.results[0].food.id)
+    expect(backup.searchLogs?.[0].items[0]).toMatchObject({
+      candidateKey: searched.page.results[0].candidateKey,
+      rank: 1,
+    })
+    expect(backup.searchLogs?.[0].savedAt).toBeUndefined()
+    expect(backup.foodUsageStats).toEqual([])
   })
+
+  it('MEXTと通常食品の統合順位を確定してから同じ検索ログへ20件ずつ追加する', async () => {
+    const foods = Array.from({ length: 45 }, (_, index): Food => ({
+      ...userFood,
+      id: `paging_food_${String(index).padStart(2, '0')}`,
+      name: `統合ページ候補 ${String(index).padStart(2, '0')}`,
+      displayName: `統合ページ候補 ${String(index).padStart(2, '0')}`,
+      officialName: `統合ページ候補 ${String(index).padStart(2, '0')}`,
+      foodGroupId: `paging_group_${String(index).padStart(2, '0')}`,
+    }))
+    const groups = foods.map((food): FoodGroup => ({
+      id: food.foodGroupId!,
+      displayName: food.displayName!,
+      reading: null,
+      category: null,
+      representativeScore: 0,
+      defaultVariantId: food.id,
+      isActive: true,
+      metadataSource: 'manual',
+      generationVersion: 'test',
+      needsReview: false,
+      createdAt: food.createdAt,
+      updatedAt: food.updatedAt,
+    }))
+    await db.foods.bulkPut(foods)
+    await db.foodGroups.bulkPut(groups)
+
+    const first = await searchFoodResults('統合ページ候補', { limit: 20, mealType: '朝食' })
+    const second = await searchFoodResults('統合ページ候補', { limit: 20, cursor: first.page.nextCursor, mealType: '朝食' })
+    const third = await searchFoodResults('統合ページ候補', { limit: 20, cursor: second.page.nextCursor, mealType: '朝食' })
+    const combined = [...first.page.results, ...second.page.results, ...third.page.results]
+
+    expect([first.page.results.length, second.page.results.length, third.page.results.length]).toEqual([20, 20, 5])
+    expect(third.page.nextCursor).toBeNull()
+    expect(second.logId).toBe(first.logId)
+    expect(third.logId).toBe(first.logId)
+    expect(new Set(combined.map((result) => result.candidateKey)).size).toBe(45)
+    expect(await db.searchLogs.get(first.logId)).toMatchObject({
+      resultCount: 45,
+      items: expect.arrayContaining([
+        expect.objectContaining({ rank: 1 }),
+        expect.objectContaining({ rank: 45 }),
+      ]),
+    })
+  })
+
+  it('成功した新規直接食品だけを180日利用プロフィールへ集計する', async () => {
+    await saveFood(userFood)
+    await saveNewDirectFoodMealEntry(createMealEntry('direct_breakfast'), {
+      entryPoint: 'favorite', savedAt: '2026-07-15T03:00:00.000Z',
+    })
+    await saveNewDirectFoodMealEntry(createMealEntry('direct_lunch', userFood.id, '2026-07-15T05:00:00.000Z', '昼食'), {
+      entryPoint: 'history', savedAt: '2026-07-15T05:00:00.000Z',
+    })
+    await saveNewDirectFoodMealEntry(createMealEntry('direct_next_day', userFood.id, '2026-07-16T03:00:00.000Z'), {
+      entryPoint: 'food-picker', savedAt: '2026-07-16T03:00:00.000Z',
+    })
+    await saveNewDirectFoodMealEntry(createMealEntry('outside_window', userFood.id, '2025-12-01T03:00:00.000Z'), {
+      entryPoint: 'other', savedAt: '2025-12-01T03:00:00.000Z',
+    })
+
+    const copiedEvidence = (await db.mealEntries.get('direct_breakfast'))?.usageEvidence
+    await saveMealEntries([{ ...createMealEntry('ordinary_copy'), usageEvidence: copiedEvidence }])
+
+    expect(await getFoodUsageProfiles({ asOf: '2026-07-20T00:00:00.000Z', windowDays: 180 })).toEqual([{
+      foodId: userFood.id,
+      usageCount: 3,
+      distinctUsageDays: 2,
+      lastUsedAt: '2026-07-16T03:00:00.000Z',
+      mealTypeCounts: { 朝食: 2, 昼食: 1, 夕食: 0, 間食: 0 },
+    }])
+    expect((await db.mealEntries.get('ordinary_copy'))?.usageEvidence).toBeUndefined()
+  })
+
+  it('直接食品の編集は回数を増やさず、食品変更と削除を再集計へ反映する', async () => {
+    const replacement = { ...userFood, id: 'replacement_food', name: '変更先食品' }
+    await db.foods.bulkPut([userFood, replacement])
+    const saved = await saveNewDirectFoodMealEntry(createMealEntry('direct_edit'), {
+      entryPoint: 'other', savedAt: '2026-07-15T03:00:00.000Z',
+    })
+    await saveMealEntry({ ...saved, foodId: replacement.id, amount: 75 })
+
+    expect(await getFoodUsageProfiles({ asOf: '2026-07-20T00:00:00.000Z' })).toEqual([expect.objectContaining({
+      foodId: replacement.id, usageCount: 1,
+    })])
+    await expect(saveNewDirectFoodMealEntry({ ...saved, foodId: userFood.id }, { entryPoint: 'other' })).rejects.toThrow('新規')
+    await deleteMealEntry(saved.id)
+    expect(await getFoodUsageProfiles({ asOf: '2026-07-20T00:00:00.000Z' })).toEqual([])
+  })
+
+  it('検索付き直接食品の保存を食事・証跡・検索ログへ一括反映する', async () => {
+    const searched = await searchFoodResults('塩')
+    const result = searched.page.results[0]
+    const entry = createMealEntry('searched_direct', result.food.id)
+    await saveNewDirectFoodMealEntry(entry, {
+      entryPoint: 'search',
+      savedAt: '2026-07-15T03:00:00.000Z',
+      search: { logId: searched.logId, foodGroupId: result.group.id, foodVariantId: result.food.id, rank: 1, normalizedQuery: searched.page.normalizedQuery },
+    })
+
+    expect((await db.mealEntries.get(entry.id))?.usageEvidence?.search?.logId).toBe(searched.logId)
+    expect(await db.searchLogs.get(searched.logId)).toMatchObject({
+      selectedFoodGroupId: result.group.id,
+      selectedFoodVariantId: result.food.id,
+      selectedRank: 1,
+      savedAt: '2026-07-15T03:00:00.000Z',
+    })
+  })
+
+  it('v4バックアップ復元は利用証跡を保持し、統計を二重加算しない', async () => {
+    await saveFood(userFood)
+    await saveNewDirectFoodMealEntry(createMealEntry('backup_direct'), {
+      entryPoint: 'favorite', savedAt: '2026-07-15T03:00:00.000Z',
+    })
+    const backup = await exportBackup()
+    expect(backup.dataFormatVersion).toBe(4)
+    expect(backup.mealEntries[0].usageEvidence?.kind).toBe('direct-food')
+    expect(backup.foodUsageStats?.[0]).toMatchObject({ foodId: userFood.id, selectionCount: 1, distinctUsageDays: 1 })
+
+    await replaceAllData(backup)
+    await replaceAllData(backup)
+    expect((await getFoodUsageProfiles({ asOf: '2026-07-20T00:00:00.000Z' }))[0]).toMatchObject({
+      foodId: userFood.id, usageCount: 1, distinctUsageDays: 1,
+    })
+    expect(await db.foodUsageStats.toArray()).toEqual([])
+  }, 15000)
 
   it('食品削除時も食事記録とスナップショットを残す', async () => {
     await saveFood(userFood)
@@ -454,7 +595,7 @@ describe('IndexedDB data safety', () => {
     const settings = await getSettings()
     expect(settings.bodyProfile?.sex).toBe('unspecified')
     expect(settings.bodyProfile?.activityLevel).toBe('moderate')
-    expect((await db.metadata.get('schema-version'))?.value).toBe(10)
+    expect((await db.metadata.get('schema-version'))?.value).toBe(11)
   })
 
   it('身体情報保存と体重履歴追加を一括し、同値・他項目変更では重複記録しない', async () => {
@@ -484,7 +625,7 @@ describe('IndexedDB data safety', () => {
     const current = await getSettings()
     await saveBodyProfileSettings({ ...current, bodyProfile: { ...current.bodyProfile!, weightKg: 65 } }, '2026-08-01T00:00:00.000Z')
     const backup = await exportBackup()
-    expect(backup.dataFormatVersion).toBe(3)
+    expect(backup.dataFormatVersion).toBe(4)
     expect(backup.weightRecords?.map((record) => record.weightKg)).toEqual([65])
 
     await db.weightRecords.clear()

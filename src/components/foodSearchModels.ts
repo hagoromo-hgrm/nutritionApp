@@ -1,5 +1,6 @@
 import { displaySearchFoodName, foodListNutritionLabel } from './foodPresentation'
 import type { FoodSearchResult } from '../services/foodSearch'
+import type { UnifiedFoodSearchResult } from '../services/unifiedFoodSearch'
 import { getFoodGroup as getMextFoodGroup } from '../services/mextFoodData'
 import type { UserFoodSearchResult } from '../services/mextUserFoodData'
 import type { Food, FoodGroup, QuantityUnit } from '../types'
@@ -27,6 +28,53 @@ export interface SearchResultGroup {
   items: SearchResultItem[]
   searchLogId: string | null
   nextCursor: string | null
+}
+
+export function nextFoodSearchRank(items: readonly SearchResultItem[], searchLogId: string | null): number {
+  if (!searchLogId) return 1
+  return items.filter((item) => item.searchLogId === searchLogId).length + 1
+}
+
+export function unifiedFoodSearchItem(
+  result: UnifiedFoodSearchResult,
+  searchLogId: string | null,
+  searchRank: number,
+): SearchResultItem {
+  const userResult = result.userFoodResult
+  if (userResult) {
+    const selectedLabel = selectedUserFoodLabel(userResult)
+    return {
+      id: result.candidateKey,
+      kind: 'user-food',
+      title: selectedLabel ?? userResult.group.displayName,
+      subtitle: selectedLabel
+        ? `${userResult.group.displayName} > ${selectedUserFoodDimensionLabel(userResult) ?? '種類'} · ${userResult.group.category} · ${foodListNutritionLabel(result.food)}`
+        : `${userResult.group.category} · ${userResult.group.memberCount > 1 ? `${userResult.group.memberCount}種類` : foodListNutritionLabel(result.food)}`,
+      food: result.food,
+      group: result.group,
+      variants: result.variants,
+      score: result.score,
+      matchedBy: result.matchedBy,
+      recentlyUsed: result.recentlyUsed,
+      searchLogId,
+      searchRank,
+      userFoodResult: userResult,
+    }
+  }
+  return {
+    id: result.candidateKey,
+    kind: 'food',
+    title: displaySearchFoodName(result.group, result.food),
+    subtitle: `${result.group.category ?? '食品'} · ${result.variants.length > 1 ? `${result.variants.length}バリエーション · ${foodListNutritionLabel(result.food, false)}` : foodListNutritionLabel(result.food)}`,
+    food: result.food,
+    group: result.group,
+    variants: result.variants,
+    score: result.score,
+    matchedBy: result.matchedBy,
+    recentlyUsed: result.recentlyUsed,
+    searchLogId,
+    searchRank,
+  }
 }
 
 // Retained search pages keep their ordering and cursors, but never own food snapshots.

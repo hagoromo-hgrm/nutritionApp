@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { nextFoodSearchRank, type SearchResultItem } from '../src/components/foodSearchModels'
 import { consumeSearchSelectionGroup } from '../src/services/searchSelection'
 
 describe('multi search selection', () => {
@@ -34,5 +35,15 @@ describe('multi search selection', () => {
       matched: false,
       remainingGroups: groups,
     })
+  })
+
+  it('追加ページの順位は途中にあるメニューを数えず検索ログと揃える', () => {
+    const items = [
+      { searchLogId: 'search-1' },
+      { searchLogId: 'search-1' },
+      { searchLogId: null, kind: 'menu' },
+    ] as SearchResultItem[]
+
+    expect(nextFoodSearchRank(items, 'search-1')).toBe(3)
   })
 })

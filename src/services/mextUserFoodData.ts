@@ -6,6 +6,15 @@ import {
   getSourceId,
   type MextFoodGroupAttribute,
 } from './mextFoodData'
+import {
+  compareSearchCandidates,
+  compactSearchText,
+  matchParsedSearchText,
+  normalizeSearchPhrase,
+  parseSearchText,
+  type SearchableTextField,
+  type SearchRelevance,
+} from './searchText'
 import { getAvailableConstraintValues, reconcileConstraintSelection, type VariantConstraintCandidate, type VariantConstraintValue } from './variantConstraints'
 
 export interface UserFoodSelectionValue {
@@ -71,10 +80,13 @@ interface UserFoodSearchIndexEntry {
 export interface UserFoodSearchResult {
   group: UserFoodGroup
   presetSelection: Record<string, string>
+  attributeSelection?: Record<string, string>
   foodGroupId: string | null
   targetType: UserFoodSearchTarget['targetType']
   matchedTerm: string
   score: number
+  /** Always populated by searchUserFoodGroups; optional for legacy/manual wrappers. */
+  relevance?: SearchRelevance
 }
 
 export interface UserFoodSearchOptions {
@@ -122,11 +134,11 @@ const groupsById = new Map(mextUserFoodGroups.map((group) => [group.id, group]))
 const mappingsByFoodGroupId = new Map(mextUserFoodGroupMappings.map((mapping) => [mapping.foodGroupId, mapping]))
 
 export function normalizeUserFoodSearchText(value: string): string {
-  return value.normalize('NFKC').toLocaleLowerCase('ja-JP').trim().replace(/\s+/g, ' ')
+  return normalizeSearchPhrase(value)
 }
 
 function compactUserFoodSearchText(value: string): string {
-  return normalizeUserFoodSearchText(value).replace(/\s+/g, '')
+  return compactSearchText(value)
 }
 
 export function listUserFoodGroups(): UserFoodGroup[] {
@@ -231,50 +243,174 @@ export function resolveFoodGroupId(
   return [...resolvedFoodGroupIds][0]
 }
 
-function matchScore(entry: UserFoodSearchIndexEntry, target: UserFoodSearchTarget, normalizedQuery: string, compactQuery: string): number {
-  const exact = entry.normalizedTerm === normalizedQuery || entry.compactTerm === compactQuery
-  const prefix = entry.normalizedTerm.startsWith(normalizedQuery) || entry.compactTerm.startsWith(compactQuery)
-  const partial = entry.normalizedTerm.includes(normalizedQuery) || entry.compactTerm.includes(compactQuery)
-  if (!exact && !prefix && !partial) return -1
-  if (exact && target.matchSource === 'group_name') return 600
-  if (exact && target.matchSource === 'shortcut') return 550
-  if ((exact || prefix) && (target.matchSource === 'group_name' || target.matchSource === 'group_term')) return 500
-  if (prefix && target.matchSource === 'shortcut') return 450
-  if (target.matchSource === 'member_canonical') return 200
-  return 300
+interface MextSearchField extends SearchableTextField {
+  sourceTerm: string
+  attributeId?: string
+  attributeValueId?: string
 }
 
-export function searchUserFoodGroups(query: string, options: UserFoodSearchOptions = {}): UserFoodSearchResult[] {
-  const normalizedQuery = normalizeUserFoodSearchText(query)
-  const compactQuery = compactUserFoodSearchText(query)
-  if (!normalizedQuery) return []
-  const bestByGroup = new Map<string, UserFoodSearchResult>()
-  const exactParentGroupIds = new Set<string>()
+interface MextSearchCandidate {
+  group: UserFoodGroup
+  presetSelection: Record<string, string>
+  foodGroupId: string | null
+  targetType: UserFoodSearchTarget['targetType']
+  fields: MextSearchField[]
+}
+
+let searchCandidatesCache: MextSearchCandidate[] | null = null
+
+function stableSelectionKey(selection: Readonly<Record<string, string>>): string {
+  return Object.entries(selection).sort(([left], [right]) => left.localeCompare(right))
+    .map(([key, value]) => `${key}:${value}`).join('|')
+}
+
+function targetKey(target: UserFoodSearchTarget): string {
+  return `${target.userFoodGroupId}::${target.foodGroupId ?? ''}::${stableSelectionKey(target.presetSelection)}`
+}
+
+function baseGroupFields(group: UserFoodGroup): MextSearchField[] {
+  const terms = [group.displayName, group.canonicalName, ...group.searchTerms]
+  return [...new Set(terms)].map((term, index) => ({
+    value: compactUserFoodSearchText(term),
+    name: index === 0 ? 'display' : 'alias',
+    priority: index === 0 ? 60 : 50,
+    sourceTerm: term,
+  }))
+}
+
+function selectionFields(group: UserFoodGroup, selection: Readonly<Record<string, string>>): MextSearchField[] {
+  return Object.entries(selection).flatMap(([dimensionId, valueId]) => {
+    const value = group.selectionDimensions.find((dimension) => dimension.id === dimensionId)
+      ?.values.find((candidate) => candidate.id === valueId)
+    if (!value) return []
+    return [{ value: compactUserFoodSearchText(value.displayName), name: 'alias', priority: 55, sourceTerm: value.displayName }]
+  })
+}
+
+function attributeFields(foodGroupIds: readonly string[]): MextSearchField[] {
+  const values = new Map<string, MextSearchField>()
+  for (const foodGroupId of foodGroupIds) {
+    for (const attribute of getSelectableAttributes(foodGroupId)) {
+      if (attribute.visibility === 'hidden') continue
+      for (const value of attribute.values) {
+        const normalizedValue = compactUserFoodSearchText(value.displayName)
+        if (!normalizedValue || value.isUnspecified || value.isNotApplicable) continue
+        const key = `${normalizedValue}::${attribute.id}::${value.id}`
+        values.set(key, {
+          value: normalizedValue,
+          name: 'attribute',
+          priority: 45,
+          sourceTerm: value.displayName,
+          attributeId: attribute.id,
+          attributeValueId: value.id,
+        })
+      }
+    }
+  }
+  return [...values.values()]
+}
+
+function getSearchCandidates(): MextSearchCandidate[] {
+  if (searchCandidatesCache) return searchCandidatesCache
+  const candidates = new Map<string, MextSearchCandidate>()
+  for (const group of mextUserFoodGroups) {
+    candidates.set(`${group.id}::::`, {
+      group,
+      presetSelection: {},
+      foodGroupId: group.defaultFoodGroupId,
+      targetType: 'user_food_group',
+      fields: [
+        ...baseGroupFields(group),
+        ...attributeFields(group.memberFoodGroupIds),
+      ],
+    })
+  }
   for (const entry of userFoodSearchIndex) {
     for (const target of entry.targets) {
-      const score = matchScore(entry, target, normalizedQuery, compactQuery)
-      if (score < 0) continue
-      const exact = entry.normalizedTerm === normalizedQuery || entry.compactTerm === compactQuery
-      if (options.expandPartShortcuts
-        && exact
-        && target.targetType === 'user_food_group'
-        && Object.keys(target.presetSelection).length === 0) {
-        exactParentGroupIds.add(target.userFoodGroupId)
-      }
-      const candidate: UserFoodSearchResult = {
-        group: getUserFoodGroup(target.userFoodGroupId),
+      const key = targetKey(target)
+      const group = getUserFoodGroup(target.userFoodGroupId)
+      const candidate = candidates.get(key) ?? {
+        group,
         presetSelection: { ...target.presetSelection },
         foodGroupId: target.foodGroupId,
         targetType: target.targetType,
-        matchedTerm: target.sourceTerm,
-        score,
+        fields: [
+          ...baseGroupFields(group),
+          ...selectionFields(group, target.presetSelection),
+          ...attributeFields(target.foodGroupId ? [target.foodGroupId] : group.memberFoodGroupIds),
+        ],
       }
-      const current = bestByGroup.get(target.userFoodGroupId)
-      if (!current
-        || candidate.score > current.score
-        || (candidate.score === current.score && candidate.matchedTerm.localeCompare(current.matchedTerm, 'ja') < 0)) {
-        bestByGroup.set(target.userFoodGroupId, candidate)
-      }
+      const sourcePriority = target.matchSource === 'group_name' ? 60
+        : target.matchSource === 'shortcut' ? 55
+          : target.matchSource === 'group_term' ? 50
+            : 20
+      candidate.fields.push({
+        value: compactUserFoodSearchText(target.sourceTerm),
+        name: target.matchSource === 'group_name' ? 'display' : target.matchSource === 'member_canonical' ? 'official' : 'alias',
+        priority: sourcePriority,
+        sourceTerm: target.sourceTerm,
+      })
+      candidates.set(key, candidate)
+    }
+  }
+  searchCandidatesCache = [...candidates.values()]
+  return searchCandidatesCache
+}
+
+function explicitAttributeSelection(queryTokens: readonly string[], fields: readonly SearchableTextField[]): Record<string, string> | undefined {
+  const valuesByAttribute = new Map<string, Set<string>>()
+  for (const token of queryTokens) {
+    const exactMatches = fields.filter((field): field is MextSearchField & { attributeId: string; attributeValueId: string } => {
+      const candidate = field as MextSearchField
+      return candidate.value === token
+        && typeof candidate.attributeId === 'string'
+        && typeof candidate.attributeValueId === 'string'
+    })
+    const uniquePairs = new Map(exactMatches.map((field) => [`${field.attributeId}::${field.attributeValueId}`, field]))
+    if (uniquePairs.size !== 1) continue
+    const field = [...uniquePairs.values()][0]
+    const values = valuesByAttribute.get(field.attributeId) ?? new Set<string>()
+    values.add(field.attributeValueId)
+    valuesByAttribute.set(field.attributeId, values)
+  }
+  const selection = Object.fromEntries([...valuesByAttribute]
+    .filter(([, values]) => values.size === 1)
+    .map(([attributeId, values]) => [attributeId, [...values][0]]))
+  return Object.keys(selection).length > 0 ? selection : undefined
+}
+
+export function searchUserFoodGroups(query: string, options: UserFoodSearchOptions = {}): UserFoodSearchResult[] {
+  const parsedQuery = parseSearchText(query)
+  if (!parsedQuery.normalized) return []
+  const bestByGroup = new Map<string, UserFoodSearchResult>()
+  const exactParentGroupIds = new Set<string>()
+  for (const candidate of getSearchCandidates()) {
+    const match = matchParsedSearchText(parsedQuery, candidate.fields)
+    if (match.score < 0) continue
+    const isParent = candidate.targetType === 'user_food_group' && Object.keys(candidate.presetSelection).length === 0
+    if (options.expandPartShortcuts
+      && isParent
+      && baseGroupFields(candidate.group).some((field) => field.value === parsedQuery.compact)) {
+      exactParentGroupIds.add(candidate.group.id)
+    }
+    const matchedField = match.matchedFields.slice().sort((left, right) => right.priority - left.priority)[0] as MextSearchField | undefined
+    const result: UserFoodSearchResult = {
+      group: candidate.group,
+      presetSelection: { ...candidate.presetSelection },
+      attributeSelection: explicitAttributeSelection(parsedQuery.tokens, candidate.fields),
+      foodGroupId: candidate.foodGroupId,
+      targetType: candidate.targetType,
+      matchedTerm: matchedField?.sourceTerm ?? candidate.group.displayName,
+      score: match.score,
+      relevance: match.relevance,
+    }
+    const current = bestByGroup.get(candidate.group.id)
+    const relevanceOrder = current ? compareSearchCandidates(result, current) : -1
+    if (!current
+      || relevanceOrder < 0
+      || (relevanceOrder === 0 && current.targetType === 'user_food_variant' && result.targetType === 'user_food_group')
+      || (relevanceOrder === 0 && current.targetType === result.targetType && result.matchedTerm.localeCompare(current.matchedTerm, 'ja') < 0)) {
+      bestByGroup.set(candidate.group.id, result)
     }
   }
   const expandedGroupIds = new Set<string>()
@@ -298,11 +434,12 @@ export function searchUserFoodGroups(query: string, options: UserFoodSearchOptio
           targetType: 'user_food_variant',
           matchedTerm: parent.matchedTerm,
           score: parent.score,
+          relevance: parent.relevance,
         })
       }
     }
   }
-  return [...bestByGroup.values()].filter((result) => !expandedGroupIds.has(result.group.id)).concat(expandedResults).sort((left, right) => right.score - left.score
+  return [...bestByGroup.values()].filter((result) => !expandedGroupIds.has(result.group.id)).concat(expandedResults).sort((left, right) => compareSearchCandidates(left, right)
     || left.group.displayName.localeCompare(right.group.displayName, 'ja')
     || left.group.id.localeCompare(right.group.id))
 }

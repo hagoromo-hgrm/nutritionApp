@@ -15,6 +15,7 @@ import {
   resolveFoodGroupId,
   searchUserFoodGroups,
 } from '../src/services/mextUserFoodData'
+import { compareSearchCandidates } from '../src/services/searchText'
 
 describe('MEXT user-facing food groups', () => {
   it('全1,494 food_group_idを重複なく一つの上位グループへ割り当てる', () => {
@@ -41,6 +42,34 @@ describe('MEXT user-facing food groups', () => {
       targetType: 'user_food_variant',
     })
     expect(resolveFoodGroupId(result!.group.id, result!.presetSelection)).toBe('fg_001282')
+  })
+
+  it('複数語で上位種類と下位属性を一意に引き継ぐ', () => {
+    const result = searchUserFoodGroups('鶏肉 むね 皮なし')
+      .find((item) => item.group.canonicalName === '鶏肉')
+    expect(result).toMatchObject({
+      presetSelection: { chicken_cut: 'breast' },
+      attributeSelection: { skin_state: 'without_skin' },
+      foodGroupId: 'fg_001370',
+      targetType: 'user_food_variant',
+    })
+    expect(result?.relevance).toBeDefined()
+  })
+
+  it('複数語はすべて一致する候補だけを返し、かなを共通正規化する', () => {
+    expect(searchUserFoodGroups('トリ肉 むね')
+      .find((item) => item.group.canonicalName === '鶏肉')).toMatchObject({
+        presetSelection: { chicken_cut: 'breast' },
+      })
+    expect(searchUserFoodGroups('鶏肉 存在しない属性')
+      .some((item) => item.group.canonicalName === '鶏肉')).toBe(false)
+  })
+
+  it('通常食品と共通の関連性コンパレーターで比較できる', () => {
+    const exact = searchUserFoodGroups('上白糖').find((item) => item.group.canonicalName === '砂糖')
+    expect(exact?.relevance).toBeDefined()
+    expect(compareSearchCandidates(exact!, exact!)).toBe(0)
+    expect(compareSearchCandidates({ relevance: [4, 4, 400, 60] }, { relevance: [3, 3, 300, 60] })).toBeLessThan(0)
   })
 
   it('砂糖類を一つの大分類として検索し、種類を選択できる', () => {

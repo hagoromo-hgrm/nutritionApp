@@ -189,12 +189,17 @@ function isFoodRelatedTerm(value: unknown): value is FoodRelatedTerm {
 
 function isFoodUsageStat(value: unknown): value is FoodUsageStat {
   if (!isRecord(value)) return false
+  const mealTypeCounts = value.mealTypeCounts
   return isNonEmptyString(value.foodId) && Number.isInteger(value.selectionCount) && Number(value.selectionCount) >= 0
-    && (value.lastSelectedAt === null || isIsoDateTime(value.lastSelectedAt)) && isIsoDateTime(value.updatedAt)
+    && (value.lastSelectedAt === null || isIsoDateTime(value.lastSelectedAt))
+    && (value.distinctUsageDays === undefined || (Number.isInteger(value.distinctUsageDays) && Number(value.distinctUsageDays) >= 0))
+    && (mealTypeCounts === undefined || (isRecord(mealTypeCounts)
+      && ['朝食', '昼食', '夕食', '間食'].every((mealType) => Number.isInteger(mealTypeCounts[mealType]) && Number(mealTypeCounts[mealType]) >= 0)))
+    && isIsoDateTime(value.updatedAt)
 }
 
 function isSearchLogItem(value: unknown): boolean {
-  if (!isRecord(value) || !isNonEmptyString(value.foodGroupId) || !isNonEmptyString(value.foodVariantId) || !Number.isInteger(value.rank) || Number(value.rank) < 1 || typeof value.score !== 'number' || !Number.isFinite(value.score) || !isNonEmptyString(value.matchedBy) || !isRecord(value.scoreBreakdown)) return false
+  if (!isRecord(value) || (value.candidateKey !== undefined && !isNonEmptyString(value.candidateKey)) || !isNonEmptyString(value.foodGroupId) || !isNonEmptyString(value.foodVariantId) || !Number.isInteger(value.rank) || Number(value.rank) < 1 || typeof value.score !== 'number' || !Number.isFinite(value.score) || !isNonEmptyString(value.matchedBy) || !isRecord(value.scoreBreakdown)) return false
   const breakdown = value.scoreBreakdown as Record<string, unknown>
   return ['text', 'representative', 'personalFrequency', 'recent', 'total'].every((key) => typeof breakdown[key] === 'number' && Number.isFinite(breakdown[key]))
 }
@@ -207,6 +212,27 @@ function isSearchLog(value: unknown): value is SearchLog {
     && (value.selectedFoodVariantId === null || isNonEmptyString(value.selectedFoodVariantId))
     && (value.selectedRank === null || (Number.isInteger(value.selectedRank) && Number(value.selectedRank) >= 1))
     && (value.selectionElapsedMs === null || (typeof value.selectionElapsedMs === 'number' && Number.isFinite(value.selectionElapsedMs) && value.selectionElapsedMs >= 0)) && typeof value.unselected === 'boolean'
+    && (value.savedAt === undefined || value.savedAt === null || isIsoDateTime(value.savedAt))
+}
+
+function isMealUsageEvidence(value: unknown): boolean {
+  if (!isRecord(value)) return false
+  if (value.version !== 1 || value.kind !== 'direct-food' || !isIsoDateTime(value.savedAt)
+    || !['search', 'favorite', 'history', 'food-picker', 'other'].includes(String(value.entryPoint))) return false
+  if (value.search === undefined) return true
+  if (!isRecord(value.search)) return false
+  return isNonEmptyString(value.search.logId)
+    && isNonEmptyString(value.search.foodGroupId)
+    && isNonEmptyString(value.search.foodVariantId)
+    && Number.isInteger(value.search.rank) && Number(value.search.rank) >= 1
+    && (value.search.normalizedQuery === undefined || isString(value.search.normalizedQuery))
+}
+
+function isMealUsageEvidenceForEntry(value: unknown, menuSnapshot: unknown): boolean {
+  if (value === undefined) return true
+  if (menuSnapshot !== undefined || !isRecord(value) || !isMealUsageEvidence(value)) return false
+  // 検索情報は初回保存時の証跡であり、後から属性を変えても検索結果を書き換えない。
+  return true
 }
 
 function isMealEntry(value: unknown): value is MealEntry {
@@ -216,6 +242,7 @@ function isMealEntry(value: unknown): value is MealEntry {
     && (value.registeredAt === undefined || isRegistrationTimestamp(value.registeredAt))
     && isNonEmptyString(value.foodId) && isSnapshot(value.foodSnapshot) && typeof value.amount === 'number' && Number.isFinite(value.amount) && value.amount > 0 && value.amount <= 100000
     && isValidQuantityUnit(String(value.amountUnit)) && (value.foodSnapshot.missing === true || hasQuantityUnitConversion(value.foodSnapshot.baseUnit, value.foodSnapshot.inputUnitConversions, String(value.amountUnit))) && isNutrients(value.calculatedNutrients)
+    && isMealUsageEvidenceForEntry(value.usageEvidence, value.menuSnapshot)
     && (value.menuSnapshot === undefined || isMealMenuSnapshot(value.menuSnapshot))
 }
 
@@ -286,7 +313,7 @@ function isSettings(value: unknown): value is AppSettings {
   const goals = value.goals
   return NUTRIENT_KEYS.every((key) => isNullableNumber(goals[key]))
     && value.displayUnit === 'default' && (value.lastBackupAt === null || isIsoDateTime(value.lastBackupAt))
-    && (value.dataFormatVersion === 1 || value.dataFormatVersion === 2 || value.dataFormatVersion === 3) && typeof value.externalApiEnabled === 'boolean'
+    && (value.dataFormatVersion === 1 || value.dataFormatVersion === 2 || value.dataFormatVersion === 3 || value.dataFormatVersion === 4) && typeof value.externalApiEnabled === 'boolean'
     && isNonEmptyString(value.externalApiEndpoint)
     && (value.mealTimeMode === undefined || value.mealTimeMode === 'auto' || value.mealTimeMode === 'manual')
     && (value.bodyProfile === undefined || isBodyProfile(value.bodyProfile))
@@ -466,7 +493,7 @@ function isEstimationSettings(value: unknown): value is EstimationSettings {
 
 export function validateBackup(value: unknown): BackupData {
   if (!isRecord(value)) throw new Error('JSONのトップレベルがオブジェクトではありません。')
-  if (value.format !== 'nutrition-pwa-backup' || (value.dataFormatVersion !== 1 && value.dataFormatVersion !== 2 && value.dataFormatVersion !== 3)) {
+  if (value.format !== 'nutrition-pwa-backup' || (value.dataFormatVersion !== 1 && value.dataFormatVersion !== 2 && value.dataFormatVersion !== 3 && value.dataFormatVersion !== 4)) {
     throw new Error('対応していないバックアップ形式またはバージョンです。')
   }
   if (!isIsoDateTime(value.exportedAt) || !Array.isArray(value.foods) || !Array.isArray(value.mealEntries)
@@ -476,8 +503,8 @@ export function validateBackup(value: unknown): BackupData {
   if (!value.foods.every(isFood) || !value.mealEntries.every(isMealEntry)) {
     throw new Error('食品または食事記録の形式が不正です。')
   }
-  if (value.dataFormatVersion === 3 && !Array.isArray(value.weightRecords)) {
-    throw new Error('v3バックアップには体重履歴が必要です。')
+  if ((value.dataFormatVersion === 3 || value.dataFormatVersion === 4) && !Array.isArray(value.weightRecords)) {
+    throw new Error('v3以降のバックアップには体重履歴が必要です。')
   }
   if (value.weightRecords !== undefined && (!Array.isArray(value.weightRecords) || !value.weightRecords.every(isValidWeightRecord))) {
     throw new Error('体重履歴の形式が不正です。')
@@ -540,7 +567,7 @@ export function validateBackup(value: unknown): BackupData {
   }
   const hasEstimationFields = value.estimationDataFormatVersion !== undefined || value.estimationSettings !== undefined
     || value.estimationRequests !== undefined || value.estimationResults !== undefined || value.estimationDecisions !== undefined
-  if ((value.dataFormatVersion === 2 || value.dataFormatVersion === 3) && (!hasEstimationFields || value.estimationDataFormatVersion !== 1
+  if ((value.dataFormatVersion === 2 || value.dataFormatVersion === 3 || value.dataFormatVersion === 4) && (!hasEstimationFields || value.estimationDataFormatVersion !== 1
     || !isEstimationSettings(value.estimationSettings) || !Array.isArray(value.estimationRequests)
     || !Array.isArray(value.estimationResults) || !Array.isArray(value.estimationDecisions))) {
     throw new Error('推計関連データの形式またはバージョンが不正です。')
@@ -548,7 +575,7 @@ export function validateBackup(value: unknown): BackupData {
   if (hasEstimationFields && value.dataFormatVersion === 1) {
     throw new Error('推計関連データを含むバックアップはデータ形式バージョン2以上である必要があります。')
   }
-  if (value.dataFormatVersion === 2 || value.dataFormatVersion === 3) {
+  if (value.dataFormatVersion === 2 || value.dataFormatVersion === 3 || value.dataFormatVersion === 4) {
     const requests = value.estimationRequests as unknown[]
     const results = value.estimationResults as unknown[]
     const decisions = value.estimationDecisions as unknown[]

@@ -218,9 +218,20 @@ export interface FoodRelatedTerm {
 
 export interface FoodUsageStat {
   foodId: string
+  /** 旧クリック数ではなく、証跡付きの新規食事保存回数。 */
   selectionCount: number
   lastSelectedAt: string | null
+  distinctUsageDays?: number
+  mealTypeCounts?: Record<MealType, number>
   updatedAt: string
+}
+
+export interface FoodUsageProfile {
+  foodId: string
+  usageCount: number
+  distinctUsageDays: number
+  lastUsedAt: string
+  mealTypeCounts: Record<MealType, number>
 }
 
 export interface SearchScoreBreakdown {
@@ -232,6 +243,8 @@ export interface SearchScoreBreakdown {
 }
 
 export interface SearchLogItem {
+  /** MEXT上位候補と通常候補を区別できる、統合後の安定キー。 */
+  candidateKey?: string
   foodGroupId: string
   foodVariantId: string
   rank: number
@@ -253,6 +266,8 @@ export interface SearchLog {
   selectedRank: number | null
   selectionElapsedMs: number | null
   unselected: boolean
+  /** 食事保存まで完了した検索だけに設定する。 */
+  savedAt?: string | null
 }
 
 export interface FoodSnapshot {
@@ -301,6 +316,25 @@ export interface MealMenuSnapshot {
   ingredients: MealIngredientSnapshot[]
 }
 
+export type MealUsageEntryPoint = 'search' | 'favorite' | 'history' | 'food-picker' | 'other'
+
+export interface MealUsageSearchContext {
+  logId: string
+  foodGroupId: string
+  foodVariantId: string
+  rank: number
+  normalizedQuery?: string
+}
+
+/** 新規の直接食品が食事として保存された事実。順位用統計はこの証跡から再構築する。 */
+export interface MealUsageEvidence {
+  version: 1
+  kind: 'direct-food'
+  savedAt: string
+  entryPoint: MealUsageEntryPoint
+  search?: MealUsageSearchContext
+}
+
 export interface MealEntry {
   id: string
   eatenAt: string
@@ -314,6 +348,7 @@ export interface MealEntry {
   amount: number
   amountUnit: QuantityUnit
   calculatedNutrients: Nutrients
+  usageEvidence?: MealUsageEvidence
   /** 料理メニューを登録した時点の構成。食事ごとのアレンジはこの複製だけを変更する。 */
   menuSnapshot?: MealMenuSnapshot
 }
@@ -671,7 +706,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   goals: DEFAULT_GOALS,
   displayUnit: 'default',
   lastBackupAt: null,
-  dataFormatVersion: 3,
+  dataFormatVersion: 4,
   externalApiEnabled: false,
   externalApiEndpoint: 'https://world.openfoodfacts.org/api/v3/product',
   mealTimeMode: 'auto',

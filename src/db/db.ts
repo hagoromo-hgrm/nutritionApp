@@ -16,10 +16,14 @@ import {
   type FoodAlias,
   type FoodGroup,
   type FoodRelatedTerm,
+  type FoodUsageProfile,
   type FoodUsageStat,
   type GeneralMenu,
   type MealEntry,
   type MealType,
+  type MealUsageEntryPoint,
+  type MealUsageEvidence,
+  type MealUsageSearchContext,
   type MetadataRecord,
   type Menu,
   type MenuSet,
@@ -34,7 +38,8 @@ import { normalizeFoodAttributePreferences } from '../services/foodAttributePref
 import { validateBackup } from '../services/backup'
 import { isRegistrationTimestamp, withLegacyRegistrationTime } from '../services/mealRegistrationTime'
 import { getMenuFoodIds, getNestedMenuIds, wouldCreateMenuCycle } from '../services/menuIngredients'
-import { normalizeSearchText, searchFoodResults as searchFoodResultsPure, type FoodSearchPage } from '../services/foodSearch'
+import { normalizeSearchText } from '../services/foodSearch'
+import { searchUnifiedFoodResults, type UnifiedFoodSearchResult } from '../services/unifiedFoodSearch'
 import { normalizeMealEntryGroups, normalizeMealEntryOrder, sortMealEntries, sortMealEntryGroup } from '../services/mealEntryOrder'
 import type { FoodSearchCategory } from '../services/foodClassification'
 import { formatDateKey } from '../utils/date'
@@ -58,6 +63,20 @@ const LEGACY_INITIAL_FOOD_IDS = [
   'mext_tofu',
 ] as const
 const mextFoodGroupIds = new Set(mextFoodGroups.map((group) => group.id))
+const FOOD_SEARCH_SESSION_LIMIT = 24
+
+interface FoodSearchSession {
+  id: string
+  query: string
+  category: FoodSearchCategory
+  mealType?: MealType
+  normalizedQuery: string
+  results: UnifiedFoodSearchResult[]
+  logId: string
+  createdAtMs: number
+}
+
+const foodSearchSessions = new Map<string, FoodSearchSession>()
 
 function isUserManualGroup(group: FoodGroup | undefined): boolean {
   return group?.metadataSource === 'manual' && group.generationVersion === 'manual-v1'
@@ -241,6 +260,14 @@ export class NutritionDatabase extends Dexie {
       })
       await transaction.table('metadata').put({ key: 'schema-version', value: 10 })
     })
+    this.version(11).stores({
+      meal_entries: 'id, eatenAt, registeredAt, mealType, foodId, usageEvidence.savedAt',
+      food_usage_stats: 'foodId, selectionCount, lastSelectedAt, updatedAt',
+    }).upgrade(async (transaction) => {
+      // 旧値は検索結果を開いただけの操作も含むため、食事保存実績へ読み替えない。
+      await transaction.table('food_usage_stats').clear()
+      await transaction.table('metadata').put({ key: 'schema-version', value: 11 })
+    })
     this.mealEntries = this.table('meal_entries')
     this.menus = this.table('menus')
     this.generalMenus = this.table('general_menus')
@@ -387,7 +414,7 @@ export async function initializeDatabase(): Promise<void> {
       if (existing === 0) await db.foods.bulkAdd(initialFoods.map(enrichFoodForSearch))
       await db.metadata.put({ key: 'initial-foods-seeded', value: true })
       await db.metadata.put({ key: 'initial-foods-version', value: INITIAL_FOODS_VERSION })
-      await db.metadata.put({ key: 'schema-version', value: 10 })
+      await db.metadata.put({ key: 'schema-version', value: 11 })
     })
   } else if (seedVersion?.value !== INITIAL_FOODS_VERSION) {
     await db.transaction('rw', [db.foods, db.metadata], async () => {
@@ -427,12 +454,12 @@ export async function initializeDatabase(): Promise<void> {
         .map((food) => food.id)
       if (legacyIdsToDelete.length > 0) await db.foods.bulkDelete(legacyIdsToDelete)
       await db.metadata.put({ key: 'initial-foods-version', value: INITIAL_FOODS_VERSION })
-      await db.metadata.put({ key: 'schema-version', value: 10 })
+      await db.metadata.put({ key: 'schema-version', value: 11 })
     })
   }
   await ensureSearchMetadata()
   await db.metadata.put({ key: INITIAL_FOOD_IDS_METADATA_KEY, value: JSON.stringify(bundledFoodIds) })
-  await db.metadata.put({ key: 'schema-version', value: 10 })
+  await db.metadata.put({ key: 'schema-version', value: 11 })
 }
 
 export async function getSettings(): Promise<AppSettings> {
@@ -482,37 +509,210 @@ export async function getWeightRecordsBetween(from: string, to: string): Promise
   return sortWeightRecords(records)
 }
 
+export interface FoodUsageProfileOptions {
+  /** テストや同一検索内の順位固定で基準時刻を固定できる。 */
+  asOf?: string
+  windowDays?: number
+}
+
+const FOOD_USAGE_WINDOW_DAYS = 180
+
+function emptyMealTypeCounts(): Record<MealType, number> {
+  return { 朝食: 0, 昼食: 0, 夕食: 0, 間食: 0 }
+}
+
+/** クリック統計を参照せず、証跡付き食事だけから利用プロフィールを再構築する。 */
+export async function getFoodUsageProfiles(options: FoodUsageProfileOptions = {}): Promise<FoodUsageProfile[]> {
+  const asOf = options.asOf ?? new Date().toISOString()
+  const asOfMs = new Date(asOf).getTime()
+  const windowDays = options.windowDays ?? FOOD_USAGE_WINDOW_DAYS
+  if (!Number.isFinite(asOfMs) || !Number.isSafeInteger(windowDays) || windowDays <= 0) {
+    throw new Error('食品利用実績の集計期間が不正です。')
+  }
+  const cutoffMs = asOfMs - windowDays * 24 * 60 * 60 * 1000
+  const entries = await db.mealEntries.where('usageEvidence.savedAt').aboveOrEqual(new Date(cutoffMs).toISOString()).toArray()
+  const aggregates = new Map<string, {
+    usageCount: number
+    usageDays: Set<string>
+    lastUsedAt: string
+    mealTypeCounts: Record<MealType, number>
+  }>()
+  for (const entry of entries) {
+    const evidence = entry.usageEvidence
+    if (evidence?.version !== 1 || evidence.kind !== 'direct-food') continue
+    const savedAtMs = new Date(evidence.savedAt).getTime()
+    if (!Number.isFinite(savedAtMs) || savedAtMs < cutoffMs || savedAtMs > asOfMs) continue
+    const current = aggregates.get(entry.foodId) ?? {
+      usageCount: 0,
+      usageDays: new Set<string>(),
+      lastUsedAt: evidence.savedAt,
+      mealTypeCounts: emptyMealTypeCounts(),
+    }
+    current.usageCount += 1
+    current.usageDays.add(formatDateKey(evidence.savedAt))
+    current.mealTypeCounts[entry.mealType] += 1
+    if (evidence.savedAt > current.lastUsedAt) current.lastUsedAt = evidence.savedAt
+    aggregates.set(entry.foodId, current)
+  }
+  return [...aggregates.entries()]
+    .map(([foodId, value]): FoodUsageProfile => ({
+      foodId,
+      usageCount: value.usageCount,
+      distinctUsageDays: value.usageDays.size,
+      lastUsedAt: value.lastUsedAt,
+      mealTypeCounts: value.mealTypeCounts,
+    }))
+    .sort((left, right) => left.foodId.localeCompare(right.foodId))
+}
+
+function usageProfilesToLegacySearchStats(profiles: FoodUsageProfile[], updatedAt: string): FoodUsageStat[] {
+  return profiles.map((profile) => ({
+    foodId: profile.foodId,
+    selectionCount: profile.usageCount,
+    lastSelectedAt: profile.lastUsedAt,
+    distinctUsageDays: profile.distinctUsageDays,
+    mealTypeCounts: profile.mealTypeCounts,
+    updatedAt,
+  }))
+}
+
 export async function searchFoods(query: string): Promise<Food[]> {
-  const page = await searchFoodResults(query, { limit: 100 })
+  const page = await searchFoodResults(query, { limit: 100, log: false })
   return page.page.results.map((result) => result.variants).flat()
 }
 
-export async function searchFoodResults(query: string, options: { limit?: number; cursor?: string | null; category?: FoodSearchCategory } = {}): Promise<{ page: FoodSearchPage; logId: string }> {
+export interface SearchFoodResultsOptions {
+  limit?: number
+  cursor?: string | null
+  category?: FoodSearchCategory
+  mealType?: MealType
+  log?: boolean
+}
+
+export interface UnifiedFoodSearchPage {
+  results: UnifiedFoodSearchResult[]
+  normalizedQuery: string
+  nextCursor: string | null
+}
+
+function foodSearchCursor(sessionId: string, offset: number): string {
+  return `${sessionId}:${offset}`
+}
+
+function readFoodSearchCursor(cursor: string): { sessionId: string; offset: number } | null {
+  const separator = cursor.lastIndexOf(':')
+  if (separator <= 0) return null
+  const offset = Number(cursor.slice(separator + 1))
+  if (!Number.isSafeInteger(offset) || offset < 0) return null
+  return { sessionId: cursor.slice(0, separator), offset }
+}
+
+function retainFoodSearchSession(session: FoodSearchSession): void {
+  foodSearchSessions.set(session.id, session)
+  while (foodSearchSessions.size > FOOD_SEARCH_SESSION_LIMIT) {
+    const oldest = [...foodSearchSessions.values()].sort((left, right) => left.createdAtMs - right.createdAtMs)[0]
+    if (!oldest) break
+    foodSearchSessions.delete(oldest.id)
+  }
+}
+
+function searchLogItems(results: UnifiedFoodSearchResult[], offset: number): SearchLog['items'] {
+  return results.map((result, index) => ({
+    candidateKey: result.candidateKey,
+    foodGroupId: result.group.id,
+    foodVariantId: result.food.id,
+    rank: offset + index + 1,
+    score: result.score,
+    matchedBy: result.matchedBy,
+    scoreBreakdown: result.scoreBreakdown,
+  }))
+}
+
+export async function searchFoodResults(query: string, options: SearchFoodResultsOptions = {}): Promise<{ page: UnifiedFoodSearchPage; logId: string }> {
   const startedAt = performance.now()
-  const [foods, groups, aliases, relatedTerms, usageStats, favoriteIds] = await Promise.all([
-    db.foods.toArray(), db.foodGroups.toArray(), db.foodAliases.toArray(), db.foodRelatedTerms.toArray(), db.foodUsageStats.toArray(), getFavoriteIds(),
+  const limit = Math.max(1, Math.floor(options.limit ?? 20))
+  const category = options.category ?? 'all'
+  if (options.cursor) {
+    const parsed = readFoodSearchCursor(options.cursor)
+    const session = parsed ? foodSearchSessions.get(parsed.sessionId) : undefined
+    if (!parsed || !session
+      || session.query !== query
+      || session.category !== category
+      || session.mealType !== options.mealType) {
+      throw new Error('検索条件が変更されたため、もう一度検索してください。')
+    }
+    const results = session.results.slice(parsed.offset, parsed.offset + limit)
+    const nextOffset = parsed.offset + results.length
+    const page: UnifiedFoodSearchPage = {
+      results,
+      normalizedQuery: session.normalizedQuery,
+      nextCursor: nextOffset < session.results.length ? foodSearchCursor(session.id, nextOffset) : null,
+    }
+    if (options.log !== false) {
+      try {
+        const log = await db.searchLogs.get(session.logId)
+        if (log) {
+          const additions = searchLogItems(results, parsed.offset)
+          const ranks = new Set(log.items.map((item) => item.rank))
+          await db.searchLogs.put({
+            ...log,
+            resultCount: Math.max(log.resultCount, nextOffset),
+            items: [...log.items, ...additions.filter((item) => !ranks.has(item.rank))].sort((left, right) => left.rank - right.rank),
+          })
+        }
+      } catch { /* ログ保存失敗で追加表示を止めない。 */ }
+    }
+    return { page, logId: session.logId }
+  }
+
+  const usageAsOf = new Date().toISOString()
+  const [foods, groups, aliases, relatedTerms, usageProfiles, favoriteIds] = await Promise.all([
+    db.foods.toArray(), db.foodGroups.toArray(), db.foodAliases.toArray(), db.foodRelatedTerms.toArray(), getFoodUsageProfiles({ asOf: usageAsOf }), getFavoriteIds(),
   ])
-  const page = searchFoodResultsPure(query, { foods, groups, aliases, relatedTerms, usageStats, favoriteIds }, options)
+  const usageStats = usageProfilesToLegacySearchStats(usageProfiles, usageAsOf)
+  const rankedResults = searchUnifiedFoodResults(query, { foods, groups, aliases, relatedTerms, usageStats, favoriteIds }, {
+    category,
+    mealType: options.mealType,
+    now: new Date(usageAsOf),
+  })
+  const sessionId = createId('food-search-session')
+  const logId = createId('search')
+  const pageResults = rankedResults.slice(0, limit)
+  const normalizedQuery = normalizeSearchText(query)
+  retainFoodSearchSession({
+    id: sessionId,
+    query,
+    category,
+    mealType: options.mealType,
+    normalizedQuery,
+    results: rankedResults,
+    logId,
+    createdAtMs: Date.now(),
+  })
+  const page: UnifiedFoodSearchPage = {
+    results: pageResults,
+    normalizedQuery,
+    nextCursor: pageResults.length < rankedResults.length ? foodSearchCursor(sessionId, pageResults.length) : null,
+  }
   const log: SearchLog = {
-    id: createId('search'), createdAt: new Date().toISOString(), query, normalizedQuery: page.normalizedQuery,
-    resultCount: page.results.length, processingMs: Math.max(0, performance.now() - startedAt),
-    items: page.results.map((result, index) => ({ foodGroupId: result.group.id, foodVariantId: result.food.id, rank: index + 1, score: result.score, matchedBy: result.matchedBy, scoreBreakdown: result.scoreBreakdown })),
+    id: logId, createdAt: new Date().toISOString(), query, normalizedQuery,
+    resultCount: pageResults.length, processingMs: Math.max(0, performance.now() - startedAt),
+    items: searchLogItems(pageResults, 0),
     selectedFoodGroupId: null, selectedFoodVariantId: null, selectedRank: null, selectionElapsedMs: null, unselected: false,
   }
-  try { await db.searchLogs.put(log) } catch { /* ログ保存失敗で検索本体を止めない */ }
-  return { page, logId: log.id }
+  if (options.log !== false) {
+    try { await db.searchLogs.put(log) } catch { /* ログ保存失敗で検索本体を止めない */ }
+  }
+  return { page, logId }
 }
 
 export async function recordFoodSelection(logId: string, groupId: string, foodId: string, rank: number): Promise<void> {
-  const now = new Date().toISOString()
   try {
-    await db.transaction('rw', [db.foodUsageStats, db.searchLogs], async () => {
-      const current = await db.foodUsageStats.get(foodId)
-      await db.foodUsageStats.put({ foodId, selectionCount: (current?.selectionCount ?? 0) + 1, lastSelectedAt: now, updatedAt: now })
+    await db.transaction('rw', db.searchLogs, async () => {
       const log = await db.searchLogs.get(logId)
       if (log) await db.searchLogs.put({ ...log, selectedFoodGroupId: groupId, selectedFoodVariantId: foodId, selectedRank: rank, selectionElapsedMs: Math.max(0, Date.now() - new Date(log.createdAt).getTime()), unselected: false })
     })
-  } catch { /* 利用統計は補助情報。選択自体の成功を妨げない。 */ }
+  } catch { /* ログは補助情報。選択自体の成功を妨げない。 */ }
 }
 
 export async function markSearchLogUnselected(logId: string): Promise<void> {
@@ -525,7 +725,10 @@ export async function markSearchLogUnselected(logId: string): Promise<void> {
 export async function getAllFoodGroups(): Promise<FoodGroup[]> { return db.foodGroups.orderBy('displayName').toArray() }
 export async function getAllFoodAliases(): Promise<FoodAlias[]> { return db.foodAliases.toArray() }
 export async function getAllFoodRelatedTerms(): Promise<FoodRelatedTerm[]> { return db.foodRelatedTerms.toArray() }
-export async function getAllFoodUsageStats(): Promise<FoodUsageStat[]> { return db.foodUsageStats.toArray() }
+export async function getAllFoodUsageStats(): Promise<FoodUsageStat[]> {
+  const updatedAt = new Date().toISOString()
+  return usageProfilesToLegacySearchStats(await getFoodUsageProfiles({ asOf: updatedAt }), updatedAt)
+}
 export async function getSearchLogs(): Promise<SearchLog[]> { return db.searchLogs.orderBy('createdAt').toArray() }
 
 export async function getFoodById(id: string): Promise<Food | undefined> {
@@ -848,12 +1051,24 @@ export async function saveMealEntry(entry: MealEntry): Promise<void> {
   await saveMealEntries([entry])
 }
 
-export async function saveMealEntries(entries: MealEntry[]): Promise<void> {
-  if (entries.length === 0) return
-  await db.transaction('rw', db.mealEntries, async () => {
+export interface SaveNewDirectFoodMealOptions {
+  entryPoint: MealUsageEntryPoint
+  savedAt?: string
+  search?: MealUsageSearchContext
+}
+
+async function saveMealEntriesInternal(
+  entries: MealEntry[],
+  directUsageByEntryId: ReadonlyMap<string, SaveNewDirectFoodMealOptions> = new Map(),
+): Promise<MealEntry[]> {
+  if (entries.length === 0) return []
+  return db.transaction('rw', [db.mealEntries, db.searchLogs], async () => {
     const previousEntries = (await db.mealEntries.bulkGet(entries.map((entry) => entry.id)))
       .filter((entry): entry is MealEntry => Boolean(entry))
     const previousById = new Map(previousEntries.map((entry) => [entry.id, entry]))
+    for (const entryId of directUsageByEntryId.keys()) {
+      if (previousById.has(entryId)) throw new Error('利用実績は新規の食事記録にだけ追加できます。')
+    }
     const latestEntry = await db.mealEntries.orderBy('registeredAt').last()
     let latestRegistrationMs = latestEntry?.registeredAt ? new Date(latestEntry.registeredAt).getTime() : -Infinity
     const now = Date.now()
@@ -870,11 +1085,53 @@ export async function saveMealEntries(entries: MealEntry[]): Promise<void> {
       } else {
         latestRegistrationMs = Math.max(latestRegistrationMs, new Date(registeredAt).getTime())
       }
-      const saved = { ...entry, registeredAt }
+      const directUsage = directUsageByEntryId.get(entry.id)
+      const requestedSavedAt = directUsage?.savedAt ?? registeredAt
+      const search = directUsage?.search
+      if (directUsage && (
+        !isRegistrationTimestamp(requestedSavedAt)
+        || entry.menuSnapshot !== undefined
+        || !['search', 'favorite', 'history', 'food-picker', 'other'].includes(directUsage.entryPoint)
+        || (search !== undefined && (
+          !search.logId || !search.foodGroupId || search.foodVariantId !== entry.foodId
+          || !Number.isSafeInteger(search.rank) || search.rank < 1
+        ))
+      )) {
+        throw new Error('直接食品の利用実績が不正です。')
+      }
+      const usageEvidence: MealUsageEvidence | undefined = previous?.usageEvidence ?? (directUsage ? {
+        version: 1,
+        kind: 'direct-food',
+        savedAt: requestedSavedAt,
+        entryPoint: directUsage.entryPoint,
+        search: directUsage.search,
+      } : undefined)
+      // 通常の一括保存へコピーされた証跡は捨て、編集時だけ既存証跡を維持する。
+      const entryWithoutUsageEvidence = { ...entry }
+      delete entryWithoutUsageEvidence.usageEvidence
+      const saved: MealEntry = { ...entryWithoutUsageEvidence, registeredAt, ...(usageEvidence ? { usageEvidence } : {}) }
       previousById.set(saved.id, saved)
       return saved
     })
     await db.mealEntries.bulkPut(registeredEntries)
+
+    for (const saved of registeredEntries) {
+      if (!directUsageByEntryId.has(saved.id)) continue
+      const evidence = saved.usageEvidence
+      const search = evidence?.search
+      if (!search) continue
+      const log = await db.searchLogs.get(search.logId)
+      if (!log) continue
+      await db.searchLogs.put({
+        ...log,
+        selectedFoodGroupId: search.foodGroupId,
+        selectedFoodVariantId: search.foodVariantId,
+        selectedRank: search.rank,
+        selectionElapsedMs: Math.max(0, new Date(evidence.savedAt).getTime() - new Date(log.createdAt).getTime()),
+        unselected: false,
+        savedAt: evidence.savedAt,
+      })
+    }
 
     const affectedGroups = new Map<string, { dateKey: string; mealType: MealType }>()
     for (const entry of [...previousEntries, ...entries]) {
@@ -886,7 +1143,20 @@ export async function saveMealEntries(entries: MealEntry[]): Promise<void> {
       const group = sortMealEntryGroup(dateEntries.filter((entry) => entry.mealType === mealType))
       if (group.length > 0) await db.mealEntries.bulkPut(normalizeMealEntryOrder(group))
     }
+    return registeredEntries
   })
+}
+
+export async function saveMealEntries(entries: MealEntry[]): Promise<void> {
+  await saveMealEntriesInternal(entries)
+}
+
+/** 新規の直接食品と利用証跡を同一トランザクションで保存する。 */
+export async function saveNewDirectFoodMealEntry(entry: MealEntry, options: SaveNewDirectFoodMealOptions): Promise<MealEntry> {
+  const saved = await saveMealEntriesInternal([entry], new Map([[entry.id, options]]))
+  const result = saved[0]
+  if (!result) throw new Error('食事記録を保存できませんでした。')
+  return result
 }
 
 export async function deleteMealEntry(id: string): Promise<void> {
@@ -1017,13 +1287,13 @@ export async function exportBackup(): Promise<BackupData> {
     if (!settings) throw new Error('設定を読み込めませんでした。')
     const [foods, mealEntries, favorites, foodGroups, foodAliases, foodRelatedTerms, foodUsageStats, searchLogs, menus, generalMenus, menuSets, estimationSettings, estimationRequests, estimationResults, estimationDecisions, weightRecords] = await Promise.all([
       db.foods.toArray(), db.mealEntries.toArray(), db.favorites.toArray(), db.foodGroups.toArray(), db.foodAliases.toArray(),
-      db.foodRelatedTerms.toArray(), db.foodUsageStats.toArray(), db.searchLogs.toArray(), db.menus.toArray(), db.generalMenus.toArray(), db.menuSets.toArray(),
+      db.foodRelatedTerms.toArray(), getAllFoodUsageStats(), db.searchLogs.toArray(), db.menus.toArray(), db.generalMenus.toArray(), db.menuSets.toArray(),
       db.estimationSettings.get('default'), db.estimationRequests.toArray(), db.estimationResults.toArray(), db.estimationDecisions.toArray(), db.weightRecords.toArray(),
     ])
-    const exportSettings = { ...settings, dataFormatVersion: 3 as const }
+    const exportSettings = { ...settings, dataFormatVersion: 4 as const }
     return {
       format: 'nutrition-pwa-backup',
-      dataFormatVersion: 3,
+      dataFormatVersion: 4,
       exportedAt: new Date().toISOString(),
       foods,
       mealEntries,
@@ -1083,7 +1353,7 @@ export async function replaceAllData(backup: BackupData): Promise<ReplaceAllData
     if (validatedBackup.foodGroups?.length) await db.foodGroups.bulkAdd(validatedBackup.foodGroups)
     if (validatedBackup.foodAliases?.length) await db.foodAliases.bulkAdd(validatedBackup.foodAliases)
     if (validatedBackup.foodRelatedTerms?.length) await db.foodRelatedTerms.bulkAdd(validatedBackup.foodRelatedTerms)
-    if (validatedBackup.foodUsageStats?.length) await db.foodUsageStats.bulkAdd(validatedBackup.foodUsageStats)
+    // 復元回数や旧クリック統計は加算せず、食事のusageEvidenceから都度再構築する。
     if (validatedBackup.searchLogs?.length) await db.searchLogs.bulkAdd(validatedBackup.searchLogs)
     if (validatedBackup.estimationSettings) await db.estimationSettings.add(validatedBackup.estimationSettings)
     if (validatedBackup.estimationRequests?.length) await db.estimationRequests.bulkAdd(validatedBackup.estimationRequests)
@@ -1091,7 +1361,7 @@ export async function replaceAllData(backup: BackupData): Promise<ReplaceAllData
     if (validatedBackup.estimationDecisions?.length) await db.estimationDecisions.bulkAdd(validatedBackup.estimationDecisions)
     if (validatedBackup.weightRecords?.length) await db.weightRecords.bulkAdd(validatedBackup.weightRecords)
     await db.settings.put(validatedBackup.settings)
-    await db.metadata.put({ key: 'schema-version', value: 10 })
+    await db.metadata.put({ key: 'schema-version', value: 11 })
     await db.metadata.put({ key: 'initial-foods-seeded', value: true })
     await db.metadata.put({ key: 'initial-foods-version', value: INITIAL_FOODS_VERSION })
     if (validatedBackup.foodAliases !== undefined && validatedBackup.foodRelatedTerms !== undefined) {

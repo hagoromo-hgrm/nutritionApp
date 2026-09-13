@@ -2,13 +2,13 @@ import { saveFoodAndEstimation } from './services/foodEstimationSave'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { registerSW } from 'virtual:pwa-register'
 import { FoodFormView } from './components/FoodFormView'
-import { displayFoodName, displaySearchFoodName, foodListNutritionLabel, generalMenuToFood, menuIngredientNames, menuSetPreviewFood, snapshotToFood, temporaryMenuToFood } from './components/foodPresentation'
+import { displayFoodName, generalMenuToFood, menuIngredientNames, menuSetPreviewFood, snapshotToFood, temporaryMenuToFood } from './components/foodPresentation'
 import {
   buildMextFoodSearchResult,
   refreshSearchFoodItem,
   getSearchResultUserFacingName,
-  selectedUserFoodDimensionLabel,
-  selectedUserFoodLabel,
+  nextFoodSearchRank,
+  unifiedFoodSearchItem,
   type SearchPurpose,
   type SearchResultGroup,
   type SearchResultItem,
@@ -68,7 +68,6 @@ import {
   getSettings,
   initializeDatabase,
   markSearchLogUnselected,
-  recordFoodSelection,
   reorderFavorites,
   reorderMealEntries,
   reorderMenuSets,
@@ -77,6 +76,7 @@ import {
   saveFoodWithMetadata,
   saveGeneralMenu,
   saveMealEntries,
+  saveNewDirectFoodMealEntry,
   saveMenu,
   saveMenuSet,
   saveSettings,
@@ -123,7 +123,6 @@ import {
   getUserFoodGroupForFoodGroup,
   MissingRequiredUserSelection,
   resolveFoodGroupId,
-  searchUserFoodGroups,
   type UserFoodSearchResult,
 } from './services/mextUserFoodData'
 import {
@@ -159,6 +158,7 @@ import {
   type MealEntry,
   type MealIngredientSnapshot,
   type MealMenuSnapshot,
+  type MealUsageSearchContext,
   type MealTimeMode,
   type MealType,
   type Menu,
@@ -228,6 +228,7 @@ function App() {
   const [searchBars, setSearchBars] = useState([''])
   const [searchResults, setSearchResults] = useState<SearchResultGroup[]>([])
   const [pendingSearchQuery, setPendingSearchQuery] = useState<string | null>(null)
+  const [pendingMealUsageSearch, setPendingMealUsageSearch] = useState<MealUsageSearchContext | null>(null)
   const [searchPurpose, setSearchPurpose] = useState<SearchPurpose>('meal')
   const [searchCategory, setSearchCategory] = useState<FoodSearchCategory>('all')
   const [searchingResults, setSearchingResults] = useState(false)
@@ -494,6 +495,7 @@ function App() {
   }
 
   const handleFoodSelection = (food: Food) => {
+    setPendingMealUsageSearch(null)
     if (recordingMealType) {
       openMealForm(food, undefined, recordingMealType)
       return
@@ -762,6 +764,7 @@ function App() {
     menuSnapshot: MealMenuSnapshot | null = null,
     userFacingName?: string,
     returnSearchQuery: string | null = pendingSearchQuery,
+    usageSearchContext: MealUsageSearchContext | null = pendingMealUsageSearch,
   ) => {
     if (!requireLoadedDate()) return false
     if (mealSaveInFlightRef.current) return false
@@ -834,9 +837,18 @@ function App() {
       const orderedGroup = currentGroup.filter((current) => current.id !== entry.id)
       orderedGroup.splice(previousIndex >= 0 ? Math.min(previousIndex, orderedGroup.length) : orderedGroup.length, 0, entry)
       const entriesToSave = normalizeMealEntryOrder(orderedGroup)
-      await saveMealEntries(entriesToSave)
+      if (!entryToEdit && !menuSnapshot) {
+        const newEntry = entriesToSave.find((candidate) => candidate.id === entry.id) ?? entry
+        await saveNewDirectFoodMealEntry(newEntry, {
+          entryPoint: usageSearchContext ? 'search' : 'food-picker',
+          ...(usageSearchContext ? { search: usageSearchContext } : {}),
+        })
+      } else {
+        await saveMealEntries(entriesToSave)
+      }
       if (searchProgress.matched) setSearchResults(searchProgress.remainingGroups)
       setPendingSearchQuery(null)
+      setPendingMealUsageSearch(null)
       setMealFood(null)
       setMealUserFacingName(null)
       setEditingEntry(null)
@@ -1066,6 +1078,7 @@ function App() {
     setSearchBars([''])
     setSearchResults([])
     setPendingSearchQuery(null)
+    setPendingMealUsageSearch(null)
     setSearchPurpose(purpose)
     setSearchCategory('all')
     setSearchingResults(false)
@@ -1083,40 +1096,19 @@ function App() {
         const includeMenus = foodSearchCategoryIncludesMenus(category) && Boolean(query) && searchPurpose === 'meal'
         const [{ page, logId }, resultMenus, resultGeneralMenus, resultMenuSets] = await Promise.all([
           includeFoods
-            ? searchFoodResults(query, { limit: 20, category })
+            ? searchFoodResults(query, {
+              limit: 20,
+              category,
+              mealType: searchPurpose === 'meal' ? (recordingMealType ?? mealType) : undefined,
+            })
             : Promise.resolve({ page: { results: [], normalizedQuery: normalizeSearchText(query), nextCursor: null }, logId: null }),
           includeMenus ? searchMenus(query) : Promise.resolve([]),
           includeMenus ? searchGeneralMenus(query) : Promise.resolve([]),
           includeMenus ? searchMenuSets(query) : Promise.resolve([]),
         ])
-        const allUserResults = (category === 'all' || category === 'general') && query ? searchUserFoodGroups(query, { expandPartShortcuts: true }) : []
-        const coveredFoodGroupIds = new Set(allUserResults.flatMap((result) => result.group.memberFoodGroupIds))
-        const userItems: SearchResultItem[] = allUserResults.slice(0, 20).flatMap((result, index) => {
-          const previewGroupId = result.foodGroupId ?? result.group.defaultFoodGroupId ?? result.group.memberFoodGroupIds[0]
-          const preview = previewGroupId ? buildMextFoodSearchResult(previewGroupId, foods, foodGroups, result.score) : null
-          if (!preview) return []
-          const selectedLabel = selectedUserFoodLabel(result)
-          return [{
-            id: result.foodGroupId ? `${result.group.id}:${result.foodGroupId}` : result.group.id,
-            kind: 'user-food' as const,
-            title: selectedLabel ?? result.group.displayName,
-            subtitle: selectedLabel
-              ? `${result.group.displayName} > ${selectedUserFoodDimensionLabel(result) ?? '種類'} · ${result.group.category} · ${foodListNutritionLabel(preview.food)}`
-              : `${result.group.category} · ${result.group.memberCount > 1 ? `${result.group.memberCount}種類` : foodListNutritionLabel(preview.food)}`,
-            food: preview.food,
-            group: preview.group,
-            variants: preview.variants,
-            score: result.score,
-            matchedBy: 'user-food-group',
-            recentlyUsed: false,
-            searchLogId: logId,
-            searchRank: index + 1,
-            userFoodResult: result,
-          }]
-        })
+        const foodItems = page.results.map((result, index) => unifiedFoodSearchItem(result, logId, index + 1))
         const items: SearchResultItem[] = [
-          ...userItems,
-          ...page.results.filter((result) => !coveredFoodGroupIds.has(result.group.id)).map((result, index) => ({ id: result.group.id, kind: 'food' as const, title: displaySearchFoodName(result.group, result.food), subtitle: `${result.group.category ?? '食品'} · ${result.variants.length > 1 ? `${result.variants.length}バリエーション · ${foodListNutritionLabel(result.food, false)}` : foodListNutritionLabel(result.food)}`, food: result.food, group: result.group, variants: result.variants, score: result.score, matchedBy: result.matchedBy, recentlyUsed: result.recentlyUsed, searchLogId: logId, searchRank: userItems.length + index + 1 })),
+          ...foodItems,
           ...resultMenus.map((menu) => ({ id: menu.id, kind: 'menu' as const, title: menu.name, subtitle: `Myメニュー · ${menu.category} · 食材: ${menuIngredientNames(menu, menus, foods) || '未登録'}`, food: menuToFood(menu, menus, foods), group: null, variants: [] as Food[], score: null, matchedBy: null, recentlyUsed: false, searchLogId: null, searchRank: null })),
           ...resultGeneralMenus.map((menu) => ({ id: menu.id, kind: 'general-menu' as const, title: menu.name, subtitle: `一般メニュー · ${menu.category} · 食材: ${menuIngredientNames(menu, [menu, ...menus], foods) || '未登録'}`, food: generalMenuToFood(menu, menus, foods), group: null, variants: [] as Food[], score: null, matchedBy: null, recentlyUsed: false, searchLogId: null, searchRank: null })),
           ...resultMenuSets.map((menuSet) => ({ id: menuSet.id, kind: 'set' as const, title: menuSet.name, subtitle: `Myセット · 内容${menuSet.menuIds.length + (menuSet.generalMenuIds?.length ?? 0) + getMenuSetFoodItems(menuSet, foods).length}件を一括登録`, food: menuSetPreviewFood(menuSet, menus, generalMenus, foods), group: null, variants: [] as Food[], score: null, matchedBy: null, recentlyUsed: false, searchLogId: null, searchRank: null })),
@@ -1174,24 +1166,34 @@ function App() {
     const requestedCategory = searchCategory
     try {
       const actualQuery = group.query === '最近・お気に入り' ? '' : group.query
-      const { page, logId } = await searchFoodResults(actualQuery, { limit: 20, cursor: group.nextCursor, category: requestedCategory })
+      const { page, logId } = await searchFoodResults(actualQuery, {
+        limit: 20,
+        cursor: group.nextCursor,
+        category: requestedCategory,
+        mealType: searchPurpose === 'meal' ? (recordingMealType ?? mealType) : undefined,
+      })
       if (requestId !== searchRequestIdRef.current) return
-      const coveredFoodGroupIds = new Set(((requestedCategory === 'all' || requestedCategory === 'general') && actualQuery ? searchUserFoodGroups(actualQuery, { expandPartShortcuts: true }) : []).flatMap((result) => result.group.memberFoodGroupIds))
-      const additionalItems: SearchResultItem[] = page.results.filter((result) => !coveredFoodGroupIds.has(result.group.id)).map((result, resultIndex) => ({
-        id: result.group.id, kind: 'food', title: displaySearchFoodName(result.group, result.food), subtitle: `${result.group.category ?? '食品'} · ${result.variants.length > 1 ? `${result.variants.length}バリエーション · ${foodListNutritionLabel(result.food, false)}` : foodListNutritionLabel(result.food)}`, food: result.food, group: result.group, variants: result.variants, score: result.score, matchedBy: result.matchedBy, recentlyUsed: result.recentlyUsed, searchLogId: logId, searchRank: group.items.length + resultIndex + 1,
-      }))
+      const firstAdditionalRank = nextFoodSearchRank(group.items, logId)
+      const additionalItems = page.results.map((result, resultIndex) => unifiedFoodSearchItem(result, logId, firstAdditionalRank + resultIndex))
       setSearchResults((current) => current.map((item, index) => index === groupIndex ? { ...item, items: [...item.items, ...additionalItems], nextCursor: page.nextCursor } : item))
     } catch { showError('検索結果を追加で読み込めませんでした。') }
   }
 
   const selectSearchFood = (groupQuery: string, item: SearchResultItem, food: Food, amount?: string) => {
-    if (item.searchLogId && item.group) void recordFoodSelection(item.searchLogId, food.foodGroupId ?? item.group.id, food.id, item.searchRank ?? 0)
     if (searchPurpose === 'food-master') {
       setPendingSearchQuery(null)
+      setPendingMealUsageSearch(null)
       openFoodForm(food, '', 'search-results', null, null, '', 'settings')
       return
     }
     setPendingSearchQuery(groupQuery)
+    setPendingMealUsageSearch(item.searchLogId && item.group ? {
+      logId: item.searchLogId,
+      foodGroupId: food.foodGroupId ?? item.group.id,
+      foodVariantId: food.id,
+      rank: item.searchRank ?? 0,
+      normalizedQuery: normalizeSearchText(groupQuery),
+    } : null)
     openMealForm(food, undefined, recordingMealType ?? mealType, getSearchResultUserFacingName(item))
     if (amount !== undefined) setMealAmount(amount)
   }
@@ -1230,7 +1232,7 @@ function App() {
     }
     if (item.kind === 'user-food' && item.userFoodResult) {
       if (item.userFoodResult.group.selectionDimensions.length > 0
-        && Object.keys(item.userFoodResult.presetSelection).length === 0) {
+        || Object.keys(item.userFoodResult.attributeSelection ?? {}).length > 0) {
         openUserFoodPicker(groupQuery, item, item.userFoodResult)
         return
       }
@@ -1682,7 +1684,16 @@ function App() {
       {view === 'today' && <button className="floating-add" type="button" onClick={openMealTypePicker} aria-label="食事を追加">＋</button>}
 
       {mealTypePicker && <MealTypePickerModal food={mealTypePicker.food} recordedMealTypes={recordedMealTypes} onSelect={chooseMealType} />}
-      {variantPicker && <FoodVariantPickerModal result={variantPicker.result} userFoodResult={variantPicker.userFoodResult} foods={foods} foodGroups={foodGroups} foodAttributePreferences={settings.foodAttributePreferences} onSaveFoodAttributePreference={saveFoodAttributePreference} mealMode={searchPurpose === 'meal'} onSubmitMeal={async (food, amount, amountUnit) => { if (await saveMealRecord(food, amount, amountUnit, null, null, getSearchResultUserFacingName(variantPicker.item), variantPicker.query)) setVariantPicker(null) }} onSelect={(food) => { setVariantPicker(null); selectSearchFood(variantPicker.query, variantPicker.item, food) }} onClose={() => setVariantPicker(null)} />}
+      {variantPicker && <FoodVariantPickerModal result={variantPicker.result} userFoodResult={variantPicker.userFoodResult} foods={foods} foodGroups={foodGroups} foodAttributePreferences={settings.foodAttributePreferences} onSaveFoodAttributePreference={saveFoodAttributePreference} mealMode={searchPurpose === 'meal'} onSubmitMeal={async (food, amount, amountUnit) => {
+        const searchContext = variantPicker.item.searchLogId && variantPicker.item.group ? {
+          logId: variantPicker.item.searchLogId,
+          foodGroupId: food.foodGroupId ?? variantPicker.item.group.id,
+          foodVariantId: food.id,
+          rank: variantPicker.item.searchRank ?? 0,
+          normalizedQuery: normalizeSearchText(variantPicker.query),
+        } satisfies MealUsageSearchContext : null
+        if (await saveMealRecord(food, amount, amountUnit, null, null, getSearchResultUserFacingName(variantPicker.item), variantPicker.query, searchContext)) setVariantPicker(null)
+      }} onSelect={(food) => { setVariantPicker(null); selectSearchFood(variantPicker.query, variantPicker.item, food) }} onClose={() => { setPendingMealUsageSearch(null); setVariantPicker(null) }} />}
       {mealVariantEdit && <FoodVariantPickerModal
         result={mealVariantEdit.result}
         userFoodResult={mealVariantEdit.userFoodResult}
@@ -1699,7 +1710,7 @@ function App() {
         onSelect={() => undefined}
         onClose={() => setMealVariantEdit(null)}
       />}
-      {mealFood && <MealModal food={mealFood} amount={mealAmount} setAmount={setMealAmount} amountUnit={mealAmountUnit} setAmountUnit={setMealAmountUnit} menuSnapshot={mealMenuSnapshot} setMenuSnapshot={setMealMenuSnapshot} menus={menus} foods={foods} foodGroups={foodGroups} recentFoods={recentFoods} favoriteFoods={favoriteFoods} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} foodAttributePreferences={settings.foodAttributePreferences} onSaveFoodAttributePreference={saveFoodAttributePreference} editing={Boolean(editingEntry)} onSubmit={saveMeal} onClose={() => { setMealFood(null); setMealUserFacingName(null); setEditingEntry(null); setMealMenuSnapshot(null) }} />}
+      {mealFood && <MealModal food={mealFood} amount={mealAmount} setAmount={setMealAmount} amountUnit={mealAmountUnit} setAmountUnit={setMealAmountUnit} menuSnapshot={mealMenuSnapshot} setMenuSnapshot={setMealMenuSnapshot} menus={menus} foods={foods} foodGroups={foodGroups} recentFoods={recentFoods} favoriteFoods={favoriteFoods} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} foodAttributePreferences={settings.foodAttributePreferences} onSaveFoodAttributePreference={saveFoodAttributePreference} editing={Boolean(editingEntry)} onSubmit={saveMeal} onClose={() => { setPendingMealUsageSearch(null); setMealFood(null); setMealUserFacingName(null); setEditingEntry(null); setMealMenuSnapshot(null) }} />}
       {mealDetails && <MealDetailsModal details={mealDetails} goals={mealDetailNutritionGoals(settings.goals, mealDetails.type)} onUpdateTimes={updateMealTimes} onClose={() => setMealDetails(null)} />}
       {showTodayDetails && <TodayDetailsModal selectedDate={selectedDate} goals={settings.goals} entries={entries} onClose={() => setShowTodayDetails(false)} />}
       {menuNutritionDetails && <MenuNutritionDetailsModal menu={menuNutritionDetails} menus={menus} foods={foods} goals={scaleNutritionGoals(settings.goals, 1 / 3)} onClose={() => setMenuNutritionDetails(null)} />}

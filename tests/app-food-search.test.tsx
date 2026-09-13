@@ -106,6 +106,37 @@ it('検索0件から食品を新規登録して食事保存した後も未選択
   expect(host.querySelector('.meal-confirmation-heading h1')?.textContent).toBe('朝食の確認')
 })
 
+it('検索から新規食事を保存できた時だけ検索文脈付きの利用実績にする', async () => {
+  await startBreakfastAddition()
+  await act(async () => screens.foods!.onOpenSearch!())
+  await act(async () => screens.input!.setBars(['テスト専用食品']))
+  await act(async () => { screens.input!.onSearch(); await new Promise((resolve) => setTimeout(resolve, 30)) })
+  const result = screens.results!.groups[0]
+  expect(result.items).toHaveLength(1)
+  await act(async () => screens.results!.onSelect(result.query, result.items[0]))
+  expect((await db.mealEntries.toArray())).toHaveLength(0)
+
+  await submitMeal()
+
+  const saved = (await db.mealEntries.toArray())[0]
+  expect(saved.usageEvidence).toMatchObject({
+    version: 1,
+    kind: 'direct-food',
+    entryPoint: 'search',
+    search: {
+      foodGroupId: 'test-group',
+      foodVariantId: 'test-food',
+      rank: 1,
+    },
+  })
+  expect(await db.searchLogs.get(saved.usageEvidence!.search!.logId)).toMatchObject({
+    selectedFoodGroupId: 'test-group',
+    selectedFoodVariantId: 'test-food',
+    selectedRank: 1,
+    savedAt: saved.usageEvidence!.savedAt,
+  })
+})
+
 it('手動familyの既存食事は登録時の属性と分量を開き、属性変更で同じ記録を更新する', async () => {
   await act(async () => root.unmount())
   const first = (await db.foods.get('test-food'))!

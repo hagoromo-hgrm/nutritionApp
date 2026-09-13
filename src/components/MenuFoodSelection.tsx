@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react'
 import { searchFoodResults } from '../db/db'
 import { foodMatchesSearchCategory } from '../services/foodClassification'
-import { normalizeSearchText, type FoodSearchResult } from '../services/foodSearch'
+import { normalizeSearchText } from '../services/foodSearch'
 import { wouldCreateMenuCycle } from '../services/menuIngredients'
 import {
   MissingRequiredUserSelection,
   resolveFoodGroupId,
-  searchUserFoodGroups,
   type UserFoodSearchResult,
 } from '../services/mextUserFoodData'
+import type { UnifiedFoodSearchResult } from '../services/unifiedFoodSearch'
 import { getFoodDefaultServing, getFoodQuantityUnits } from '../services/nutrition'
 import {
   type Food,
@@ -83,10 +83,7 @@ export function MenuFoodSelection({ selectedIds, selectedIngredients, selectedMe
   const [foodQuery, setFoodQuery] = useState('')
   const [searchedQuery, setSearchedQuery] = useState('')
   const [foodCategory, setFoodCategory] = useState<'all' | 'commercial'>('all')
-  const [userSearchResults, setUserSearchResults] = useState<UserFoodSearchResult[]>([])
-  const [userSearchResultOffset, setUserSearchResultOffset] = useState(0)
-  const [userSearchResultTotal, setUserSearchResultTotal] = useState(0)
-  const [searchResults, setSearchResults] = useState<FoodSearchResult[]>([])
+  const [searchResults, setSearchResults] = useState<UnifiedFoodSearchResult[]>([])
   const [searchNextCursor, setSearchNextCursor] = useState<string | null>(null)
   const [searching, setSearching] = useState(false)
   const [loadingMoreSearchResults, setLoadingMoreSearchResults] = useState(false)
@@ -115,9 +112,6 @@ export function MenuFoodSelection({ selectedIds, selectedIngredients, selectedMe
 
   const resetSearchResults = () => {
     setSearchedQuery('')
-    setUserSearchResults([])
-    setUserSearchResultOffset(0)
-    setUserSearchResultTotal(0)
     setSearchResults([])
     setSearchNextCursor(null)
   }
@@ -149,17 +143,11 @@ export function MenuFoodSelection({ selectedIds, selectedIngredients, selectedMe
     setSearching(true)
     try {
       const requestedCategory = allowFoodCategoryFilter ? foodCategory : 'all'
-      const allUserResults = requestedCategory === 'all' ? searchUserFoodGroups(query, { expandPartShortcuts: true }) : []
-      const coveredFoodGroupIds = new Set(allUserResults.flatMap((result) => result.group.memberFoodGroupIds))
-      const { page } = await searchFoodResults(query, { limit: MENU_FOOD_SEARCH_PAGE_SIZE, category: requestedCategory })
-      setUserSearchResults(allUserResults.slice(0, MENU_FOOD_SEARCH_PAGE_SIZE))
-      setUserSearchResultOffset(Math.min(MENU_FOOD_SEARCH_PAGE_SIZE, allUserResults.length))
-      setUserSearchResultTotal(allUserResults.length)
-      setSearchResults(requestedCategory === 'commercial' ? page.results : page.results.filter((result) => !coveredFoodGroupIds.has(result.group.id)))
+      const { page } = await searchFoodResults(query, { limit: MENU_FOOD_SEARCH_PAGE_SIZE, category: requestedCategory, log: false })
+      setSearchResults(page.results)
       setSearchNextCursor(page.nextCursor)
       setSearchedQuery(normalizeSearchText(query))
     } catch {
-      setUserSearchResults([])
       setSearchResults([])
       setSearchedQuery(normalizeSearchText(query))
     } finally {
@@ -168,8 +156,12 @@ export function MenuFoodSelection({ selectedIds, selectedIngredients, selectedMe
   }
 
   const showSearchResults = normalizedQuery.length > 0 && searchedQuery === normalizedQuery
-  const canLoadMoreSearchResults = userSearchResultOffset < userSearchResultTotal || searchNextCursor !== null
-  const chooseSearchResult = (result: FoodSearchResult) => {
+  const canLoadMoreSearchResults = searchNextCursor !== null
+  const chooseSearchResult = (result: UnifiedFoodSearchResult) => {
+    if (result.userFoodResult) {
+      chooseUserSearchResult(result.userFoodResult)
+      return
+    }
     if (result.variants.length > 1) setVariantResult({ result })
     else startFoodAdd(result.food)
   }
@@ -177,11 +169,12 @@ export function MenuFoodSelection({ selectedIds, selectedIngredients, selectedMe
   const chooseResolvedFoodGroup = (foodGroupId: string) => {
     const result = buildMextFoodSearchResult(foodGroupId, foods, foodGroups)
     if (!result) return
-    chooseSearchResult(result)
+    if (result.variants.length > 1) setVariantResult({ result })
+    else startFoodAdd(result.food)
   }
 
   const chooseUserSearchResult = (result: UserFoodSearchResult) => {
-    if (result.group.selectionDimensions.length > 0 && Object.keys(result.presetSelection).length === 0) {
+    if (result.group.selectionDimensions.length > 0 || Object.keys(result.attributeSelection ?? {}).length > 0) {
       setVariantResult({ result: null, userFoodResult: result })
       return
     }
@@ -201,20 +194,13 @@ export function MenuFoodSelection({ selectedIds, selectedIngredients, selectedMe
     try {
       const query = foodQuery.trim()
       const requestedCategory = allowFoodCategoryFilter ? foodCategory : 'all'
-      const allUserResults = requestedCategory === 'all' ? searchUserFoodGroups(query, { expandPartShortcuts: true }) : []
-      const additionalUserResults = allUserResults.slice(userSearchResultOffset, userSearchResultOffset + MENU_FOOD_SEARCH_PAGE_SIZE)
-      const nextUserOffset = Math.min(userSearchResultOffset + MENU_FOOD_SEARCH_PAGE_SIZE, allUserResults.length)
-      let additionalSearchResults: FoodSearchResult[] = []
-      let nextCursor = searchNextCursor
+      let additionalSearchResults: UnifiedFoodSearchResult[] = []
+      let nextCursor: string | null = searchNextCursor
       if (searchNextCursor !== null) {
-        const coveredFoodGroupIds = new Set(allUserResults.flatMap((result) => result.group.memberFoodGroupIds))
-        const { page } = await searchFoodResults(query, { limit: MENU_FOOD_SEARCH_PAGE_SIZE, cursor: searchNextCursor, category: requestedCategory })
-        additionalSearchResults = requestedCategory === 'commercial' ? page.results : page.results.filter((result) => !coveredFoodGroupIds.has(result.group.id))
+        const { page } = await searchFoodResults(query, { limit: MENU_FOOD_SEARCH_PAGE_SIZE, cursor: searchNextCursor, category: requestedCategory, log: false })
+        additionalSearchResults = page.results
         nextCursor = page.nextCursor
       }
-      setUserSearchResults((current) => [...current, ...additionalUserResults])
-      setUserSearchResultOffset(nextUserOffset)
-      setUserSearchResultTotal(allUserResults.length)
       setSearchResults((current) => [...current, ...additionalSearchResults])
       setSearchNextCursor(nextCursor)
     } catch {
@@ -246,8 +232,8 @@ export function MenuFoodSelection({ selectedIds, selectedIngredients, selectedMe
             <>
               <div className="menu-food-section-heading"><span className="eyebrow">SEARCH RESULTS</span><h4>検索結果：{foodQuery.trim()}</h4></div>
               <div className="menu-food-search-results">
-                {userSearchResults.length > 0 || searchResults.length > 0 || (onAddMenu && matchingMenus.length > 0) || (onAddGeneralMenu && matchingGeneralMenus.length > 0)
-                  ? <>{onAddMenu && matchingMenus.map((menu) => <button className="menu-food-search-result" type="button" key={`menu:${menu.id}`} disabled={selectedIngredientKeys.has(`menu:${menu.id}`)} onClick={() => onAddMenu(menu)}><span className="source-badge">My</span><span><strong>{menu.name}</strong><small>{menu.category} · 1食単位</small></span><b>{selectedIngredientKeys.has(`menu:${menu.id}`) ? '追加済み' : '›'}</b></button>)}{onAddGeneralMenu && matchingGeneralMenus.map((menu) => <button className="menu-food-search-result" type="button" key={`general-menu:${menu.id}`} disabled={selectedIngredientKeys.has(`general-menu:${menu.id}`)} onClick={() => onAddGeneralMenu(menu)}><span className="source-badge">一般</span><span><strong>{menu.name}</strong><small>{menu.category} · 1食単位</small></span><b>{selectedIngredientKeys.has(`general-menu:${menu.id}`) ? '追加済み' : '›'}</b></button>)}{userSearchResults.map((result) => { const label = selectedUserFoodLabel(result); return <button className="menu-food-search-result" type="button" key={`user:${result.group.id}:${result.foodGroupId ?? 'group'}`} onClick={() => chooseUserSearchResult(result)}><span className="source-badge">食品</span><span><strong>{label ?? result.group.displayName}</strong><small>{label ? `${result.group.displayName} > ${selectedUserFoodDimensionLabel(result) ?? '種類'}` : `${result.group.category} · ${result.group.memberCount > 1 ? `${result.group.memberCount}種類` : '直接選択'}`}</small></span><b>›</b></button> })}{searchResults.map((result) => { const selected = result.variants.length === 1 && selectedIngredientKeys.has(`food:${result.food.id}`); return <button className="menu-food-search-result" type="button" key={result.group.id} disabled={selected} onClick={() => chooseSearchResult(result)}><span className="source-badge">食品</span><span><strong>{displaySearchFoodName(result.group, result.food)}</strong><small>{result.group.category ?? '食品'} · {result.variants.length > 1 ? `${result.variants.length}バリエーション · ${foodListNutritionLabel(result.food, false)}` : foodListNutritionLabel(result.food)}</small></span><b>{selected ? '追加済み' : '›'}</b></button> })}</>
+                {searchResults.length > 0 || (onAddMenu && matchingMenus.length > 0) || (onAddGeneralMenu && matchingGeneralMenus.length > 0)
+                  ? <>{onAddMenu && matchingMenus.map((menu) => <button className="menu-food-search-result" type="button" key={`menu:${menu.id}`} disabled={selectedIngredientKeys.has(`menu:${menu.id}`)} onClick={() => onAddMenu(menu)}><span className="source-badge">My</span><span><strong>{menu.name}</strong><small>{menu.category} · 1食単位</small></span><b>{selectedIngredientKeys.has(`menu:${menu.id}`) ? '追加済み' : '›'}</b></button>)}{onAddGeneralMenu && matchingGeneralMenus.map((menu) => <button className="menu-food-search-result" type="button" key={`general-menu:${menu.id}`} disabled={selectedIngredientKeys.has(`general-menu:${menu.id}`)} onClick={() => onAddGeneralMenu(menu)}><span className="source-badge">一般</span><span><strong>{menu.name}</strong><small>{menu.category} · 1食単位</small></span><b>{selectedIngredientKeys.has(`general-menu:${menu.id}`) ? '追加済み' : '›'}</b></button>)}{searchResults.map((result) => { const userResult = result.userFoodResult; const label = userResult ? selectedUserFoodLabel(userResult) : null; const selected = !userResult && result.variants.length === 1 && selectedIngredientKeys.has(`food:${result.food.id}`); return <button className="menu-food-search-result" type="button" key={result.candidateKey} disabled={selected} onClick={() => chooseSearchResult(result)}><span className="source-badge">食品</span><span><strong>{userResult ? (label ?? userResult.group.displayName) : displaySearchFoodName(result.group, result.food)}</strong><small>{userResult ? (label ? `${userResult.group.displayName} > ${selectedUserFoodDimensionLabel(userResult) ?? '種類'}` : `${userResult.group.category} · ${userResult.group.memberCount > 1 ? `${userResult.group.memberCount}種類` : '直接選択'}`) : `${result.group.category ?? '食品'} · ${result.variants.length > 1 ? `${result.variants.length}バリエーション · ${foodListNutritionLabel(result.food, false)}` : foodListNutritionLabel(result.food)}`}</small></span><b>{selected ? '追加済み' : '›'}</b></button> })}</>
                   : <p className="menu-food-empty">検索に一致する食品・メニューがありません。</p>}
               </div>
               {canLoadMoreSearchResults && <button className="button ghost menu-food-load-more" type="button" onClick={() => void loadMoreSearchResults()} disabled={loadingMoreSearchResults}>{loadingMoreSearchResults ? '読み込み中…' : 'さらに表示'}</button>}

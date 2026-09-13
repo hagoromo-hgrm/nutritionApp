@@ -69,6 +69,46 @@ describe('export formats', () => {
     expect(() => validateBackup({ ...v3, weightRecords: undefined })).toThrow('体重履歴')
   })
 
+  it('v4バックアップは直接食品の保存証跡と再構築済み利用統計を検証する', () => {
+    const usageEntry: MealEntry = {
+      ...entry,
+      registeredAt: '2026-07-15T03:00:00.000Z',
+      usageEvidence: {
+        version: 1,
+        kind: 'direct-food',
+        savedAt: '2026-07-15T03:00:00.000Z',
+        entryPoint: 'search',
+        search: { logId: 'search_1', foodGroupId: 'group_1', foodVariantId: entry.foodId, rank: 1, normalizedQuery: '米' },
+      },
+    }
+    const v4: BackupData = {
+      ...backup,
+      dataFormatVersion: 4,
+      mealEntries: [usageEntry],
+      settings: { ...backup.settings, dataFormatVersion: 4 },
+      weightRecords: [],
+      foodUsageStats: [{
+        foodId: entry.foodId,
+        selectionCount: 1,
+        lastSelectedAt: '2026-07-15T03:00:00.000Z',
+        distinctUsageDays: 1,
+        mealTypeCounts: { 朝食: 1, 昼食: 0, 夕食: 0, 間食: 0 },
+        updatedAt: '2026-07-15T04:00:00.000Z',
+      }],
+      estimationDataFormatVersion: 1,
+      estimationSettings: { ...DEFAULT_ESTIMATION_SETTINGS, updatedAt: '2026-07-15T00:00:00.000Z' },
+      estimationRequests: [], estimationResults: [], estimationDecisions: [],
+    }
+    expect(parseBackupText(backupToJson(v4)).mealEntries[0].usageEvidence).toEqual(usageEntry.usageEvidence)
+    expect(validateBackup({
+      ...v4,
+      mealEntries: [{ ...usageEntry, foodId: 'food_edited_after_search' }],
+    }).mealEntries[0].foodId).toBe('food_edited_after_search')
+    expect(() => validateBackup({ ...v4, mealEntries: [{ ...usageEntry, usageEvidence: { ...usageEntry.usageEvidence!, savedAt: 'invalid' } }] })).toThrow('食事記録')
+    expect(() => validateBackup({ ...v4, mealEntries: [{ ...menuEntry, usageEvidence: usageEntry.usageEvidence }] })).toThrow('食事記録')
+    expect(() => validateBackup({ ...v4, foodUsageStats: [{ ...v4.foodUsageStats![0], distinctUsageDays: -1 }] })).toThrow('利用統計')
+  })
+
   it('このPWAで出力したCSVから食事スナップショットを復元できる', () => {
     const orderedEntry = {
       ...entry,

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { normalizeSearchText, searchFoodResults } from '../src/services/foodSearch'
+import { normalizeSearchText, scoreFoodPersonalization, searchFoodResults } from '../src/services/foodSearch'
+import { compareSearchCandidates, parseSearchText } from '../src/services/searchText'
 import { resolveBarcodeCommercialFlag, resolveFoodGroupDisplayName } from '../src/services/foodDraft'
 import { FOOD_MASTER_SEARCH_CATEGORIES, MEAL_SEARCH_CATEGORIES, foodMatchesSearchCategory, foodSearchCategoryIncludesFoods, foodSearchCategoryIncludesMenus, isCommercialFood } from '../src/services/foodClassification'
 import type { Food, FoodAlias, FoodGroup, FoodRelatedTerm, FoodUsageStat } from '../src/types'
@@ -15,6 +16,14 @@ describe('local food search', () => {
     const barcodeFood = { ...food('barcode-food', 'バーコード食品', 'barcode'), barcode: '4901234567890' }
     const result = searchFoodResults('4901234567890', { foods: [barcodeFood], groups: [group('barcode', 'バーコード食品', 'barcode-food')], aliases: [], relatedTerms: [], usageStats: [] })
     expect(result.results).toHaveLength(0)
+  })
+
+  it('共通正規化で語境界を保持しつつ比較用の連結形も返す', () => {
+    expect(parseSearchText(' 明治・ヨーグルト ＡＢＣ ')).toEqual({
+      normalized: '明治 よーぐると abc',
+      compact: '明治よーぐるとabc',
+      tokens: ['明治', 'よーぐると', 'abc'],
+    })
   })
 
   it('別名と関連語を分け、別名を関連語より上位にする', () => {
@@ -33,6 +42,47 @@ describe('local food search', () => {
     expect(result.results).toHaveLength(1)
     expect(result.results[0].food.id).toBe(product.id)
     expect(result.results[0].matchedBy).toBe('maker-exact')
+  })
+
+  it('複数語をメーカー・名称にまたがってAND検索する', () => {
+    const matching = { ...food('matching', 'プレーンヨーグルト', 'matching'), maker: '明治' }
+    const makerOnly = { ...food('maker-only', '牛乳', 'maker-only'), maker: '明治' }
+    const nameOnly = { ...food('name-only', 'ヨーグルト', 'name-only'), maker: '別会社' }
+    const result = searchFoodResults('明治 ヨーグルト', {
+      foods: [matching, makerOnly, nameOnly],
+      groups: [
+        group('matching', 'プレーンヨーグルト', 'matching'),
+        group('maker-only', '牛乳', 'maker-only'),
+        group('name-only', 'ヨーグルト', 'name-only'),
+      ],
+      aliases: [], relatedTerms: [], usageStats: [],
+    })
+    expect(result.results.map((item) => item.food.id)).toEqual(['matching'])
+    expect(result.results[0].matchedBy).toMatch(/^multi-/)
+    expect(result.results[0].relevance).toBeDefined()
+  })
+
+  it('強い関連性を利用頻度の高い弱い一致が追い越さない', () => {
+    const exact = food('exact', '牛乳', 'exact')
+    const partial = food('partial', '低脂肪牛乳', 'partial')
+    const usageStats: FoodUsageStat[] = [{ foodId: 'partial', selectionCount: 10_000, lastSelectedAt: '2026-07-15T00:00:00Z', updatedAt: '2026-07-15T00:00:00Z' }]
+    const result = searchFoodResults('牛乳', {
+      foods: [partial, exact],
+      groups: [group('partial', '低脂肪牛乳', 'partial'), group('exact', '牛乳', 'exact')],
+      aliases: [], relatedTerms: [], usageStats,
+    }, { now: new Date('2026-07-15T00:00:00Z') })
+    expect(result.results.map((item) => item.food.id)).toEqual(['exact', 'partial'])
+    expect(compareSearchCandidates(result.results[0], result.results[1])).toBeLessThan(0)
+  })
+
+  it('variant限定別名を他variantへ適用せず、一致variantをプレビューする', () => {
+    const defaultVariant = { ...food('default', '既定商品', 'products'), maker: 'メーカーA' }
+    const aliasedVariant = { ...food('aliased', '別商品', 'products'), maker: 'メーカーB' }
+    const aliases: FoodAlias[] = [{ id: 'variant-alias', foodGroupId: 'products', foodVariantId: 'aliased', alias: '特別ヨーグルト', normalizedAlias: '特別よーぐると', aliasType: 'synonym', priority: 100, isActive: true, metadataSource: 'manual' }]
+    const data = { foods: [defaultVariant, aliasedVariant], groups: [group('products', '商品', 'default')], aliases, relatedTerms: [], usageStats: [] }
+
+    expect(searchFoodResults('特別ヨーグルト', data).results[0].food.id).toBe('aliased')
+    expect(searchFoodResults('メーカーA 特別ヨーグルト', data).results).toHaveLength(0)
   })
 
   it('バーコード導線から保存する食品は外食・市販の明示分類を有効にする', () => {
@@ -62,6 +112,38 @@ describe('local food search', () => {
     const result = searchFoodResults('食品', { foods, groups: [group('a', '食品A', 'a'), group('b', '食品B', 'b')], aliases: [], relatedTerms: [], usageStats }, { now: new Date('2026-07-15T00:00:00Z') })
     expect(result.results[0].food.id).toBe('b')
     expect(result.results[0].recentlyUsed).toBe(true)
+  })
+
+  it('同じ関連性では頻度と新しさの個人加点合計で順位を決める', () => {
+    const foods = [food('recent', '食品A', 'recent'), food('frequent-old', '食品B', 'frequent-old')]
+    const usageStats: FoodUsageStat[] = [
+      { foodId: 'recent', selectionCount: 1, lastSelectedAt: '2026-07-15T00:00:00Z', updatedAt: '2026-07-15T00:00:00Z' },
+      { foodId: 'frequent-old', selectionCount: 2, lastSelectedAt: '2026-01-16T00:00:00Z', updatedAt: '2026-01-16T00:00:00Z' },
+    ]
+    const result = searchFoodResults('食品', {
+      foods,
+      groups: [group('recent', '食品A', 'recent'), group('frequent-old', '食品B', 'frequent-old')],
+      aliases: [], relatedTerms: [], usageStats,
+    }, { now: new Date('2026-07-15T00:00:00Z') })
+
+    expect(result.results.map((item) => item.food.id)).toEqual(['recent', 'frequent-old'])
+  })
+
+  it('統合側で頻度・新しさ・食事区分・お気に入りを再利用できる', () => {
+    const stat: FoodUsageStat = {
+      foodId: 'breakfast',
+      selectionCount: 8,
+      distinctUsageDays: 4,
+      mealTypeCounts: { 朝食: 6, 昼食: 1, 夕食: 1, 間食: 0 },
+      lastSelectedAt: '2026-07-15T00:00:00Z',
+      updatedAt: '2026-07-15T00:00:00Z',
+    }
+    const breakfast = scoreFoodPersonalization(stat, true, new Date('2026-07-15T00:00:00Z'), '朝食')
+    const snack = scoreFoodPersonalization(stat, false, new Date('2026-07-15T00:00:00Z'), '間食')
+    expect(breakfast.mealType).toBeGreaterThan(snack.mealType)
+    expect(breakfast.favorite).toBe(2)
+    expect(breakfast.recentlyUsed).toBe(true)
+    expect(breakfast.total).toBeLessThanOrEqual(25)
   })
 
   it('明示指定またはJANを持つ食品を外食・市販として判定する', () => {
