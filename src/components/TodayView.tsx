@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { getEntriesBetween } from '../db/db'
 import { getMealEntryDisplayName, isMealEntryDeleted } from '../services/mealEntryDisplay'
+import { averageNutritionGoalsForPeriod } from '../services/goalHistory'
 import { formatNutrient, nutrientRangeForGoals, sumAvailableNutrients } from '../services/nutrition'
 import {
   buildTodayDetailSummary,
@@ -15,6 +16,7 @@ import {
   type MealType,
   type Nutrients,
   type NutritionGoals,
+  type NutritionGoalRecord,
 } from '../types'
 import { addDays, currentDateKey, formatTime } from '../utils/date'
 import { MEAL_ICON_ASSETS } from './mealPresentation'
@@ -218,7 +220,7 @@ export function MealConfirmationView({ type, entries, subtotal, onAdd, onEdit, o
   const draggedEntry = draggedEntryId ? orderedEntries.find((entry) => entry.id === draggedEntryId) : null
 
   return <>
-    <section className="page-heading meal-confirmation-heading"><div><span className="eyebrow">MEAL CONFIRMATION</span><h1>{type}の確認</h1></div><button className="button ghost" type="button" onClick={onDone}>記録へ</button></section>
+    <section className="page-heading meal-confirmation-heading"><div><span className="eyebrow">MEAL CONFIRMATION</span><h1>{type}の確認</h1></div></section>
     <section className="settings-card meal-confirmation-card">
       <div className="meal-confirmation-summary"><div><img className="meal-icon" src={MEAL_ICON_ASSETS[type]} alt="" aria-hidden="true" /><span>{type}</span></div><strong>{entries.length}件 · {formatNutrient(subtotal.energyKcal)} kcal</strong></div>
       {orderedEntries.length > 0 ? <div ref={listRef} className={`meal-confirmation-list${draggedEntryId ? ' is-reordering' : ''}`}>{orderedEntries.map((entry) => { const entryName = getMealEntryDisplayName(entry); return <div className={`meal-confirmation-entry${draggedEntryId === entry.id ? ' is-drag-placeholder' : ''}`} key={entry.id} data-meal-entry-id={entry.id}><button className="meal-order-handle" type="button" aria-label={`${entryName}をドラッグして並び替え`} disabled={savingOrder || orderedEntries.length < 2} onPointerDown={(event) => startDrag(event, entry.id)} onPointerUp={(event) => finishDragRef.current(event.pointerId, true)} onPointerCancel={(event) => finishDragRef.current(event.pointerId, false)}>≡</button><div className="meal-confirmation-entry-copy"><strong>{entryName}{entry.foodSnapshot.maker ? `（${entry.foodSnapshot.maker}）` : ''}</strong><span>{entry.amount}{entry.amountUnit}{type === '間食' ? ` · ${formatTime(entry.eatenAt)}` : ''}</span></div><b>{formatNutrient(entry.calculatedNutrients.energyKcal)} kcal</b><button className="small-action" type="button" disabled={savingOrder} onClick={() => onEdit(entry)}>編集</button><button className="small-action danger-text" type="button" disabled={savingOrder} onClick={() => onDelete(entry)}>削除</button></div> })}</div> : <div className="empty-state">記録なし</div>}
@@ -228,7 +230,7 @@ export function MealConfirmationView({ type, entries, subtotal, onAdd, onEdit, o
   </>
 }
 
-export function TodayDetailsModal({ selectedDate, goals, entries, onClose }: { selectedDate: string; goals: NutritionGoals; entries: MealEntry[]; onClose: () => void }) {
+export function TodayDetailsModal({ selectedDate, goals, goalRecords, entries, onClose }: { selectedDate: string; goals: NutritionGoals; goalRecords: NutritionGoalRecord[]; entries: MealEntry[]; onClose: () => void }) {
   const [rangeId, setRangeId] = useState<TodayDetailRangeId>('day')
   const [loadedPeriod, setLoadedPeriod] = useState<{ key: string; entries: MealEntry[] } | null>(null)
   const [loading, setLoading] = useState(false)
@@ -272,8 +274,12 @@ export function TodayDetailsModal({ selectedDate, goals, entries, onClose }: { s
   const currentLoadError = loadError?.key === periodKey ? loadError.message : null
   const waitingForPeriod = rangeId !== 'day' && loadedPeriod?.key !== periodKey && currentLoadError === null
   const periodLabel = period.from === period.to ? period.to : `${period.from}〜${period.to}`
+  const periodGoals = useMemo(
+    () => averageNutritionGoalsForPeriod(goalRecords, period.from, period.to, goals),
+    [goalRecords, goals, period.from, period.to],
+  )
 
-  return <div className="modal-backdrop nutrient-detail-backdrop" role="dialog" aria-modal="true" aria-label="詳細"><section className="modal-card nutrient-detail-modal today-details-modal" aria-busy={loading || waitingForPeriod}><div className="modal-heading"><div><span className="eyebrow">DETAILS</span><h2>詳細</h2></div><button className="icon-button" type="button" onClick={onClose} aria-label="閉じる">×</button></div><div className="today-detail-range-control"><div className="today-detail-range-tabs" role="tablist" aria-label="詳細の集計期間">{TODAY_DETAIL_RANGE_OPTIONS.map((option) => <button key={option.id} id={`today-detail-range-${option.id}`} type="button" role="tab" aria-selected={rangeId === option.id} aria-controls="today-detail-period-panel" className={rangeId === option.id ? 'active' : ''} onClick={() => setRangeId(option.id)}>{option.label}</button>)}</div><div className="today-detail-range-summary"><span>{periodLabel}</span><strong>{period.days === 1 ? '当日' : '1日平均'}</strong></div></div><div id="today-detail-period-panel" role="tabpanel" aria-labelledby={`today-detail-range-${rangeId}`}>{(loading || waitingForPeriod) && !summary ? <p className="today-detail-load-status" role="status">期間の食事記録を読み込んでいます…</p> : currentLoadError ? <div className="today-detail-load-status error-text" role="alert"><p>{currentLoadError}</p><button className="button secondary" type="button" onClick={() => setReloadToken((current) => current + 1)}>再試行</button></div> : summary && <NutrientGoalGraphs nutrients={summary.nutrients} availableNutrients={summary.availableNutrients} goals={goals} subtotals={summary.subtotals} availableSubtotals={summary.availableSubtotals} colorByMeal />}</div></section></div>
+  return <div className="modal-backdrop nutrient-detail-backdrop" role="dialog" aria-modal="true" aria-label="詳細"><section className="modal-card nutrient-detail-modal today-details-modal" aria-busy={loading || waitingForPeriod}><div className="modal-heading"><div><span className="eyebrow">DETAILS</span><h2>詳細</h2></div><button className="icon-button" type="button" onClick={onClose} aria-label="閉じる">×</button></div><div className="today-detail-range-control"><div className="today-detail-range-tabs" role="tablist" aria-label="詳細の集計期間">{TODAY_DETAIL_RANGE_OPTIONS.map((option) => <button key={option.id} id={`today-detail-range-${option.id}`} type="button" role="tab" aria-selected={rangeId === option.id} aria-controls="today-detail-period-panel" className={rangeId === option.id ? 'active' : ''} onClick={() => setRangeId(option.id)}>{option.label}</button>)}</div><div className="today-detail-range-summary"><span>{periodLabel}</span><strong>{period.days === 1 ? '当日' : '1日平均'}</strong></div></div><div id="today-detail-period-panel" role="tabpanel" aria-labelledby={`today-detail-range-${rangeId}`}>{(loading || waitingForPeriod) && !summary ? <p className="today-detail-load-status" role="status">期間の食事記録を読み込んでいます…</p> : currentLoadError ? <div className="today-detail-load-status error-text" role="alert"><p>{currentLoadError}</p><button className="button secondary" type="button" onClick={() => setReloadToken((current) => current + 1)}>再試行</button></div> : summary && <NutrientGoalGraphs nutrients={summary.nutrients} availableNutrients={summary.availableNutrients} goals={periodGoals} subtotals={summary.subtotals} availableSubtotals={summary.availableSubtotals} colorByMeal />}</div></section></div>
 }
 
 function MealGroup({ type, entries, subtotal, existingFoodIds, onShowDetails, onOpenConfirmation }: { type: MealType; entries: MealEntry[]; subtotal?: Nutrients; existingFoodIds: Set<string>; onShowDetails: (type: MealType, entries: MealEntry[], subtotal: Nutrients) => void; onOpenConfirmation: (type: MealType) => void }) {

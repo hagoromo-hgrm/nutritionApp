@@ -1,11 +1,12 @@
 import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { db, deleteFood, deleteGeneralMenu, deleteMealEntry, deleteMenu, exportBackup, getEntriesForDate, getFavoriteFoods, getFoodByBarcode, getFoodUsageProfiles, getRecentFoods, getSettings, getWeightRecords, getWeightRecordsBetween, initializeDatabase, recordFoodSelection, reorderFavorites, reorderMealEntries, replaceAllData, saveBodyProfileSettings, saveFood, saveFoodWithMetadata, saveGeneralMenu, saveMealEntries, saveMealEntry, saveMenu, saveMenuSet, saveNewDirectFoodMealEntry, searchFoodResults, searchGeneralMenus, searchMenus, setFavorite } from '../src/db/db'
+import { db, deleteFood, deleteGeneralMenu, deleteMealEntry, deleteMenu, exportBackup, getEntriesForDate, getFavoriteFoods, getFoodByBarcode, getFoodUsageProfiles, getNutritionGoalRecords, getNutritionGoalsForDate, getRecentFoods, getSettings, getWeightRecords, getWeightRecordsBetween, initializeDatabase, recordFoodSelection, reorderFavorites, reorderMealEntries, replaceAllData, saveBodyProfileSettings, saveFood, saveFoodWithMetadata, saveGeneralMenu, saveMealEntries, saveMealEntry, saveMenu, saveMenuSet, saveNewDirectFoodMealEntry, saveSettings, searchFoodResults, searchGeneralMenus, searchMenus, setFavorite } from '../src/db/db'
 import { validateBackup } from '../src/services/backup'
 import { createMenuSetMealBatch } from '../src/services/menuSetMeals'
 import { mealsToCsv, parseMealsCsv } from '../src/services/csv'
 import { getFoodVariantBySourceId, hasFoodGroup as hasMextFoodGroup } from '../src/services/mextFoodData'
 import type { BackupData, Food, FoodAlias, FoodGroup, FoodRelatedTerm, GeneralMenu, MealEntry, Menu } from '../src/types'
+import { formatDateKey } from '../src/utils/date'
 
 const addedNutrients = { calciumMg: null, ironMg: null, vitaminAMcg: null, vitaminEMg: null, vitaminB1Mg: null, vitaminB2Mg: null, vitaminCMg: null, saturatedFatG: null }
 
@@ -406,7 +407,7 @@ describe('IndexedDB data safety', () => {
       entryPoint: 'favorite', savedAt: '2026-07-15T03:00:00.000Z',
     })
     const backup = await exportBackup()
-    expect(backup.dataFormatVersion).toBe(4)
+    expect(backup.dataFormatVersion).toBe(5)
     expect(backup.mealEntries[0].usageEvidence?.kind).toBe('direct-food')
     expect(backup.foodUsageStats?.[0]).toMatchObject({ foodId: userFood.id, selectionCount: 1, distinctUsageDays: 1 })
 
@@ -595,7 +596,7 @@ describe('IndexedDB data safety', () => {
     const settings = await getSettings()
     expect(settings.bodyProfile?.sex).toBe('unspecified')
     expect(settings.bodyProfile?.activityLevel).toBe('moderate')
-    expect((await db.metadata.get('schema-version'))?.value).toBe(11)
+    expect((await db.metadata.get('schema-version'))?.value).toBe(12)
   })
 
   it('身体情報保存と体重履歴追加を一括し、同値・他項目変更では重複記録しない', async () => {
@@ -625,7 +626,7 @@ describe('IndexedDB data safety', () => {
     const current = await getSettings()
     await saveBodyProfileSettings({ ...current, bodyProfile: { ...current.bodyProfile!, weightKg: 65 } }, '2026-08-01T00:00:00.000Z')
     const backup = await exportBackup()
-    expect(backup.dataFormatVersion).toBe(4)
+    expect(backup.dataFormatVersion).toBe(5)
     expect(backup.weightRecords?.map((record) => record.weightKg)).toEqual([65])
 
     await db.weightRecords.clear()
@@ -659,6 +660,56 @@ describe('IndexedDB data safety', () => {
     }
     await replaceAllData(v1)
     expect(await getWeightRecords()).toEqual([])
+  }, 15000)
+
+  it('目標変更を東京日付から適用し、過去日の目標を変更しない', async () => {
+    const initial = await getSettings()
+    await db.goalRecords.clear()
+    await saveSettings({ ...initial, goals: { ...initial.goals, energyKcal: 1800 } }, '2026-08-01T14:59:59.000Z')
+    const first = await getSettings()
+    await saveBodyProfileSettings({ ...first, goals: { ...first.goals, energyKcal: 2200 } }, '2026-08-01T15:00:00.000Z')
+
+    expect((await getNutritionGoalsForDate('2026-08-01')).energyKcal).toBe(1800)
+    expect((await getNutritionGoalsForDate('2026-08-02')).energyKcal).toBe(2200)
+    expect((await getNutritionGoalsForDate('2027-01-01')).energyKcal).toBe(2200)
+    expect((await getNutritionGoalRecords()).map((record) => record.effectiveFrom)).toEqual(['2026-08-01', '2026-08-02'])
+  })
+
+  it('同日中の目標再変更は同日のスナップショットだけを更新する', async () => {
+    const initial = await getSettings()
+    await db.goalRecords.clear()
+    await saveSettings({ ...initial, goals: { ...initial.goals, energyKcal: 1800 } }, '2026-08-01T00:00:00.000Z')
+    const first = await getSettings()
+    await saveSettings({ ...first, goals: { ...first.goals, energyKcal: 1900 } }, '2026-08-01T10:00:00.000Z')
+
+    expect(await db.goalRecords.count()).toBe(1)
+    expect((await getNutritionGoalsForDate('2026-08-01')).energyKcal).toBe(1900)
+  })
+
+  it('目標履歴の保存に失敗した場合は最新設定も更新しない', async () => {
+    const initial = await getSettings()
+    const putFailure = vi.spyOn(db.goalRecords, 'put').mockRejectedValueOnce(new Error('goal history failure'))
+    await expect(saveSettings({ ...initial, goals: { ...initial.goals, energyKcal: 2100 } }, '2026-08-02T00:00:00.000Z')).rejects.toThrow('goal history failure')
+    putFailure.mockRestore()
+
+    expect((await getSettings()).goals.energyKcal).toBe(initial.goals.energyKcal)
+  })
+
+  it('目標量履歴をバックアップし、旧バックアップには復元時点の初期履歴を作る', async () => {
+    const initial = await getSettings()
+    await saveSettings({ ...initial, goals: { ...initial.goals, energyKcal: 2000 } }, '2026-08-01T15:00:00.000Z')
+    const backup = await exportBackup()
+    expect(backup.goalRecords?.some((record) => record.goals.energyKcal === 2000)).toBe(true)
+
+    await db.goalRecords.clear()
+    await replaceAllData(backup)
+    expect(await getNutritionGoalRecords()).toEqual(backup.goalRecords)
+
+    const legacy: BackupData = { ...backup, dataFormatVersion: 4, settings: { ...backup.settings, dataFormatVersion: 4 }, goalRecords: undefined }
+    await replaceAllData(legacy)
+    expect(await getNutritionGoalRecords()).toEqual([{
+      effectiveFrom: formatDateKey(backup.exportedAt), recordedAt: backup.exportedAt, goals: backup.settings.goals,
+    }])
   }, 15000)
 
   it('食事区分の時刻を複数記録へ一括保存できる', async () => {

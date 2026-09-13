@@ -302,6 +302,7 @@ export interface MealMenuIngredientSnapshot {
   name: string
   amount: number
   unit: QuantityUnit
+  inputUnitConversions?: FoodUnitConversion[]
   ingredients: MealIngredientSnapshot[]
   missing: boolean
 }
@@ -313,6 +314,8 @@ export interface MealMenuSnapshot {
   sourceMenuName: string
   /** 未指定は既存データとの互換のためMyメニューとして扱う。 */
   sourceKind?: 'my-menu' | 'general-menu' | 'temporary'
+  /** 1食を基準にした、登録時点のメニュー全体の入力単位換算。 */
+  inputUnitConversions?: FoodUnitConversion[]
   ingredients: MealIngredientSnapshot[]
 }
 
@@ -364,6 +367,11 @@ export interface Menu {
   id: string
   name: string
   category: MenuCategory
+  /** 1食を基準とした、メニュー全体の明示入力単位。 */
+  inputUnitConversions?: FoodUnitConversion[]
+  /** メニューを食事へ追加する際の既定分量・単位。 */
+  servingAmount?: number | null
+  servingUnit?: QuantityUnit | null
   /** 旧データおよび食品検索との互換用。新規保存ではingredients内の食品IDと同期する。 */
   foodIds: string[]
   ingredients?: MenuIngredient[]
@@ -428,6 +436,13 @@ export interface WeightRecord {
   recordedAt: string
   date: string
   weightKg: number
+}
+
+/** Asia/Tokyoの日付単位で適用する栄養目標のスナップショット。 */
+export interface NutritionGoalRecord {
+  effectiveFrom: string
+  recordedAt: string
+  goals: NutritionGoals
 }
 
 export type FoodAttributePreferenceMode = 'prefill' | 'auto'
@@ -665,6 +680,8 @@ export interface BackupData {
   menuSets?: MenuSet[]
   /** v3から必須。v1/v2バックアップには存在しない。 */
   weightRecords?: WeightRecord[]
+  /** v5から必須。旧バックアップは復元時にsettings.goalsから初期化する。 */
+  goalRecords?: NutritionGoalRecord[]
   settings: AppSettings
   /** v2からの推計関連データ。v1バックアップには存在しない。 */
   estimationDataFormatVersion?: number
@@ -706,7 +723,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   goals: DEFAULT_GOALS,
   displayUnit: 'default',
   lastBackupAt: null,
-  dataFormatVersion: 4,
+  dataFormatVersion: 5,
   externalApiEnabled: false,
   externalApiEndpoint: 'https://world.openfoodfacts.org/api/v3/product',
   mealTimeMode: 'auto',

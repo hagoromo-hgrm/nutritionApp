@@ -95,6 +95,23 @@ describe('menu set meal batches', () => {
     expect(batch.entries[0].calculatedNutrients.energyKcal).toBe(192)
   })
 
+  it('メニュー全体の既定量と任意単位をセット展開へ引き継ぐ', () => {
+    const customSoup: Menu = {
+      ...soup,
+      inputUnitConversions: [{ unit: '杯', baseAmount: 0.5 }],
+      servingAmount: 2,
+      servingUnit: '杯',
+    }
+    const batch = createMenuSetMealBatch({
+      menuSet: breakfast, menus: [customSoup], foods: [rice, soupIngredient], mealType: '朝食',
+      eatenAt: '2026-07-23T00:00:00.000Z', createId: () => 'meal_menu_unit',
+    })
+
+    expect(batch.entries[0]).toMatchObject({ amount: 2, amountUnit: '杯' })
+    expect(batch.entries[0].foodSnapshot.inputUnitConversions).toEqual([{ unit: '杯', baseAmount: 0.5 }])
+    expect(batch.entries[0].calculatedNutrients.energyKcal).toBe(20)
+  })
+
   it('新形式のfoodItemsから確定variantの分量と単位を展開する', () => {
     const customRice: Food = {
       ...rice,

@@ -37,19 +37,29 @@ export function FoodFormView({ draft, returnView, allowCommercialClassification,
   })
   const updateBaseUnit = (baseUnit: FoodUnit) => setDraft((current) => {
     if (!current) return current
-    const normalizedInputUnit = current.inputUnit.trim()
-    const inputUnit = normalizedInputUnit === current.baseUnit || normalizedInputUnit === baseUnit ? '' : current.inputUnit
-    const allowed = [baseUnit, ...(inputUnit.trim() && inputUnit.trim() !== baseUnit ? [inputUnit.trim()] : [])]
-    return { ...withoutPendingEstimation(current), baseUnit, inputUnit, inputUnitBaseAmount: inputUnit ? current.inputUnitBaseAmount : '', servingUnit: allowed.includes(current.servingUnit) ? current.servingUnit : baseUnit }
+    const inputUnitConversions = current.inputUnitConversions.filter((conversion) => conversion.unit.trim() && conversion.unit.trim() !== baseUnit)
+    const allowed = [baseUnit, ...inputUnitConversions.map((conversion) => conversion.unit.trim())]
+    return { ...withoutPendingEstimation(current), baseUnit, inputUnitConversions, servingUnit: allowed.includes(current.servingUnit) ? current.servingUnit : baseUnit }
   })
-  const updateInputUnit = (inputUnit: string) => setDraft((current) => {
+  const updateInputUnit = (index: number, inputUnit: string) => setDraft((current) => {
     if (!current) return current
     const normalized = inputUnit.trim()
-    const allowed = [current.baseUnit, ...(normalized && normalized !== current.baseUnit ? [normalized] : [])]
-    return { ...withoutPendingEstimation(current), inputUnit, inputUnitBaseAmount: normalized && normalized !== current.baseUnit ? current.inputUnitBaseAmount : '', servingUnit: allowed.includes(current.servingUnit) ? current.servingUnit : current.baseUnit }
+    const inputUnitConversions = current.inputUnitConversions.map((conversion, conversionIndex) => conversionIndex === index
+      ? { ...conversion, unit: inputUnit, baseAmount: normalized && normalized !== current.baseUnit ? conversion.baseAmount : '' }
+      : conversion)
+    const allowed = [current.baseUnit, ...inputUnitConversions.map((conversion) => conversion.unit.trim()).filter(Boolean)]
+    return { ...withoutPendingEstimation(current), inputUnitConversions, servingUnit: allowed.includes(current.servingUnit) ? current.servingUnit : current.baseUnit }
   })
-  const inputUnit = draft.inputUnit.trim()
-  const servingUnitOptions = [...new Set([draft.baseUnit, ...(inputUnit && inputUnit !== draft.baseUnit ? [inputUnit] : [])])]
+  const updateInputUnitBaseAmount = (index: number, baseAmount: string) => update('inputUnitConversions', draft.inputUnitConversions.map((conversion, conversionIndex) => conversionIndex === index ? { ...conversion, baseAmount } : conversion))
+  const addInputUnit = () => update('inputUnitConversions', [...draft.inputUnitConversions, { unit: '', baseAmount: '' }])
+  const removeInputUnit = (index: number) => {
+    const inputUnitConversions = draft.inputUnitConversions.filter((_, conversionIndex) => conversionIndex !== index)
+    const allowed = [draft.baseUnit, ...inputUnitConversions.map((conversion) => conversion.unit.trim()).filter(Boolean)]
+    setDraft((current) => current
+      ? { ...withoutPendingEstimation(current), inputUnitConversions, servingUnit: allowed.includes(current.servingUnit) ? current.servingUnit : current.baseUnit }
+      : current)
+  }
+  const servingUnitOptions = [...new Set([draft.baseUnit, ...draft.inputUnitConversions.map((conversion) => conversion.unit.trim()).filter(Boolean), draft.servingUnit])]
   const updateProductName = (value: string) => setDraft((current) => {
     if (!current) return current
     const cleared = withoutPendingEstimation(current)
@@ -146,7 +156,15 @@ export function FoodFormView({ draft, returnView, allowCommercialClassification,
           <label>バーコード（JAN/GTIN）<input inputMode="numeric" value={draft.barcode} onChange={(event) => update('barcode', event.target.value)} placeholder="任意・8〜14桁" /></label>
           {allowCommercialClassification && <div className="food-commercial-setting"><label className="toggle-row"><input type="checkbox" checked={draft.isCommercial} onChange={(event) => update('isCommercial', event.target.checked)} />外食・市販として分類する</label></div>}
           <div className="two-fields"><label>基準量*<input type="number" min="0.01" step="any" value={draft.baseAmount} onChange={(event) => update('baseAmount', event.target.value)} required /></label><label>基準単位*<select value={draft.baseUnit} onChange={(event) => updateBaseUnit(event.target.value as FoodUnit)}>{FOOD_UNITS.map((unit) => <option key={unit}>{unit}</option>)}</select></label></div>
-          <div className="two-fields"><label>入力用単位（任意）<input list="food-input-unit-options" value={draft.inputUnit} onChange={(event) => updateInputUnit(event.target.value)} placeholder="例：個、杯、パック、切れ" /><datalist id="food-input-unit-options">{FOOD_UNITS.map((unit) => <option key={unit} value={unit} />)}</datalist></label>{inputUnit && inputUnit !== draft.baseUnit && <label>1入力単位あたりの基準量<input type="number" min="0.01" max="100000" step="any" value={draft.inputUnitBaseAmount} onChange={(event) => update('inputUnitBaseAmount', event.target.value)} placeholder={`例：60（${draft.baseUnit}）`} /><span className="field-hint">{draft.baseUnit}で入力</span></label>}</div>
+          <div className="food-form-subsection input-unit-editor">
+            <div className="metadata-editor-heading"><strong>入力用単位（任意）</strong><button className="small-action" type="button" onClick={addInputUnit}>＋追加</button></div>
+            {draft.inputUnitConversions.map((conversion, index) => <div className="metadata-input-row" key={`input-unit-${index}`}>
+              <label><span className="sr-only">入力用単位</span><input list="food-input-unit-options" value={conversion.unit} onChange={(event) => updateInputUnit(index, event.target.value)} placeholder="例：個、杯、パック、切れ" /></label>
+              <label><span className="sr-only">1入力単位あたりの基準量</span><input type="number" min="0.01" max="100000" step="any" value={conversion.baseAmount} onChange={(event) => updateInputUnitBaseAmount(index, event.target.value)} placeholder={`基準量（${draft.baseUnit}）`} /><span className="field-hint">{draft.baseUnit}で入力</span></label>
+              <button className="small-action danger-text" type="button" onClick={() => removeInputUnit(index)}>削除</button>
+            </div>)}
+            <datalist id="food-input-unit-options">{FOOD_UNITS.map((unit) => <option key={unit} value={unit} />)}</datalist>
+          </div>
           <div className="two-fields"><label>既定の入力分量<input type="number" min="0.01" step="any" value={draft.servingAmount} onChange={(event) => update('servingAmount', event.target.value)} placeholder="任意" /></label><label>既定の入力単位<select value={draft.servingUnit} onChange={(event) => update('servingUnit', event.target.value)}>{servingUnitOptions.map((unit) => <option key={unit} value={unit}>{unit}</option>)}</select></label></div>
           <div className="food-form-subsection ingredient-source-editor">
             <h3>原材料と推計用の確認情報</h3>

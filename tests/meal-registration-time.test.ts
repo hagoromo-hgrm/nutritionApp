@@ -110,6 +110,6 @@ describe('食事の初回登録順', () => {
     expect(await db.foods.get('a')).toEqual(food('a'))
     expect(await db.mealEntries.get('legacy')).toMatchObject({ ...meal('legacy', 'a'), registeredAt: eatenAt })
     expect((await getRecentFoods()).map((item) => item.id)).toEqual(['a'])
-    expect((await db.metadata.get('schema-version'))?.value).toBe(11)
+    expect((await db.metadata.get('schema-version'))?.value).toBe(12)
   })
 })

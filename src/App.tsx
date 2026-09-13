@@ -65,6 +65,7 @@ import {
   getFavoriteIds,
   getFoodByBarcode,
   getRecentFoods,
+  getNutritionGoalRecords,
   getSettings,
   initializeDatabase,
   markSearchLogUnselected,
@@ -112,7 +113,7 @@ import {
 } from './services/mealMenuSnapshots'
 import { resolveMealRegistrationTransition } from './services/mealRegistrationFlow'
 import { resolveMealEntryTime } from './services/mealTime'
-import { getMenuIngredients, menuToFood, wouldCreateMenuCycle } from './services/menuIngredients'
+import { getMenuIngredients, getMenuQuantityUnits, menuToFood, wouldCreateMenuCycle } from './services/menuIngredients'
 import { createMenuSetMealBatch, getMenuSetFoodItems } from './services/menuSetMeals'
 import {
   getFoodVariantBySourceId,
@@ -134,6 +135,7 @@ import {
 } from './services/nutrientEstimationStore'
 import { ESTIMATE_FIT_NUTRIENT_KEYS, toStoredNutrientEstimateResult } from './services/nutrientEstimator'
 import { calculateBmi, calculateNutrients, estimateDailyGoals, getFoodDefaultServing, getFoodQuantityUnits, mealDetailNutritionGoals, scaleNutritionGoals, sumByMealType, sumEntries } from './services/nutrition'
+import { resolveNutritionGoals } from './services/goalHistory'
 import { consumeSearchSelectionGroup } from './services/searchSelection'
 import {
   unresolvedIngredientsToCsv,
@@ -154,6 +156,7 @@ import {
   type FoodGroup,
   type FoodRelatedTerm,
   type FoodVariantAttributes,
+  type FoodUnitConversion,
   type GeneralMenu,
   type MealEntry,
   type MealIngredientSnapshot,
@@ -168,6 +171,7 @@ import {
   type NutrientKey,
   type NutrientMetadataMap,
   type Nutrients,
+  type NutritionGoalRecord,
   type QuantityUnit,
 } from './types'
 import { addDays, currentDateKey, currentMonthRange, formatFileTimestamp, isoFromTokyoTimeInput } from './utils/date'
@@ -224,6 +228,7 @@ function App() {
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set())
   const [existingFoodIds, setExistingFoodIds] = useState<Set<string>>(new Set())
   const [settings, setSettings] = useState<Awaited<ReturnType<typeof getSettings>> | null>(null)
+  const [goalRecords, setGoalRecords] = useState<NutritionGoalRecord[]>([])
   const [estimationSettings, setEstimationSettings] = useState<EstimationSettings | null>(null)
   const [searchBars, setSearchBars] = useState([''])
   const [searchResults, setSearchResults] = useState<SearchResultGroup[]>([])
@@ -287,9 +292,9 @@ function App() {
     const requestedDate = selectedDateRef.current
     setLoadedDate(null)
     try {
-      const [dateEntries, resultFoods, resultGroups, resultAliases, resultRelatedTerms, recent, recentByMealType, favorites, ids, currentSettings, currentEstimationSettings, foodCount, mealCount, menuCount, generalMenuCount, menuSetCount, foodKeys, resultMenus, resultGeneralMenus, resultMenuSets] = await Promise.all([
+      const [dateEntries, resultFoods, resultGroups, resultAliases, resultRelatedTerms, recent, recentByMealType, favorites, ids, currentSettings, currentEstimationSettings, currentGoalRecords, foodCount, mealCount, menuCount, generalMenuCount, menuSetCount, foodKeys, resultMenus, resultGeneralMenus, resultMenuSets] = await Promise.all([
         getEntriesForDate(requestedDate), getAllFoods(), getAllFoodGroups(), getAllFoodAliases(), getAllFoodRelatedTerms(), getRecentFoods(), Promise.all(MEAL_TYPES.map(async (type) => [type, await getRecentFoods(20, type)] as const)), getFavoriteFoods(), getFavoriteIds(),
-        getSettings(), getEstimationSettings(), db.foods.count(), db.mealEntries.count(), db.menus.count(), db.generalMenus.count(), db.menuSets.count(), db.foods.toCollection().primaryKeys(), getAllMenus(), getAllGeneralMenus(), getAllMenuSets(),
+        getSettings(), getEstimationSettings(), getNutritionGoalRecords(), db.foods.count(), db.mealEntries.count(), db.menus.count(), db.generalMenus.count(), db.menuSets.count(), db.foods.toCollection().primaryKeys(), getAllMenus(), getAllGeneralMenus(), getAllMenuSets(),
       ])
       if (requestId !== loadRequestIdRef.current || requestedDate !== selectedDateRef.current) return false
       setEntries(dateEntries)
@@ -313,6 +318,7 @@ function App() {
       setFavoriteIds(ids)
       setExistingFoodIds(new Set([...foodKeys, ...resultMenus.map((menu) => `menu:${menu.id}`), ...resultGeneralMenus.map((menu) => `general-menu:${menu.id}`), ...resultMenuSets.map((menuSet) => `menu-set:${menuSet.id}`)]))
       setSettings(currentSettings)
+      setGoalRecords(currentGoalRecords)
       setEstimationSettings(currentEstimationSettings)
       setCounts({ foods: foodCount, meals: mealCount, menus: menuCount, generalMenus: generalMenuCount, menuSets: menuSetCount })
       setGoalInputs(Object.fromEntries(nutrientKeys.map((key) => [key, currentSettings.goals[key] === null ? '' : String(currentSettings.goals[key])])) as Record<NutrientKey, string>)
@@ -380,6 +386,10 @@ function App() {
 
   const total = useMemo(() => sumEntries(entries), [entries])
   const subtotals = useMemo(() => sumByMealType(entries), [entries])
+  const selectedGoals = useMemo(
+    () => resolveNutritionGoals(goalRecords, selectedDate, settings?.goals ?? EMPTY_NUTRIENTS),
+    [goalRecords, selectedDate, settings?.goals],
+  )
   const recordedMealTypes = useMemo(() => MEAL_TYPES.filter((type) => entries.some((entry) => entry.mealType === type)), [entries])
 
   const showError = (message: string) => { setError(message); setNotice(null) }
@@ -598,14 +608,15 @@ function App() {
     if (foodDraft.barcode && !isValidBarcode(foodDraft.barcode)) { showError('バーコードは8〜14桁の数字で入力してください。'); return }
     const servingAmount = foodDraft.servingAmount.trim() ? Number(foodDraft.servingAmount) : null
     if (servingAmount !== null && !isPositiveFinite(servingAmount)) { showError('既定量は正の数値で入力してください。'); return }
-    const inputUnit = foodDraft.inputUnit.trim()
-    if (inputUnit && !isValidQuantityUnit(inputUnit)) { showError('入力用単位は空白のみ・制御文字・31文字以上を使用できません。'); return }
-    const normalizedInputUnit = inputUnit === foodDraft.baseUnit ? '' : inputUnit
-    const inputUnitBaseAmount = normalizedInputUnit ? Number(foodDraft.inputUnitBaseAmount) : null
-    if (normalizedInputUnit && (!isPositiveFinite(inputUnitBaseAmount ?? Number.NaN) || inputUnitBaseAmount! > 100000)) { showError('1入力単位あたりの基準量は正の数値で入力してください。'); return }
-    const inputUnitConversions = normalizedInputUnit ? [{ unit: normalizedInputUnit, baseAmount: inputUnitBaseAmount! }] : undefined
+    const inputUnitConversions = foodDraft.inputUnitConversions
+      .map((conversion) => ({ unit: conversion.unit.trim(), baseAmount: Number(conversion.baseAmount) }))
+      .filter((conversion) => conversion.unit.length > 0)
+    if (inputUnitConversions.some((conversion) => !isValidQuantityUnit(conversion.unit))) { showError('入力用単位は空白のみ・制御文字・31文字以上を使用できません。'); return }
+    if (new Set(inputUnitConversions.map((conversion) => conversion.unit)).size !== inputUnitConversions.length) { showError('入力用単位は重複しないように入力してください。'); return }
+    if (inputUnitConversions.some((conversion) => conversion.unit === foodDraft.baseUnit)) { showError('入力用単位には基準単位と異なる単位を入力してください。'); return }
+    if (inputUnitConversions.some((conversion) => !isPositiveFinite(conversion.baseAmount) || conversion.baseAmount > 100000)) { showError('1入力単位あたりの基準量は正の数値で入力してください。'); return }
     const servingUnit = foodDraft.servingUnit.trim()
-    if (servingAmount !== null && (!isValidQuantityUnit(servingUnit) || (servingUnit !== foodDraft.baseUnit && !inputUnitConversions?.some((conversion) => conversion.unit === servingUnit)))) {
+    if (servingAmount !== null && (!isValidQuantityUnit(servingUnit) || (servingUnit !== foodDraft.baseUnit && !inputUnitConversions.some((conversion) => conversion.unit === servingUnit)))) {
       showError('既定の入力単位は基準単位、または登録済みの入力用単位を選択してください。'); return
     }
     const nutrients = Object.fromEntries(nutrientKeys.map((key) => {
@@ -654,7 +665,7 @@ function App() {
         id: foodId, name: foodDraft.name.trim(), officialName: foodDraft.name.trim(), displayName: groupDisplayName, maker: foodDraft.maker.trim(), barcode: foodDraft.barcode.trim(),
         isCommercial: resolveBarcodeCommercialFlag(foodDraft.isCommercial, foodDraft.barcode, foodFormOrigin === 'barcode'),
         source: foodDraft.source, sourceVersion: foodDraft.sourceVersion || 'ユーザー入力', baseAmount, baseUnit: foodDraft.baseUnit,
-        servingAmount, servingUnit: servingAmount === null ? null : servingUnit, inputUnitConversions, menuIds: foodDraft.menuIds, foodGroupId: groupId, variantAttributes,
+        servingAmount, servingUnit: servingAmount === null ? null : servingUnit, inputUnitConversions: inputUnitConversions.length > 0 ? inputUnitConversions : undefined, menuIds: foodDraft.menuIds, foodGroupId: groupId, variantAttributes,
         nutrients: persistedNutrients,
         ingredientsText,
         ingredientsSource: ingredientsText ? { provider: ingredientsSourceProvider, verified: true } : null,
@@ -776,7 +787,11 @@ function App() {
     if (menuSnapshot && !menuSnapshot.sourceMenuName.trim()) { showError('メニュー名を入力してください。'); return false }
     const invalidIngredientAmount = (ingredients: MealIngredientSnapshot[]): boolean => ingredients.some((ingredient) => !isPositiveFinite(ingredient.amount) || ingredient.amount > 100000 || (ingredient.kind === 'menu' && invalidIngredientAmount(ingredient.ingredients)))
     const invalidIngredientUnit = (ingredients: MealIngredientSnapshot[]): boolean => ingredients.some((ingredient) => {
-      if (ingredient.kind === 'menu') return ingredient.unit !== '食' || invalidIngredientUnit(ingredient.ingredients)
+      if (ingredient.kind === 'menu') {
+        const unsupportedUnit = ingredient.unit !== '食'
+          && !(ingredient.inputUnitConversions ?? []).some((conversion) => conversion.unit === ingredient.unit)
+        return unsupportedUnit || invalidIngredientUnit(ingredient.ingredients)
+      }
       if (ingredient.foodSnapshot.missing) return false
       return ![ingredient.foodSnapshot.baseUnit, ...(ingredient.foodSnapshot.inputUnitConversions ?? []).map((conversion) => conversion.unit)].includes(ingredient.unit)
     })
@@ -1070,7 +1085,7 @@ function App() {
     if (Object.values(goals).some((value) => value !== null && (!Number.isFinite(value) || value <= 0))) {
       showError('目標値は正の数値、または空欄で入力してください。'); return
     }
-    try { const next = { ...settings, goals }; await saveSettings(next); setSettings(next); notify('目標値を保存しました。') } catch { showError('目標値を保存できませんでした。') }
+    try { const next = { ...settings, goals }; await saveSettings(next); setSettings(next); setGoalRecords(await getNutritionGoalRecords()); notify('目標値を保存しました。') } catch { showError('目標値を保存できませんでした。') }
   }
 
   const openSearchInput = (purpose: SearchPurpose = 'meal') => {
@@ -1271,6 +1286,7 @@ function App() {
     try {
       await saveBodyProfileSettings(next)
       setSettings(next)
+      setGoalRecords(await getNutritionGoalRecords())
       setGoalInputs(Object.fromEntries(nutrientKeys.map((key) => [key, next.goals[key] === null ? '' : String(next.goals[key])])) as Record<NutrientKey, string>)
       notify(estimatedGoals === null ? '身体情報を保存しました。算出に必要な項目を入力してください。' : 'エネルギー・たんぱく質などの参考目標を保存しました。')
     } catch {
@@ -1278,17 +1294,54 @@ function App() {
     }
   }
 
+  const validateMenuDraftIngredients = (draft: MenuDraft): MenuIngredient[] | null => {
+    const ingredients = draft.ingredients.map((ingredient) => {
+      const amount = Number(ingredient.amount)
+      return { ...ingredient, amount }
+    })
+    if (ingredients.some((ingredient) => !isPositiveFinite(ingredient.amount) || ingredient.amount > 100000)) {
+      showError('食材の分量は0より大きく100000以下で入力してください。')
+      return null
+    }
+    if (ingredients.some((ingredient) => {
+      if (ingredient.kind === 'menu') {
+        const menu = menus.find((candidate) => candidate.id === ingredient.itemId)
+        return menu !== undefined && !getMenuQuantityUnits(menu).includes(ingredient.unit)
+      }
+      const food = foods.find((candidate) => candidate.id === ingredient.itemId)
+      return food !== undefined && !getFoodQuantityUnits(food).includes(ingredient.unit)
+    })) {
+      showError('食材の入力単位が食品またはメニューの換算設定と一致しません。単位を選び直してください。')
+      return null
+    }
+    return ingredients
+  }
+
+  const validateMenuUnitSettings = (draft: MenuDraft): { inputUnitConversions?: FoodUnitConversion[]; servingAmount: number; servingUnit: QuantityUnit } | null => {
+    const inputUnitConversions = draft.inputUnitConversions
+      .map((conversion) => ({ unit: conversion.unit.trim(), baseAmount: Number(conversion.baseAmount) }))
+      .filter((conversion) => conversion.unit.length > 0)
+    if (inputUnitConversions.some((conversion) => !isValidQuantityUnit(conversion.unit))) { showError('メニューの入力単位は空白のみ・制御文字・31文字以上を使用できません。'); return null }
+    if (new Set(inputUnitConversions.map((conversion) => conversion.unit)).size !== inputUnitConversions.length) { showError('メニューの入力単位は重複しないように入力してください。'); return null }
+    if (inputUnitConversions.some((conversion) => conversion.unit === '食' || !isPositiveFinite(conversion.baseAmount) || conversion.baseAmount > 100000)) { showError('メニューの入力単位は「食」と異なる単位で、1単位あたりの食数を正しく入力してください。'); return null }
+    const servingAmount = Number(draft.servingAmount)
+    if (!isPositiveFinite(servingAmount) || servingAmount > 100000) { showError('メニューの既定分量は0より大きく100000以下で入力してください。'); return null }
+    if (!isValidQuantityUnit(draft.servingUnit) || (draft.servingUnit !== '食' && !inputUnitConversions.some((conversion) => conversion.unit === draft.servingUnit))) { showError('メニューの既定入力単位は基準単位、または登録済みの入力用単位を選択してください。'); return null }
+    return { inputUnitConversions: inputUnitConversions.length > 0 ? inputUnitConversions : undefined, servingAmount, servingUnit: draft.servingUnit }
+  }
+
   const saveMenuDraft = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!menuDraft || !menuDraft.name.trim()) { showError('メニュー名を入力してください。'); return }
-    const ingredients = menuDraft.ingredients.map((ingredient) => ({ ...ingredient, amount: Number(ingredient.amount) }))
-    if (ingredients.some((ingredient) => !isPositiveFinite(ingredient.amount) || ingredient.amount > 100000)) { showError('食材の分量は0より大きく100000以下で入力してください。'); return }
-    if (ingredients.some((ingredient) => ingredient.kind === 'food' && foods.some((food) => food.id === ingredient.itemId) && !getFoodQuantityUnits(foods.find((food) => food.id === ingredient.itemId)!).includes(ingredient.unit))) { showError('食品の入力単位が現在の換算設定と一致しません。単位を選び直してください。'); return }
-    if (ingredients.some((ingredient) => ingredient.kind === 'menu' && ingredient.unit !== '食')) { showError('Myメニューの単位は「食」を選択してください。'); return }
+    const ingredients = validateMenuDraftIngredients(menuDraft)
+    if (!ingredients) return
+    const unitSettings = validateMenuUnitSettings(menuDraft)
+    if (!unitSettings) return
     if (menuDraft.id && ingredients.some((ingredient) => ingredient.kind === 'menu' && wouldCreateMenuCycle(menuDraft.id, ingredient.itemId, menus))) { showError('Myメニューを循環して参照することはできません。'); return }
     const now = new Date().toISOString()
     const menu: Menu = {
       id: menuDraft.id ?? createNewMenuId(), name: menuDraft.name.trim(), category: menuDraft.category,
+      ...unitSettings,
       foodIds: ingredients.filter((ingredient) => ingredient.kind === 'food').map((ingredient) => ingredient.itemId), ingredients,
       aliases: [...new Set(menuDraft.aliases.map((alias) => alias.trim()).filter(Boolean))],
       memo: menuDraft.memo?.trim() || undefined,
@@ -1297,34 +1350,20 @@ function App() {
     try { await saveMenu(menu); setMenuDraft(null); await reloadAfterMutation(menuDraft.id ? 'メニューを更新しました。' : 'メニューを登録しました。') } catch { showError('メニューを保存できませんでした。') }
   }
 
-  const validateMenuDraftIngredients = (draft: MenuDraft): MenuIngredient[] | null => {
-    const ingredients = draft.ingredients.map((ingredient) => ({ ...ingredient, amount: Number(ingredient.amount) }))
-    if (ingredients.some((ingredient) => !isPositiveFinite(ingredient.amount) || ingredient.amount > 100000)) {
-      showError('食材の分量は0より大きく100000以下で入力してください。')
-      return null
-    }
-    if (ingredients.some((ingredient) => {
-      if (ingredient.kind === 'menu') return ingredient.unit !== '食'
-      const food = foods.find((candidate) => candidate.id === ingredient.itemId)
-      return food !== undefined && !getFoodQuantityUnits(food).includes(ingredient.unit)
-    })) {
-      showError('食材の入力単位が現在の換算設定と一致しません。単位を選び直してください。')
-      return null
-    }
-    return ingredients
-  }
-
   const saveGeneralMenuDraft = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!generalMenuDraft || !generalMenuDraft.name.trim()) { showError('一般メニュー名を入力してください。'); return }
     const ingredients = validateMenuDraftIngredients(generalMenuDraft)
     if (!ingredients) return
+    const unitSettings = validateMenuUnitSettings(generalMenuDraft)
+    if (!unitSettings) return
     if (ingredients.length === 0) { showError('一般メニューに食材を1件以上追加してください。'); return }
     const now = new Date().toISOString()
     const menu: GeneralMenu = {
       id: generalMenuDraft.id ?? createNewGeneralMenuId(),
       name: generalMenuDraft.name.trim(),
       category: generalMenuDraft.category,
+      ...unitSettings,
       foodIds: ingredients.filter((ingredient) => ingredient.kind === 'food').map((ingredient) => ingredient.itemId),
       ingredients,
       aliases: [...new Set(generalMenuDraft.aliases.map((alias) => alias.trim()).filter(Boolean))],
@@ -1345,6 +1384,8 @@ function App() {
     if (!temporaryMenuDraft || !temporaryMenuDraft.name.trim()) { showError('一時メニュー名を入力してください。'); return }
     const ingredients = validateMenuDraftIngredients(temporaryMenuDraft)
     if (!ingredients) return
+    const unitSettings = validateMenuUnitSettings(temporaryMenuDraft)
+    if (!unitSettings) return
     if (ingredients.length === 0) { showError('一時メニューに食材を1件以上追加してください。'); return }
     const snapshots: MealIngredientSnapshot[] = []
     for (const ingredient of ingredients) {
@@ -1358,8 +1399,10 @@ function App() {
         snapshots.push(createMealMenuIngredientSnapshot(menu, menus, foods, ingredient.amount, ingredient.unit))
       }
     }
-    const snapshot = createTemporaryMealMenuSnapshot(temporaryMenuDraft.name, snapshots)
-    const saved = await saveMealRecord(temporaryMenuToFood(snapshot), '1', '食', null, snapshot, snapshot.sourceMenuName)
+    const snapshot = createTemporaryMealMenuSnapshot(temporaryMenuDraft.name, snapshots, undefined, unitSettings.inputUnitConversions)
+    const temporaryFood = temporaryMenuToFood(snapshot)
+    const serving = { amount: unitSettings.servingAmount, unit: unitSettings.servingUnit }
+    const saved = await saveMealRecord(temporaryFood, String(serving.amount), serving.unit, null, snapshot, snapshot.sourceMenuName)
     if (saved) setTemporaryMenuDraft(null)
   }
 
@@ -1368,6 +1411,7 @@ function App() {
     const cloned: Menu = {
       ...generalMenu,
       id: createNewMenuId(),
+      inputUnitConversions: generalMenu.inputUnitConversions?.map((conversion) => ({ ...conversion })),
       foodIds: [...generalMenu.foodIds],
       ingredients: generalMenu.ingredients?.map((ingredient) => ({ ...ingredient })),
       aliases: generalMenu.aliases ? [...generalMenu.aliases] : undefined,
@@ -1650,7 +1694,7 @@ function App() {
 
       <main className="content">
         {view === 'today' && <TodayView
-          selectedDate={selectedDate} setSelectedDate={selectDate} total={total} goals={settings.goals} entries={entries} subtotals={subtotals}
+          selectedDate={selectedDate} setSelectedDate={selectDate} total={total} goals={selectedGoals} entries={entries} subtotals={subtotals}
           existingFoodIds={existingFoodIds}
           onOpenMealConfirmation={(type) => { if (!requireLoadedDate()) return; setConfirmingMealType(type); setRecordingMealType(null); setView('meal-confirmation') }}
           onShowMealDetails={openMealDetails} onShowTodayDetails={() => setShowTodayDetails(true)}
@@ -1665,11 +1709,11 @@ function App() {
           onReorder={(orderedEntryIds) => reorderMealRecords(confirmingMealType, orderedEntryIds)}
           onDone={() => { setConfirmingMealType(null); setView('today') }}
         />}
-        {view === 'graphs' && <GraphsView range={graphRange} onRangeChange={setGraphRange} goals={settings.goals} />}
-        {view === 'food-screen' && <FoodsView selectedDate={selectedDate} recordingMealType={recordingMealType} recordingEntryCount={recordingMealType ? entries.filter((entry) => entry.mealType === recordingMealType).length : 0} foods={foods} foodGroups={foodGroups} menus={menus} generalMenus={generalMenus} menuSets={menuSets} recentFoods={recordingMealType ? recentFoodsByMealType[recordingMealType] : recentFoods} favoriteFoods={favoriteFoods} favoriteIds={favoriteIds} onSelectFood={handleFoodSelection} onSelectMenuSet={(menuSet) => void registerMenuSet(menuSet)} onCreateTemporaryMenu={() => setTemporaryMenuDraft({ id: null, name: '', category: 'その他', ingredients: [], aliases: [] })} onToggleFavorite={toggleFavorite} onReorderFavorites={reorderFavoriteFoods} onEditFood={(food) => openFoodForm(food, '', 'food-screen', null, null, '', foodScreenReturnView === 'settings' ? 'settings' : 'meal')} onDeleteFood={(food) => void removeFood(food)} onOpenSearch={() => openSearchInput(recordingMealType ? 'meal' : 'food-master')} onOpenScanner={() => openBarcodeScanner(recordingMealType ? 'meal' : 'lookup')} onOpenConfirmation={openMealConfirmationFromFoodSelection} onBack={() => { if (foodScreenReturnView === 'meal-confirmation') setConfirmingMealType(recordingMealType); setRecordingMealType(null); setView(foodScreenReturnView) }} backLabel={foodScreenReturnView === 'settings' ? '← 設定' : '← 記録'} copyMealType={copyMealType} setCopyMealType={setCopyMealType} onCopyPrevious={copyPreviousMeals} />}
+        {view === 'graphs' && <GraphsView range={graphRange} onRangeChange={setGraphRange} goals={settings.goals} goalRecords={goalRecords} />}
+        {view === 'food-screen' && <FoodsView selectedDate={selectedDate} recordingMealType={recordingMealType} recordingEntryCount={recordingMealType ? entries.filter((entry) => entry.mealType === recordingMealType).length : 0} foods={foods} foodGroups={foodGroups} menus={menus} generalMenus={generalMenus} menuSets={menuSets} recentFoods={recordingMealType ? recentFoodsByMealType[recordingMealType] : recentFoods} favoriteFoods={favoriteFoods} favoriteIds={favoriteIds} onSelectFood={handleFoodSelection} onSelectMenuSet={(menuSet) => void registerMenuSet(menuSet)} onCreateTemporaryMenu={() => setTemporaryMenuDraft({ id: null, name: '', category: 'その他', inputUnitConversions: [], servingAmount: '1', servingUnit: '食', ingredients: [], aliases: [] })} onToggleFavorite={toggleFavorite} onReorderFavorites={reorderFavoriteFoods} onEditFood={(food) => openFoodForm(food, '', 'food-screen', null, null, '', foodScreenReturnView === 'settings' ? 'settings' : 'meal')} onDeleteFood={(food) => void removeFood(food)} onOpenSearch={() => openSearchInput(recordingMealType ? 'meal' : 'food-master')} onOpenScanner={() => openBarcodeScanner(recordingMealType ? 'meal' : 'lookup')} onOpenConfirmation={openMealConfirmationFromFoodSelection} onBack={() => { if (foodScreenReturnView === 'meal-confirmation') setConfirmingMealType(recordingMealType); setRecordingMealType(null); setView(foodScreenReturnView) }} backLabel={foodScreenReturnView === 'settings' ? '← 設定' : '← 記録'} copyMealType={copyMealType} setCopyMealType={setCopyMealType} onCopyPrevious={copyPreviousMeals} />}
         {view === 'food-form' && foodDraft && <FoodFormView draft={foodDraft} returnView={foodFormReturnView} allowCommercialClassification={foodFormOrigin === 'settings'} estimationEnabled={estimationSettings?.enabled === true} setDraft={setFoodDraft} foodGroups={foodGroups} foodAliases={foodAliases} foodRelatedTerms={foodRelatedTerms} externalNote={externalNote} onRevertEstimate={(foodId, nutrientKey) => void revertFoodEstimate(foodId, nutrientKey)} onSubmit={saveFoodDraft} onDelete={foodDraft.id ? () => void removeFoodFromForm() : undefined} onClose={closeFoodForm} />}
         {view === 'settings' && estimationSettings && <SettingsView settings={settings} estimationSettings={estimationSettings} goalInputs={goalInputs} setGoalInputs={setGoalInputs} onSaveGoals={saveGoals} onToggleExternalApi={toggleExternalApi} onToggleNutrientEstimator={toggleNutrientEstimator} onChangeDefaultMealTimeMode={changeDefaultMealTimeMode} onExportJson={exportJson} onRestoreJson={restoreJson} onExportCsv={exportCsv} onImportCsv={importCsv} onExportUnresolvedIngredients={exportUnresolvedIngredients} csvFrom={csvFrom} csvTo={csvTo} setCsvFrom={setCsvFrom} setCsvTo={setCsvTo} counts={counts} bodyProfileInputs={bodyProfileInputs} setBodyProfileInputs={setBodyProfileInputs} onSaveBodyProfile={saveBodyProfile} onOpenNewFood={() => openFoodForm(undefined, '', 'settings', null, null, '', 'settings')} onOpenBarcodeRegister={() => openBarcodeScanner('register')} onOpenFoodMaster={() => { setRecordingMealType(null); setFoodScreenReturnView('settings'); setView('food-screen') }} estimatedGoals={estimateDailyGoals(settings.bodyProfile ?? DEFAULT_BODY_PROFILE)} bmi={calculateBmi(settings.bodyProfile ?? DEFAULT_BODY_PROFILE)} />}
-        {view === 'menus' && <MenuView menus={menus} generalMenus={generalMenus} menuSets={menuSets} foods={foods} onNewMenu={() => setMenuDraft({ id: null, name: '', category: '主菜', ingredients: [], aliases: [], memo: '' })} onShowMenuNutrition={setMenuNutritionDetails} onEditMenu={(menu) => setMenuDraft({ id: menu.id, name: menu.name, category: menu.category, ingredients: getMenuIngredients(menu, foods).map((ingredient) => ({ ...ingredient, amount: String(ingredient.amount) })), aliases: menu.aliases ?? [], memo: menu.memo ?? '' })} onDeleteMenu={removeMenu} onNewGeneralMenu={() => setGeneralMenuDraft({ id: null, name: '', category: '主菜', ingredients: [], aliases: [] })} onEditGeneralMenu={(menu) => setGeneralMenuDraft({ id: menu.id, name: menu.name, category: menu.category, ingredients: getMenuIngredients(menu, foods).map((ingredient) => ({ ...ingredient, amount: String(ingredient.amount) })), aliases: menu.aliases ?? [] })} onDeleteGeneralMenu={removeGeneralMenu} onCloneGeneralMenu={(menu) => void cloneGeneralMenuToMyMenu(menu)} onNewMenuSet={() => setMenuSetDraft({ id: null, name: '', menuIds: [], generalMenuIds: [], foodIds: [], foodItems: [] })} onEditMenuSet={(menuSet) => { const foodItems = getMenuSetFoodItems(menuSet, foods); setMenuSetDraft({ id: menuSet.id, name: menuSet.name, menuIds: menuSet.menuIds, generalMenuIds: menuSet.generalMenuIds ?? [], foodIds: foodItems.map((item) => item.foodId), foodItems: foodItems.map((item) => ({ ...item, amount: String(item.amount) })) }) }} onDeleteMenuSet={removeMenuSet} onReorderMenuSets={reorderMenuSetRecords} onBack={() => setView('today')} />}
+        {view === 'menus' && <MenuView menus={menus} generalMenus={generalMenus} menuSets={menuSets} foods={foods} onNewMenu={() => setMenuDraft({ id: null, name: '', category: '主菜', inputUnitConversions: [], servingAmount: '1', servingUnit: '食', ingredients: [], aliases: [], memo: '' })} onShowMenuNutrition={setMenuNutritionDetails} onEditMenu={(menu) => setMenuDraft({ id: menu.id, name: menu.name, category: menu.category, inputUnitConversions: (menu.inputUnitConversions ?? []).map((conversion) => ({ unit: conversion.unit, baseAmount: String(conversion.baseAmount) })), servingAmount: menu.servingAmount === null || menu.servingAmount === undefined ? '1' : String(menu.servingAmount), servingUnit: menu.servingUnit ?? '食', ingredients: getMenuIngredients(menu, foods).map((ingredient) => ({ ...ingredient, amount: String(ingredient.amount) })), aliases: menu.aliases ?? [], memo: menu.memo ?? '' })} onDeleteMenu={removeMenu} onNewGeneralMenu={() => setGeneralMenuDraft({ id: null, name: '', category: '主菜', inputUnitConversions: [], servingAmount: '1', servingUnit: '食', ingredients: [], aliases: [] })} onEditGeneralMenu={(menu) => setGeneralMenuDraft({ id: menu.id, name: menu.name, category: menu.category, inputUnitConversions: (menu.inputUnitConversions ?? []).map((conversion) => ({ unit: conversion.unit, baseAmount: String(conversion.baseAmount) })), servingAmount: menu.servingAmount === null || menu.servingAmount === undefined ? '1' : String(menu.servingAmount), servingUnit: menu.servingUnit ?? '食', ingredients: getMenuIngredients(menu, foods).map((ingredient) => ({ ...ingredient, amount: String(ingredient.amount) })), aliases: menu.aliases ?? [] })} onDeleteGeneralMenu={removeGeneralMenu} onCloneGeneralMenu={(menu) => void cloneGeneralMenuToMyMenu(menu)} onNewMenuSet={() => setMenuSetDraft({ id: null, name: '', menuIds: [], generalMenuIds: [], foodIds: [], foodItems: [] })} onEditMenuSet={(menuSet) => { const foodItems = getMenuSetFoodItems(menuSet, foods); setMenuSetDraft({ id: menuSet.id, name: menuSet.name, menuIds: menuSet.menuIds, generalMenuIds: menuSet.generalMenuIds ?? [], foodIds: foodItems.map((item) => item.foodId), foodItems: foodItems.map((item) => ({ ...item, amount: String(item.amount) })) }) }} onDeleteMenuSet={removeMenuSet} onReorderMenuSets={reorderMenuSetRecords} onBack={() => setView('today')} />}
         {view === 'search-input' && <SearchInputView bars={searchBars} setBars={setSearchBars} onSearch={() => void searchFoodsAndMenus()} onBack={() => setView('food-screen')} />}
         {view === 'search-results' && <SearchResultsView groups={searchResults} purpose={searchPurpose} category={searchCategory} searching={searchingResults} onCategoryChange={changeSearchCategory} onSelect={handleSearchResultSelect} onAddFood={(query) => openFoodForm(undefined, '', searchPurpose === 'food-master' ? 'search-results' : 'food-screen', searchPurpose === 'meal' ? (recordingMealType ?? mealType) : null, searchPurpose === 'meal' ? (query || null) : null, query, searchPurpose === 'food-master' ? 'settings' : 'meal')} onLoadMore={(index) => void loadMoreSearchResults(index)} onOpenConfirmation={openMealConfirmationFromSearch} onBack={leaveSearchResults} />}
       </main>
@@ -1711,8 +1755,8 @@ function App() {
         onClose={() => setMealVariantEdit(null)}
       />}
       {mealFood && <MealModal food={mealFood} amount={mealAmount} setAmount={setMealAmount} amountUnit={mealAmountUnit} setAmountUnit={setMealAmountUnit} menuSnapshot={mealMenuSnapshot} setMenuSnapshot={setMealMenuSnapshot} menus={menus} foods={foods} foodGroups={foodGroups} recentFoods={recentFoods} favoriteFoods={favoriteFoods} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} foodAttributePreferences={settings.foodAttributePreferences} onSaveFoodAttributePreference={saveFoodAttributePreference} editing={Boolean(editingEntry)} onSubmit={saveMeal} onClose={() => { setPendingMealUsageSearch(null); setMealFood(null); setMealUserFacingName(null); setEditingEntry(null); setMealMenuSnapshot(null) }} />}
-      {mealDetails && <MealDetailsModal details={mealDetails} goals={mealDetailNutritionGoals(settings.goals, mealDetails.type)} onUpdateTimes={updateMealTimes} onClose={() => setMealDetails(null)} />}
-      {showTodayDetails && <TodayDetailsModal selectedDate={selectedDate} goals={settings.goals} entries={entries} onClose={() => setShowTodayDetails(false)} />}
+      {mealDetails && <MealDetailsModal details={mealDetails} goals={mealDetailNutritionGoals(selectedGoals, mealDetails.type)} onUpdateTimes={updateMealTimes} onClose={() => setMealDetails(null)} />}
+      {showTodayDetails && <TodayDetailsModal selectedDate={selectedDate} goals={selectedGoals} goalRecords={goalRecords} entries={entries} onClose={() => setShowTodayDetails(false)} />}
       {menuNutritionDetails && <MenuNutritionDetailsModal menu={menuNutritionDetails} menus={menus} foods={foods} goals={scaleNutritionGoals(settings.goals, 1 / 3)} onClose={() => setMenuNutritionDetails(null)} />}
       {menuDraft && <MenuEditorModal draft={menuDraft} setDraft={setMenuDraft} menus={menus} foods={foods} foodGroups={foodGroups} recentFoods={recentFoods} favoriteFoods={favoriteFoods} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} foodAttributePreferences={settings.foodAttributePreferences} onSaveFoodAttributePreference={saveFoodAttributePreference} onSubmit={saveMenuDraft} onClose={() => setMenuDraft(null)} />}
       {generalMenuDraft && <MenuEditorModal draft={generalMenuDraft} setDraft={setGeneralMenuDraft} mode="general" menus={menus} foods={foods} foodGroups={foodGroups} recentFoods={recentFoods} favoriteFoods={favoriteFoods} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} foodAttributePreferences={settings.foodAttributePreferences} onSaveFoodAttributePreference={saveFoodAttributePreference} onSubmit={saveGeneralMenuDraft} onClose={() => setGeneralMenuDraft(null)} />}

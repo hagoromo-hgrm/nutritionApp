@@ -8,6 +8,7 @@ import { formatGraphNutrient, isNutrientWithinGoalRange } from '../services/nutr
 import { buildDailyNutrientTrend, buildTrendAxisTicks, buildTrendAxisTicksForRange } from '../services/trend'
 import { shouldShowTrendDate } from '../services/trendDateLabels'
 import { buildDailyWeightTrend, buildWeightChartRange } from '../services/weightHistory'
+import { resolveNutritionGoals } from '../services/goalHistory'
 import {
   MEAL_TYPES,
   NUTRIENT_LABELS,
@@ -15,6 +16,7 @@ import {
   type MealEntry,
   type NutrientKey,
   type NutritionGoals,
+  type NutritionGoalRecord,
   type WeightRecord,
 } from '../types'
 import { addDays, currentDateKey } from '../utils/date'
@@ -50,10 +52,11 @@ function formatTrendDate(dateKey: string): string {
 interface GraphsViewProps {
   range: TrendRangeId
   goals: NutritionGoals
+  goalRecords: NutritionGoalRecord[]
   onRangeChange: (value: TrendRangeId) => void
 }
 
-export function GraphsView({ range, goals, onRangeChange }: GraphsViewProps) {
+export function GraphsView({ range, goals, goalRecords, onRangeChange }: GraphsViewProps) {
   const [metric, setMetric] = useState<TrendMetric>('energyKcal')
   const rangeDays = TREND_RANGE_DAYS[range]
   const [historyDays, setHistoryDays] = useState(() => Math.max(TREND_MIN_HISTORY_DAYS, rangeDays * 2))
@@ -82,17 +85,21 @@ export function GraphsView({ range, goals, onRangeChange }: GraphsViewProps) {
   )
   const weightMode = metric === 'weightKg'
   const nutrientMetric = weightMode ? null : metric
-  const goal = nutrientMetric ? goals[nutrientMetric] : null
+  const dailyGoals = useMemo(
+    () => nutrientPoints.map((point) => resolveNutritionGoals(goalRecords, point.date, goals)),
+    [goalRecords, goals, nutrientPoints],
+  )
+  const goalValues = nutrientMetric ? dailyGoals.map((daily) => daily[nutrientMetric] ?? 0) : []
   const nutrientValues = nutrientMetric
     ? nutrientPoints.map((point) => point.availableNutrients[nutrientMetric] ?? 0)
     : []
   const weightRange = buildWeightChartRange(weightPoints)
   const chartMin = weightMode ? weightRange.min : 0
-  const chartMax = weightMode ? weightRange.max : Math.max(goal ?? 0, ...nutrientValues, 1) * 1.15
+  const chartMax = weightMode ? weightRange.max : Math.max(...goalValues, ...nutrientValues, 1) * 1.15
   const axisTicks = weightMode
     ? buildTrendAxisTicksForRange(chartMin, chartMax)
     : buildTrendAxisTicks(chartMax)
-  const goalPosition = !weightMode && goal !== null && goal > 0 ? Math.min(100, (goal / chartMax) * 100) : null
+  const hasGoal = !weightMode && goalValues.some((value) => value > 0)
   const dayStep = Math.max(1, (chartViewportWidth || 320) / rangeDays)
   const dayGap = dayStep / 5
   const chartWidth = Math.max(chartViewportWidth, nutrientPoints.length * dayStep)
@@ -226,7 +233,7 @@ export function GraphsView({ range, goals, onRangeChange }: GraphsViewProps) {
     <section className="trend-chart-card" aria-busy={!historyReady || loadingOlder}>
       {!weightMode && <div className="trend-chart-legend">
         <MealColorLegend />
-        {goalPosition !== null && <span className="trend-goal-legend"><i className="trend-legend-line" />目標 {formatGraphNutrient(goal)}{metricUnit}</span>}
+        {hasGoal && <span className="trend-goal-legend"><i className="trend-legend-line" />日別目標</span>}
       </div>}
       {historyError && <p className="trend-load-status error-text">{historyError}</p>}
       <div className="trend-chart-body">
@@ -239,10 +246,10 @@ export function GraphsView({ range, goals, onRangeChange }: GraphsViewProps) {
                     const showLabel = point.weightKg !== null && shouldShowTrendDate(point.date, range)
                     return <span key={point.date} className={`trend-bar-value${point.weightKg === null ? ' is-missing' : ''}${showLabel ? '' : ' is-hidden'}`}>{point.weightKg === null ? '' : formatGraphNutrient(point.weightKg)}{point.weightKg !== null && <small>kg</small>}</span>
                   })
-                  : nutrientMetric && nutrientPoints.map((point) => {
+                  : nutrientMetric && nutrientPoints.map((point, index) => {
                     const availableValue = point.availableNutrients[nutrientMetric]
                     const showLabel = shouldShowTrendDate(point.date, range)
-                    return <span key={point.date} className={`trend-bar-value${isNutrientWithinGoalRange(point.nutrients[nutrientMetric], goals, nutrientMetric) ? ' is-within-goal' : ''}${availableValue === null ? ' is-missing' : ''}${showLabel ? '' : ' is-hidden'}`}>{formatGraphNutrient(availableValue)}<small>{metricUnit}</small></span>
+                    return <span key={point.date} className={`trend-bar-value${isNutrientWithinGoalRange(point.nutrients[nutrientMetric], dailyGoals[index], nutrientMetric) ? ' is-within-goal' : ''}${availableValue === null ? ' is-missing' : ''}${showLabel ? '' : ' is-hidden'}`}>{formatGraphNutrient(availableValue)}<small>{metricUnit}</small></span>
                   })}
               </div>
               <div className={`trend-chart-track-area${weightMode ? ' weight-trend-track-area' : ''}`}>
@@ -257,7 +264,11 @@ export function GraphsView({ range, goals, onRangeChange }: GraphsViewProps) {
                     })}
                   </div>
                 </> : <>
-                  {goalPosition !== null && <span className="trend-chart-goal-line" style={{ bottom: `${goalPosition}%` }} />}
+                  {hasGoal && nutrientMetric && <div className="trend-chart-daily-goals" style={chartGridStyle}>{dailyGoals.map((daily, index) => {
+                    const dailyGoal = daily[nutrientMetric]
+                    if (dailyGoal === null || dailyGoal <= 0) return <span key={nutrientPoints[index].date} />
+                    return <span key={nutrientPoints[index].date}><i style={{ bottom: `${Math.min(100, (dailyGoal / chartMax) * 100)}%` }} /></span>
+                  })}</div>}
                   <div className="trend-chart-bars" style={chartGridStyle}>
                   {nutrientMetric && nutrientPoints.map((point) => {
                     const availableValue = point.availableNutrients[nutrientMetric]

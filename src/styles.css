@@ -167,6 +167,9 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .weight-trend-points { position: absolute; z-index: 3; inset: 0; }
 .weight-trend-point { position: absolute; width: .58rem; height: .58rem; transform: translate(-50%, 50%); border: 2px solid var(--accent-deep); border-radius: 50%; background: #ffffff; box-shadow: 0 .15rem .35rem rgba(69, 111, 159, .2); }
 .trend-chart-goal-line { position: absolute; z-index: 1; right: 0; left: 0; border-top: 1px dashed var(--accent-deep); opacity: .72; pointer-events: none; }
+.trend-chart-daily-goals { position: absolute; z-index: 1; inset: 0; display: grid; pointer-events: none; }
+.trend-chart-daily-goals > span { position: relative; }
+.trend-chart-daily-goals i { position: absolute; right: 0; left: 0; border-top: 1px dashed var(--accent-deep); opacity: .72; }
 .trend-bar-value { overflow: hidden; min-height: 1rem; color: var(--muted); font-size: .56rem; line-height: 1.2; text-align: center; white-space: nowrap; }
 .trend-bar-value.is-within-goal { color: #6d9ed6; }
 .trend-bar-value.is-missing { color: var(--muted); }

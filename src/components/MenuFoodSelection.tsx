@@ -74,7 +74,7 @@ export function MenuIngredientRow({ ingredient, foods, menus, onChangeAmount, on
   const food = ingredient.kind === 'food' ? foods.find((item) => item.id === ingredient.itemId) : undefined
   const menu = ingredient.kind === 'menu' ? menus.find((item) => item.id === ingredient.itemId) : undefined
   const name = food ? displayFoodName(food) : menu?.name ?? (ingredient.kind === 'food' ? '削除済み食品' : '削除済みメニュー')
-  const availableUnits = food ? getFoodQuantityUnits(food) : ['食']
+  const availableUnits = food ? getFoodQuantityUnits(food) : menu ? ['食', ...(menu.inputUnitConversions ?? []).map((conversion) => conversion.unit)] : ['食']
   const unitOptions = availableUnits.includes(ingredient.unit) ? availableUnits : [...availableUnits, ingredient.unit]
   return <div className="menu-ingredient-row"><div className="menu-ingredient-copy"><span className="source-badge">{ingredient.kind === 'food' ? '食品' : '料理'}</span><strong>{name}</strong></div><label className="menu-ingredient-amount"><span className="sr-only">{name}の分量</span><input type="number" min="0.01" max="100000" step="any" value={ingredient.amount} onChange={(event) => onChangeAmount(event.target.value)} required />{onChangeUnit ? <select value={ingredient.unit} onChange={(event) => onChangeUnit(event.target.value)} aria-label={`${name}の入力単位`}>{unitOptions.map((unit) => <option key={unit} value={unit}>{unit}{!availableUnits.includes(unit) ? '（未登録）' : ''}</option>)}</select> : <span>{ingredient.unit}</span>}</label><button type="button" className="small-action danger-text" onClick={onRemove} aria-label={`${name}を削除`}>削除</button></div>
 }

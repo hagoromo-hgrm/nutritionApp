@@ -35,6 +35,9 @@ export interface MenuDraft {
   id: string | null
   name: string
   category: MenuCategory
+  inputUnitConversions: Array<{ unit: string; baseAmount: string }>
+  servingAmount: string
+  servingUnit: QuantityUnit
   ingredients: MenuIngredientDraft[]
   aliases: string[]
   memo?: string
@@ -80,8 +83,8 @@ export interface FoodDraft {
   sourceVersion: string
   baseAmount: string
   baseUnit: FoodUnit
-  inputUnit: string
-  inputUnitBaseAmount: string
+  /** 食品に明示登録する入力単位。複数単位を編集画面から保持できる。 */
+  inputUnitConversions: Array<{ unit: string; baseAmount: string }>
   servingAmount: string
   servingUnit: QuantityUnit
   menuIds: string[]
@@ -156,7 +159,7 @@ export function emptyFoodDraft(barcode = '', initialName = ''): FoodDraft {
   const genre = inferEstimatorGenre({ productName: initialName })
   return {
     originalInputHash: null, id: null, name: initialName, maker: '', barcode, isCommercial: Boolean(barcode.trim()), source: 'user', sourceVersion: 'ユーザー入力',
-    baseAmount: '100', baseUnit: 'g', inputUnit: '', inputUnitBaseAmount: '', servingAmount: '', servingUnit: 'g', menuIds: [], foodGroupId: '', groupDisplayName: initialName,
+    baseAmount: '100', baseUnit: 'g', inputUnitConversions: [{ unit: '', baseAmount: '' }], servingAmount: '', servingUnit: 'g', menuIds: [], foodGroupId: '', groupDisplayName: initialName,
     groupReading: '', groupCategory: '', aliases: [], relatedTerms: [], variantAttributes: emptyVariantInputs(), nutrients: emptyNutrientInputs(),
     ingredientsText: '', ingredientsSourceProvider: '', estimationReferenceMassG: '', estimationReferenceMassSource: '',
     estimatorGenreId: genre.id, estimatorGenreSource: genre.source,
@@ -173,12 +176,13 @@ export function bodyProfileToDraft(profile: BodyProfile | undefined): BodyProfil
 }
 
 export function foodToDraft(food: Food, group: FoodGroup | undefined, aliases: FoodAlias[], relatedTerms: FoodRelatedTerm[]): FoodDraft {
-  const conversion = food.inputUnitConversions?.[0]
+  const storedInputUnitConversions = (food.inputUnitConversions ?? []).map((conversion) => ({ unit: conversion.unit, baseAmount: String(conversion.baseAmount) }))
+  const inputUnitConversions = storedInputUnitConversions.length > 0 ? storedInputUnitConversions : [{ unit: '', baseAmount: '' }]
   const inferredGenre = inferEstimatorGenre({ productName: food.name, ingredientsText: food.ingredientsText })
   return {
     originalInputHash: createEstimationInputHash(food), id: food.id, name: food.name, maker: food.maker, barcode: food.barcode, isCommercial: food.isCommercial === true, source: food.source,
     sourceVersion: food.sourceVersion, baseAmount: String(food.baseAmount), baseUnit: food.baseUnit,
-    inputUnit: conversion?.unit ?? '', inputUnitBaseAmount: conversion ? String(conversion.baseAmount) : '',
+    inputUnitConversions,
     servingAmount: food.servingAmount === null ? '' : String(food.servingAmount), servingUnit: food.servingUnit ?? food.baseUnit,
     menuIds: food.menuIds ?? [], foodGroupId: group?.id ?? food.foodGroupId ?? '', groupDisplayName: group?.displayName ?? food.displayName ?? food.name,
     groupReading: group?.reading ?? food.reading ?? '', groupCategory: group?.category ?? '',

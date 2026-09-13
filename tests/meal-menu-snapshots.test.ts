@@ -84,6 +84,21 @@ describe('meal menu snapshots', () => {
     expect(calculateMealMenuEntryNutrients(snapshot, 2, '個').energyKcal).toBeNull()
   })
 
+  it('メニュー全体の任意単位をスナップショットへ固定して換算する', () => {
+    const customMenu: Menu = {
+      ...parent,
+      inputUnitConversions: [{ unit: '皿', baseAmount: 0.5 }],
+      servingAmount: 2,
+      servingUnit: '皿',
+    }
+    const snapshot = createMealMenuSnapshot(customMenu, [customMenu, child], [rice, egg])
+
+    expect(snapshot.inputUnitConversions).toEqual([{ unit: '皿', baseAmount: 0.5 }])
+    expect(calculateMealMenuEntryNutrients(snapshot, 2, '皿').energyKcal).toBe(340)
+    expect(isMealMenuSnapshot(snapshot)).toBe(true)
+    expect(isMealMenuSnapshot({ ...snapshot, inputUnitConversions: [{ unit: '食', baseAmount: 1 }] })).toBe(false)
+  })
+
   it('一般メニューのスナップショットは由来を区別して複製する', () => {
     const snapshot = createGeneralMealMenuSnapshot(generalMenu, [child], [rice, egg])
     expect(snapshot).toMatchObject({ sourceMenuId: 'general-parent', sourceMenuName: '一般の卵ご飯', sourceKind: 'general-menu' })

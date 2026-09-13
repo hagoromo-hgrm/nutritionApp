@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { NutrientEstimateAdoption } from '../src/components/NutrientEstimatePanel'
-import { emptyFoodDraft, queueFoodEstimateAdoption, queueFoodEstimateEvaluation, queueFoodEstimateRejection, withoutPendingEstimation } from '../src/components/formDrafts'
+import { emptyFoodDraft, foodToDraft, queueFoodEstimateAdoption, queueFoodEstimateEvaluation, queueFoodEstimateRejection, withoutPendingEstimation } from '../src/components/formDrafts'
+import type { Food } from '../src/types'
 import { estimateNutrients, type NutrientEstimateRequest } from '../src/services/nutrientEstimator'
 import contract from './fixtures/estimation-contract/core-invariants.json'
 
@@ -26,6 +27,21 @@ function stagedDraft() {
 }
 
 describe('staged nutrient estimate decisions', () => {
+  it('食品編集で既存の入力用単位換算をすべて保持する', () => {
+    const food: Food = {
+      id: 'potato', name: 'じゃがいも 塊茎 皮なし 生', maker: '', barcode: '', source: 'mext', sourceVersion: 'test',
+      baseAmount: 100, baseUnit: 'g', servingAmount: 1, servingUnit: '個',
+      inputUnitConversions: [{ unit: '個', baseAmount: 90 }, { unit: '袋', baseAmount: 450 }],
+      nutrients: { energyKcal: 59, proteinG: 1.8, fatG: 0.1, carbohydrateG: 17.3, fiberG: 8.9, saltG: 0, calciumMg: 4, ironMg: 0.4, vitaminAMcg: 0, vitaminEMg: 0, vitaminB1Mg: 0.08, vitaminB2Mg: 0.03, vitaminCMg: 28, saturatedFatG: 0.01 },
+      createdAt: '', updatedAt: '',
+    }
+
+    expect(foodToDraft(food, undefined, [], []).inputUnitConversions).toEqual([
+      { unit: '個', baseAmount: '90' },
+      { unit: '袋', baseAmount: '450' },
+    ])
+  })
+
   it('keeps every sequential adoption and its full precision under one request', () => {
     const draft = stagedDraft()
     expect(draft.nutrients.fiberG).toBe('1.2')

@@ -1,6 +1,10 @@
 import { EMPTY_NUTRIENTS, type Food, type Menu, type MenuIngredient } from '../types'
 import { calculateNutrients, getFoodQuantityUnits, sumNutrients } from './nutrition'
 
+export function getMenuQuantityUnits(menu: Menu): string[] {
+  return [...new Set(['食', ...(menu.inputUnitConversions ?? []).map((conversion) => conversion.unit)])]
+}
+
 /** 旧形式のfoodIdsを、食品の基準量を使う明細へ読み替える。 */
 export function getMenuIngredients(menu: Menu, foods: Food[]): MenuIngredient[] {
   if (menu.ingredients !== undefined) return menu.ingredients.map((ingredient) => ({ ...ingredient }))
@@ -47,7 +51,10 @@ export function hasMenuCycles(menus: Menu[]): boolean {
 export function menusWithUnsupportedIngredientUnits(menus: Menu[], foods: Food[]): Menu[] {
   const foodsById = new Map(foods.map((food) => [food.id, food]))
   return menus.filter((menu) => (menu.ingredients ?? []).some((ingredient) => {
-    if (ingredient.kind === 'menu') return ingredient.unit !== '食'
+    if (ingredient.kind === 'menu') {
+      const nested = menus.find((candidate) => candidate.id === ingredient.itemId)
+      return nested !== undefined && !getMenuQuantityUnits(nested).includes(ingredient.unit)
+    }
     const food = foodsById.get(ingredient.itemId)
     return food ? !getFoodQuantityUnits(food).includes(ingredient.unit) : false
   }))
@@ -57,7 +64,7 @@ function createMenuFood(menu: Menu, menusById: Map<string, Menu>, foodsById: Map
   if (ancestors.has(menu.id)) {
     return {
       id: `menu:${menu.id}`, name: menu.name, maker: '', barcode: '', source: 'user', sourceVersion: `メニュー「${menu.category}」`,
-      baseAmount: 1, baseUnit: '食', servingAmount: 1, servingUnit: '食', nutrients: { ...EMPTY_NUTRIENTS }, createdAt: menu.createdAt, updatedAt: menu.updatedAt,
+      baseAmount: 1, baseUnit: '食', servingAmount: menu.servingAmount ?? 1, servingUnit: menu.servingUnit ?? '食', inputUnitConversions: menu.inputUnitConversions?.map((conversion) => ({ ...conversion })), nutrients: { ...EMPTY_NUTRIENTS }, createdAt: menu.createdAt, updatedAt: menu.updatedAt,
     }
   }
   const nextAncestors = new Set(ancestors).add(menu.id)
@@ -72,7 +79,7 @@ function createMenuFood(menu: Menu, menusById: Map<string, Menu>, foodsById: Map
   }))
   return {
     id: `menu:${menu.id}`, name: menu.name, maker: '', barcode: '', source: 'user', sourceVersion: `メニュー「${menu.category}」`,
-    baseAmount: 1, baseUnit: '食', servingAmount: 1, servingUnit: '食', nutrients, createdAt: menu.createdAt, updatedAt: menu.updatedAt,
+    baseAmount: 1, baseUnit: '食', servingAmount: menu.servingAmount ?? 1, servingUnit: menu.servingUnit ?? '食', inputUnitConversions: menu.inputUnitConversions?.map((conversion) => ({ ...conversion })), nutrients, createdAt: menu.createdAt, updatedAt: menu.updatedAt,
   }
 }
 

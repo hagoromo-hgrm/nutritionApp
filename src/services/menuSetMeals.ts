@@ -131,6 +131,7 @@ export function createMenuSetMealBatch(options: CreateMenuSetMealBatchOptions): 
     const menuFood = menuToFood(menu, menus, foods)
     const menuSnapshot = createMealMenuSnapshot(menu, menus, foods)
     const snapshotNutrients = calculateMealMenuSnapshotNutrients(menuSnapshot)
+    const serving = getFoodDefaultServing(menuFood)
     entries.push({
       id: createId(),
       eatenAt,
@@ -140,9 +141,9 @@ export function createMenuSetMealBatch(options: CreateMenuSetMealBatchOptions): 
         ...createFoodSnapshot(menuFood),
         nutrients: { ...snapshotNutrients },
       },
-      amount: 1,
-      amountUnit: '食',
-      calculatedNutrients: calculateMealMenuEntryNutrients(menuSnapshot, 1, '食'),
+      amount: serving.amount,
+      amountUnit: serving.unit,
+      calculatedNutrients: calculateMealMenuEntryNutrients(menuSnapshot, serving.amount, serving.unit),
       menuSnapshot,
     })
   }
@@ -157,6 +158,7 @@ export function createMenuSetMealBatch(options: CreateMenuSetMealBatchOptions): 
     const menuFood = { ...convertedMenuFood, id: `general-menu:${generalMenu.id}`, sourceVersion: `一般メニュー「${generalMenu.category}」` }
     const menuSnapshot = createGeneralMealMenuSnapshot(generalMenu, menus, foods)
     const snapshotNutrients = calculateMealMenuSnapshotNutrients(menuSnapshot)
+    const serving = getFoodDefaultServing(menuFood)
     entries.push({
       id: createId(),
       eatenAt,
@@ -166,9 +168,9 @@ export function createMenuSetMealBatch(options: CreateMenuSetMealBatchOptions): 
         ...createFoodSnapshot(menuFood),
         nutrients: { ...snapshotNutrients },
       },
-      amount: 1,
-      amountUnit: '食',
-      calculatedNutrients: calculateMealMenuEntryNutrients(menuSnapshot, 1, '食'),
+      amount: serving.amount,
+      amountUnit: serving.unit,
+      calculatedNutrients: calculateMealMenuEntryNutrients(menuSnapshot, serving.amount, serving.unit),
       menuSnapshot,
     })
   }
