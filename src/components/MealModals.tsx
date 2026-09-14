@@ -6,6 +6,7 @@ import {
   createMealMenuIngredientSnapshot,
 } from '../services/mealMenuSnapshots'
 import { calculateNutrients, formatNutrient, getFoodQuantityUnits, incrementByQuantityUnit, sumAvailableNutrients } from '../services/nutrition'
+import { getMenuBase } from '../services/menuIngredients'
 import {
   MEAL_TYPES,
   type Food,
@@ -35,7 +36,9 @@ function MealSnapshotIngredientRow({ ingredient, onChange, onRemove }: { ingredi
   const name = ingredient.kind === 'food' ? getFoodSnapshotDisplayName(ingredient.foodSnapshot) : ingredient.name
   const availableUnits = ingredient.kind === 'food'
     ? [ingredient.foodSnapshot.baseUnit, ...(ingredient.foodSnapshot.inputUnitConversions ?? []).map((conversion) => conversion.unit)]
-    : ['食', ...(ingredient.inputUnitConversions ?? []).map((conversion) => conversion.unit)]
+    : ingredient.baseAmount !== undefined && ingredient.baseUnit !== undefined
+      ? [ingredient.baseUnit]
+      : ['食', ...(ingredient.inputUnitConversions ?? []).map((conversion) => conversion.unit)]
   const unitOptions = availableUnits.includes(ingredient.unit) ? availableUnits : [...availableUnits, ingredient.unit]
   const changeChild = (index: number, child: MealIngredientSnapshot) => {
     if (ingredient.kind !== 'menu') return
@@ -64,7 +67,8 @@ export function MealModal({ food, amount, setAmount, amountUnit, setAmountUnit, 
   }
   const addMenu = (menu: Menu) => {
     if (!menuSnapshot || menuSnapshot.ingredients.some((ingredient) => ingredient.kind === 'menu' && ingredient.itemId === menu.id)) return
-    setMenuSnapshot({ ...menuSnapshot, ingredients: [...menuSnapshot.ingredients, createMealMenuIngredientSnapshot(menu, menus, foods)] })
+    const base = getMenuBase(menu)
+    setMenuSnapshot({ ...menuSnapshot, ingredients: [...menuSnapshot.ingredients, createMealMenuIngredientSnapshot(menu, menus, foods, base.amount, base.unit)] })
   }
   const selectedIngredients: MenuIngredientDraft[] = menuSnapshot?.ingredients.map((ingredient) => ({ kind: ingredient.kind, itemId: ingredient.itemId, amount: String(ingredient.amount), unit: ingredient.unit })) ?? []
   const selectedFoodIds = selectedIngredients.filter((ingredient) => ingredient.kind === 'food').map((ingredient) => ingredient.itemId)
@@ -77,7 +81,7 @@ export function MealModal({ food, amount, setAmount, amountUnit, setAmountUnit, 
         <label>分量<div className="amount-input-row"><div className="amount-input"><input type="number" min="0.01" max="100000" step="any" value={amount} onChange={(event) => setAmount(event.target.value)} required /><select className="field-suffix" value={amountUnit} onChange={(event) => setAmountUnit(event.target.value)} aria-label="入力用単位">{getFoodQuantityUnits(food).map((unit) => <option key={unit} value={unit}>{unit}</option>)}</select></div><button className="amount-increment" type="button" onClick={incrementAmount} disabled={!canIncrement} aria-label="分量を既定分量1回分増やす">＋1</button></div></label>
         {menuSnapshot && <section className="meal-menu-snapshot-editor">
           <details className="meal-menu-selected-details" open={selectedIngredientsOpen} onToggle={(event) => setSelectedIngredientsOpen(event.currentTarget.open)}>
-            <summary><div><span className="eyebrow">SELECTED</span><h3>追加済み食材</h3><p>表示中の分量は1食分です。ここでの変更はこの食事だけに保存され、メニュー原本には反映されません。</p></div><span className="menu-editor-count">{menuSnapshot.ingredients.length}件</span><i aria-hidden="true" /></summary>
+            <summary><div><span className="eyebrow">SELECTED</span><h3>追加済み食材</h3><p>表示中の分量はメニューの基準量分です。ここでの変更はこの食事だけに保存され、メニュー原本には反映されません。</p></div><span className="menu-editor-count">{menuSnapshot.ingredients.length}件</span><i aria-hidden="true" /></summary>
             <div className="meal-snapshot-ingredients menu-editor-selected-list">{menuSnapshot.ingredients.length > 0 ? menuSnapshot.ingredients.map((ingredient, index) => <MealSnapshotIngredientRow key={`${ingredient.kind}:${ingredient.itemId}:${index}`} ingredient={ingredient} onChange={(next) => changeIngredient(index, next)} onRemove={() => removeIngredient(index)} />) : <p className="menu-editor-empty">構成食材がありません。下から追加できます。</p>}</div>
           </details>
           <div className="menu-editor-add-section"><MenuFoodSelection selectedIds={selectedFoodIds} selectedIngredients={selectedIngredients} menus={menus} editingMenuId={menuSnapshot.sourceMenuId} foods={foods} foodGroups={foodGroups} recentFoods={recentFoods} favoriteFoods={favoriteFoods} favoriteIds={favoriteIds} onToggleFavorite={onToggleFavorite} foodAttributePreferences={foodAttributePreferences} onSaveFoodAttributePreference={onSaveFoodAttributePreference} onAdd={addFood} onRemove={() => undefined} onAddMenu={addMenu} showSelectedList={false} pickerTitle="食材を追加" /></div>

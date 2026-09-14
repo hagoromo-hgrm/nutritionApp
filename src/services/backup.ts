@@ -155,7 +155,7 @@ function isFood(value: unknown): value is Food {
 function isSnapshot(value: unknown): value is FoodSnapshot {
   if (!isRecord(value)) return false
   return isNonEmptyString(value.name) && isString(value.maker) && isString(value.barcode) && (!value.barcode || isValidBarcode(value.barcode))
-    && typeof value.baseAmount === 'number' && Number.isFinite(value.baseAmount) && value.baseAmount > 0 && value.baseAmount <= 100000 && isValidUnit(String(value.baseUnit))
+    && typeof value.baseAmount === 'number' && Number.isFinite(value.baseAmount) && value.baseAmount > 0 && value.baseAmount <= 100000 && isValidQuantityUnit(String(value.baseUnit))
     && isInputUnitConversions(value.inputUnitConversions, String(value.baseUnit))
     && isNutrients(value.nutrients)
     && (value.missing === undefined || typeof value.missing === 'boolean')
@@ -262,10 +262,16 @@ function isMenuIngredient(value: unknown): value is MenuIngredient {
 
 function isMenu(value: unknown): value is Menu {
   if (!isRecord(value)) return false
+  const hasBase = value.baseAmount !== undefined || value.baseUnit !== undefined
+  const validBase = !hasBase
+    || (typeof value.baseAmount === 'number' && Number.isFinite(value.baseAmount) && value.baseAmount > 0 && value.baseAmount <= 100000
+      && typeof value.baseUnit === 'string' && isValidQuantityUnit(value.baseUnit))
   return isNonEmptyString(value.id) && isNonEmptyString(value.name) && ['主食', '主菜', '副菜', '汁物', '乳製品・果物', 'お菓子・スイーツ', 'その他'].includes(String(value.category))
-    && isInputUnitConversions(value.inputUnitConversions, '食')
+    && validBase
+    && (hasBase ? value.inputUnitConversions === undefined : isInputUnitConversions(value.inputUnitConversions, '食'))
     && (value.servingAmount === undefined || value.servingAmount === null || (typeof value.servingAmount === 'number' && Number.isFinite(value.servingAmount) && value.servingAmount > 0 && value.servingAmount <= 100000))
-    && (value.servingUnit === undefined || value.servingUnit === null || (isValidQuantityUnit(String(value.servingUnit)) && hasQuantityUnitConversion('食', value.inputUnitConversions, String(value.servingUnit))))
+    && (value.servingUnit === undefined || value.servingUnit === null || (isValidQuantityUnit(String(value.servingUnit))
+      && (hasBase ? String(value.servingUnit) === String(value.baseUnit) : hasQuantityUnitConversion('食', value.inputUnitConversions, String(value.servingUnit)))))
     && Array.isArray(value.foodIds) && value.foodIds.every(isNonEmptyString)
     && (value.ingredients === undefined || (Array.isArray(value.ingredients) && value.ingredients.every(isMenuIngredient)))
     && (value.aliases === undefined || (Array.isArray(value.aliases) && value.aliases.every(isNonEmptyString)))

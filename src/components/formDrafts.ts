@@ -35,7 +35,9 @@ export interface MenuDraft {
   id: string | null
   name: string
   category: MenuCategory
-  inputUnitConversions: Array<{ unit: string; baseAmount: string }>
+  /** メニュー全体の栄養値に対応する基準量・単位。旧ドラフトは1食として初期化する。 */
+  baseAmount: string
+  baseUnit: QuantityUnit
   servingAmount: string
   servingUnit: QuantityUnit
   ingredients: MenuIngredientDraft[]

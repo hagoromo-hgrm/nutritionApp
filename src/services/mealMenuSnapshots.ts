@@ -15,7 +15,7 @@ import {
 import { createId } from '../utils/id'
 import { isFoodUnitConversion, isNutrients, isValidQuantityUnit, isValidUnit } from '../utils/validation'
 import { calculateNutrients, getFoodDefaultServing, sumNutrients } from './nutrition'
-import { getMenuIngredients } from './menuIngredients'
+import { getMenuBase, getMenuIngredients } from './menuIngredients'
 import { getMextUserFacingFoodName } from './mealEntryDisplay'
 
 function foodSnapshot(food: Food): FoodSnapshot {
@@ -71,10 +71,12 @@ function createMenuIngredientSnapshot(
   ancestors: Set<string>,
 ): MealMenuIngredientSnapshot {
   const menu = menusById.get(menuId)
+  const hasExplicitBase = menu?.baseAmount !== undefined && menu.baseUnit !== undefined
+  const base = menu ? getMenuBase(menu) : { amount: 1, unit: '食' as QuantityUnit }
   if (!menu || ancestors.has(menuId)) {
     return {
       kind: 'menu', itemId: menuId, name: menu?.name ?? `削除済みメニュー（${menuId}）`, amount, unit,
-      inputUnitConversions: menu?.inputUnitConversions?.map((conversion) => ({ ...conversion })),
+      ...(hasExplicitBase ? { baseAmount: base.amount, baseUnit: base.unit } : { inputUnitConversions: menu?.inputUnitConversions?.map((conversion) => ({ ...conversion })) }),
       ingredients: [], missing: true,
     }
   }
@@ -90,25 +92,37 @@ function createMenuIngredientSnapshot(
       ingredient.itemId, ingredient.amount, ingredient.unit, menusById, foodsById, allFoods, nextAncestors,
     )
   })
-  return { kind: 'menu', itemId: menu.id, name: menu.name, amount, unit, ingredients, missing: false }
+  return {
+    kind: 'menu', itemId: menu.id, name: menu.name, amount, unit,
+    ...(hasExplicitBase ? { baseAmount: base.amount, baseUnit: base.unit } : { inputUnitConversions: menu.inputUnitConversions?.map((conversion) => ({ ...conversion })) }),
+    ingredients, missing: false,
+  }
 }
 
 export function createMealMenuIngredientSnapshot(
   menu: Menu,
   menus: Menu[],
   foods: Food[],
-  amount = 1,
-  unit: QuantityUnit = '食',
+  amount = getMenuBase(menu).amount,
+  unit?: QuantityUnit,
 ): MealMenuIngredientSnapshot {
+  const base = getMenuBase(menu)
   return createMenuIngredientSnapshot(
-    menu.id, amount, unit, new Map(menus.map((item) => [item.id, item])),
+    menu.id, amount, unit ?? base.unit, new Map(menus.map((item) => [item.id, item])),
     new Map(foods.map((food) => [food.id, food])), foods, new Set(),
   )
 }
 
 export function createMealMenuSnapshot(menu: Menu, menus: Menu[], foods: Food[]): MealMenuSnapshot {
   const root = createMealMenuIngredientSnapshot(menu, menus, foods)
-  return { sourceMenuId: menu.id, sourceMenuName: menu.name, inputUnitConversions: menu.inputUnitConversions?.map((conversion) => ({ ...conversion })), ingredients: root.ingredients }
+  const hasExplicitBase = menu.baseAmount !== undefined && menu.baseUnit !== undefined
+  const base = getMenuBase(menu)
+  return {
+    sourceMenuId: menu.id,
+    sourceMenuName: menu.name,
+    ...(hasExplicitBase ? { baseAmount: base.amount, baseUnit: base.unit } : { inputUnitConversions: menu.inputUnitConversions?.map((conversion) => ({ ...conversion })) }),
+    ingredients: root.ingredients,
+  }
 }
 
 /** 一般メニューを食事へ登録した時点の構成を複製する。原本とは別の食事側スナップショットになる。 */
@@ -116,11 +130,12 @@ export function createGeneralMealMenuIngredientSnapshot(
   menu: GeneralMenu,
   menus: Menu[],
   foods: Food[],
-  amount = 1,
-  unit: QuantityUnit = '食',
+  amount = getMenuBase(menu).amount,
+  unit?: QuantityUnit,
 ): MealMenuIngredientSnapshot {
+  const base = getMenuBase(menu)
   return createMenuIngredientSnapshot(
-    menu.id, amount, unit,
+    menu.id, amount, unit ?? base.unit,
     new Map([...menus, menu].map((item) => [item.id, item])),
     new Map(foods.map((food) => [food.id, food])), foods, new Set(),
   )
@@ -128,7 +143,15 @@ export function createGeneralMealMenuIngredientSnapshot(
 
 export function createGeneralMealMenuSnapshot(menu: GeneralMenu, menus: Menu[], foods: Food[]): MealMenuSnapshot {
   const root = createGeneralMealMenuIngredientSnapshot(menu, menus, foods)
-  return { sourceMenuId: menu.id, sourceMenuName: menu.name, sourceKind: 'general-menu', inputUnitConversions: menu.inputUnitConversions?.map((conversion) => ({ ...conversion })), ingredients: root.ingredients }
+  const hasExplicitBase = menu.baseAmount !== undefined && menu.baseUnit !== undefined
+  const base = getMenuBase(menu)
+  return {
+    sourceMenuId: menu.id,
+    sourceMenuName: menu.name,
+    sourceKind: 'general-menu',
+    ...(hasExplicitBase ? { baseAmount: base.amount, baseUnit: base.unit } : { inputUnitConversions: menu.inputUnitConversions?.map((conversion) => ({ ...conversion })) }),
+    ingredients: root.ingredients,
+  }
 }
 
 /** 原本を保存せず、その食事記録だけに属するメニュー構成を安全に作る。 */
@@ -136,15 +159,20 @@ export function createTemporaryMealMenuSnapshot(
   sourceMenuName: string,
   ingredients: MealIngredientSnapshot[],
   sourceMenuId = createId('temporary-menu'),
-  inputUnitConversions?: MealMenuSnapshot['inputUnitConversions'],
+  baseAmount = 1,
+  baseUnit: QuantityUnit = '食',
 ): MealMenuSnapshot {
   if (!sourceMenuName.trim()) throw new Error('一時メニュー名は空にできません。')
   if (!sourceMenuId.trim()) throw new Error('一時メニューの識別子が空です。')
+  if (!Number.isFinite(baseAmount) || baseAmount <= 0 || baseAmount > 100000 || !isValidQuantityUnit(baseUnit)) {
+    throw new Error('一時メニューの基準量・基準単位が不正です。')
+  }
   return {
     sourceMenuId,
     sourceMenuName: sourceMenuName.trim(),
     sourceKind: 'temporary',
-    inputUnitConversions: inputUnitConversions?.map((conversion) => ({ ...conversion })),
+    baseAmount,
+    baseUnit,
     ingredients: ingredients.map(cloneIngredient),
   }
 }
@@ -160,7 +188,7 @@ function snapshotFoodAsFood(snapshot: FoodSnapshot, id: string): Food {
     source: 'user',
     sourceVersion: '食事記録の構成食材スナップショット',
     baseAmount: snapshot.baseAmount,
-    baseUnit: snapshot.baseUnit,
+    baseUnit: snapshot.baseUnit as Food['baseUnit'],
     servingAmount: null,
     servingUnit: null,
     inputUnitConversions: snapshot.inputUnitConversions?.map((conversion) => ({ ...conversion })),
@@ -184,14 +212,16 @@ export function calculateMealIngredientSnapshotNutrients(ingredient: MealIngredi
   if (ingredient.missing) return { ...EMPTY_NUTRIENTS }
   const menuFood: Food = {
     id: `menu:${ingredient.itemId}`, name: ingredient.name, maker: '', barcode: '', source: 'user', sourceVersion: '食事記録のメニュースナップショット',
-    baseAmount: 1, baseUnit: '食', servingAmount: null, servingUnit: null,
-    inputUnitConversions: ingredient.inputUnitConversions?.map((conversion) => ({ ...conversion })),
+    baseAmount: ingredient.baseAmount ?? 1, baseUnit: (ingredient.baseUnit ?? '食') as Food['baseUnit'], servingAmount: null, servingUnit: null,
+    inputUnitConversions: ingredient.baseAmount === undefined && ingredient.baseUnit === undefined
+      ? ingredient.inputUnitConversions?.map((conversion) => ({ ...conversion }))
+      : undefined,
     nutrients: sumNutrients(ingredient.ingredients.map(calculateMealIngredientSnapshotNutrients)), createdAt: '', updatedAt: '',
   }
   return calculateNutrients(menuFood, ingredient.amount, ingredient.unit)
 }
 
-/** 料理メニュー1食分の栄養値を、食事側へ複製した構成だけから計算する。 */
+/** 料理メニューの基準量分の栄養値を、食事側へ複製した構成だけから計算する。 */
 export function calculateMealMenuSnapshotNutrients(snapshot: MealMenuSnapshot): Nutrients {
   return sumNutrients(snapshot.ingredients.map(calculateMealIngredientSnapshotNutrients))
 }
@@ -199,8 +229,10 @@ export function calculateMealMenuSnapshotNutrients(snapshot: MealMenuSnapshot): 
 export function calculateMealMenuEntryNutrients(snapshot: MealMenuSnapshot, amount: number, unit: QuantityUnit): Nutrients {
   const food: Food = {
     id: `menu:${snapshot.sourceMenuId}`, name: snapshot.sourceMenuName, maker: '', barcode: '', source: 'user', sourceVersion: '食事記録のメニュースナップショット',
-    baseAmount: 1, baseUnit: '食', servingAmount: null, servingUnit: null,
-    inputUnitConversions: snapshot.inputUnitConversions?.map((conversion) => ({ ...conversion })),
+    baseAmount: snapshot.baseAmount ?? 1, baseUnit: (snapshot.baseUnit ?? '食') as Food['baseUnit'], servingAmount: null, servingUnit: null,
+    inputUnitConversions: snapshot.baseAmount === undefined && snapshot.baseUnit === undefined
+      ? snapshot.inputUnitConversions?.map((conversion) => ({ ...conversion }))
+      : undefined,
     nutrients: calculateMealMenuSnapshotNutrients(snapshot), createdAt: '', updatedAt: '',
   }
   return calculateNutrients(food, amount, unit)
@@ -224,11 +256,23 @@ function cloneIngredient(ingredient: MealIngredientSnapshot): MealIngredientSnap
       },
     }
   }
-  return { ...ingredient, inputUnitConversions: ingredient.inputUnitConversions?.map((conversion) => ({ ...conversion })), ingredients: ingredient.ingredients.map(cloneIngredient) }
+  return {
+    ...ingredient,
+    ...(ingredient.baseAmount === undefined && ingredient.baseUnit === undefined
+      ? { inputUnitConversions: ingredient.inputUnitConversions?.map((conversion) => ({ ...conversion })) }
+      : {}),
+    ingredients: ingredient.ingredients.map(cloneIngredient),
+  }
 }
 
 export function cloneMealMenuSnapshot(snapshot: MealMenuSnapshot): MealMenuSnapshot {
-  return { ...snapshot, inputUnitConversions: snapshot.inputUnitConversions?.map((conversion) => ({ ...conversion })), ingredients: snapshot.ingredients.map(cloneIngredient) }
+  return {
+    ...snapshot,
+    ...(snapshot.baseAmount === undefined && snapshot.baseUnit === undefined
+      ? { inputUnitConversions: snapshot.inputUnitConversions?.map((conversion) => ({ ...conversion })) }
+      : {}),
+    ingredients: snapshot.ingredients.map(cloneIngredient),
+  }
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -300,20 +344,33 @@ function isMealIngredientSnapshot(value: unknown): value is MealIngredientSnapsh
       || value.unit === value.foodSnapshot.baseUnit
       || (value.foodSnapshot.inputUnitConversions ?? []).some((conversion) => conversion.unit === value.unit)
   }
+  const hasBase = value.baseAmount !== undefined || value.baseUnit !== undefined
+  const validBase = !hasBase
+    || (typeof value.baseAmount === 'number' && Number.isFinite(value.baseAmount) && value.baseAmount > 0 && value.baseAmount <= 100000
+      && typeof value.baseUnit === 'string' && isValidQuantityUnit(value.baseUnit) && value.unit === value.baseUnit)
+  const validLegacyConversions = value.inputUnitConversions === undefined || (Array.isArray(value.inputUnitConversions) && value.inputUnitConversions.every(isFoodUnitConversion)
+    && new Set(value.inputUnitConversions.map((conversion) => conversion.unit)).size === value.inputUnitConversions.length
+    && value.inputUnitConversions.every((conversion) => conversion.unit !== '食'))
   return typeof value.name === 'string' && typeof value.missing === 'boolean'
-    && (value.inputUnitConversions === undefined || (Array.isArray(value.inputUnitConversions) && value.inputUnitConversions.every(isFoodUnitConversion)
-      && new Set(value.inputUnitConversions.map((conversion) => conversion.unit)).size === value.inputUnitConversions.length
-      && value.inputUnitConversions.every((conversion) => conversion.unit !== '食')))
-    && (value.unit === '食' || (value.inputUnitConversions ?? []).some((conversion) => conversion.unit === value.unit))
+    && validBase
+    && validLegacyConversions
+    && (hasBase ? value.inputUnitConversions === undefined : (value.unit === '食' || (Array.isArray(value.inputUnitConversions) && value.inputUnitConversions.some((conversion: unknown) => isFoodUnitConversion(conversion) && conversion.unit === value.unit))))
     && Array.isArray(value.ingredients) && value.ingredients.every(isMealIngredientSnapshot)
 }
 
 export function isMealMenuSnapshot(value: unknown): value is MealMenuSnapshot {
+  const hasBase = isRecord(value) && (value.baseAmount !== undefined || value.baseUnit !== undefined)
+  const validBase = !hasBase
+    || (typeof value.baseAmount === 'number' && Number.isFinite(value.baseAmount) && value.baseAmount > 0 && value.baseAmount <= 100000
+      && typeof value.baseUnit === 'string' && isValidQuantityUnit(value.baseUnit))
+  const validLegacyConversions = !isRecord(value) || value.inputUnitConversions === undefined || (Array.isArray(value.inputUnitConversions) && value.inputUnitConversions.every(isFoodUnitConversion)
+    && new Set(value.inputUnitConversions.map((conversion) => conversion.unit)).size === value.inputUnitConversions.length
+    && value.inputUnitConversions.every((conversion) => conversion.unit !== '食'))
   return isRecord(value) && typeof value.sourceMenuId === 'string' && Boolean(value.sourceMenuId)
     && typeof value.sourceMenuName === 'string' && Array.isArray(value.ingredients)
-    && (value.inputUnitConversions === undefined || (Array.isArray(value.inputUnitConversions) && value.inputUnitConversions.every(isFoodUnitConversion)
-      && new Set(value.inputUnitConversions.map((conversion) => conversion.unit)).size === value.inputUnitConversions.length
-      && value.inputUnitConversions.every((conversion) => conversion.unit !== '食')))
+    && validBase
+    && validLegacyConversions
+    && (!hasBase || value.inputUnitConversions === undefined)
     && (value.sourceKind === undefined || value.sourceKind === 'my-menu' || value.sourceKind === 'general-menu' || value.sourceKind === 'temporary')
     && value.ingredients.every(isMealIngredientSnapshot)
 }

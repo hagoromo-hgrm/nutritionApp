@@ -18,7 +18,7 @@ export function snapshotToFood(entry: MealEntry): Food {
   return {
     id: entry.foodId, name: entry.foodSnapshot.name, displayName: entry.foodSnapshot.displayName ?? entry.foodSnapshot.name, officialName: entry.foodSnapshot.officialName, maker: entry.foodSnapshot.maker, barcode: entry.foodSnapshot.barcode,
     source: 'user', sourceVersion: '食事記録スナップショット', baseAmount: entry.foodSnapshot.baseAmount,
-    baseUnit: entry.foodSnapshot.baseUnit, servingAmount: null, servingUnit: null,
+    baseUnit: entry.foodSnapshot.baseUnit as Food['baseUnit'], servingAmount: null, servingUnit: null,
     inputUnitConversions: entry.foodSnapshot.inputUnitConversions?.map((conversion) => ({ ...conversion })), nutrients: entry.foodSnapshot.nutrients,
     nutrientMetadata: entry.foodSnapshot.nutrientMetadata
       ? Object.fromEntries(Object.entries(entry.foodSnapshot.nutrientMetadata).map(([key, metadata]) => [key, {
@@ -32,8 +32,8 @@ export function snapshotToFood(entry: MealEntry): Food {
 }
 
 export function menuSetPreviewFood(menuSet: MenuSet, menus: Menu[], generalMenus: GeneralMenu[], foods: Food[]): Food {
-  const menuNutrients = menuSet.menuIds.map((menuId) => menus.find((menu) => menu.id === menuId)).filter((menu): menu is Menu => Boolean(menu)).map((menu) => menuToFood(menu, menus, foods)).map((food) => food.nutrients)
-  const generalMenuNutrients = (menuSet.generalMenuIds ?? []).map((menuId) => generalMenus.find((menu) => menu.id === menuId)).filter((menu): menu is GeneralMenu => Boolean(menu)).map((menu) => generalMenuToFood(menu, menus, foods)).map((food) => food.nutrients)
+  const menuNutrients = menuSet.menuIds.map((menuId) => menus.find((menu) => menu.id === menuId)).filter((menu): menu is Menu => Boolean(menu)).map((menu) => menuToFood(menu, menus, foods)).map((food) => getFoodDefaultServingNutrition(food).nutrients)
+  const generalMenuNutrients = (menuSet.generalMenuIds ?? []).map((menuId) => generalMenus.find((menu) => menu.id === menuId)).filter((menu): menu is GeneralMenu => Boolean(menu)).map((menu) => generalMenuToFood(menu, menus, foods)).map((food) => getFoodDefaultServingNutrition(food).nutrients)
   const foodNutrients = getMenuSetFoodItems(menuSet, foods).map((item) => {
     const food = foods.find((candidate) => candidate.id === item.foodId)
     return food ? calculateNutrients(food, item.amount, item.unit) : null
@@ -64,10 +64,10 @@ export function temporaryMenuToFood(snapshot: MealMenuSnapshot): Food {
     barcode: '',
     source: 'user',
     sourceVersion: '一時メニュー',
-    baseAmount: 1,
-    baseUnit: '食',
-    servingAmount: 1,
-    servingUnit: '食',
+    baseAmount: snapshot.baseAmount ?? 1,
+    baseUnit: (snapshot.baseUnit ?? '食') as Food['baseUnit'],
+    servingAmount: snapshot.baseAmount ?? 1,
+    servingUnit: snapshot.baseUnit ?? '食',
     nutrients: calculateMealMenuSnapshotNutrients(snapshot),
     createdAt: now,
     updatedAt: now,

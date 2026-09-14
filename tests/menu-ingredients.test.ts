@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { EMPTY_NUTRIENTS, type Food, type Menu, type Nutrients } from '../src/types'
-import { getMenuFoodIds, getMenuIngredients, getNestedMenuIds, hasMenuCycles, menuToFood, wouldCreateMenuCycle } from '../src/services/menuIngredients'
+import { getEditableMenuBase, getMenuBase, getMenuFoodIds, getMenuIngredients, getMenuQuantityUnits, getNestedMenuIds, hasMenuCycles, menuToFood, wouldCreateMenuCycle } from '../src/services/menuIngredients'
+import { calculateNutrients, getFoodDefaultServing } from '../src/services/nutrition'
 
 const nutrients = (energyKcal: number): Nutrients => ({
   energyKcal, proteinG: 10, fatG: 5, carbohydrateG: 20, fiberG: 2, saltG: 1,
@@ -37,6 +38,37 @@ describe('menu ingredients', () => {
   it('食品明細の保存分量を栄養計算へ反映する', () => {
     const beef = food('beef', 400)
     expect(menuToFood(menu('dish', [{ kind: 'food', itemId: beef.id, amount: 25, unit: 'g' }]), [], [beef]).nutrients.energyKcal).toBe(100)
+  })
+
+  it('メニュー全体の基準量と任意単位を直接保持して分量計算する', () => {
+    const potato = food('potato', 400)
+    const croquettes: Menu = {
+      ...menu('croquettes', [{ kind: 'food', itemId: potato.id, amount: 100, unit: 'g' }]),
+      baseAmount: 2,
+      baseUnit: '個',
+      servingAmount: 1,
+      servingUnit: '個',
+    }
+    const converted = menuToFood(croquettes, [croquettes], [potato])
+
+    expect(getMenuBase(croquettes)).toEqual({ amount: 2, unit: '個' })
+    expect(getMenuQuantityUnits(croquettes)).toEqual(['個'])
+    expect(converted).toMatchObject({ baseAmount: 2, baseUnit: '個', servingAmount: 1, servingUnit: '個' })
+    expect(converted.nutrients.energyKcal).toBe(400)
+    expect(calculateNutrients(converted, 1, '個').energyKcal).toBe(200)
+    const withoutServing = menuToFood({ ...croquettes, servingAmount: undefined, servingUnit: undefined }, [croquettes], [potato])
+    expect(getFoodDefaultServing(withoutServing)).toEqual({ amount: 2, unit: '個' })
+  })
+
+  it('旧換算形式を編集するときは既定単位を新しい基準へ読み替える', () => {
+    const legacy: Menu = {
+      ...menu('legacy-unit'),
+      inputUnitConversions: [{ unit: '皿', baseAmount: 0.5 }],
+      servingAmount: 2,
+      servingUnit: '皿',
+    }
+    expect(getMenuBase(legacy)).toEqual({ amount: 1, unit: '食' })
+    expect(getEditableMenuBase(legacy)).toEqual({ amount: 2, unit: '皿' })
   })
 
   it('ネスト先メニューを小数を含む指定食数で計算する', () => {

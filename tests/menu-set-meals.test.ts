@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createMenuSetMealBatch, getMenuSetCalorieSummary } from '../src/services/menuSetMeals'
+import { menuSetPreviewFood } from '../src/components/foodPresentation'
 import type { Food, GeneralMenu, Menu, MenuSet, Nutrients } from '../src/types'
 
 const nutrients = (energyKcal: number): Nutrients => ({
@@ -98,8 +99,9 @@ describe('menu set meal batches', () => {
   it('メニュー全体の既定量と任意単位をセット展開へ引き継ぐ', () => {
     const customSoup: Menu = {
       ...soup,
-      inputUnitConversions: [{ unit: '杯', baseAmount: 0.5 }],
-      servingAmount: 2,
+      baseAmount: 2,
+      baseUnit: '杯',
+      servingAmount: 1,
       servingUnit: '杯',
     }
     const batch = createMenuSetMealBatch({
@@ -107,9 +109,12 @@ describe('menu set meal batches', () => {
       eatenAt: '2026-07-23T00:00:00.000Z', createId: () => 'meal_menu_unit',
     })
 
-    expect(batch.entries[0]).toMatchObject({ amount: 2, amountUnit: '杯' })
-    expect(batch.entries[0].foodSnapshot.inputUnitConversions).toEqual([{ unit: '杯', baseAmount: 0.5 }])
-    expect(batch.entries[0].calculatedNutrients.energyKcal).toBe(20)
+    expect(batch.entries[0]).toMatchObject({ amount: 1, amountUnit: '杯' })
+    expect(batch.entries[0].foodSnapshot).toMatchObject({ baseAmount: 2, baseUnit: '杯' })
+    expect(batch.entries[0].foodSnapshot.inputUnitConversions).toBeUndefined()
+    expect(batch.entries[0].menuSnapshot).toMatchObject({ baseAmount: 2, baseUnit: '杯' })
+    expect(batch.entries[0].calculatedNutrients.energyKcal).toBe(10)
+    expect(menuSetPreviewFood(breakfast, [customSoup], [], [rice, soupIngredient]).nutrients.energyKcal).toBe(250)
   })
 
   it('新形式のfoodItemsから確定variantの分量と単位を展開する', () => {

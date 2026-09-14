@@ -87,16 +87,34 @@ describe('meal menu snapshots', () => {
   it('メニュー全体の任意単位をスナップショットへ固定して換算する', () => {
     const customMenu: Menu = {
       ...parent,
-      inputUnitConversions: [{ unit: '皿', baseAmount: 0.5 }],
-      servingAmount: 2,
+      baseAmount: 2,
+      baseUnit: '皿',
+      servingAmount: 1,
       servingUnit: '皿',
     }
     const snapshot = createMealMenuSnapshot(customMenu, [customMenu, child], [rice, egg])
 
-    expect(snapshot.inputUnitConversions).toEqual([{ unit: '皿', baseAmount: 0.5 }])
+    expect(snapshot).toMatchObject({ baseAmount: 2, baseUnit: '皿' })
+    expect(snapshot.inputUnitConversions).toBeUndefined()
+    expect(calculateMealMenuEntryNutrients(snapshot, 1, '皿').energyKcal).toBe(170)
     expect(calculateMealMenuEntryNutrients(snapshot, 2, '皿').energyKcal).toBe(340)
     expect(isMealMenuSnapshot(snapshot)).toBe(true)
+    expect(isMealMenuSnapshot({ ...snapshot, baseAmount: undefined })).toBe(false)
     expect(isMealMenuSnapshot({ ...snapshot, inputUnitConversions: [{ unit: '食', baseAmount: 1 }] })).toBe(false)
+  })
+
+  it('子メニューにも登録時点の基準量と単位を保存して換算する', () => {
+    const customChild: Menu = { ...child, baseAmount: 2, baseUnit: '個' }
+    const customParent: Menu = {
+      ...parent,
+      ingredients: [{ kind: 'menu', itemId: customChild.id, amount: 1, unit: '個' }],
+    }
+    const snapshot = createMealMenuSnapshot(customParent, [customParent, customChild], [egg])
+    const nested = snapshot.ingredients[0]
+
+    expect(nested).toMatchObject({ kind: 'menu', amount: 1, unit: '個', baseAmount: 2, baseUnit: '個' })
+    expect(calculateMealMenuSnapshotNutrients(snapshot).energyKcal).toBe(40)
+    expect(isMealMenuSnapshot(snapshot)).toBe(true)
   })
 
   it('一般メニューのスナップショットは由来を区別して複製する', () => {
@@ -114,6 +132,8 @@ describe('meal menu snapshots', () => {
     expect(isMealMenuSnapshot(snapshot)).toBe(true)
     expect(() => createTemporaryMealMenuSnapshot(' ', [])).toThrow()
     expect(() => createTemporaryMealMenuSnapshot('名前', [], ' ')).toThrow()
+    expect(() => createTemporaryMealMenuSnapshot('名前', [], 'temporary-invalid', 0, '皿')).toThrow('基準量')
+    expect(() => createTemporaryMealMenuSnapshot('名前', [], 'temporary-invalid', 1, ' ')).toThrow('基準量')
   })
 
   it('食事側の変更は原本と元のスナップショットを変更しない', () => {

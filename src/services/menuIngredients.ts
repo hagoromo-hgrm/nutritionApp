@@ -1,7 +1,33 @@
-import { EMPTY_NUTRIENTS, type Food, type Menu, type MenuIngredient } from '../types'
+import { EMPTY_NUTRIENTS, type Food, type Menu, type MenuIngredient, type QuantityUnit } from '../types'
 import { calculateNutrients, getFoodQuantityUnits, sumNutrients } from './nutrition'
+import { isValidQuantityUnit } from '../utils/validation'
+
+/** メニューの新形式の基準量。旧形式・不完全な値は1食へ読み替える。 */
+export function getMenuBase(menu: Menu): { amount: number; unit: QuantityUnit } {
+  if (typeof menu.baseAmount === 'number' && Number.isFinite(menu.baseAmount) && menu.baseAmount > 0 && menu.baseAmount <= 100000
+    && typeof menu.baseUnit === 'string' && isValidQuantityUnit(menu.baseUnit)) {
+    return { amount: menu.baseAmount, unit: menu.baseUnit }
+  }
+  return { amount: 1, unit: '食' }
+}
+
+/** 直前の換算単位形式を編集するときは、既定単位を新しい基準単位へ換算して栄養量を保つ。 */
+export function getEditableMenuBase(menu: Menu): { amount: number; unit: QuantityUnit } {
+  if (menu.baseAmount !== undefined || menu.baseUnit !== undefined) return getMenuBase(menu)
+  if (menu.servingUnit && menu.servingUnit !== '食') {
+    const conversion = menu.inputUnitConversions?.find((item) => item.unit === menu.servingUnit)
+    const convertedAmount = conversion ? 1 / conversion.baseAmount : Number.NaN
+    if (conversion && Number.isFinite(convertedAmount) && convertedAmount > 0 && convertedAmount <= 100000) {
+      return { amount: convertedAmount, unit: conversion.unit }
+    }
+  }
+  return getMenuBase(menu)
+}
 
 export function getMenuQuantityUnits(menu: Menu): string[] {
+  const base = getMenuBase(menu)
+  if (base.unit !== '食' || menu.baseAmount !== undefined || menu.baseUnit !== undefined) return [base.unit]
+  // 旧形式の保存データだけは、当時の換算を読み取れるようにする。
   return [...new Set(['食', ...(menu.inputUnitConversions ?? []).map((conversion) => conversion.unit)])]
 }
 
@@ -61,10 +87,14 @@ export function menusWithUnsupportedIngredientUnits(menus: Menu[], foods: Food[]
 }
 
 function createMenuFood(menu: Menu, menusById: Map<string, Menu>, foodsById: Map<string, Food>, ancestors: Set<string>): Food {
+  const base = getMenuBase(menu)
+  const legacyConversions = menu.baseAmount === undefined && menu.baseUnit === undefined
+    ? menu.inputUnitConversions?.map((conversion) => ({ ...conversion }))
+    : undefined
   if (ancestors.has(menu.id)) {
     return {
       id: `menu:${menu.id}`, name: menu.name, maker: '', barcode: '', source: 'user', sourceVersion: `メニュー「${menu.category}」`,
-      baseAmount: 1, baseUnit: '食', servingAmount: menu.servingAmount ?? 1, servingUnit: menu.servingUnit ?? '食', inputUnitConversions: menu.inputUnitConversions?.map((conversion) => ({ ...conversion })), nutrients: { ...EMPTY_NUTRIENTS }, createdAt: menu.createdAt, updatedAt: menu.updatedAt,
+      baseAmount: base.amount, baseUnit: base.unit as Food['baseUnit'], servingAmount: menu.servingAmount ?? base.amount, servingUnit: menu.servingUnit ?? base.unit, inputUnitConversions: legacyConversions, nutrients: { ...EMPTY_NUTRIENTS }, createdAt: menu.createdAt, updatedAt: menu.updatedAt,
     }
   }
   const nextAncestors = new Set(ancestors).add(menu.id)
@@ -79,11 +109,11 @@ function createMenuFood(menu: Menu, menusById: Map<string, Menu>, foodsById: Map
   }))
   return {
     id: `menu:${menu.id}`, name: menu.name, maker: '', barcode: '', source: 'user', sourceVersion: `メニュー「${menu.category}」`,
-    baseAmount: 1, baseUnit: '食', servingAmount: menu.servingAmount ?? 1, servingUnit: menu.servingUnit ?? '食', inputUnitConversions: menu.inputUnitConversions?.map((conversion) => ({ ...conversion })), nutrients, createdAt: menu.createdAt, updatedAt: menu.updatedAt,
+    baseAmount: base.amount, baseUnit: base.unit as Food['baseUnit'], servingAmount: menu.servingAmount ?? base.amount, servingUnit: menu.servingUnit ?? base.unit, inputUnitConversions: legacyConversions, nutrients, createdAt: menu.createdAt, updatedAt: menu.updatedAt,
   }
 }
 
-/** メニューを1食分の食品として扱える形へ変換する。 */
+/** メニューを基準量・基準単位付きの食品として扱える形へ変換する。 */
 export function menuToFood(menu: Menu, menus: Menu[], foods: Food[]): Food {
   return createMenuFood(menu, new Map(menus.map((item) => [item.id, item])), new Map(foods.map((food) => [food.id, food])), new Set())
 }

@@ -420,6 +420,10 @@ describe('export formats', () => {
     expect(validateBackup(withMenu).menuSets?.[0].generalMenuIds).toEqual(['general_1'])
     expect(validateBackup(withMenu).menuSets?.[0].foodIds).toEqual(['food_1'])
     expect(validateBackup(withMenu).menuSets?.[0].foodItems?.[0]).toMatchObject({ foodId: 'food_1', amount: 150, unit: 'g' })
+    const explicitUnitMenu = { ...withMenu.menus[0], baseAmount: 2, baseUnit: '個', servingAmount: 1, servingUnit: '個' }
+    expect(validateBackup({ ...withMenu, menus: [explicitUnitMenu] }).menus?.[0]).toMatchObject({ baseAmount: 2, baseUnit: '個' })
+    expect(() => validateBackup({ ...withMenu, menus: [{ ...explicitUnitMenu, baseAmount: undefined }] })).toThrow('メニューまたはメニューセットの形式が不正')
+    expect(() => validateBackup({ ...withMenu, menus: [{ ...explicitUnitMenu, inputUnitConversions: [{ unit: '皿', baseAmount: 1 }] }] })).toThrow('メニューまたはメニューセットの形式が不正')
     expect(() => validateBackup({ ...withMenu, menuSets: [{ ...withMenu.menuSets[0], foodItems: [{ foodId: 'food_1', amount: 1, unit: '食' }] }] })).toThrow('換算設定')
     expect(() => validateBackup({ ...withMenu, menus: [{ ...withMenu.menus[0], ingredients: [{ kind: 'food', itemId: 'food_1', amount: 0, unit: 'g' }] }] })).toThrow()
     expect(() => validateBackup({ ...withMenu, menus: [
@@ -449,6 +453,23 @@ describe('export formats', () => {
       foods: [customFood],
       menus: [{ ...menu, ingredients: [{ ...menu.ingredients[0], unit: 'パック' }] }],
     })).toThrow('換算設定と一致しない')
+  })
+
+  it('任意のメニュー基準単位を食事スナップショットに保持できる', () => {
+    const menuSnapshot = {
+      sourceMenuId: 'menu_plate', sourceMenuName: '盛り合わせ',
+      baseAmount: 2, baseUnit: '皿', ingredients: [],
+    }
+    const menuEntry = {
+      ...entry,
+      foodId: 'menu:menu_plate',
+      foodSnapshot: { ...entry.foodSnapshot, baseAmount: 2, baseUnit: '皿' },
+      amount: 1,
+      amountUnit: '皿',
+      menuSnapshot,
+    }
+
+    expect(validateBackup({ ...backup, mealEntries: [menuEntry] }).mealEntries[0]).toMatchObject({ amountUnit: '皿', menuSnapshot })
   })
 
   it('検索ログと利用統計を含むバックアップを検証できる', () => {

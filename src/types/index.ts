@@ -279,7 +279,8 @@ export interface FoodSnapshot {
   maker: string
   barcode: string
   baseAmount: number
-  baseUnit: FoodUnit
+  /** 食品は管理単位、メニュー由来の食事記録は任意の基準単位を保持する。 */
+  baseUnit: QuantityUnit
   inputUnitConversions?: FoodUnitConversion[]
   /** 食品マスターが削除済みの場合に、未集計の履歴として保持する印。 */
   missing?: boolean
@@ -302,6 +303,10 @@ export interface MealMenuIngredientSnapshot {
   name: string
   amount: number
   unit: QuantityUnit
+  /** メニュー全体の栄養値に対応する基準量。旧スナップショットは1食として扱う。 */
+  baseAmount?: number
+  baseUnit?: QuantityUnit
+  /** 直前の未リリース形式との互換用。新規スナップショットでは使用しない。 */
   inputUnitConversions?: FoodUnitConversion[]
   ingredients: MealIngredientSnapshot[]
   missing: boolean
@@ -314,7 +319,10 @@ export interface MealMenuSnapshot {
   sourceMenuName: string
   /** 未指定は既存データとの互換のためMyメニューとして扱う。 */
   sourceKind?: 'my-menu' | 'general-menu' | 'temporary'
-  /** 1食を基準にした、登録時点のメニュー全体の入力単位換算。 */
+  /** 登録時点のメニュー全体の基準量・単位。旧スナップショットは1食として扱う。 */
+  baseAmount?: number
+  baseUnit?: QuantityUnit
+  /** 直前の未リリース形式との互換用。新規スナップショットでは使用しない。 */
   inputUnitConversions?: FoodUnitConversion[]
   ingredients: MealIngredientSnapshot[]
 }
@@ -367,7 +375,11 @@ export interface Menu {
   id: string
   name: string
   category: MenuCategory
-  /** 1食を基準とした、メニュー全体の明示入力単位。 */
+  /** メニュー全体の栄養値に対応する基準量。未指定の既存メニューは1食として扱う。 */
+  baseAmount?: number
+  /** メニュー全体の栄養値に対応する基準単位。未指定の既存メニューは食として扱う。 */
+  baseUnit?: QuantityUnit
+  /** 直前の未リリース形式との互換用。新規保存では使用しない。 */
   inputUnitConversions?: FoodUnitConversion[]
   /** メニューを食事へ追加する際の既定分量・単位。 */
   servingAmount?: number | null

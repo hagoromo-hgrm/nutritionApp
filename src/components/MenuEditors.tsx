@@ -1,4 +1,5 @@
 import { getFoodDefaultServing, getFoodQuantityUnits } from '../services/nutrition'
+import { getMenuBase } from '../services/menuIngredients'
 import {
   MENU_CATEGORIES,
   type Food,
@@ -28,30 +29,15 @@ export function MenuEditorModal({ draft, setDraft, menus, foods, foodGroups, rec
     const serving = getFoodDefaultServing(food)
     return { ...current, ingredients: [...current.ingredients, { kind: 'food', itemId: food.id, amount: String(serving.amount), unit: serving.unit }] }
   })
-  const addMenu = (menu: Menu) => setDraft((current) => current && !current.ingredients.some((ingredient) => ingredient.kind === 'menu' && ingredient.itemId === menu.id) ? { ...current, ingredients: [...current.ingredients, { kind: 'menu', itemId: menu.id, amount: '1', unit: '食' }] } : current)
+  const addMenu = (menu: Menu) => setDraft((current) => {
+    if (!current || current.ingredients.some((ingredient) => ingredient.kind === 'menu' && ingredient.itemId === menu.id)) return current
+    const base = getMenuBase(menu)
+    return { ...current, ingredients: [...current.ingredients, { kind: 'menu', itemId: menu.id, amount: String(base.amount), unit: base.unit }] }
+  })
   const removeFood = (food: Food) => setDraft((current) => current ? { ...current, ingredients: current.ingredients.filter((ingredient) => ingredient.kind !== 'food' || ingredient.itemId !== food.id) } : current)
   const removeIngredient = (target: MenuIngredientDraft) => setDraft((current) => current ? { ...current, ingredients: current.ingredients.filter((ingredient) => ingredient.kind !== target.kind || ingredient.itemId !== target.itemId) } : current)
   const changeIngredientAmount = (target: MenuIngredientDraft, amount: string) => setDraft((current) => current ? { ...current, ingredients: current.ingredients.map((ingredient) => ingredient.kind === target.kind && ingredient.itemId === target.itemId ? { ...ingredient, amount } : ingredient) } : current)
   const changeIngredientUnit = (target: MenuIngredientDraft, unit: QuantityUnit) => setDraft((current) => current ? { ...current, ingredients: current.ingredients.map((ingredient) => ingredient.kind === target.kind && ingredient.itemId === target.itemId ? { ...ingredient, unit } : ingredient) } : current)
-  const updateMenuConversion = (index: number, key: 'unit' | 'baseAmount', value: string) => setDraft((current) => {
-    if (!current) return current
-    const previousUnit = current.inputUnitConversions[index]?.unit
-    return {
-      ...current,
-      inputUnitConversions: current.inputUnitConversions.map((conversion, conversionIndex) => conversionIndex === index ? { ...conversion, [key]: value } : conversion),
-      servingUnit: key === 'unit' && current.servingUnit === previousUnit ? value : current.servingUnit,
-    }
-  })
-  const addMenuConversion = () => setDraft((current) => current ? { ...current, inputUnitConversions: [...current.inputUnitConversions, { unit: '', baseAmount: '' }] } : current)
-  const removeMenuConversion = (index: number) => setDraft((current) => {
-    if (!current) return current
-    const removedUnit = current.inputUnitConversions[index]?.unit
-    return {
-      ...current,
-      inputUnitConversions: current.inputUnitConversions.filter((_, conversionIndex) => conversionIndex !== index),
-      servingUnit: current.servingUnit === removedUnit ? '食' : current.servingUnit,
-    }
-  })
   const selectedFoodIds = draft.ingredients.filter((ingredient) => ingredient.kind === 'food').map((ingredient) => ingredient.itemId)
   return (
     <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label={`${menuTypeLabel}を設定`}>
@@ -72,15 +58,11 @@ export function MenuEditorModal({ draft, setDraft, menus, foods, foodGroups, rec
               {mode === 'my' && <label className="menu-editor-memo-field">メモ（任意）<textarea rows={4} value={draft.memo ?? ''} onChange={(event) => setDraft((current) => current ? { ...current, memo: event.target.value } : current)} placeholder="作り方や次回の調整点などを自由に記録できます。" /></label>}
             </div>
             <div className="food-form-subsection input-unit-editor">
-              <div className="metadata-editor-heading"><strong>メニュー全体の入力単位（任意）</strong><button className="small-action" type="button" onClick={addMenuConversion}>＋追加</button></div>
-              <p className="field-hint">基準単位は「食」です。1入力単位が何食分かを明示してください。</p>
-              {draft.inputUnitConversions.map((conversion, index) => <div className="metadata-input-row" key={`menu-input-unit-${index}`}>
-                <label><span className="sr-only">メニュー入力単位</span><input value={conversion.unit} onChange={(event) => updateMenuConversion(index, 'unit', event.target.value)} placeholder="例：皿、パック" /></label>
-                <label><span className="sr-only">1入力単位あたりの食数</span><input type="number" min="0.01" max="100000" step="any" value={conversion.baseAmount} onChange={(event) => updateMenuConversion(index, 'baseAmount', event.target.value)} placeholder="食数" /><span className="field-hint">食</span></label>
-                <button className="small-action danger-text" type="button" onClick={() => removeMenuConversion(index)}>削除</button>
-              </div>)}
+              <div className="metadata-editor-heading"><strong>メニュー全体の基準量</strong></div>
+              <p className="field-hint">この分量・単位に、追加済み食材全体の栄養値を対応させます。例：2個、1皿、500ml。</p>
+              <div className="two-fields"><label>基準量<input type="number" min="0.01" max="100000" step="any" value={draft.baseAmount} onChange={(event) => setDraft((current) => current ? { ...current, baseAmount: event.target.value } : current)} required /></label><label>基準単位<input value={draft.baseUnit} onChange={(event) => setDraft((current) => current ? { ...current, baseUnit: event.target.value, servingUnit: event.target.value } : current)} placeholder="例：皿、個、ml" required /></label></div>
             </div>
-            <div className="two-fields"><label>既定の入力分量<input type="number" min="0.01" max="100000" step="any" value={draft.servingAmount} onChange={(event) => setDraft((current) => current ? { ...current, servingAmount: event.target.value } : current)} /></label><label>既定の入力単位<select value={draft.servingUnit} onChange={(event) => setDraft((current) => current ? { ...current, servingUnit: event.target.value } : current)}><option value="食">食</option>{draft.inputUnitConversions.filter((conversion) => conversion.unit.trim()).map((conversion) => <option key={conversion.unit} value={conversion.unit}>{conversion.unit}</option>)}</select></label></div>
+            <label>食事へ追加するときの分量<input type="number" min="0.01" max="100000" step="any" value={draft.servingAmount} onChange={(event) => setDraft((current) => current ? { ...current, servingAmount: event.target.value } : current)} /><span className="field-hint">単位：{draft.baseUnit || '未入力'}</span></label>
           </section>
           <section className="menu-editor-section">
             <div className="menu-editor-section-heading">
