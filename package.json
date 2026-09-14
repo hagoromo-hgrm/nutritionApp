@@ -1,14 +1,16 @@
 {
   "name": "nutrition-pwa",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc --noEmit && vite build",
+    "dev": "npm run generate:release-notes && vite",
+    "generate:release-notes": "node scripts/build-release-notes.mjs",
+    "check:release-notes": "node scripts/build-release-notes.mjs --check",
+    "build": "npm run generate:release-notes && tsc --noEmit && vite build",
     "build:sites": "npm run build && node scripts/prepare-sites-build.mjs",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "npm run check:release-notes && tsc --noEmit",
     "test": "vitest run",
     "preview": "vite preview"
   },

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { getSettings } from '../db/db'
+import { APP_VERSION } from '../generated/releaseNotes'
 import { formatNutrient } from '../services/nutrition'
 import {
   NUTRIENT_KEYS,
@@ -41,11 +42,12 @@ interface SettingsViewProps {
   onOpenNewFood: () => void
   onOpenBarcodeRegister: () => void
   onOpenFoodMaster: () => void
+  onOpenReleaseNotes: () => void
   estimatedGoals: NutritionGoals | null
   bmi: number | null
 }
 
-export function SettingsView({ settings, estimationSettings, goalInputs, setGoalInputs, onSaveGoals, onToggleExternalApi, onToggleNutrientEstimator, onChangeDefaultMealTimeMode, onExportJson, onRestoreJson, onExportCsv, onImportCsv, onExportUnresolvedIngredients, csvFrom, csvTo, setCsvFrom, setCsvTo, counts, bodyProfileInputs, setBodyProfileInputs, onSaveBodyProfile, onOpenNewFood, onOpenBarcodeRegister, onOpenFoodMaster, estimatedGoals, bmi }: SettingsViewProps) {
+export function SettingsView({ settings, estimationSettings, goalInputs, setGoalInputs, onSaveGoals, onToggleExternalApi, onToggleNutrientEstimator, onChangeDefaultMealTimeMode, onExportJson, onRestoreJson, onExportCsv, onImportCsv, onExportUnresolvedIngredients, csvFrom, csvTo, setCsvFrom, setCsvTo, counts, bodyProfileInputs, setBodyProfileInputs, onSaveBodyProfile, onOpenNewFood, onOpenBarcodeRegister, onOpenFoodMaster, onOpenReleaseNotes, estimatedGoals, bmi }: SettingsViewProps) {
   const configuredGoalCount = NUTRIENT_KEYS.filter((key) => settings.goals[key] !== null).length
   const [showFoodRegistrationMethods, setShowFoodRegistrationMethods] = useState(false)
   const chooseFoodRegistrationMethod = (method: 'manual' | 'barcode') => {
@@ -121,6 +123,10 @@ export function SettingsView({ settings, estimationSettings, goalInputs, setGoal
       <form onSubmit={onSaveBodyProfile} className="body-profile-form"><div className="two-fields"><label>身長（cm）<input type="number" min="1" max="300" step="0.1" value={bodyProfileInputs.heightCm} onChange={(event) => setBodyProfileInputs((current) => ({ ...current, heightCm: event.target.value }))} placeholder="未設定" /></label><label>体重（kg）<input type="number" min="1" max="500" step="0.1" value={bodyProfileInputs.weightKg} onChange={(event) => setBodyProfileInputs((current) => ({ ...current, weightKg: event.target.value }))} placeholder="未設定" /></label></div><div className="two-fields"><label>年齢（歳）<input type="number" min="1" max="120" step="1" value={bodyProfileInputs.ageYears} onChange={(event) => setBodyProfileInputs((current) => ({ ...current, ageYears: event.target.value }))} placeholder="算出に使用" /></label><label>性別<select value={bodyProfileInputs.sex} onChange={(event) => setBodyProfileInputs((current) => ({ ...current, sex: event.target.value as BiologicalSex }))}><option value="unspecified">未選択</option><option value="male">男性</option><option value="female">女性</option></select></label></div><label>活動量<select value={bodyProfileInputs.activityLevel} onChange={(event) => setBodyProfileInputs((current) => ({ ...current, activityLevel: event.target.value as ActivityLevel }))}><option value="low">低い</option><option value="moderate">普通</option><option value="high">高い</option></select></label><button className="button primary" type="submit">身体情報を保存して目標を算出</button></form>
       <div className="estimated-target"><div><span>BMI</span><strong>{bmi === null ? '未計算' : bmi.toFixed(1)}</strong></div><div><span>推定エネルギー目標</span><strong>{estimatedGoals === null ? '未計算' : `${estimatedGoals.energyKcal ?? '未設定'} kcal`}</strong></div></div>{estimatedGoals && <div className="estimated-goals"><div className="estimated-goals-heading"><strong>栄養素の参考目標</strong><span>P15% / F25% / C60%</span></div><div className="estimated-goal-grid">{NUTRIENT_KEYS.filter((key) => key !== 'energyKcal').map((key) => <div key={key}><span>{NUTRIENT_LABELS[key]}</span><strong>{formatNutrient(estimatedGoals[key])}<small>{NUTRIENT_UNITS[key]}</small></strong></div>)}</div></div>}<div className="estimate-info-row"><span>参考目標の算出について</span><InfoPopover label="参考目標の算出について" text="算出値は一般的な推定式・栄養配分による参考値です。食塩は性別ごとの一般的な上限目安を表示しています。診断・治療・個別の栄養指導を目的とせず、体調や医療上の指示がある場合は専門家に相談してください。" /></div>
     </section>
-    <section className="privacy-note"><strong>医療目的ではありません</strong><p>このアプリは日々の記録を支援するもので、診断・治療・個別の栄養指導を行いません。</p><span>Nutrition PWA v0.1.0 · 端末内のみで動作</span></section>
+    <section className="settings-card release-notes-entry-card">
+      <div className="section-title"><div><span className="eyebrow">RELEASE NOTES</span><h2>リリースノート</h2></div><span className="count-label">v{APP_VERSION}</span></div>
+      <button className="button secondary full-width" type="button" onClick={onOpenReleaseNotes}>変更内容を確認</button>
+    </section>
+    <section className="privacy-note"><strong>医療目的ではありません</strong><p>このアプリは日々の記録を支援するもので、診断・治療・個別の栄養指導を行いません。</p><span>Nutrition PWA v{APP_VERSION} · 端末内のみで動作</span></section>
   </>
 }

@@ -638,6 +638,28 @@ label { display: grid; gap: .38rem; color: #5c718d; font-size: .78rem; font-weig
 .privacy-note strong { color: var(--accent-deep); font-size: .8rem; }
 .privacy-note p { margin-top: .35rem; font-size: .74rem; line-height: 1.6; }
 .privacy-note span { margin-top: .6rem; color: var(--muted); font-size: .65rem; }
+.release-notes-heading { align-items: start; }
+.release-notes-back { display: block; margin-bottom: 1.3rem; font-size: .76rem; }
+.release-notes-heading .muted { margin-top: .65rem; }
+.release-notes-list { display: grid; gap: .7rem; }
+.release-note-card { overflow: hidden; border: 1px solid var(--line); border-radius: 1rem; background: white; }
+.release-note-summary { display: flex; align-items: center; justify-content: space-between; gap: .8rem; padding: .95rem 1rem; color: var(--ink); cursor: pointer; list-style: none; }
+.release-note-summary::-webkit-details-marker { display: none; }
+.release-note-card[open] .release-note-summary { border-bottom: 1px solid var(--line); background: #eef5fd; }
+.release-note-summary-copy { display: grid; gap: .2rem; min-width: 0; }
+.release-note-summary-copy strong { color: var(--accent-deep); font-size: .9rem; }
+.release-note-summary-copy small { color: var(--muted); font-size: .68rem; }
+.release-note-chevron { color: var(--accent); font-size: 1.2rem; line-height: 1; transition: transform .15s ease; }
+.release-note-card[open] .release-note-chevron { transform: rotate(180deg); }
+.release-note-body { padding: 1rem; }
+.release-note-summary-text { color: var(--ink); font-size: .82rem; line-height: 1.65; }
+.release-note-section { margin-top: 1rem; }
+.release-note-section h2 { color: var(--accent-deep); font-size: .9rem; }
+.release-note-section ul { display: grid; gap: .55rem; margin: .55rem 0 0; padding-left: 1.15rem; }
+.release-note-section li { color: var(--ink); font-size: .76rem; line-height: 1.65; }
+.release-notes-empty { border: 1px solid var(--line); border-radius: 1rem; padding: 1.25rem; background: white; }
+.release-notes-entry-card .section-title { align-items: center; }
+.release-notes-entry-card .count-label { margin-left: auto; color: var(--muted); font-size: .72rem; }
 
 .bottom-nav { position: fixed; z-index: 5; right: 0; bottom: 0; left: 0; display: flex; justify-content: center; gap: min(10vw, 5rem); padding: .6rem max(1rem, env(safe-area-inset-left)) calc(.6rem + env(safe-area-inset-bottom)); border-top: 1px solid rgba(203, 220, 237, .9); background: rgba(250, 253, 255, .94); backdrop-filter: blur(16px); }
 .nav-item { display: grid; gap: .18rem; min-width: 3rem; border: 0; color: var(--muted); background: transparent; font-size: .68rem; }

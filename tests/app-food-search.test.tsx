@@ -5,15 +5,17 @@ import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import type { FoodFormView } from '../src/components/FoodFormView'
 import type { SettingsView } from '../src/components/SettingsView'
+import type { ReleaseNotesView } from '../src/components/ReleaseNotesView'
 import type { FoodsView } from '../src/components/FoodsView'
 import type { SearchInputView, SearchResultsView } from '../src/components/SearchViews'
 import { db } from '../src/db/db'
 import { DEFAULT_SETTINGS } from '../src/types'
 import App from '../src/App'
 
-const screens = vi.hoisted(() => ({ form: null as ComponentProps<typeof FoodFormView> | null, settings: null as ComponentProps<typeof SettingsView> | null, foods: null as ComponentProps<typeof FoodsView> | null, input: null as ComponentProps<typeof SearchInputView> | null, results: null as ComponentProps<typeof SearchResultsView> | null }))
+const screens = vi.hoisted(() => ({ form: null as ComponentProps<typeof FoodFormView> | null, settings: null as ComponentProps<typeof SettingsView> | null, releaseNotes: null as ComponentProps<typeof ReleaseNotesView> | null, foods: null as ComponentProps<typeof FoodsView> | null, input: null as ComponentProps<typeof SearchInputView> | null, results: null as ComponentProps<typeof SearchResultsView> | null }))
 vi.mock('../src/components/FoodFormView', () => ({ FoodFormView: (props: ComponentProps<typeof FoodFormView>) => { screens.form = props; return null } }))
 vi.mock('../src/components/SettingsView', () => ({ SettingsView: (props: ComponentProps<typeof SettingsView>) => { screens.settings = props; return null } }))
+vi.mock('../src/components/ReleaseNotesView', () => ({ ReleaseNotesView: (props: ComponentProps<typeof ReleaseNotesView>) => { screens.releaseNotes = props; return <div>リリースノート画面</div> } }))
 vi.mock('../src/components/FoodsView', () => ({ FoodsView: (props: ComponentProps<typeof FoodsView>) => { screens.foods = props; return null } }))
 vi.mock('../src/components/SearchViews', () => ({ SearchInputView: (props: ComponentProps<typeof SearchInputView>) => { screens.input = props; return null }, SearchResultsView: (props: ComponentProps<typeof SearchResultsView>) => { screens.results = props; return null } }))
 vi.mock('virtual:pwa-register', () => ({ registerSW: () => vi.fn() }))
@@ -31,6 +33,15 @@ beforeEach(async () => {
   await vi.waitFor(async () => { await act(async () => { await new Promise((resolve) => setTimeout(resolve, 10)) }); expect(host.querySelector('nav')).not.toBeNull() })
 })
 afterEach(async () => { await act(async () => root.unmount()); host.remove(); await db.delete(); vi.restoreAllMocks() })
+it('設定からリリースノートを開いて設定へ戻れる', async () => {
+  await act(async () => { Array.from(host.querySelectorAll('button')).find((button) => button.textContent?.includes('設定'))!.click() })
+  await act(async () => screens.settings!.onOpenReleaseNotes())
+  expect(host.textContent).toContain('リリースノート画面')
+  screens.settings = null
+  await act(async () => screens.releaseNotes!.onBack())
+  expect(screens.settings).not.toBeNull()
+})
+
 it('FOODMASTER保存後に同じ検索結果を再編集すると更新値を開く', async () => {
   await act(async () => { Array.from(host.querySelectorAll('button')).find((button) => button.textContent?.includes('設定'))!.click() })
   await act(async () => screens.settings!.onOpenFoodMaster())
