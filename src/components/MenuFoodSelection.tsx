@@ -126,7 +126,17 @@ export function MenuFoodSelection({ selectedIds, selectedIngredients, selectedMe
       return
     }
     const serving = getFoodDefaultServing(food)
-    const result = food.foodGroupId ? buildMextFoodSearchResult(food.foodGroupId, foods, foodGroups) : null
+    // 手入力・外部商品由来の食品にも foodGroupId は付くが、MEXTの
+    // バリエーション定義を持たないため、種類選択モーダルへは進めない。
+    // ここで MEXT グループ取得の例外を分量入力へフォールバックさせる。
+    let result: ReturnType<typeof buildMextFoodSearchResult> = null
+    if (food.foodGroupId) {
+      try {
+        result = buildMextFoodSearchResult(food.foodGroupId, foods, foodGroups)
+      } catch {
+        result = null
+      }
+    }
     if (result) {
       setVariantResult({ result, initialFoodId: food.id, initialAmount: String(serving.amount), initialAmountUnit: serving.unit })
     } else {
