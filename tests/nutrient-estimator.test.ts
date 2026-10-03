@@ -50,6 +50,167 @@ describe('browser nutrient estimator', () => {
     expect(first.modelVersion).toBe(NUTRIENT_ESTIMATOR_MODEL_VERSION)
   })
 
+  it('robust_intervalは確認済み固定表示を区間fitに使い、区間と方式をtraceへ記録する', () => {
+    const request: NutrientEstimateRequest = {
+      ...eligibleRequest,
+      baseAmount: 100,
+      baseUnit: 'g',
+      referenceMassG: 100,
+      ingredientsText: '薄力粉、砂糖',
+      knownNutrients: { energyKcal: 363, proteinG: 5.5, fatG: 1, carbohydrateG: 83.6, saltG: 0 },
+      fitMode: 'robust_interval',
+      knownNutrientReferenceBasis: { amount: 100, unit: 'g' },
+      knownNutrientReferences: {
+        energyKcal: {
+          verified: true,
+          sourceReference: 'https://example.test/label',
+          reference: { kind: 'fixed', value: 363, decimalPlaces: 0 },
+          basis: { amount: 100, unit: 'g' },
+        },
+      },
+      requestedNutrients: ['fiberG'],
+    }
+    const first = estimateNutrients(request)
+    const second = estimateNutrients(request)
+    const trace = first.optimization?.trace
+
+    expect(second).toEqual(first)
+    expect(trace?.fitMode).toBe('robust_interval')
+    expect(trace?.fitReferenceIntervals?.energyKcal).toMatchObject({
+      min: 290.4,
+      max: 435.6,
+      maxInclusive: true,
+      basisMode: 'relative_only',
+      basisStatus: 'explicit',
+      ruleVersion: 'caa-label-tolerance-2026-10-01-v1',
+    })
+    expect(trace?.fitReferenceIntervals?.proteinG).toBeUndefined()
+  })
+
+  it('無参照の要求は従来point動作を保ち、robust modeの欠損参照はpoint値へfallbackする', () => {
+    const request = {
+      ...eligibleRequest,
+      baseAmount: 100,
+      baseUnit: 'g' as const,
+      referenceMassG: 100,
+      ingredientsText: '薄力粉、砂糖',
+      knownNutrients: { energyKcal: 363, proteinG: 5.5, fatG: 1, carbohydrateG: 83.6, saltG: 0 },
+      requestedNutrients: ['fiberG'] as const,
+    }
+    const defaultResult = estimateNutrients(request)
+    const explicitLegacy = estimateNutrients({ ...request, fitMode: 'legacy_point' })
+    const robustPointFallback = estimateNutrients({ ...request, fitMode: 'robust_interval' })
+
+    expect(explicitLegacy).toEqual(defaultResult)
+    expect(defaultResult.optimization?.trace?.fitMode).toBeUndefined()
+    expect(robustPointFallback.optimization?.trace?.fitMode).toBe('robust_interval')
+    expect(robustPointFallback.optimization?.trace?.fitReferenceIntervals).toEqual({})
+  })
+
+  it('estimated・未確認・出典なし・基準量不一致のtyped referenceを受け付けない', () => {
+    const request: NutrientEstimateRequest = {
+      ...eligibleRequest,
+      baseAmount: 100,
+      baseUnit: 'g',
+      referenceMassG: 100,
+      ingredientsText: '薄力粉、砂糖',
+      knownNutrients: { energyKcal: 363 },
+      fitMode: 'robust_interval',
+      knownNutrientReferenceBasis: { amount: 100, unit: 'g' },
+      requestedNutrients: ['fiberG'],
+    }
+    const verified = {
+      verified: true,
+      sourceReference: 'https://example.test/label',
+      reference: { kind: 'fixed' as const, value: 363 },
+      basis: { amount: 100, unit: 'g' as const },
+    }
+
+    expect(() => estimateNutrients({
+      ...request,
+      knownNutrientReferences: { energyKcal: { ...verified, reference: { kind: 'estimated', value: 363 } } },
+    })).toThrow(/推定表示値/)
+    expect(() => estimateNutrients({
+      ...request,
+      knownNutrientReferences: { energyKcal: { ...verified, verified: false } },
+    })).toThrow(/確認済み/)
+    expect(() => estimateNutrients({
+      ...request,
+      knownNutrientReferences: { energyKcal: { ...verified, sourceReference: '  ' } },
+    })).toThrow(/出典/)
+    expect(() => estimateNutrients({
+      ...request,
+      knownNutrientReferenceBasis: { amount: 90, unit: 'g' },
+      knownNutrientReferences: { energyKcal: verified },
+    })).toThrow(/一致/)
+  })
+
+  it('ml基準は要求のml量とだけ一致させ、referenceMassGへ密度換算しない', () => {
+    const request: NutrientEstimateRequest = {
+      ...eligibleRequest,
+      baseAmount: 100,
+      baseUnit: 'ml',
+      referenceMassG: 93,
+      ingredientsText: '薄力粉、砂糖',
+      knownNutrients: { energyKcal: 100 },
+      fitMode: 'robust_interval',
+      knownNutrientReferenceBasis: { amount: 100, unit: 'ml' },
+      knownNutrientReferences: {
+        energyKcal: {
+          verified: true,
+          sourceReference: 'https://example.test/beverage-label',
+          reference: { kind: 'fixed', value: 100 },
+          basis: { amount: 100, unit: 'ml' },
+        },
+      },
+      requestedNutrients: ['fiberG'],
+    }
+    const result = estimateNutrients(request)
+    expect(result.optimization?.trace?.fitReferenceIntervals?.energyKcal).toMatchObject({
+      min: 80,
+      max: 120,
+      basisStatus: 'explicit',
+    })
+
+    expect(() => estimateNutrients({
+      ...request,
+      knownNutrientReferences: {
+        energyKcal: {
+          ...request.knownNutrientReferences!.energyKcal!,
+          basis: { amount: 93, unit: 'g' },
+        },
+      },
+    })).toThrow(/一致/)
+  })
+
+  it('CAAゼロ表示区間の親栄養素を正確な0g composition capとして使わない', () => {
+    const base = {
+      ...eligibleRequest,
+      baseAmount: 100,
+      baseUnit: 'g' as const,
+      referenceMassG: 100,
+      ingredientsText: 'バター',
+      knownNutrients: { fatG: 0 },
+      knownNutrientReferenceBasis: { amount: 100, unit: 'g' as const },
+      knownNutrientReferences: {
+        fatG: {
+          verified: true,
+          sourceReference: 'https://example.test/label',
+          reference: { kind: 'fixed' as const, value: 0 },
+          basis: { amount: 100, unit: 'g' as const },
+        },
+      },
+      requestedNutrients: ['saturatedFatG'] as const,
+    }
+    for (const fitMode of ['legacy_point', 'robust_interval'] as const) {
+      const estimate = estimateNutrients({ ...base, fitMode }).estimates.saturatedFatG
+      expect(estimate.status).toBe('available')
+      if (estimate.status !== 'available') continue
+      expect(estimate.value).toBeGreaterThan(0)
+      expect(estimate.zeroEvidence).not.toBe('known_parent_zero')
+    }
+  })
+
   it('明示的な基準重量がなければ単位から重量を推測しない', () => {
     const result = estimateNutrients({ ...eligibleRequest, referenceMassG: null })
 

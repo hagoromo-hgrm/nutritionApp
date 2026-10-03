@@ -11,6 +11,14 @@ import {
 import { calibratedEstimateRange } from './nutrientEstimatorCalibration'
 import { ESTIMATOR_GENRE_PRIOR_VERSION } from '../data/nutrientEstimatorGenrePriors'
 import {
+  normalizedIntervalHuberLoss,
+  nutrientLabelReferenceInterval,
+  nutrientReferenceNormalizationScale,
+  type NutrientLabelBasis,
+  type NutrientLabelInterval,
+  type NutrientLabelReference,
+} from './nutrientLabelInterval'
+import {
   ESTIMATOR_GENRE_NUTRIENT_PRIOR_SOURCE,
   genreNutrientPrior,
   saturatedFatRatioPrior,
@@ -27,6 +35,7 @@ import {
   type EstimationOptimization,
   type EstimationRatioAdjustment,
   type EstimationRatioFeedback,
+  type EstimationFitReferenceInterval,
   type EstimationTrace,
   type EstimationZeroEvidence,
   type EstimatorGenreId,
@@ -66,8 +75,9 @@ export const ESTIMATE_FIT_NUTRIENT_KEYS = [
 ] as const satisfies readonly NutrientKey[]
 export type EstimateFitNutrientKey = (typeof ESTIMATE_FIT_NUTRIENT_KEYS)[number]
 export type EstimateConfidence = 'high' | 'medium' | 'low' | 'unavailable'
+export type NutrientEstimateFitMode = 'legacy_point' | 'robust_interval'
 export type EstimateAdoptability = EstimationAdoptionClass | 'unavailable'
-export const NUTRIENT_ESTIMATOR_MODEL_VERSION = 'browser-rule-0.24.0' as const
+export const NUTRIENT_ESTIMATOR_MODEL_VERSION = 'browser-rule-0.25.0' as const
 const MEXT_SOURCE = '文部科学省 日本食品標準成分表（八訂）増補2023年（2026年3月27日正誤表対応）' as const
 const FDC_SOURCE = 'USDA FoodData Central SR Legacy 04/2018' as const
 const INGREDIENT_SPEC_SOURCE = '原料メーカー・業界団体公式仕様' as const
@@ -75,6 +85,14 @@ const INGREDIENT_SPEC_SOURCE = '原料メーカー・業界団体公式仕様' a
 export interface NutrientEstimateBasis {
   baseAmount: number
   baseUnit: string
+}
+
+export interface KnownNutrientReference {
+  verified: boolean
+  sourceReference?: string
+  provider?: string
+  reference: NutrientLabelReference
+  basis?: NutrientLabelBasis | null
 }
 
 export interface NutrientEstimateRequest {
@@ -88,6 +106,9 @@ export interface NutrientEstimateRequest {
   ingredientsText: string | null
   ingredientsSource: IngredientsSource | null
   knownNutrients?: Partial<Pick<Nutrients, EstimateFitNutrientKey>>
+  fitMode?: NutrientEstimateFitMode
+  knownNutrientReferences?: Partial<Record<EstimateFitNutrientKey, KnownNutrientReference>>
+  knownNutrientReferenceBasis?: NutrientLabelBasis | null
   requestedNutrients?: readonly EstimatableNutrientKey[]
   requestedAt: string
 }
@@ -212,6 +233,10 @@ interface SaturatedFatRatioFitContext {
 export interface CandidateSelectionContext {
   referenceMassG: number
   knownNutrients: NutrientEstimateRequest['knownNutrients']
+  fitMode?: NutrientEstimateFitMode
+  knownNutrientReferences?: NutrientEstimateRequest['knownNutrientReferences']
+  knownNutrientReferenceBasis?: NutrientEstimateRequest['knownNutrientReferenceBasis']
+  requestedNutrients?: NutrientEstimateRequest['requestedNutrients']
   ratioFeedback?: SaturatedFatRatioFitContext
 }
 
@@ -235,6 +260,157 @@ interface MacroFit {
 interface CandidateScenarioRange {
   range: { min: number; max: number }
   plausibleScenarioCount: number
+}
+
+interface FitObservation {
+  interval: { min: number; max: number; minInclusive?: boolean; maxInclusive?: boolean }
+  labelInterval?: NutrientLabelInterval
+  normalizationValue: number
+}
+
+function hasReferenceSource(reference: KnownNutrientReference): boolean {
+  return (typeof reference.sourceReference === 'string' && reference.sourceReference.trim().length > 0)
+    || (typeof reference.provider === 'string' && reference.provider.trim().length > 0)
+}
+
+function validateKnownNutrientReferences(request: NutrientEstimateRequest): void {
+  if (request.fitMode !== undefined && request.fitMode !== 'legacy_point' && request.fitMode !== 'robust_interval') {
+    throw new Error('栄養表示フィット方式を確認してください。')
+  }
+  if (request.fitMode !== 'robust_interval') return
+
+  const references = request.knownNutrientReferences
+  if (!references) return
+  if (typeof references !== 'object' || Array.isArray(references)) {
+    throw new Error('栄養表示参照の一覧を確認してください。')
+  }
+  const expectedBasis = request.knownNutrientReferenceBasis
+  if (expectedBasis !== undefined && expectedBasis !== null) {
+    if (
+      !Number.isFinite(expectedBasis.amount)
+      || expectedBasis.amount <= 0
+      || (expectedBasis.unit !== 'g' && expectedBasis.unit !== 'ml')
+    ) {
+      throw new Error('栄養表示フィットの要求基準量は0より大きいgまたはmlで指定してください。')
+    }
+    if (expectedBasis.unit === 'g' && expectedBasis.amount !== request.referenceMassG) {
+      throw new Error('栄養表示のg基準量は明示された内容物重量と一致させてください。')
+    }
+    if (expectedBasis.unit === 'ml' && (request.baseUnit !== 'ml' || expectedBasis.amount !== request.baseAmount)) {
+      throw new Error('栄養表示のml基準量は要求のml基準量と一致させてください。')
+    }
+  }
+
+  for (const [rawKey, rawReference] of Object.entries(references)) {
+    if (!ESTIMATE_FIT_NUTRIENT_KEYS.includes(rawKey as EstimateFitNutrientKey)) {
+      throw new Error(`栄養表示フィットで扱えない栄養素です: ${rawKey}`)
+    }
+    if (
+      !rawReference
+      || rawReference.verified !== true
+      || !hasReferenceSource(rawReference)
+      || typeof rawReference.reference !== 'object'
+      || rawReference.reference === null
+    ) {
+      throw new Error(`${rawKey}の表示参照は確認済みで出典を持つ場合だけ使用できます。`)
+    }
+    const basis = rawReference.basis
+    if (basis !== undefined && basis !== null) {
+      if (!expectedBasis || basis.amount !== expectedBasis.amount || basis.unit !== expectedBasis.unit) {
+        throw new Error(`${rawKey}の表示基準量は要求基準量と一致させてください。`)
+      }
+    }
+    nutrientLabelReferenceInterval(rawKey as EstimateFitNutrientKey, rawReference.reference, basis)
+  }
+}
+
+function fitTargetExcluded(context: CandidateSelectionContext, key: EstimateFitNutrientKey): boolean {
+  const targets = context.requestedNutrients ?? ESTIMATABLE_NUTRIENT_KEYS
+  return targets.includes(key as EstimatableNutrientKey)
+}
+
+function fitObservationForKey(
+  key: EstimateFitNutrientKey,
+  context: CandidateSelectionContext,
+): FitObservation | null {
+  if (fitTargetExcluded(context, key)) return null
+  if (context.fitMode === 'robust_interval') {
+    const typedReference = context.knownNutrientReferences?.[key]
+    if (typedReference) {
+      if (typedReference.verified !== true || !hasReferenceSource(typedReference)) {
+        throw new Error(`${key}の表示参照は確認済みで出典を持つ場合だけ使用できます。`)
+      }
+      const interval = nutrientLabelReferenceInterval(key, typedReference.reference, typedReference.basis)
+      if (typedReference.basis) {
+        const expectedBasis = context.knownNutrientReferenceBasis
+        if (!expectedBasis || typedReference.basis.amount !== expectedBasis.amount || typedReference.basis.unit !== expectedBasis.unit) {
+          throw new Error(`${key}の表示基準量は要求基準量と一致させてください。`)
+        }
+        if (expectedBasis.unit === 'g' && expectedBasis.amount !== context.referenceMassG) {
+          throw new Error('栄養表示のg基準量は明示された内容物重量と一致させてください。')
+        }
+      }
+      const normalizationValue = typedReference.reference.kind === 'fixed'
+        ? typedReference.reference.value!
+        : typedReference.reference.max!
+      return { interval, labelInterval: interval, normalizationValue }
+    }
+  }
+
+  const value = context.knownNutrients?.[key]
+  if (value === null || value === undefined || !Number.isFinite(value) || value < 0) return null
+  return {
+    interval: { min: value, max: value, minInclusive: true, maxInclusive: true },
+    normalizationValue: value,
+  }
+}
+
+function fitObservationScale(key: EstimateFitNutrientKey, observation: FitObservation): number {
+  return nutrientReferenceNormalizationScale(key, observation.normalizationValue)
+}
+
+function knownNutrientsForEstimatePostprocessing(
+  request: NutrientEstimateRequest,
+): NutrientEstimateRequest['knownNutrients'] {
+  const knownNutrients = { ...request.knownNutrients }
+  const requested = new Set(request.requestedNutrients ?? ESTIMATABLE_NUTRIENT_KEYS)
+  for (const key of ESTIMATE_FIT_NUTRIENT_KEYS) {
+    if (requested.has(key as EstimatableNutrientKey)) {
+      knownNutrients[key] = null
+      continue
+    }
+    const reference = request.knownNutrientReferences?.[key]
+    if (
+      reference?.verified === true
+      && hasReferenceSource(reference)
+      && knownNutrients[key] === 0
+    ) {
+      try {
+        if (
+          typeof reference.reference !== 'object'
+          || reference.reference === null
+          || reference.reference.kind !== 'fixed'
+          || reference.reference.value !== 0
+        ) continue
+        if (reference.basis) {
+          const expectedBasis = request.knownNutrientReferenceBasis
+          const basisMatchesRequest = expectedBasis !== undefined
+            && expectedBasis !== null
+            && reference.basis.amount === expectedBasis.amount
+            && reference.basis.unit === expectedBasis.unit
+            && (expectedBasis.unit === 'g'
+              ? expectedBasis.amount === request.referenceMassG
+              : request.baseUnit === 'ml' && expectedBasis.amount === request.baseAmount)
+          if (!basisMatchesRequest) continue
+        }
+        const interval = nutrientLabelReferenceInterval(key, reference.reference, reference.basis)
+        if (interval.max > 0) knownNutrients[key] = null
+      } catch {
+        // Legacy point calls ignore malformed optional reference metadata for post-processing.
+      }
+    }
+  }
+  return knownNutrients
 }
 
 function saturatedFatRatioFitContext(
@@ -579,10 +755,12 @@ function quickCandidateFitError(
 ): number | null {
   if (!context || !Number.isFinite(context.referenceMassG) || context.referenceMassG <= 0) return null
   const ratios = fallbackRatios(candidateSets.length)
-  const fitKeys = ESTIMATE_FIT_NUTRIENT_KEYS.filter((key) => {
-    const observed = context.knownNutrients?.[key]
-    return observed !== null && observed !== undefined && Number.isFinite(observed) && observed >= 0
-  })
+  const observations = new Map<EstimateFitNutrientKey, FitObservation>()
+  for (const key of ESTIMATE_FIT_NUTRIENT_KEYS) {
+    const observation = fitObservationForKey(key, context)
+    if (observation) observations.set(key, observation)
+  }
+  const fitKeys = [...observations.keys()]
   const errors = fitKeys.flatMap((key) => {
     let minPer100g = 0
     let maxPer100g = 0
@@ -598,9 +776,17 @@ function quickCandidateFitError(
       minPer100g += Math.min(...values) * ratios[index]
       maxPer100g += Math.max(...values) * ratios[index]
     }
-    const observed = context.knownNutrients![key]!
     const predictedMin = minPer100g * context.referenceMassG / 100
     const predictedMax = maxPer100g * context.referenceMassG / 100
+    const observation = observations.get(key)!
+    if (context.fitMode === 'robust_interval') {
+      return [normalizedIntervalHuberLoss(
+        { min: predictedMin, max: predictedMax },
+        observation.interval,
+        fitObservationScale(key, observation),
+      )]
+    }
+    const observed = context.knownNutrients![key]!
     const distance = observed < predictedMin
       ? predictedMin - observed
       : observed > predictedMax
@@ -664,10 +850,7 @@ function selectCandidateBeam(
   const hasFitEvidence = context !== undefined
     && Number.isFinite(context.referenceMassG)
     && context.referenceMassG > 0
-    && ESTIMATE_FIT_NUTRIENT_KEYS.some((key) => {
-      const value = context.knownNutrients?.[key]
-      return value !== null && value !== undefined && Number.isFinite(value) && value >= 0
-    })
+    && ESTIMATE_FIT_NUTRIENT_KEYS.some((key) => fitObservationForKey(key, context) !== null)
   // 栄養表示がない場面では従来の事前確率順を維持し、根拠のない候補順変更を避ける。
   if (pool.length <= limit || !hasFitEvidence) return pool.sort(byPrior).slice(0, limit)
   const scored = pool.map((combination) => {
@@ -896,20 +1079,20 @@ function uncertainZeroWarning(value: number, zeroEvidence: EstimationZeroEvidenc
 function fitIngredientRatios(
   combination: CandidateCombination,
   referenceMassG: number,
-  knownNutrients: NutrientEstimateRequest['knownNutrients'],
+  fitContext: CandidateSelectionContext,
   ratioFeedback: SaturatedFatRatioFitContext | null,
   seedInput: string,
   scenarioCount: number,
 ): MacroFit {
   const profiles = combination.profiles
-  const fitKeys = ESTIMATE_FIT_NUTRIENT_KEYS.filter((key) => {
-    const value = knownNutrients?.[key]
-    return value !== null
-      && value !== undefined
-      && Number.isFinite(value)
-      && value >= 0
-      && profiles.every((profile) => profile.nutrients[key] !== null)
-  })
+  const observations = new Map<EstimateFitNutrientKey, FitObservation>()
+  for (const key of ESTIMATE_FIT_NUTRIENT_KEYS) {
+    const observation = fitObservationForKey(key, fitContext)
+    if (observation && profiles.every((profile) => profile.nutrients[key] !== null)) {
+      observations.set(key, observation)
+    }
+  }
+  const fitKeys = [...observations.keys()]
   const predict = (ratios: readonly number[], key: EstimateFitNutrientKey) => (
     profiles.reduce((sum, profile, index) => sum + profile.nutrients[key]! * ratios[index], 0)
     * referenceMassG / 100
@@ -917,11 +1100,17 @@ function fitIngredientRatios(
   const macroObjectiveForRatios = (ratios: readonly number[]) => {
     if (fitKeys.length === 0) return null
     return fitKeys.reduce((sum, key) => {
-      const observed = knownNutrients![key]!
-      // 公表値の丸めと食品差を考慮し、微小値だけが目的関数を支配しない尺度にする。
-      const roundingWidth = key === 'energyKcal' ? 0.5 : 0.05
-      const scale = Math.max(roundingWidth, observed * 0.02)
-      const error = (predict(ratios, key) - observed) / scale
+      const observation = observations.get(key)!
+      const predicted = predict(ratios, key)
+      if (fitContext.fitMode === 'robust_interval') {
+        return sum + normalizedIntervalHuberLoss(
+          { min: predicted, max: predicted },
+          observation.interval,
+          fitObservationScale(key, observation),
+        )
+      }
+      // legacy_point preserves the previous normalized squared point error.
+      const error = (predicted - fitContext.knownNutrients![key]!) / fitObservationScale(key, observation)
       return sum + error * error
     }, 0) / fitKeys.length
   }
@@ -1415,7 +1604,9 @@ export function estimateNutrients(
   ratioStrategyOverride?: NutrientEstimatorRatioStrategy,
 ): NutrientEstimateResult {
   const ratioStrategy = validatedRatioStrategy(ratioStrategyOverride)
+  validateKnownNutrientReferences(request)
   const requested = new Set(request.requestedNutrients ?? ESTIMATABLE_NUTRIENT_KEYS)
+  const postprocessingKnownNutrients = knownNutrientsForEstimatePostprocessing(request)
   let estimates: Record<EstimatableNutrientKey, NutrientEstimate>
   let optimization: EstimationOptimization | undefined
 
@@ -1447,24 +1638,29 @@ export function estimateNutrients(
       }
     } else {
       const ratioFeedbackContext = saturatedFatRatioFitContext(
-        request.knownNutrients,
+        postprocessingKnownNutrients,
         request.estimatorGenreId,
         ratioStrategy.feedbackWeight,
       )
+      const fitContext: CandidateSelectionContext = {
+        referenceMassG: request.referenceMassG!,
+        knownNutrients: request.knownNutrients,
+        fitMode: request.fitMode,
+        knownNutrientReferences: request.knownNutrientReferences,
+        knownNutrientReferenceBasis: request.knownNutrientReferenceBasis,
+        requestedNutrients: request.requestedNutrients,
+        ...(ratioFeedbackContext ? { ratioFeedback: ratioFeedbackContext } : {}),
+      }
       const combinations = combineCandidateSets(
         resolved.map((item) => item.candidates),
         MAX_PROFILE_COMBINATIONS,
-        {
-          referenceMassG: request.referenceMassG!,
-          knownNutrients: request.knownNutrients,
-          ...(ratioFeedbackContext ? { ratioFeedback: ratioFeedbackContext } : {}),
-        },
+        fitContext,
       )
       const scenarioCount = Math.max(512, Math.floor(4_096 / Math.max(1, combinations.length)))
       const fits = combinations.map((combination) => fitIngredientRatios(
         combination,
         request.referenceMassG!,
-        request.knownNutrients,
+        fitContext,
         ratioFeedbackContext,
         JSON.stringify({
           productName: request.productName?.normalize('NFKC') ?? null,
@@ -1474,7 +1670,10 @@ export function estimateNutrients(
           ingredients: declaration.ingredients.map((ingredient) => ingredient.normalizedName),
           profiles: combination.profiles.map((profile) => profile.profileId),
           referenceMassG: request.referenceMassG,
-          knownNutrients: ESTIMATE_FIT_NUTRIENT_KEYS.map((key) => [key, request.knownNutrients?.[key] ?? null]),
+          knownNutrients: ESTIMATE_FIT_NUTRIENT_KEYS.map((key) => [
+            key,
+            fitTargetExcluded(fitContext, key) ? null : request.knownNutrients?.[key] ?? null,
+          ]),
           modelVersion: RATIO_FIT_SEED_MODEL_VERSION,
         }),
         scenarioCount,
@@ -1484,6 +1683,18 @@ export function estimateNutrients(
         || left.profiles.map((profile) => profile.profileId).join('|')
           .localeCompare(right.profiles.map((profile) => profile.profileId).join('|'))
       ))[0]
+      const fitReferenceIntervals: Partial<Record<NutrientKey, EstimationFitReferenceInterval>> = {}
+      if (request.fitMode === 'robust_interval') {
+        for (const key of ESTIMATE_FIT_NUTRIENT_KEYS) {
+          const observation = fitObservationForKey(key, fitContext)
+          if (
+            observation?.labelInterval
+            && selected.profiles.every((profile) => profile.nutrients[key] !== null)
+          ) {
+            fitReferenceIntervals[key] = observation.labelInterval
+          }
+        }
+      }
       const hasCandidateAmbiguity = resolved.some((item) => item.candidates.length > 1)
         || selected.profiles.some((profile) => profile.ambiguous)
       const hasCompound = declaration.ingredients.some((ingredient) => ingredient.components.length > 0)
@@ -1672,6 +1883,9 @@ export function estimateNutrients(
           plausibleScenarioCount: plausibleFits(fits, selected).length,
           unresolvedMassRatio: 0,
           genrePriorContributionRatios,
+          ...(request.fitMode === 'robust_interval'
+            ? { fitMode: 'robust_interval' as const, fitReferenceIntervals }
+            : {}),
           ...(selectedRatioFeedback ? { ratioFeedback: selectedRatioFeedback } : {}),
         },
       }
@@ -1680,11 +1894,11 @@ export function estimateNutrients(
 
   estimates = applySaturatedFatRatioPrior(
     estimates,
-    request.knownNutrients,
+    postprocessingKnownNutrients,
     request.estimatorGenreId,
     ratioStrategy.postBlendWeight,
   )
-  estimates = applyCompositionUpperBounds(estimates, request.knownNutrients)
+  estimates = applyCompositionUpperBounds(estimates, postprocessingKnownNutrients)
   const unresolvedIngredients = request.ingredientsText?.trim()
     ? unresolvedIngredientNames(request.ingredientsText, request.productName, request.estimatorGenreId)
     : []
@@ -1776,6 +1990,15 @@ export function toStoredNutrientEstimateResult(
                     genrePriorContributionRatios: {
                       ...result.optimization.trace.genrePriorContributionRatios,
                     },
+                    ...(result.optimization.trace.fitReferenceIntervals
+                      ? {
+                          fitReferenceIntervals: Object.fromEntries(
+                            Object.entries(result.optimization.trace.fitReferenceIntervals).map(([key, interval]) => (
+                              [key, interval ? { ...interval } : interval]
+                            )),
+                          ) as EstimationTrace['fitReferenceIntervals'],
+                        }
+                      : {}),
                     ...(result.optimization.trace.ratioFeedback
                       ? { ratioFeedback: { ...result.optimization.trace.ratioFeedback } }
                       : {}),

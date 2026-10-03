@@ -19,6 +19,7 @@ import {
   ESTIMATOR_GENRE_NUTRIENT_PRIOR_VERSION,
 } from '../src/data/nutrientEstimatorGenreNutrientPriors'
 import {
+  intervalContains,
   intervalDistance,
   nutrientLabelReferenceInterval,
   type NutrientLabelReference,
@@ -90,6 +91,7 @@ interface Observation {
   predictedMax: number | null
   referenceMin: number
   referenceMax: number
+  referenceMaxInclusive?: boolean
   ratioAdjustment?: {
     parentValue: number
     blendWeight: number
@@ -175,7 +177,7 @@ function nutrientReference(label: TrainingNutrient): NutrientLabelReference {
 }
 
 function knownNutrientValue(label: TrainingNutrient | undefined): number | null {
-  if (!label) return null
+  if (!label || label.valueKind === 'estimated') return null
   if (label.value !== null) return label.value
   if (label.rangeMin !== null && label.rangeMax !== null) return (label.rangeMin + label.rangeMax) / 2
   return null
@@ -311,7 +313,7 @@ function summarizeRatioWeight(
       : predictedValue > item.referenceMax
         ? predictedValue - item.referenceMax
         : 0
-    if (error === 0) pointInsideCount += 1
+    if (intervalContains(predictedValue, { min: item.referenceMin, max: item.referenceMax, maxInclusive: item.referenceMaxInclusive })) pointInsideCount += 1
     if (center > 0) percentageErrorTotal += error / center
   }
   return {
@@ -337,7 +339,7 @@ function observationForStrategy(
 ): Observation | null {
   const label = record.nutrients[nutrientKey]
   if (!label || label.valueKind === 'estimated') return null
-  const reference = nutrientLabelReferenceInterval(nutrientKey, nutrientReference(label))
+  const reference = nutrientLabelReferenceInterval(nutrientKey, nutrientReference(label), { amount: record.referenceMassG, unit: 'g' })
   const estimate = result.estimates[nutrientKey]
   if (estimate.status !== 'available') {
     return {
@@ -357,6 +359,7 @@ function observationForStrategy(
       predictedMax: null,
       referenceMin: reference.min,
       referenceMax: reference.max,
+      referenceMaxInclusive: reference.maxInclusive,
     }
   }
   const center = (reference.min + reference.max) / 2
@@ -375,13 +378,14 @@ function observationForStrategy(
     limitationReasons: [...estimate.limitationReasons],
     pointError,
     percentageError: center <= 0 ? null : pointError / center,
-    pointInsideReference: pointError === 0,
-    rangeOverlapsReference: estimate.range.max >= reference.min && estimate.range.min <= reference.max,
+    pointInsideReference: intervalContains(estimate.value, reference),
+    rangeOverlapsReference: estimate.range.max >= reference.min && (estimate.range.min < reference.max || (estimate.range.min === reference.max && reference.maxInclusive !== false)),
     predictedValue: estimate.value,
     predictedMin: estimate.range.min,
     predictedMax: estimate.range.max,
     referenceMin: reference.min,
     referenceMax: reference.max,
+    referenceMaxInclusive: reference.maxInclusive,
   }
 }
 
@@ -633,7 +637,7 @@ async function main(): Promise<void> {
     for (const nutrientKey of requestedNutrients) {
       const label = record.nutrients[nutrientKey]
       if (!label || label.valueKind === 'estimated') continue
-      const reference = nutrientLabelReferenceInterval(nutrientKey, nutrientReference(label))
+      const reference = nutrientLabelReferenceInterval(nutrientKey, nutrientReference(label), { amount: record.referenceMassG, unit: 'g' })
       const estimate = result.estimates[nutrientKey]
       if (estimate.status !== 'available') {
         observations.push({
@@ -653,6 +657,7 @@ async function main(): Promise<void> {
           predictedMax: null,
           referenceMin: reference.min,
           referenceMax: reference.max,
+          referenceMaxInclusive: reference.maxInclusive,
         })
         continue
       }
@@ -672,13 +677,14 @@ async function main(): Promise<void> {
         limitationReasons: [...estimate.limitationReasons],
         pointError,
         percentageError: center <= 0 ? null : pointError / center,
-        pointInsideReference: pointError === 0,
-        rangeOverlapsReference: estimate.range.max >= reference.min && estimate.range.min <= reference.max,
+        pointInsideReference: intervalContains(estimate.value, reference),
+        rangeOverlapsReference: estimate.range.max >= reference.min && (estimate.range.min < reference.max || (estimate.range.min === reference.max && reference.maxInclusive !== false)),
         predictedValue: estimate.value,
         predictedMin: estimate.range.min,
         predictedMax: estimate.range.max,
         referenceMin: reference.min,
         referenceMax: reference.max,
+        referenceMaxInclusive: reference.maxInclusive,
         ...(estimate.ratioAdjustment
           ? {
               ratioAdjustment: {

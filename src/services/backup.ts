@@ -433,6 +433,21 @@ function isEstimationRatioFeedback(value: unknown): boolean {
     && typeof value.optimizedIngredientRatios === 'boolean'
 }
 
+function isFitReferenceIntervals(value: unknown): boolean {
+  return isRecord(value) && Object.entries(value).every(([key, interval]) => (
+    isNutrientKey(key)
+    && isRecord(interval)
+    && typeof interval.min === 'number' && Number.isFinite(interval.min) && interval.min >= 0
+    && typeof interval.max === 'number' && Number.isFinite(interval.max) && interval.max >= interval.min
+    && typeof interval.minInclusive === 'boolean'
+    && typeof interval.maxInclusive === 'boolean'
+    && (interval.min < interval.max || (interval.minInclusive && interval.maxInclusive))
+    && isNonEmptyString(interval.ruleVersion)
+    && ['caa_low_content', 'relative_only', 'declared_range'].includes(String(interval.basisMode))
+    && ['explicit', 'unknown', 'not_applicable'].includes(String(interval.basisStatus))
+  ))
+}
+
 function isEstimationTrace(value: unknown): boolean {
   if (!isRecord(value)
     || !Array.isArray(value.ingredientNames) || !value.ingredientNames.every(isNonEmptyString)
@@ -451,6 +466,8 @@ function isEstimationTrace(value: unknown): boolean {
     || value.plausibleScenarioCount > value.retainedCandidateCombinationCount
     || typeof value.unresolvedMassRatio !== 'number' || !Number.isFinite(value.unresolvedMassRatio) || value.unresolvedMassRatio < 0 || value.unresolvedMassRatio > 1
     || !isRecord(value.genrePriorContributionRatios)
+    || (value.fitMode !== undefined && !['legacy_point', 'robust_interval'].includes(String(value.fitMode)))
+    || (value.fitReferenceIntervals !== undefined && !isFitReferenceIntervals(value.fitReferenceIntervals))
     || (value.ratioFeedback !== undefined && !isEstimationRatioFeedback(value.ratioFeedback))) return false
   const ratioTotal = value.ingredientRatios.reduce<number>((total, ratio) => total + ratio, 0)
   if (value.ingredientRatios.length > 0 && Math.abs(ratioTotal - 1) > 0.0001) return false

@@ -591,6 +591,16 @@ export interface EstimationRatioFeedback {
   optimizedIngredientRatios: boolean
 }
 
+export interface EstimationFitReferenceInterval {
+  min: number
+  max: number
+  minInclusive: boolean
+  maxInclusive: boolean
+  ruleVersion: string
+  basisMode: 'caa_low_content' | 'relative_only' | 'declared_range'
+  basisStatus: 'explicit' | 'unknown' | 'not_applicable'
+}
+
 export interface EstimationTrace {
   ingredientNames: string[]
   selectedProfileIds: Array<string | null>
@@ -603,6 +613,9 @@ export interface EstimationTrace {
   unresolvedMassRatio: number
   /** 対象栄養素でジャンル分布を適用した、製品重量に対する暫定重量比。 */
   genrePriorContributionRatios: Partial<Record<NutrientKey, number>>
+  fitMode?: 'legacy_point' | 'robust_interval'
+  /** robust_intervalで目的関数へ使った、検証済み表示参照の区間。 */
+  fitReferenceIntervals?: Partial<Record<NutrientKey, EstimationFitReferenceInterval>>
   /** 候補・配合探索へ弱い制約として戻した栄養素比率。 */
   ratioFeedback?: EstimationRatioFeedback
 }

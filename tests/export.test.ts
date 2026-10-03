@@ -306,6 +306,42 @@ describe('export formats', () => {
       baseAmount: traceFood.baseAmount,
       baseUnit: traceFood.baseUnit,
     })
+    const robustBrowserResult = estimateNutrients({
+      requestId: estimationRequest.requestId,
+      productName: traceFood.name,
+      estimatorGenreId: 'prepared_meal',
+      baseAmount: traceFood.baseAmount,
+      baseUnit: traceFood.baseUnit,
+      referenceMassG: 100,
+      referenceMassSource: '基準単位がg',
+      ingredientsText: traceFood.ingredientsText ?? null,
+      ingredientsSource: traceFood.ingredientsSource ?? null,
+      knownNutrients: {
+        energyKcal: 363,
+        proteinG: 5.5,
+        fatG: 1,
+        carbohydrateG: 83.6,
+        saltG: 0,
+      },
+      fitMode: 'robust_interval',
+      knownNutrientReferenceBasis: { amount: 100, unit: 'g' },
+      knownNutrientReferences: {
+        energyKcal: {
+          verified: true,
+          sourceReference: 'https://example.test/label',
+          reference: { kind: 'fixed', value: 363 },
+          basis: { amount: 100, unit: 'g' },
+        },
+      },
+      requestedNutrients: ['fiberG', 'saturatedFatG'],
+      requestedAt: estimatedAt,
+    })
+    const robustEstimationResult = toStoredNutrientEstimateResult(robustBrowserResult, {
+      foodId: traceFood.id,
+      inputHash: estimationRequest.inputHash,
+      baseAmount: traceFood.baseAmount,
+      baseUnit: traceFood.baseUnit,
+    })
     const v2 = {
       ...backup,
       dataFormatVersion: 2,
@@ -317,6 +353,16 @@ describe('export formats', () => {
     }
     expect(validateBackup(v2).estimationSettings?.applyMode).toBe('manual')
     expect(validateBackup(v2).estimationResults?.[0].optimization?.trace).toEqual(estimationResult.optimization?.trace)
+    expect(robustEstimationResult.optimization?.trace?.fitReferenceIntervals?.energyKcal).toMatchObject({
+      min: 290.4,
+      max: 435.6,
+      basisMode: 'relative_only',
+    })
+    expect(robustEstimationResult.optimization?.trace?.fitReferenceIntervals)
+      .not.toBe(robustBrowserResult.optimization?.trace?.fitReferenceIntervals)
+    const robustV2 = { ...v2, estimationResults: [robustEstimationResult] }
+    expect(validateBackup(robustV2).estimationResults?.[0].optimization?.trace?.fitReferenceIntervals)
+      .toEqual(robustEstimationResult.optimization?.trace?.fitReferenceIntervals)
     expect(estimationResult.optimization?.trace?.ratioFeedback).toMatchObject({
       feedbackWeight: 0.2,
       pooledSampleSize: 113,
@@ -339,6 +385,26 @@ describe('export formats', () => {
           trace: {
             ...estimationResult.optimization!.trace!,
             unresolvedMassRatio: 2,
+          },
+        },
+      }],
+    })).toThrow('推計要求、結果または採用履歴')
+    expect(() => validateBackup({
+      ...robustV2,
+      estimationResults: [{
+        ...robustEstimationResult,
+        optimization: {
+          ...robustEstimationResult.optimization!,
+          trace: {
+            ...robustEstimationResult.optimization!.trace!,
+            fitReferenceIntervals: {
+              energyKcal: {
+                ...robustEstimationResult.optimization!.trace!.fitReferenceIntervals!.energyKcal!,
+                min: 0,
+                max: 0,
+                maxInclusive: false,
+              },
+            },
           },
         },
       }],

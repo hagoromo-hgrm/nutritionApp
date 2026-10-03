@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { NUTRIENT_KEYS, type Nutrients } from '../src/types'
 import {
   combineCandidateSets,
+  type EstimatableNutrientKey,
   type CandidateSelectionContext,
 } from '../src/services/nutrientEstimator'
 import { saturatedFatRatioPrior } from '../src/data/nutrientEstimatorGenreNutrientPriors'
@@ -72,6 +73,43 @@ describe('nutrient estimator candidate selection', () => {
     const second = combineCandidateSets(candidateSets, 64, context)
 
     expect(second).toEqual(first)
+  })
+
+  it('robust_intervalの確認済み表示参照もbeam候補選択に使う', () => {
+    const robustContext: CandidateSelectionContext = {
+      referenceMassG: 100,
+      knownNutrients: undefined,
+      fitMode: 'robust_interval',
+      knownNutrientReferences: {
+        energyKcal: {
+          verified: true,
+          sourceReference: 'official test reference',
+          reference: { kind: 'fixed', value: 400 },
+          basis: { amount: 100, unit: 'g' },
+        },
+      },
+      knownNutrientReferenceBasis: { amount: 100, unit: 'g' },
+    }
+    const first = combineCandidateSets(candidateSets, 64, robustContext)
+    const second = combineCandidateSets(candidateSets, 64, robustContext)
+
+    expect(second).toEqual(first)
+    expect(first.some((combination) => (
+      combination.profiles.some((profile) => profile.profileId.endsWith('candidate-3'))
+    ))).toBe(true)
+  })
+
+  it('要求している栄養素はfit evidenceから外す', () => {
+    // Step 7 will widen the estimatable key union; this cast exercises the shared exclusion now.
+    const requestedEnergy = ['energyKcal'] as unknown as readonly EstimatableNutrientKey[]
+    const combinations = combineCandidateSets(candidateSets, 64, {
+      ...context,
+      requestedNutrients: requestedEnergy,
+    })
+
+    expect(combinations.some((combination) => (
+      combination.profiles.every((profile) => profile.profileId.endsWith('candidate-3'))
+    ))).toBe(false)
   })
 
   it('組合せ上限を超えても比率分布に整合する低事前確率候補を残す', () => {
