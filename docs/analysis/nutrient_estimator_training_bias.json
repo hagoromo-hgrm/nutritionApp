@@ -1,0 +1,3453 @@
+{
+  "format": "nutrition-estimator-training-bias-audit",
+  "formatVersion": 1,
+  "scope": "train_split_only",
+  "source": {
+    "sourceFileSha256": "3edf63aa78c138460c528a75a1870839c710332e68f781cab86aff93132db89b",
+    "normalizedDatasetSha256": "bd2b3230343b917e4fa8c542043519f8c532b9f967f8feb44056b4c273e246e3",
+    "manifestFileSha256": "79adc1258b0e0aa5a2f115bff9ada6de499c196b6912d3cd95ba334fa2eed8d2",
+    "publicSealedCollectionFileSha256": "0a72965dfab0fa3b53ebf2e3b4d50904b15d2bc17c346fbda77cba76b42bff36",
+    "publicSealedFamilyCount": 30,
+    "excludedSealedFamilyOverlapCount": 0
+  },
+  "trainingRecordCount": 545,
+  "genreCount": 14,
+  "taxonomyGenreCount": 14,
+  "observedGenreCount": 12,
+  "thresholds": {
+    "pilotRecordsPerGenre": 50,
+    "formalRecordsPerGenre": 100,
+    "independentFamiliesPerNutrient": 30,
+    "minimumMakersPerNutrient": 3,
+    "maximumMakerShare": 0.5,
+    "preferredMaximumMakerShare": 0.2
+  },
+  "definitions": {
+    "observedCount": "train records containing this nutrient label, including estimated labels",
+    "acceptedCount": "non-estimated fixed values and valid declared ranges accepted for an auxiliary prior",
+    "declaredRange": "range midpoint is used only as a prior representative, never represented as a fixed point value",
+    "independentFamily": "normalized maker + productFamily group with at least one accepted label for this nutrient",
+    "familyWeight": "each independent family has total weight 1 per nutrient; its records share that weight equally",
+    "maximumMakerShare": "largest maker share of independent family total weights for this nutrient",
+    "maximumFamilyShare": "largest independent family share of total family weights for this nutrient",
+    "effectiveFamilySampleSize": "Kish ESS = (sum of family total weights)^2 / sum of squared family total weights, after record weights are aggregated within family",
+    "missingCount": "train records without a usable label value or valid declared range",
+    "invalidExclusionReasons": "counted label-level exclusions; malformed source structure or integrity failures reject the audit",
+    "makerFamilyCountsBySha256": "maker identity is SHA-256 of normalized name; values count independent families"
+  },
+  "genres": {
+    "baked_sweets": {
+      "trainingRecordCount": 56,
+      "pilot50RecordTargetAchieved": true,
+      "formal100RecordTargetAchieved": false,
+      "genreShortageReasons": [
+        "fewer_than_100_formal_records"
+      ],
+      "nutrients": {
+        "saturatedFatG": {
+          "observedCount": 47,
+          "acceptedCount": 47,
+          "independentFamilyCount": 47,
+          "makerCount": 1,
+          "makerFamilyCountsBySha256": {
+            "641c205bbc4ab91832c5e3cb671beac2b6468e394c668048091ca6c1104e3657": 47
+          },
+          "maximumMakerShare": 1.0,
+          "maximumFamilyShare": 0.021277,
+          "effectiveFamilySampleSize": 47.0,
+          "makerBalance": 0.0,
+          "missingCount": 9,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": true,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "fiberG": {
+          "observedCount": 52,
+          "acceptedCount": 52,
+          "independentFamilyCount": 50,
+          "makerCount": 2,
+          "makerFamilyCountsBySha256": {
+            "641c205bbc4ab91832c5e3cb671beac2b6468e394c668048091ca6c1104e3657": 47,
+            "f6472f0afc082b86a95d230349eea8dcb31ded4decfdb0df678e5e1a250b8a53": 3
+          },
+          "maximumMakerShare": 0.94,
+          "maximumFamilyShare": 0.02,
+          "effectiveFamilySampleSize": 50.0,
+          "makerBalance": 0.12,
+          "missingCount": 4,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": true,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "calciumMg": {
+          "observedCount": 6,
+          "acceptedCount": 6,
+          "independentFamilyCount": 6,
+          "makerCount": 2,
+          "makerFamilyCountsBySha256": {
+            "641c205bbc4ab91832c5e3cb671beac2b6468e394c668048091ca6c1104e3657": 2,
+            "f6472f0afc082b86a95d230349eea8dcb31ded4decfdb0df678e5e1a250b8a53": 4
+          },
+          "maximumMakerShare": 0.666667,
+          "maximumFamilyShare": 0.166667,
+          "effectiveFamilySampleSize": 6.0,
+          "makerBalance": 0.666667,
+          "missingCount": 50,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "ironMg": {
+          "observedCount": 5,
+          "acceptedCount": 5,
+          "independentFamilyCount": 5,
+          "makerCount": 1,
+          "makerFamilyCountsBySha256": {
+            "f6472f0afc082b86a95d230349eea8dcb31ded4decfdb0df678e5e1a250b8a53": 5
+          },
+          "maximumMakerShare": 1.0,
+          "maximumFamilyShare": 0.2,
+          "effectiveFamilySampleSize": 5.0,
+          "makerBalance": 0.0,
+          "missingCount": 51,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "vitaminAMcg": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 56,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        },
+        "vitaminEMg": {
+          "observedCount": 1,
+          "acceptedCount": 1,
+          "independentFamilyCount": 1,
+          "makerCount": 1,
+          "makerFamilyCountsBySha256": {
+            "f6472f0afc082b86a95d230349eea8dcb31ded4decfdb0df678e5e1a250b8a53": 1
+          },
+          "maximumMakerShare": 1.0,
+          "maximumFamilyShare": 1.0,
+          "effectiveFamilySampleSize": 1.0,
+          "makerBalance": 0.0,
+          "missingCount": 55,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "vitaminB1Mg": {
+          "observedCount": 6,
+          "acceptedCount": 6,
+          "independentFamilyCount": 4,
+          "makerCount": 1,
+          "makerFamilyCountsBySha256": {
+            "f6472f0afc082b86a95d230349eea8dcb31ded4decfdb0df678e5e1a250b8a53": 4
+          },
+          "maximumMakerShare": 1.0,
+          "maximumFamilyShare": 0.25,
+          "effectiveFamilySampleSize": 4.0,
+          "makerBalance": 0.0,
+          "missingCount": 50,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "vitaminB2Mg": {
+          "observedCount": 6,
+          "acceptedCount": 6,
+          "independentFamilyCount": 4,
+          "makerCount": 1,
+          "makerFamilyCountsBySha256": {
+            "f6472f0afc082b86a95d230349eea8dcb31ded4decfdb0df678e5e1a250b8a53": 4
+          },
+          "maximumMakerShare": 1.0,
+          "maximumFamilyShare": 0.25,
+          "effectiveFamilySampleSize": 4.0,
+          "makerBalance": 0.0,
+          "missingCount": 50,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "vitaminCMg": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 56,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        }
+      }
+    },
+    "bread": {
+      "trainingRecordCount": 0,
+      "pilot50RecordTargetAchieved": false,
+      "formal100RecordTargetAchieved": false,
+      "genreShortageReasons": [
+        "fewer_than_50_pilot_records",
+        "fewer_than_100_formal_records"
+      ],
+      "nutrients": {
+        "saturatedFatG": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 0,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        },
+        "fiberG": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 0,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        },
+        "calciumMg": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 0,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        },
+        "ironMg": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 0,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        },
+        "vitaminAMcg": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 0,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        },
+        "vitaminEMg": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 0,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        },
+        "vitaminB1Mg": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 0,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        },
+        "vitaminB2Mg": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 0,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        },
+        "vitaminCMg": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 0,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        }
+      }
+    },
+    "cake_pastry": {
+      "trainingRecordCount": 8,
+      "pilot50RecordTargetAchieved": false,
+      "formal100RecordTargetAchieved": false,
+      "genreShortageReasons": [
+        "fewer_than_50_pilot_records",
+        "fewer_than_100_formal_records"
+      ],
+      "nutrients": {
+        "saturatedFatG": {
+          "observedCount": 4,
+          "acceptedCount": 4,
+          "independentFamilyCount": 4,
+          "makerCount": 1,
+          "makerFamilyCountsBySha256": {
+            "641c205bbc4ab91832c5e3cb671beac2b6468e394c668048091ca6c1104e3657": 4
+          },
+          "maximumMakerShare": 1.0,
+          "maximumFamilyShare": 0.25,
+          "effectiveFamilySampleSize": 4.0,
+          "makerBalance": 0.0,
+          "missingCount": 4,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "fiberG": {
+          "observedCount": 4,
+          "acceptedCount": 4,
+          "independentFamilyCount": 4,
+          "makerCount": 1,
+          "makerFamilyCountsBySha256": {
+            "641c205bbc4ab91832c5e3cb671beac2b6468e394c668048091ca6c1104e3657": 4
+          },
+          "maximumMakerShare": 1.0,
+          "maximumFamilyShare": 0.25,
+          "effectiveFamilySampleSize": 4.0,
+          "makerBalance": 0.0,
+          "missingCount": 4,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "calciumMg": {
+          "observedCount": 3,
+          "acceptedCount": 3,
+          "independentFamilyCount": 3,
+          "makerCount": 2,
+          "makerFamilyCountsBySha256": {
+            "641c205bbc4ab91832c5e3cb671beac2b6468e394c668048091ca6c1104e3657": 1,
+            "f6472f0afc082b86a95d230349eea8dcb31ded4decfdb0df678e5e1a250b8a53": 2
+          },
+          "maximumMakerShare": 0.666667,
+          "maximumFamilyShare": 0.333333,
+          "effectiveFamilySampleSize": 3.0,
+          "makerBalance": 0.666667,
+          "missingCount": 5,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "ironMg": {
+          "observedCount": 1,
+          "acceptedCount": 1,
+          "independentFamilyCount": 1,
+          "makerCount": 1,
+          "makerFamilyCountsBySha256": {
+            "f6472f0afc082b86a95d230349eea8dcb31ded4decfdb0df678e5e1a250b8a53": 1
+          },
+          "maximumMakerShare": 1.0,
+          "maximumFamilyShare": 1.0,
+          "effectiveFamilySampleSize": 1.0,
+          "makerBalance": 0.0,
+          "missingCount": 7,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "vitaminAMcg": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 8,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        },
+        "vitaminEMg": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 8,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        },
+        "vitaminB1Mg": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 8,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        },
+        "vitaminB2Mg": {
+          "observedCount": 1,
+          "acceptedCount": 1,
+          "independentFamilyCount": 1,
+          "makerCount": 1,
+          "makerFamilyCountsBySha256": {
+            "f6472f0afc082b86a95d230349eea8dcb31ded4decfdb0df678e5e1a250b8a53": 1
+          },
+          "maximumMakerShare": 1.0,
+          "maximumFamilyShare": 1.0,
+          "effectiveFamilySampleSize": 1.0,
+          "makerBalance": 0.0,
+          "missingCount": 7,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "vitaminCMg": {
+          "observedCount": 2,
+          "acceptedCount": 2,
+          "independentFamilyCount": 2,
+          "makerCount": 2,
+          "makerFamilyCountsBySha256": {
+            "3a14a6fd236a7fe2df1197004ffaaab9ed52b27290fadb296dd05ed081897068": 1,
+            "f6472f0afc082b86a95d230349eea8dcb31ded4decfdb0df678e5e1a250b8a53": 1
+          },
+          "maximumMakerShare": 0.5,
+          "maximumFamilyShare": 0.5,
+          "effectiveFamilySampleSize": 2.0,
+          "makerBalance": 1.0,
+          "missingCount": 6,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": true,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        }
+      }
+    },
+    "chocolate": {
+      "trainingRecordCount": 67,
+      "pilot50RecordTargetAchieved": true,
+      "formal100RecordTargetAchieved": false,
+      "genreShortageReasons": [
+        "fewer_than_100_formal_records"
+      ],
+      "nutrients": {
+        "saturatedFatG": {
+          "observedCount": 28,
+          "acceptedCount": 28,
+          "independentFamilyCount": 28,
+          "makerCount": 1,
+          "makerFamilyCountsBySha256": {
+            "641c205bbc4ab91832c5e3cb671beac2b6468e394c668048091ca6c1104e3657": 28
+          },
+          "maximumMakerShare": 1.0,
+          "maximumFamilyShare": 0.035714,
+          "effectiveFamilySampleSize": 28.0,
+          "makerBalance": 0.0,
+          "missingCount": 39,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "fiberG": {
+          "observedCount": 59,
+          "acceptedCount": 57,
+          "independentFamilyCount": 50,
+          "makerCount": 3,
+          "makerFamilyCountsBySha256": {
+            "07830b68b07444b1630177fe84c557255483603f0475f033e2ac36f8f650325e": 19,
+            "641c205bbc4ab91832c5e3cb671beac2b6468e394c668048091ca6c1104e3657": 28,
+            "f6472f0afc082b86a95d230349eea8dcb31ded4decfdb0df678e5e1a250b8a53": 3
+          },
+          "maximumMakerShare": 0.56,
+          "maximumFamilyShare": 0.02,
+          "effectiveFamilySampleSize": 50.0,
+          "makerBalance": 0.88,
+          "missingCount": 8,
+          "estimatedExcludedCount": 2,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": true,
+          "makerTarget3Achieved": true,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "calciumMg": {
+          "observedCount": 13,
+          "acceptedCount": 13,
+          "independentFamilyCount": 12,
+          "makerCount": 4,
+          "makerFamilyCountsBySha256": {
+            "01fc9bff4c4083bf892353c7b1edd9856bf5a3ad1f6391bfd82580b8ec67c597": 1,
+            "07830b68b07444b1630177fe84c557255483603f0475f033e2ac36f8f650325e": 3,
+            "641c205bbc4ab91832c5e3cb671beac2b6468e394c668048091ca6c1104e3657": 3,
+            "f6472f0afc082b86a95d230349eea8dcb31ded4decfdb0df678e5e1a250b8a53": 5
+          },
+          "maximumMakerShare": 0.416667,
+          "maximumFamilyShare": 0.083333,
+          "effectiveFamilySampleSize": 12.0,
+          "makerBalance": 1.0,
+          "missingCount": 54,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": true,
+          "maximumMakerShare50PercentAchieved": true,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "ironMg": {
+          "observedCount": 6,
+          "acceptedCount": 6,
+          "independentFamilyCount": 5,
+          "makerCount": 2,
+          "makerFamilyCountsBySha256": {
+            "07830b68b07444b1630177fe84c557255483603f0475f033e2ac36f8f650325e": 3,
+            "f6472f0afc082b86a95d230349eea8dcb31ded4decfdb0df678e5e1a250b8a53": 2
+          },
+          "maximumMakerShare": 0.6,
+          "maximumFamilyShare": 0.2,
+          "effectiveFamilySampleSize": 5.0,
+          "makerBalance": 0.8,
+          "missingCount": 61,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "vitaminAMcg": {
+          "observedCount": 3,
+          "acceptedCount": 3,
+          "independentFamilyCount": 2,
+          "makerCount": 2,
+          "makerFamilyCountsBySha256": {
+            "07830b68b07444b1630177fe84c557255483603f0475f033e2ac36f8f650325e": 1,
+            "f6472f0afc082b86a95d230349eea8dcb31ded4decfdb0df678e5e1a250b8a53": 1
+          },
+          "maximumMakerShare": 0.5,
+          "maximumFamilyShare": 0.5,
+          "effectiveFamilySampleSize": 2.0,
+          "makerBalance": 1.0,
+          "missingCount": 64,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": true,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "vitaminEMg": {
+          "observedCount": 2,
+          "acceptedCount": 2,
+          "independentFamilyCount": 1,
+          "makerCount": 1,
+          "makerFamilyCountsBySha256": {
+            "07830b68b07444b1630177fe84c557255483603f0475f033e2ac36f8f650325e": 1
+          },
+          "maximumMakerShare": 1.0,
+          "maximumFamilyShare": 1.0,
+          "effectiveFamilySampleSize": 1.0,
+          "makerBalance": 0.0,
+          "missingCount": 65,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "vitaminB1Mg": {
+          "observedCount": 11,
+          "acceptedCount": 11,
+          "independentFamilyCount": 7,
+          "makerCount": 2,
+          "makerFamilyCountsBySha256": {
+            "07830b68b07444b1630177fe84c557255483603f0475f033e2ac36f8f650325e": 5,
+            "f6472f0afc082b86a95d230349eea8dcb31ded4decfdb0df678e5e1a250b8a53": 2
+          },
+          "maximumMakerShare": 0.714286,
+          "maximumFamilyShare": 0.142857,
+          "effectiveFamilySampleSize": 7.0,
+          "makerBalance": 0.571429,
+          "missingCount": 56,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "vitaminB2Mg": {
+          "observedCount": 11,
+          "acceptedCount": 11,
+          "independentFamilyCount": 7,
+          "makerCount": 2,
+          "makerFamilyCountsBySha256": {
+            "07830b68b07444b1630177fe84c557255483603f0475f033e2ac36f8f650325e": 5,
+            "f6472f0afc082b86a95d230349eea8dcb31ded4decfdb0df678e5e1a250b8a53": 2
+          },
+          "maximumMakerShare": 0.714286,
+          "maximumFamilyShare": 0.142857,
+          "effectiveFamilySampleSize": 7.0,
+          "makerBalance": 0.571429,
+          "missingCount": 56,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "vitaminCMg": {
+          "observedCount": 7,
+          "acceptedCount": 7,
+          "independentFamilyCount": 4,
+          "makerCount": 1,
+          "makerFamilyCountsBySha256": {
+            "07830b68b07444b1630177fe84c557255483603f0475f033e2ac36f8f650325e": 4
+          },
+          "maximumMakerShare": 1.0,
+          "maximumFamilyShare": 0.25,
+          "effectiveFamilySampleSize": 4.0,
+          "makerBalance": 0.0,
+          "missingCount": 60,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        }
+      }
+    },
+    "dairy": {
+      "trainingRecordCount": 93,
+      "pilot50RecordTargetAchieved": true,
+      "formal100RecordTargetAchieved": false,
+      "genreShortageReasons": [
+        "fewer_than_100_formal_records"
+      ],
+      "nutrients": {
+        "saturatedFatG": {
+          "observedCount": 2,
+          "acceptedCount": 2,
+          "independentFamilyCount": 2,
+          "makerCount": 2,
+          "makerFamilyCountsBySha256": {
+            "3a14a6fd236a7fe2df1197004ffaaab9ed52b27290fadb296dd05ed081897068": 1,
+            "641c205bbc4ab91832c5e3cb671beac2b6468e394c668048091ca6c1104e3657": 1
+          },
+          "maximumMakerShare": 0.5,
+          "maximumFamilyShare": 0.5,
+          "effectiveFamilySampleSize": 2.0,
+          "makerBalance": 1.0,
+          "missingCount": 91,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": true,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "fiberG": {
+          "observedCount": 9,
+          "acceptedCount": 9,
+          "independentFamilyCount": 7,
+          "makerCount": 4,
+          "makerFamilyCountsBySha256": {
+            "07830b68b07444b1630177fe84c557255483603f0475f033e2ac36f8f650325e": 4,
+            "3a14a6fd236a7fe2df1197004ffaaab9ed52b27290fadb296dd05ed081897068": 1,
+            "641c205bbc4ab91832c5e3cb671beac2b6468e394c668048091ca6c1104e3657": 1,
+            "f6472f0afc082b86a95d230349eea8dcb31ded4decfdb0df678e5e1a250b8a53": 1
+          },
+          "maximumMakerShare": 0.571429,
+          "maximumFamilyShare": 0.142857,
+          "effectiveFamilySampleSize": 7.0,
+          "makerBalance": 0.857143,
+          "missingCount": 84,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": true,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "calciumMg": {
+          "observedCount": 87,
+          "acceptedCount": 82,
+          "independentFamilyCount": 78,
+          "makerCount": 4,
+          "makerFamilyCountsBySha256": {
+            "00621f94f9a55a88da118de42e40492ec70a7aca6cdfebf4f377b5f2e0acc5bf": 1,
+            "00ed7d35fade7bc798e555f1b0cb3cb2d021b0649919f042b75bba4c7c2de0d6": 1,
+            "07830b68b07444b1630177fe84c557255483603f0475f033e2ac36f8f650325e": 73,
+            "3a14a6fd236a7fe2df1197004ffaaab9ed52b27290fadb296dd05ed081897068": 3
+          },
+          "maximumMakerShare": 0.935897,
+          "maximumFamilyShare": 0.012821,
+          "effectiveFamilySampleSize": 78.0,
+          "makerBalance": 0.128205,
+          "missingCount": 6,
+          "estimatedExcludedCount": 5,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": true,
+          "makerTarget3Achieved": true,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "ironMg": {
+          "observedCount": 18,
+          "acceptedCount": 18,
+          "independentFamilyCount": 17,
+          "makerCount": 2,
+          "makerFamilyCountsBySha256": {
+            "07830b68b07444b1630177fe84c557255483603f0475f033e2ac36f8f650325e": 16,
+            "3a14a6fd236a7fe2df1197004ffaaab9ed52b27290fadb296dd05ed081897068": 1
+          },
+          "maximumMakerShare": 0.941176,
+          "maximumFamilyShare": 0.058824,
+          "effectiveFamilySampleSize": 17.0,
+          "makerBalance": 0.117647,
+          "missingCount": 75,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "vitaminAMcg": {
+          "observedCount": 15,
+          "acceptedCount": 15,
+          "independentFamilyCount": 14,
+          "makerCount": 1,
+          "makerFamilyCountsBySha256": {
+            "07830b68b07444b1630177fe84c557255483603f0475f033e2ac36f8f650325e": 14
+          },
+          "maximumMakerShare": 1.0,
+          "maximumFamilyShare": 0.071429,
+          "effectiveFamilySampleSize": 14.0,
+          "makerBalance": 0.0,
+          "missingCount": 78,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "vitaminEMg": {
+          "observedCount": 15,
+          "acceptedCount": 15,
+          "independentFamilyCount": 14,
+          "makerCount": 1,
+          "makerFamilyCountsBySha256": {
+            "07830b68b07444b1630177fe84c557255483603f0475f033e2ac36f8f650325e": 14
+          },
+          "maximumMakerShare": 1.0,
+          "maximumFamilyShare": 0.071429,
+          "effectiveFamilySampleSize": 14.0,
+          "makerBalance": 0.0,
+          "missingCount": 78,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "vitaminB1Mg": {
+          "observedCount": 17,
+          "acceptedCount": 17,
+          "independentFamilyCount": 15,
+          "makerCount": 2,
+          "makerFamilyCountsBySha256": {
+            "07830b68b07444b1630177fe84c557255483603f0475f033e2ac36f8f650325e": 14,
+            "f6472f0afc082b86a95d230349eea8dcb31ded4decfdb0df678e5e1a250b8a53": 1
+          },
+          "maximumMakerShare": 0.933333,
+          "maximumFamilyShare": 0.066667,
+          "effectiveFamilySampleSize": 15.0,
+          "makerBalance": 0.133333,
+          "missingCount": 76,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "vitaminB2Mg": {
+          "observedCount": 17,
+          "acceptedCount": 17,
+          "independentFamilyCount": 15,
+          "makerCount": 2,
+          "makerFamilyCountsBySha256": {
+            "07830b68b07444b1630177fe84c557255483603f0475f033e2ac36f8f650325e": 14,
+            "f6472f0afc082b86a95d230349eea8dcb31ded4decfdb0df678e5e1a250b8a53": 1
+          },
+          "maximumMakerShare": 0.933333,
+          "maximumFamilyShare": 0.066667,
+          "effectiveFamilySampleSize": 15.0,
+          "makerBalance": 0.133333,
+          "missingCount": 76,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "vitaminCMg": {
+          "observedCount": 18,
+          "acceptedCount": 18,
+          "independentFamilyCount": 16,
+          "makerCount": 1,
+          "makerFamilyCountsBySha256": {
+            "07830b68b07444b1630177fe84c557255483603f0475f033e2ac36f8f650325e": 16
+          },
+          "maximumMakerShare": 1.0,
+          "maximumFamilyShare": 0.0625,
+          "effectiveFamilySampleSize": 16.0,
+          "makerBalance": 0.0,
+          "missingCount": 75,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        }
+      }
+    },
+    "drink_jelly_pudding": {
+      "trainingRecordCount": 38,
+      "pilot50RecordTargetAchieved": false,
+      "formal100RecordTargetAchieved": false,
+      "genreShortageReasons": [
+        "fewer_than_50_pilot_records",
+        "fewer_than_100_formal_records"
+      ],
+      "nutrients": {
+        "saturatedFatG": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 38,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        },
+        "fiberG": {
+          "observedCount": 23,
+          "acceptedCount": 21,
+          "independentFamilyCount": 18,
+          "makerCount": 3,
+          "makerFamilyCountsBySha256": {
+            "01fc9bff4c4083bf892353c7b1edd9856bf5a3ad1f6391bfd82580b8ec67c597": 2,
+            "07830b68b07444b1630177fe84c557255483603f0475f033e2ac36f8f650325e": 9,
+            "f6472f0afc082b86a95d230349eea8dcb31ded4decfdb0df678e5e1a250b8a53": 7
+          },
+          "maximumMakerShare": 0.5,
+          "maximumFamilyShare": 0.055556,
+          "effectiveFamilySampleSize": 18.0,
+          "makerBalance": 1.0,
+          "missingCount": 15,
+          "estimatedExcludedCount": 2,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": true,
+          "maximumMakerShare50PercentAchieved": true,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "calciumMg": {
+          "observedCount": 7,
+          "acceptedCount": 7,
+          "independentFamilyCount": 6,
+          "makerCount": 2,
+          "makerFamilyCountsBySha256": {
+            "07830b68b07444b1630177fe84c557255483603f0475f033e2ac36f8f650325e": 3,
+            "f6472f0afc082b86a95d230349eea8dcb31ded4decfdb0df678e5e1a250b8a53": 3
+          },
+          "maximumMakerShare": 0.5,
+          "maximumFamilyShare": 0.166667,
+          "effectiveFamilySampleSize": 6.0,
+          "makerBalance": 1.0,
+          "missingCount": 31,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": true,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "ironMg": {
+          "observedCount": 6,
+          "acceptedCount": 6,
+          "independentFamilyCount": 5,
+          "makerCount": 2,
+          "makerFamilyCountsBySha256": {
+            "07830b68b07444b1630177fe84c557255483603f0475f033e2ac36f8f650325e": 3,
+            "f6472f0afc082b86a95d230349eea8dcb31ded4decfdb0df678e5e1a250b8a53": 2
+          },
+          "maximumMakerShare": 0.6,
+          "maximumFamilyShare": 0.2,
+          "effectiveFamilySampleSize": 5.0,
+          "makerBalance": 0.8,
+          "missingCount": 32,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "vitaminAMcg": {
+          "observedCount": 6,
+          "acceptedCount": 6,
+          "independentFamilyCount": 5,
+          "makerCount": 1,
+          "makerFamilyCountsBySha256": {
+            "f6472f0afc082b86a95d230349eea8dcb31ded4decfdb0df678e5e1a250b8a53": 5
+          },
+          "maximumMakerShare": 1.0,
+          "maximumFamilyShare": 0.2,
+          "effectiveFamilySampleSize": 5.0,
+          "makerBalance": 0.0,
+          "missingCount": 32,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "vitaminEMg": {
+          "observedCount": 6,
+          "acceptedCount": 6,
+          "independentFamilyCount": 5,
+          "makerCount": 2,
+          "makerFamilyCountsBySha256": {
+            "07830b68b07444b1630177fe84c557255483603f0475f033e2ac36f8f650325e": 1,
+            "f6472f0afc082b86a95d230349eea8dcb31ded4decfdb0df678e5e1a250b8a53": 4
+          },
+          "maximumMakerShare": 0.8,
+          "maximumFamilyShare": 0.2,
+          "effectiveFamilySampleSize": 5.0,
+          "makerBalance": 0.4,
+          "missingCount": 32,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "vitaminB1Mg": {
+          "observedCount": 12,
+          "acceptedCount": 12,
+          "independentFamilyCount": 11,
+          "makerCount": 2,
+          "makerFamilyCountsBySha256": {
+            "07830b68b07444b1630177fe84c557255483603f0475f033e2ac36f8f650325e": 6,
+            "f6472f0afc082b86a95d230349eea8dcb31ded4decfdb0df678e5e1a250b8a53": 5
+          },
+          "maximumMakerShare": 0.545455,
+          "maximumFamilyShare": 0.090909,
+          "effectiveFamilySampleSize": 11.0,
+          "makerBalance": 0.909091,
+          "missingCount": 26,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "vitaminB2Mg": {
+          "observedCount": 11,
+          "acceptedCount": 11,
+          "independentFamilyCount": 10,
+          "makerCount": 2,
+          "makerFamilyCountsBySha256": {
+            "07830b68b07444b1630177fe84c557255483603f0475f033e2ac36f8f650325e": 5,
+            "f6472f0afc082b86a95d230349eea8dcb31ded4decfdb0df678e5e1a250b8a53": 5
+          },
+          "maximumMakerShare": 0.5,
+          "maximumFamilyShare": 0.1,
+          "effectiveFamilySampleSize": 10.0,
+          "makerBalance": 1.0,
+          "missingCount": 27,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": true,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "vitaminCMg": {
+          "observedCount": 10,
+          "acceptedCount": 10,
+          "independentFamilyCount": 8,
+          "makerCount": 2,
+          "makerFamilyCountsBySha256": {
+            "07830b68b07444b1630177fe84c557255483603f0475f033e2ac36f8f650325e": 3,
+            "f6472f0afc082b86a95d230349eea8dcb31ded4decfdb0df678e5e1a250b8a53": 5
+          },
+          "maximumMakerShare": 0.625,
+          "maximumFamilyShare": 0.125,
+          "effectiveFamilySampleSize": 8.0,
+          "makerBalance": 0.75,
+          "missingCount": 28,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        }
+      }
+    },
+    "fried_food": {
+      "trainingRecordCount": 0,
+      "pilot50RecordTargetAchieved": false,
+      "formal100RecordTargetAchieved": false,
+      "genreShortageReasons": [
+        "fewer_than_50_pilot_records",
+        "fewer_than_100_formal_records"
+      ],
+      "nutrients": {
+        "saturatedFatG": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 0,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        },
+        "fiberG": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 0,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        },
+        "calciumMg": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 0,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        },
+        "ironMg": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 0,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        },
+        "vitaminAMcg": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 0,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        },
+        "vitaminEMg": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 0,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        },
+        "vitaminB1Mg": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 0,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        },
+        "vitaminB2Mg": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 0,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        },
+        "vitaminCMg": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 0,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        }
+      }
+    },
+    "frozen_dessert": {
+      "trainingRecordCount": 1,
+      "pilot50RecordTargetAchieved": false,
+      "formal100RecordTargetAchieved": false,
+      "genreShortageReasons": [
+        "fewer_than_50_pilot_records",
+        "fewer_than_100_formal_records"
+      ],
+      "nutrients": {
+        "saturatedFatG": {
+          "observedCount": 1,
+          "acceptedCount": 1,
+          "independentFamilyCount": 1,
+          "makerCount": 1,
+          "makerFamilyCountsBySha256": {
+            "641c205bbc4ab91832c5e3cb671beac2b6468e394c668048091ca6c1104e3657": 1
+          },
+          "maximumMakerShare": 1.0,
+          "maximumFamilyShare": 1.0,
+          "effectiveFamilySampleSize": 1.0,
+          "makerBalance": 0.0,
+          "missingCount": 0,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "fiberG": {
+          "observedCount": 1,
+          "acceptedCount": 1,
+          "independentFamilyCount": 1,
+          "makerCount": 1,
+          "makerFamilyCountsBySha256": {
+            "641c205bbc4ab91832c5e3cb671beac2b6468e394c668048091ca6c1104e3657": 1
+          },
+          "maximumMakerShare": 1.0,
+          "maximumFamilyShare": 1.0,
+          "effectiveFamilySampleSize": 1.0,
+          "makerBalance": 0.0,
+          "missingCount": 0,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "calciumMg": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 1,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        },
+        "ironMg": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 1,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        },
+        "vitaminAMcg": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 1,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        },
+        "vitaminEMg": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 1,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        },
+        "vitaminB1Mg": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 1,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        },
+        "vitaminB2Mg": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 1,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        },
+        "vitaminCMg": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 1,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        }
+      }
+    },
+    "noodle_flour_dish": {
+      "trainingRecordCount": 1,
+      "pilot50RecordTargetAchieved": false,
+      "formal100RecordTargetAchieved": false,
+      "genreShortageReasons": [
+        "fewer_than_50_pilot_records",
+        "fewer_than_100_formal_records"
+      ],
+      "nutrients": {
+        "saturatedFatG": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 1,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        },
+        "fiberG": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 1,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        },
+        "calciumMg": {
+          "observedCount": 1,
+          "acceptedCount": 1,
+          "independentFamilyCount": 1,
+          "makerCount": 1,
+          "makerFamilyCountsBySha256": {
+            "01fc9bff4c4083bf892353c7b1edd9856bf5a3ad1f6391bfd82580b8ec67c597": 1
+          },
+          "maximumMakerShare": 1.0,
+          "maximumFamilyShare": 1.0,
+          "effectiveFamilySampleSize": 1.0,
+          "makerBalance": 0.0,
+          "missingCount": 0,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "ironMg": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 1,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        },
+        "vitaminAMcg": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 1,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        },
+        "vitaminEMg": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 1,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        },
+        "vitaminB1Mg": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 1,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        },
+        "vitaminB2Mg": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 1,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        },
+        "vitaminCMg": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 1,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        }
+      }
+    },
+    "other_unknown": {
+      "trainingRecordCount": 119,
+      "pilot50RecordTargetAchieved": true,
+      "formal100RecordTargetAchieved": true,
+      "genreShortageReasons": [],
+      "nutrients": {
+        "saturatedFatG": {
+          "observedCount": 6,
+          "acceptedCount": 6,
+          "independentFamilyCount": 6,
+          "makerCount": 1,
+          "makerFamilyCountsBySha256": {
+            "641c205bbc4ab91832c5e3cb671beac2b6468e394c668048091ca6c1104e3657": 6
+          },
+          "maximumMakerShare": 1.0,
+          "maximumFamilyShare": 0.166667,
+          "effectiveFamilySampleSize": 6.0,
+          "makerBalance": 0.0,
+          "missingCount": 113,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "fiberG": {
+          "observedCount": 80,
+          "acceptedCount": 69,
+          "independentFamilyCount": 60,
+          "makerCount": 6,
+          "makerFamilyCountsBySha256": {
+            "01fc9bff4c4083bf892353c7b1edd9856bf5a3ad1f6391bfd82580b8ec67c597": 11,
+            "07830b68b07444b1630177fe84c557255483603f0475f033e2ac36f8f650325e": 18,
+            "0e7446833fe8356e52013399cfe0033b8252cc56cebbc25e63d197c9af544a2d": 2,
+            "3a14a6fd236a7fe2df1197004ffaaab9ed52b27290fadb296dd05ed081897068": 20,
+            "641c205bbc4ab91832c5e3cb671beac2b6468e394c668048091ca6c1104e3657": 6,
+            "f6472f0afc082b86a95d230349eea8dcb31ded4decfdb0df678e5e1a250b8a53": 3
+          },
+          "maximumMakerShare": 0.333333,
+          "maximumFamilyShare": 0.016667,
+          "effectiveFamilySampleSize": 60.0,
+          "makerBalance": 1.0,
+          "missingCount": 39,
+          "estimatedExcludedCount": 11,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": true,
+          "makerTarget3Achieved": true,
+          "maximumMakerShare50PercentAchieved": true,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "calciumMg": {
+          "observedCount": 47,
+          "acceptedCount": 45,
+          "independentFamilyCount": 42,
+          "makerCount": 5,
+          "makerFamilyCountsBySha256": {
+            "01fc9bff4c4083bf892353c7b1edd9856bf5a3ad1f6391bfd82580b8ec67c597": 14,
+            "07830b68b07444b1630177fe84c557255483603f0475f033e2ac36f8f650325e": 12,
+            "0e7446833fe8356e52013399cfe0033b8252cc56cebbc25e63d197c9af544a2d": 1,
+            "3a14a6fd236a7fe2df1197004ffaaab9ed52b27290fadb296dd05ed081897068": 13,
+            "f6472f0afc082b86a95d230349eea8dcb31ded4decfdb0df678e5e1a250b8a53": 2
+          },
+          "maximumMakerShare": 0.333333,
+          "maximumFamilyShare": 0.02381,
+          "effectiveFamilySampleSize": 42.0,
+          "makerBalance": 1.0,
+          "missingCount": 72,
+          "estimatedExcludedCount": 2,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": true,
+          "makerTarget3Achieved": true,
+          "maximumMakerShare50PercentAchieved": true,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "ironMg": {
+          "observedCount": 25,
+          "acceptedCount": 22,
+          "independentFamilyCount": 19,
+          "makerCount": 4,
+          "makerFamilyCountsBySha256": {
+            "01fc9bff4c4083bf892353c7b1edd9856bf5a3ad1f6391bfd82580b8ec67c597": 3,
+            "07830b68b07444b1630177fe84c557255483603f0475f033e2ac36f8f650325e": 10,
+            "3a14a6fd236a7fe2df1197004ffaaab9ed52b27290fadb296dd05ed081897068": 3,
+            "f6472f0afc082b86a95d230349eea8dcb31ded4decfdb0df678e5e1a250b8a53": 3
+          },
+          "maximumMakerShare": 0.526316,
+          "maximumFamilyShare": 0.052632,
+          "effectiveFamilySampleSize": 19.0,
+          "makerBalance": 0.947368,
+          "missingCount": 94,
+          "estimatedExcludedCount": 3,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": true,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "vitaminAMcg": {
+          "observedCount": 8,
+          "acceptedCount": 8,
+          "independentFamilyCount": 5,
+          "makerCount": 1,
+          "makerFamilyCountsBySha256": {
+            "07830b68b07444b1630177fe84c557255483603f0475f033e2ac36f8f650325e": 5
+          },
+          "maximumMakerShare": 1.0,
+          "maximumFamilyShare": 0.2,
+          "effectiveFamilySampleSize": 5.0,
+          "makerBalance": 0.0,
+          "missingCount": 111,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "vitaminEMg": {
+          "observedCount": 10,
+          "acceptedCount": 10,
+          "independentFamilyCount": 7,
+          "makerCount": 2,
+          "makerFamilyCountsBySha256": {
+            "07830b68b07444b1630177fe84c557255483603f0475f033e2ac36f8f650325e": 6,
+            "f6472f0afc082b86a95d230349eea8dcb31ded4decfdb0df678e5e1a250b8a53": 1
+          },
+          "maximumMakerShare": 0.857143,
+          "maximumFamilyShare": 0.142857,
+          "effectiveFamilySampleSize": 7.0,
+          "makerBalance": 0.285714,
+          "missingCount": 109,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "vitaminB1Mg": {
+          "observedCount": 43,
+          "acceptedCount": 41,
+          "independentFamilyCount": 28,
+          "makerCount": 2,
+          "makerFamilyCountsBySha256": {
+            "07830b68b07444b1630177fe84c557255483603f0475f033e2ac36f8f650325e": 24,
+            "f6472f0afc082b86a95d230349eea8dcb31ded4decfdb0df678e5e1a250b8a53": 4
+          },
+          "maximumMakerShare": 0.857143,
+          "maximumFamilyShare": 0.035714,
+          "effectiveFamilySampleSize": 28.0,
+          "makerBalance": 0.285714,
+          "missingCount": 76,
+          "estimatedExcludedCount": 2,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "vitaminB2Mg": {
+          "observedCount": 41,
+          "acceptedCount": 41,
+          "independentFamilyCount": 28,
+          "makerCount": 2,
+          "makerFamilyCountsBySha256": {
+            "07830b68b07444b1630177fe84c557255483603f0475f033e2ac36f8f650325e": 24,
+            "f6472f0afc082b86a95d230349eea8dcb31ded4decfdb0df678e5e1a250b8a53": 4
+          },
+          "maximumMakerShare": 0.857143,
+          "maximumFamilyShare": 0.035714,
+          "effectiveFamilySampleSize": 28.0,
+          "makerBalance": 0.285714,
+          "missingCount": 78,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "vitaminCMg": {
+          "observedCount": 47,
+          "acceptedCount": 47,
+          "independentFamilyCount": 33,
+          "makerCount": 3,
+          "makerFamilyCountsBySha256": {
+            "07830b68b07444b1630177fe84c557255483603f0475f033e2ac36f8f650325e": 26,
+            "3a14a6fd236a7fe2df1197004ffaaab9ed52b27290fadb296dd05ed081897068": 4,
+            "f6472f0afc082b86a95d230349eea8dcb31ded4decfdb0df678e5e1a250b8a53": 3
+          },
+          "maximumMakerShare": 0.787879,
+          "maximumFamilyShare": 0.030303,
+          "effectiveFamilySampleSize": 33.0,
+          "makerBalance": 0.424242,
+          "missingCount": 72,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": true,
+          "makerTarget3Achieved": true,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        }
+      }
+    },
+    "prepared_meal": {
+      "trainingRecordCount": 25,
+      "pilot50RecordTargetAchieved": false,
+      "formal100RecordTargetAchieved": false,
+      "genreShortageReasons": [
+        "fewer_than_50_pilot_records",
+        "fewer_than_100_formal_records"
+      ],
+      "nutrients": {
+        "saturatedFatG": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 25,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        },
+        "fiberG": {
+          "observedCount": 7,
+          "acceptedCount": 7,
+          "independentFamilyCount": 7,
+          "makerCount": 2,
+          "makerFamilyCountsBySha256": {
+            "00ed7d35fade7bc798e555f1b0cb3cb2d021b0649919f042b75bba4c7c2de0d6": 5,
+            "3a14a6fd236a7fe2df1197004ffaaab9ed52b27290fadb296dd05ed081897068": 2
+          },
+          "maximumMakerShare": 0.714286,
+          "maximumFamilyShare": 0.142857,
+          "effectiveFamilySampleSize": 7.0,
+          "makerBalance": 0.571429,
+          "missingCount": 18,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "calciumMg": {
+          "observedCount": 13,
+          "acceptedCount": 13,
+          "independentFamilyCount": 9,
+          "makerCount": 2,
+          "makerFamilyCountsBySha256": {
+            "00ed7d35fade7bc798e555f1b0cb3cb2d021b0649919f042b75bba4c7c2de0d6": 2,
+            "07830b68b07444b1630177fe84c557255483603f0475f033e2ac36f8f650325e": 7
+          },
+          "maximumMakerShare": 0.777778,
+          "maximumFamilyShare": 0.111111,
+          "effectiveFamilySampleSize": 9.0,
+          "makerBalance": 0.444444,
+          "missingCount": 12,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "ironMg": {
+          "observedCount": 5,
+          "acceptedCount": 5,
+          "independentFamilyCount": 5,
+          "makerCount": 1,
+          "makerFamilyCountsBySha256": {
+            "01fc9bff4c4083bf892353c7b1edd9856bf5a3ad1f6391bfd82580b8ec67c597": 5
+          },
+          "maximumMakerShare": 1.0,
+          "maximumFamilyShare": 0.2,
+          "effectiveFamilySampleSize": 5.0,
+          "makerBalance": 0.0,
+          "missingCount": 20,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "vitaminAMcg": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 25,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        },
+        "vitaminEMg": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 25,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        },
+        "vitaminB1Mg": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 25,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        },
+        "vitaminB2Mg": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 25,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        },
+        "vitaminCMg": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 25,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        }
+      }
+    },
+    "sauce_spread": {
+      "trainingRecordCount": 92,
+      "pilot50RecordTargetAchieved": true,
+      "formal100RecordTargetAchieved": false,
+      "genreShortageReasons": [
+        "fewer_than_100_formal_records"
+      ],
+      "nutrients": {
+        "saturatedFatG": {
+          "observedCount": 6,
+          "acceptedCount": 6,
+          "independentFamilyCount": 6,
+          "makerCount": 1,
+          "makerFamilyCountsBySha256": {
+            "641c205bbc4ab91832c5e3cb671beac2b6468e394c668048091ca6c1104e3657": 6
+          },
+          "maximumMakerShare": 1.0,
+          "maximumFamilyShare": 0.166667,
+          "effectiveFamilySampleSize": 6.0,
+          "makerBalance": 0.0,
+          "missingCount": 86,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "fiberG": {
+          "observedCount": 77,
+          "acceptedCount": 77,
+          "independentFamilyCount": 77,
+          "makerCount": 3,
+          "makerFamilyCountsBySha256": {
+            "01fc9bff4c4083bf892353c7b1edd9856bf5a3ad1f6391bfd82580b8ec67c597": 19,
+            "3a14a6fd236a7fe2df1197004ffaaab9ed52b27290fadb296dd05ed081897068": 52,
+            "641c205bbc4ab91832c5e3cb671beac2b6468e394c668048091ca6c1104e3657": 6
+          },
+          "maximumMakerShare": 0.675325,
+          "maximumFamilyShare": 0.012987,
+          "effectiveFamilySampleSize": 77.0,
+          "makerBalance": 0.649351,
+          "missingCount": 15,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": true,
+          "makerTarget3Achieved": true,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "calciumMg": {
+          "observedCount": 53,
+          "acceptedCount": 53,
+          "independentFamilyCount": 53,
+          "makerCount": 2,
+          "makerFamilyCountsBySha256": {
+            "01fc9bff4c4083bf892353c7b1edd9856bf5a3ad1f6391bfd82580b8ec67c597": 20,
+            "3a14a6fd236a7fe2df1197004ffaaab9ed52b27290fadb296dd05ed081897068": 33
+          },
+          "maximumMakerShare": 0.622642,
+          "maximumFamilyShare": 0.018868,
+          "effectiveFamilySampleSize": 53.0,
+          "makerBalance": 0.754717,
+          "missingCount": 39,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": true,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "ironMg": {
+          "observedCount": 6,
+          "acceptedCount": 6,
+          "independentFamilyCount": 6,
+          "makerCount": 2,
+          "makerFamilyCountsBySha256": {
+            "01fc9bff4c4083bf892353c7b1edd9856bf5a3ad1f6391bfd82580b8ec67c597": 4,
+            "3a14a6fd236a7fe2df1197004ffaaab9ed52b27290fadb296dd05ed081897068": 2
+          },
+          "maximumMakerShare": 0.666667,
+          "maximumFamilyShare": 0.166667,
+          "effectiveFamilySampleSize": 6.0,
+          "makerBalance": 0.666667,
+          "missingCount": 86,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "vitaminAMcg": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 92,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        },
+        "vitaminEMg": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 92,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        },
+        "vitaminB1Mg": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 92,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        },
+        "vitaminB2Mg": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 92,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        },
+        "vitaminCMg": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 92,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        }
+      }
+    },
+    "snack_rice_cracker": {
+      "trainingRecordCount": 24,
+      "pilot50RecordTargetAchieved": false,
+      "formal100RecordTargetAchieved": false,
+      "genreShortageReasons": [
+        "fewer_than_50_pilot_records",
+        "fewer_than_100_formal_records"
+      ],
+      "nutrients": {
+        "saturatedFatG": {
+          "observedCount": 18,
+          "acceptedCount": 18,
+          "independentFamilyCount": 18,
+          "makerCount": 1,
+          "makerFamilyCountsBySha256": {
+            "641c205bbc4ab91832c5e3cb671beac2b6468e394c668048091ca6c1104e3657": 18
+          },
+          "maximumMakerShare": 1.0,
+          "maximumFamilyShare": 0.055556,
+          "effectiveFamilySampleSize": 18.0,
+          "makerBalance": 0.0,
+          "missingCount": 6,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "fiberG": {
+          "observedCount": 18,
+          "acceptedCount": 18,
+          "independentFamilyCount": 18,
+          "makerCount": 1,
+          "makerFamilyCountsBySha256": {
+            "641c205bbc4ab91832c5e3cb671beac2b6468e394c668048091ca6c1104e3657": 18
+          },
+          "maximumMakerShare": 1.0,
+          "maximumFamilyShare": 0.055556,
+          "effectiveFamilySampleSize": 18.0,
+          "makerBalance": 0.0,
+          "missingCount": 6,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "calciumMg": {
+          "observedCount": 8,
+          "acceptedCount": 8,
+          "independentFamilyCount": 5,
+          "makerCount": 2,
+          "makerFamilyCountsBySha256": {
+            "641c205bbc4ab91832c5e3cb671beac2b6468e394c668048091ca6c1104e3657": 2,
+            "f6472f0afc082b86a95d230349eea8dcb31ded4decfdb0df678e5e1a250b8a53": 3
+          },
+          "maximumMakerShare": 0.6,
+          "maximumFamilyShare": 0.2,
+          "effectiveFamilySampleSize": 5.0,
+          "makerBalance": 0.8,
+          "missingCount": 16,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "ironMg": {
+          "observedCount": 2,
+          "acceptedCount": 2,
+          "independentFamilyCount": 2,
+          "makerCount": 1,
+          "makerFamilyCountsBySha256": {
+            "641c205bbc4ab91832c5e3cb671beac2b6468e394c668048091ca6c1104e3657": 2
+          },
+          "maximumMakerShare": 1.0,
+          "maximumFamilyShare": 0.5,
+          "effectiveFamilySampleSize": 2.0,
+          "makerBalance": 0.0,
+          "missingCount": 22,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "vitaminAMcg": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 24,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        },
+        "vitaminEMg": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 24,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        },
+        "vitaminB1Mg": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 24,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        },
+        "vitaminB2Mg": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 24,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        },
+        "vitaminCMg": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 24,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        }
+      }
+    },
+    "sugar_confectionery": {
+      "trainingRecordCount": 21,
+      "pilot50RecordTargetAchieved": false,
+      "formal100RecordTargetAchieved": false,
+      "genreShortageReasons": [
+        "fewer_than_50_pilot_records",
+        "fewer_than_100_formal_records"
+      ],
+      "nutrients": {
+        "saturatedFatG": {
+          "observedCount": 1,
+          "acceptedCount": 1,
+          "independentFamilyCount": 1,
+          "makerCount": 1,
+          "makerFamilyCountsBySha256": {
+            "641c205bbc4ab91832c5e3cb671beac2b6468e394c668048091ca6c1104e3657": 1
+          },
+          "maximumMakerShare": 1.0,
+          "maximumFamilyShare": 1.0,
+          "effectiveFamilySampleSize": 1.0,
+          "makerBalance": 0.0,
+          "missingCount": 20,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "fiberG": {
+          "observedCount": 6,
+          "acceptedCount": 6,
+          "independentFamilyCount": 4,
+          "makerCount": 3,
+          "makerFamilyCountsBySha256": {
+            "07830b68b07444b1630177fe84c557255483603f0475f033e2ac36f8f650325e": 2,
+            "641c205bbc4ab91832c5e3cb671beac2b6468e394c668048091ca6c1104e3657": 1,
+            "f6472f0afc082b86a95d230349eea8dcb31ded4decfdb0df678e5e1a250b8a53": 1
+          },
+          "maximumMakerShare": 0.5,
+          "maximumFamilyShare": 0.25,
+          "effectiveFamilySampleSize": 4.0,
+          "makerBalance": 1.0,
+          "missingCount": 15,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": true,
+          "maximumMakerShare50PercentAchieved": true,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "calciumMg": {
+          "observedCount": 7,
+          "acceptedCount": 7,
+          "independentFamilyCount": 7,
+          "makerCount": 2,
+          "makerFamilyCountsBySha256": {
+            "641c205bbc4ab91832c5e3cb671beac2b6468e394c668048091ca6c1104e3657": 1,
+            "f6472f0afc082b86a95d230349eea8dcb31ded4decfdb0df678e5e1a250b8a53": 6
+          },
+          "maximumMakerShare": 0.857143,
+          "maximumFamilyShare": 0.142857,
+          "effectiveFamilySampleSize": 7.0,
+          "makerBalance": 0.285714,
+          "missingCount": 14,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "ironMg": {
+          "observedCount": 5,
+          "acceptedCount": 5,
+          "independentFamilyCount": 5,
+          "makerCount": 2,
+          "makerFamilyCountsBySha256": {
+            "641c205bbc4ab91832c5e3cb671beac2b6468e394c668048091ca6c1104e3657": 2,
+            "f6472f0afc082b86a95d230349eea8dcb31ded4decfdb0df678e5e1a250b8a53": 3
+          },
+          "maximumMakerShare": 0.6,
+          "maximumFamilyShare": 0.2,
+          "effectiveFamilySampleSize": 5.0,
+          "makerBalance": 0.8,
+          "missingCount": 16,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "vitaminAMcg": {
+          "observedCount": 2,
+          "acceptedCount": 2,
+          "independentFamilyCount": 2,
+          "makerCount": 1,
+          "makerFamilyCountsBySha256": {
+            "f6472f0afc082b86a95d230349eea8dcb31ded4decfdb0df678e5e1a250b8a53": 2
+          },
+          "maximumMakerShare": 1.0,
+          "maximumFamilyShare": 0.5,
+          "effectiveFamilySampleSize": 2.0,
+          "makerBalance": 0.0,
+          "missingCount": 19,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "vitaminEMg": {
+          "observedCount": 0,
+          "acceptedCount": 0,
+          "independentFamilyCount": 0,
+          "makerCount": 0,
+          "makerFamilyCountsBySha256": {},
+          "maximumMakerShare": null,
+          "maximumFamilyShare": null,
+          "effectiveFamilySampleSize": 0.0,
+          "makerBalance": 0.0,
+          "missingCount": 21,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "no_accepted_nonestimated_label"
+          ]
+        },
+        "vitaminB1Mg": {
+          "observedCount": 8,
+          "acceptedCount": 8,
+          "independentFamilyCount": 6,
+          "makerCount": 2,
+          "makerFamilyCountsBySha256": {
+            "07830b68b07444b1630177fe84c557255483603f0475f033e2ac36f8f650325e": 2,
+            "f6472f0afc082b86a95d230349eea8dcb31ded4decfdb0df678e5e1a250b8a53": 4
+          },
+          "maximumMakerShare": 0.666667,
+          "maximumFamilyShare": 0.166667,
+          "effectiveFamilySampleSize": 6.0,
+          "makerBalance": 0.666667,
+          "missingCount": 13,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "vitaminB2Mg": {
+          "observedCount": 8,
+          "acceptedCount": 8,
+          "independentFamilyCount": 6,
+          "makerCount": 2,
+          "makerFamilyCountsBySha256": {
+            "07830b68b07444b1630177fe84c557255483603f0475f033e2ac36f8f650325e": 2,
+            "f6472f0afc082b86a95d230349eea8dcb31ded4decfdb0df678e5e1a250b8a53": 4
+          },
+          "maximumMakerShare": 0.666667,
+          "maximumFamilyShare": 0.166667,
+          "effectiveFamilySampleSize": 6.0,
+          "makerBalance": 0.666667,
+          "missingCount": 13,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": false,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "fewer_than_3_makers_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        },
+        "vitaminCMg": {
+          "observedCount": 12,
+          "acceptedCount": 12,
+          "independentFamilyCount": 10,
+          "makerCount": 3,
+          "makerFamilyCountsBySha256": {
+            "07830b68b07444b1630177fe84c557255483603f0475f033e2ac36f8f650325e": 2,
+            "641c205bbc4ab91832c5e3cb671beac2b6468e394c668048091ca6c1104e3657": 6,
+            "f6472f0afc082b86a95d230349eea8dcb31ded4decfdb0df678e5e1a250b8a53": 2
+          },
+          "maximumMakerShare": 0.6,
+          "maximumFamilyShare": 0.1,
+          "effectiveFamilySampleSize": 10.0,
+          "makerBalance": 0.8,
+          "missingCount": 9,
+          "estimatedExcludedCount": 0,
+          "invalidExcludedCount": 0,
+          "invalidExclusionReasons": {},
+          "independentFamilyTarget30Achieved": false,
+          "makerTarget3Achieved": true,
+          "maximumMakerShare50PercentAchieved": false,
+          "preferredMaximumMakerShare20PercentAchieved": false,
+          "shortageReasons": [
+            "fewer_than_30_independent_families_for_nutrient",
+            "maximum_maker_share_above_50_percent",
+            "preferred_maximum_maker_share_above_20_percent"
+          ]
+        }
+      }
+    }
+  }
+}

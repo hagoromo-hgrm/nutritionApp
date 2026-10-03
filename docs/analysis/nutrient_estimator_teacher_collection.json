@@ -1,0 +1,99 @@
+{
+  "format": "nutrition-estimator-teacher-safe-collection-report",
+  "formatVersion": 1,
+  "recordCount": 18,
+  "familyCount": 18,
+  "makerFamilyCounts": {
+    "エースコック": 16,
+    "パネックス": 1,
+    "ゴールドパック": 1
+  },
+  "genreFamilyCounts": {
+    "noodle_flour_dish": 16,
+    "bread": 1,
+    "frozen_dessert": 1
+  },
+  "nonEstimatedTargetCounts": {
+    "vitaminB1Mg": 11,
+    "vitaminB2Mg": 11,
+    "calciumMg": 13,
+    "fiberG": 8,
+    "ironMg": 0,
+    "vitaminAMcg": 0,
+    "vitaminCMg": 0,
+    "saturatedFatG": 0,
+    "vitaminEMg": 0
+  },
+  "nonEstimatedTargetCountsByGenre": {
+    "bread": {
+      "calciumMg": 0,
+      "fiberG": 1,
+      "ironMg": 0,
+      "saturatedFatG": 0,
+      "vitaminAMcg": 0,
+      "vitaminB1Mg": 0,
+      "vitaminB2Mg": 0,
+      "vitaminCMg": 0,
+      "vitaminEMg": 0
+    },
+    "noodle_flour_dish": {
+      "calciumMg": 13,
+      "fiberG": 6,
+      "ironMg": 0,
+      "saturatedFatG": 0,
+      "vitaminAMcg": 0,
+      "vitaminB1Mg": 11,
+      "vitaminB2Mg": 11,
+      "vitaminCMg": 0,
+      "vitaminEMg": 0
+    },
+    "frozen_dessert": {
+      "calciumMg": 0,
+      "fiberG": 1,
+      "ironMg": 0,
+      "saturatedFatG": 0,
+      "vitaminAMcg": 0,
+      "vitaminB1Mg": 0,
+      "vitaminB2Mg": 0,
+      "vitaminCMg": 0,
+      "vitaminEMg": 0
+    }
+  },
+  "familyHashes": [
+    "0531f07c2fb718ae263d9bf93f6c6bd9b0dd996404fc50399f711793c662f1aa",
+    "424b96eae3cdbc51a952aafd78c37eb41b36f0521149a2a87e7abeef3525d7df",
+    "4745c2dbe355ca109f2536ce751d61fcb0f71d9448a22a16e96651581f0008db",
+    "5452787ae5cf895828ec2acbb3a46cf3a1f1bb74f6aebf1dbd8082d4e4a08391",
+    "63cdb559a1dcf47401fbafd2e89c9513b592891d9165bd050352e5a2888efd78",
+    "644e7200d93da065f3491f5251234b1d724be284634b3958b60d5702f6bf3c30",
+    "65f1c66c16c5ce5650461d4abad6f2ec827d547de0d8541712a1c1229943bfc6",
+    "8b70f1baf2d6d814d7faf970b9eae6c81c5759f29c1e66df2f20dca94c86bac9",
+    "8f49e23efd8cecce26d76884275cd9bc2d13952b0d8d3b8aefae77adaaaf6359",
+    "98ab9d8598de8146e07749e49d845fc04d2e0239f6b931ab34e2177c6f279f35",
+    "9bc7cb478679a3dcdb08730dc38bef9e01de2029e1cd8ece960af3b90f5b04af",
+    "a146c7619001ec2edebf6ed29751f895820cc4e8c20966485e56e11032a73e28",
+    "a7f25ac1c1c2702eea25cc02e4d7449e0992ea1c19dcdedbde15e0ed287a3e9e",
+    "b62038abe3b9b6245f49282ff0e6adc6a0f9d94bf846723c27ea89f388d199e3",
+    "da2405af9fb62e793056a0761192a95b340498f6182f9ab342a355cf414a5d74",
+    "dbf92e12668ddf949c7e60d383b1985f01ac3ddc6df48fc24082f6e31fef4a2d",
+    "e073b1042fcbb3e6b137eecfef3b63cca951a7872bd299eb21f54974c2dd8300",
+    "e97e6aec235a736b357c4a6a48b12cde25f30c781be6eb8f735b215857deea9d"
+  ],
+  "sealedFamilyCollisionCount": 0,
+  "teacherFileSha256": "63e4baff72dbd440473857e3e2f3d99204f01cf058b2e2524954fc6a1fa28a7d",
+  "sourceManifestSha256": "ae6d9ac77a2cdd4dfca8b0519d9a050ad792167aba179516463bab32f9d2cbb1",
+  "pilotTarget": 50,
+  "formalTarget": 100,
+  "pilotShortfall": {
+    "bread": 49,
+    "noodle_flour_dish": 34,
+    "frozen_dessert": 49
+  },
+  "publicTrainingOrAggregateRedistributionPermitted": false,
+  "rightsScope": "private research only; redistribution/ML aggregate rights unconfirmed",
+  "rawCapturedCount": 286,
+  "candidateExcludedCount": 233,
+  "allRawSha256Verified": true,
+  "schemaValidated": true,
+  "classificationNote": "frozen_dessertはメーカーが凍結してシャーベットにする用途を明示した常温パウチ1系列。冷凍販売された冷菓の採用は0系列。"
+}
