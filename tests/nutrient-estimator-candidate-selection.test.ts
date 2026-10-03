@@ -7,7 +7,9 @@ import {
 import { saturatedFatRatioPrior } from '../src/data/nutrientEstimatorGenreNutrientPriors'
 import mextFoodData from '../data/mext/processed/mext_foods.json'
 import {
+  applyNullNutrientSupplements,
   resolveIngredientCandidates,
+  sourceFoodIdsForNutrient,
   type IngredientProfile,
 } from '../src/services/nutrientEstimatorProfiles'
 
@@ -159,11 +161,11 @@ describe('nutrient estimator candidate selection', () => {
     expect(genericButter.every((profile) => profile.ambiguous)).toBe(true)
     expect(genericButter.every((profile) => profile.derivationWarnings?.join(' ').includes('発酵の有無と食塩'))).toBe(true)
     expect(butterOil).toMatchObject({
-      profileId: 'proxy_butter_oil_mext_14017',
-      ambiguous: true,
-      sourceFoodIds: ['mext_14017'],
+      profileId: 'fdc_butter_oil_anhydrous',
+      sourceFoodIds: ['fdc:173412'],
     })
-    expect(butterOil.derivationWarnings?.join(' ')).toContain('水分をほぼ除いた乳脂肪原料')
+    expect(butterOil.ambiguous).toBeUndefined()
+    expect(butterOil.derivationWarnings?.join(' ')).toContain('FDC ID 173412')
   })
 
   it('卵粉は乾燥全卵の直接値、粉末しょうゆは濃縮不明の代理候補へ分ける', () => {
@@ -245,6 +247,47 @@ describe('nutrient estimator candidate selection', () => {
     expect(whey.derivationWarnings?.join(' ')).toContain('濃縮物／分離物で確認できない')
   })
 
+  it('甘性の乾燥ホエイだけをFDC直接項目へ対応し、一般ホエイは濃縮度を推測しない', () => {
+    const sweetDry = directCandidate('甘性ホエイパウダー')
+    const genericWheyPowder = directCandidate('ホエイパウダー')
+    const unspecifiedDryWhey = resolveIngredientCandidates('乾燥ホエイ', null)
+
+    expect(sweetDry).toMatchObject({
+      profileId: 'fdc_sweet_whey_dried',
+      sourceFoodIds: ['fdc:171283'],
+    })
+    expect(sweetDry.ambiguous).toBeUndefined()
+    expect(genericWheyPowder.profileId).toBe('proxy_milk_protein_mext_13010')
+    expect(genericWheyPowder.ambiguous).toBe(true)
+    expect(unspecifiedDryWhey).toEqual([])
+  })
+
+  it('欠損補完は対象値がnullのときだけ出典を付け、既存値を維持する', () => {
+    const sourceProfile = directCandidate('オニオンパウダー')
+    const source = { ...sourceProfile.nutrients, vitaminEMg: 0.27 }
+    const existingValue = { ...sourceProfile.nutrients, vitaminEMg: 0.5 }
+    const missingValue = { ...sourceProfile.nutrients, vitaminEMg: null }
+
+    const preserved = applyNullNutrientSupplements(
+      existingValue,
+      source,
+      ['fdc:171327'],
+      ['vitaminEMg'],
+    )
+    const supplemented = applyNullNutrientSupplements(
+      missingValue,
+      source,
+      ['fdc:171327'],
+      ['vitaminEMg'],
+    )
+
+    expect(preserved.nutrients.vitaminEMg).toBe(0.5)
+    expect(preserved.supplementedKeys).toEqual([])
+    expect(preserved.nutrientSourceFoodIds).toEqual({})
+    expect(supplemented.nutrients.vitaminEMg).toBe(0.27)
+    expect(supplemented.nutrientSourceFoodIds).toEqual({ vitaminEMg: ['fdc:171327'] })
+  })
+
   it('昆布エキスを乾燥昆布へ無警告対応せず、粉末エキスは未解決に保つ', () => {
     const kombu = directCandidate('昆布')
     const extract = directCandidate('昆布エキス')
@@ -271,7 +314,10 @@ describe('nutrient estimator candidate selection', () => {
     const lemonConcentrate = directCandidate('レモン濃縮果汁')
 
     expect(onionPowder.profileId).toBe('general_mext_17056')
-    expect(onionPowder.nutrients).toEqual(mextNutrients(onionPowder))
+    expect(onionPowder.nutrients).toEqual({ ...mextNutrients(onionPowder), vitaminEMg: 0.27 })
+    expect(onionPowder.sourceFoodIds).toEqual(['mext_17056'])
+    expect(sourceFoodIdsForNutrient(onionPowder, 'vitaminEMg')).toEqual(['fdc:171327'])
+    expect(sourceFoodIdsForNutrient(onionPowder, 'calciumMg')).toEqual(['mext_17056'])
     expect(onionPowder.ambiguous).toBeUndefined()
     expect(roastedOnionPowder).toMatchObject({
       profileId: 'proxy_roasted_onion_powder_mext_17056',

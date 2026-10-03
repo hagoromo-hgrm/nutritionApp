@@ -1,5 +1,5 @@
 import { genreProfileMultiplier } from '../data/nutrientEstimatorGenrePriors'
-import { NUTRIENT_KEYS, type EstimatorGenreId, type Nutrients } from '../types'
+import { NUTRIENT_KEYS, type EstimatorGenreId, type NutrientKey, type Nutrients } from '../types'
 import fdcProfilesArtifact from '../../data/fdc/app/ingredient_profiles.json'
 import generalProfilesArtifact from '../../data/estimator/general_ingredient_profiles.json'
 
@@ -8,6 +8,7 @@ export interface IngredientProfile {
   canonicalName: string
   nutrients: Nutrients
   sourceFoodIds: readonly string[]
+  nutrientSourceFoodIds?: Partial<Record<NutrientKey, readonly string[]>>
   priorProbability: number
   ambiguous?: boolean
   derivationWarnings?: readonly string[]
@@ -62,6 +63,35 @@ function reviewedFdcProfile(profileId: string): IngredientProfile {
       `USDA FoodData Central ${item.source.dataType}の直接項目（FDC ID ${item.source.fdcId}）を使用しています。`,
     ],
   })
+}
+
+export function sourceFoodIdsForNutrient(
+  candidate: Pick<IngredientProfile, 'sourceFoodIds' | 'nutrientSourceFoodIds'>,
+  nutrientKey: NutrientKey,
+): readonly string[] {
+  return candidate.nutrientSourceFoodIds?.[nutrientKey] ?? candidate.sourceFoodIds
+}
+
+export function applyNullNutrientSupplements(
+  targetNutrients: Nutrients,
+  supplementNutrients: Nutrients,
+  supplementSourceFoodIds: readonly string[],
+  nutrientKeys: readonly NutrientKey[],
+): {
+  nutrients: Nutrients
+  nutrientSourceFoodIds: Partial<Record<NutrientKey, readonly string[]>>
+  supplementedKeys: NutrientKey[]
+} {
+  const nutrients = { ...targetNutrients }
+  const nutrientSourceFoodIds: Partial<Record<NutrientKey, readonly string[]>> = {}
+  const supplementedKeys: NutrientKey[] = []
+  for (const key of nutrientKeys) {
+    if (nutrients[key] !== null || supplementNutrients[key] === null) continue
+    nutrients[key] = supplementNutrients[key]
+    nutrientSourceFoodIds[key] = supplementSourceFoodIds
+    supplementedKeys.push(key)
+  }
+  return { nutrients, nutrientSourceFoodIds, supplementedKeys }
 }
 
 function scaledProfile(
@@ -409,15 +439,6 @@ const genericButterCandidates: readonly IngredientProfile[] = [butter, unsaltedB
   ambiguous: true,
   derivationWarnings: [genericButterCandidateWarning],
 }))
-const butterOilProxy = profile('proxy_butter_oil_mext_14017', 'バターオイル（無発酵有塩バター代理）', butter.nutrients, {
-  sourceFoodIds: ['mext_14017'],
-  priorProbability: 0.2,
-  ambiguous: true,
-  derivationWarnings: [
-    'バターオイルの直接値はMEXT食品項目にないため、無発酵有塩バターを低信頼度の代理参照として使用しています。',
-    'バターオイルは水分をほぼ除いた乳脂肪原料で、通常のバターとは濃縮度が異なります。製品表示値を優先してください。',
-  ],
-})
 const butterProcessedProxy = profile('proxy_butter_processed_mext_14017', 'バター加工品（無発酵有塩バター代理）', butter.nutrients, {
   sourceFoodIds: ['mext_14017'],
   priorProbability: 0.2,
@@ -438,6 +459,18 @@ const shortening = profile('mext_14030', 'ショートニング', {
   vitaminB2Mg: 0, vitaminCMg: 0, saturatedFatG: 51.13,
 }, { priorProbability: 0.15, ambiguous: true })
 const cocoaButterFdc = reviewedFdcProfile('fdc_cocoa_butter')
+const butterOilFdc = reviewedFdcProfile('fdc_butter_oil_anhydrous')
+const sweetDriedWheyFdc = reviewedFdcProfile('fdc_sweet_whey_dried')
+const onionPowderFdcEntry = fdcProfilesArtifact.profiles.find((entry) => entry.profileId === 'fdc_onion_powder')
+if (!onionPowderFdcEntry) throw new Error('レビュー済みFDCオニオンパウダープロファイルが見つかりません')
+const supplementMetadata = onionPowderFdcEntry.nullSupplement
+if (!supplementMetadata) throw new Error('FDCオニオンパウダーの欠損補完メタデータがありません')
+if (supplementMetadata.targetProfileId !== 'general_mext_17056'
+  || supplementMetadata.nutrientKeys.length !== 1
+  || supplementMetadata.nutrientKeys[0] !== 'vitaminEMg') {
+  throw new Error('FDCオニオンパウダーの欠損補完許可範囲が想定外です')
+}
+const onionPowderFdc = reviewedFdcProfile('fdc_onion_powder')
 const wheatBranFdc = reviewedFdcProfile('fdc_wheat_bran')
 const coconutOilFdc = reviewedFdcProfile('fdc_coconut_oil')
 const chickenFatFdc = reviewedFdcProfile('fdc_chicken_fat')
@@ -1222,7 +1255,7 @@ const GROUPS: readonly IngredientProfileGroup[] = [
     })),
   },
   { aliases: ['バター'], candidates: genericButterCandidates },
-  { aliases: ['バターオイル', 'バターオイル（無水乳脂肪）'], candidates: [butterOilProxy] },
+  { aliases: ['バターオイル', 'バターオイル（無水乳脂肪）', '無水乳脂肪'], candidates: [butterOilFdc] },
   { aliases: ['バター加工品'], candidates: [butterProcessedProxy] },
   { aliases: ['パーム油'], candidates: [palmOil] },
   { aliases: ['なたね油', '菜種油', 'キャノーラ油'], candidates: [canolaOil] },
@@ -1272,6 +1305,13 @@ const GROUPS: readonly IngredientProfileGroup[] = [
       '乳たんぱく質', '乳たん白', '乳たん白質', 'カルシウムカゼイネート', 'カゼインカルシウム',
     ],
     candidates: [milkProteinProxy],
+  },
+  {
+    aliases: [
+      '甘性ホエイ（乾燥）', '乾燥甘性ホエイ', '甘性ホエイパウダー', '甘性ホエイ粉末', '甘性ホエイ末',
+      'スイートホエイパウダー', 'スイートホエイ粉末', 'スイートホエイ末', 'スイートドライホエイ',
+    ],
+    candidates: [sweetDriedWheyFdc],
   },
   {
     aliases: ['バターミルク', 'バターミルクパウダー'],
@@ -1472,23 +1512,52 @@ const GROUPS: readonly IngredientProfileGroup[] = [
   { aliases: ['食塩', '塩'], candidates: [salt] },
 ] as const
 
-const GENERAL_PROFILE_ENTRIES = generalProfilesArtifact.profiles.map((item) => ({
-  aliases: item.aliases,
-  profile: profile(item.profileId, item.canonicalName, item.nutrients as Nutrients, {
-    sourceFoodIds: item.sourceFoodIds,
-    priorProbability: item.priorProbability,
-    ...(item.ambiguous ? { ambiguous: true } : {}),
-    ...('derivationWarnings' in item
-      ? { derivationWarnings: item.derivationWarnings }
-      : {}),
-    ...('priorSignals' in item
-      ? { priorSignals: item.priorSignals }
-      : {}),
-    ...('requiredGenreIds' in item
-      ? { requiredGenreIds: item.requiredGenreIds as EstimatorGenreId[] }
-      : {}),
-  }),
-}))
+const GENERAL_PROFILE_ENTRIES = generalProfilesArtifact.profiles.map((item) => {
+  let nutrients = { ...item.nutrients } as Nutrients
+  const nutrientSourceFoodIds: Partial<Record<NutrientKey, readonly string[]>> = {}
+  const supplementProvenance = onionPowderFdcEntry.nutrientProvenance.vitaminEMg
+  if (!supplementProvenance
+    || supplementProvenance.nutrientId !== 1109
+    || supplementProvenance.nutrientName !== 'Vitamin E (alpha-tocopherol)'
+    || supplementProvenance.unit !== 'mg'
+    || onionPowderFdc.nutrients.vitaminEMg !== supplementProvenance.amount) {
+    throw new Error('FDCオニオンパウダーのビタミンE参照根拠が想定と一致しません')
+  }
+  const supplementedKeys: NutrientKey[] = []
+  if (item.profileId === supplementMetadata.targetProfileId) {
+    const applied = applyNullNutrientSupplements(
+      nutrients,
+      onionPowderFdc.nutrients,
+      onionPowderFdc.sourceFoodIds,
+      supplementMetadata.nutrientKeys as NutrientKey[],
+    )
+    nutrients = applied.nutrients
+    Object.assign(nutrientSourceFoodIds, applied.nutrientSourceFoodIds)
+    supplementedKeys.push(...applied.supplementedKeys)
+  }
+  const derivationWarnings = [
+    ...('derivationWarnings' in item ? item.derivationWarnings ?? [] : []),
+    ...(supplementedKeys.includes('vitaminEMg')
+      ? ['MEXT値が欠損するビタミンEのみをUSDA SR Legacyのたまねぎ粉末（栄養素ID 1109、α-トコフェロール）で補っています。']
+      : []),
+  ]
+  return {
+    aliases: item.aliases,
+    profile: profile(item.profileId, item.canonicalName, nutrients, {
+      sourceFoodIds: item.sourceFoodIds,
+      ...(Object.keys(nutrientSourceFoodIds).length > 0 ? { nutrientSourceFoodIds } : {}),
+      priorProbability: item.priorProbability,
+      ...(item.ambiguous ? { ambiguous: true } : {}),
+      ...(derivationWarnings.length > 0 ? { derivationWarnings } : {}),
+      ...('priorSignals' in item
+        ? { priorSignals: item.priorSignals }
+        : {}),
+      ...('requiredGenreIds' in item
+        ? { requiredGenreIds: item.requiredGenreIds as EstimatorGenreId[] }
+        : {}),
+    }),
+  }
+})
 
 function normalize(value: string): string {
   return value.normalize('NFKC').replace(/\s+/gu, '').toLocaleLowerCase('ja-JP')

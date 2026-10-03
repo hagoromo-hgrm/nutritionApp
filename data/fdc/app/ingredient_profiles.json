@@ -1,8 +1,8 @@
 {
   "format": "nutrition-estimator-fdc-profiles",
   "formatVersion": 1,
-  "generatedAt": "2026-07-28T07:40:08.708350Z",
-  "transformVersion": "fdc-ingredient-profile-0.1.0",
+  "generatedAt": "2026-10-03T10:48:09.500044Z",
+  "transformVersion": "fdc-ingredient-profile-0.2.0",
   "datasetReleases": [
     "SR Legacy 04/2018"
   ],
@@ -32,6 +32,125 @@
         "saturatedFatG": 59.7,
         "saltG": 0.0
       },
+      "nutrientProvenance": {
+        "energyKcal": {
+          "nutrientId": 1008,
+          "nutrientName": "Energy",
+          "unit": "kcal",
+          "amount": 884.0,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "proteinG": {
+          "nutrientId": 1003,
+          "nutrientName": "Protein",
+          "unit": "g",
+          "amount": 0.0,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "fatG": {
+          "nutrientId": 1004,
+          "nutrientName": "Total lipid (fat)",
+          "unit": "g",
+          "amount": 100.0,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "carbohydrateG": {
+          "nutrientId": 1005,
+          "nutrientName": "Carbohydrate, by difference",
+          "unit": "g",
+          "amount": 0.0,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "fiberG": {
+          "nutrientId": 1079,
+          "nutrientName": "Fiber, total dietary",
+          "unit": "g",
+          "amount": 0.0,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "calciumMg": {
+          "nutrientId": 1087,
+          "nutrientName": "Calcium, Ca",
+          "unit": "mg",
+          "amount": 0.0,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "ironMg": {
+          "nutrientId": 1089,
+          "nutrientName": "Iron, Fe",
+          "unit": "mg",
+          "amount": 0.0,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "vitaminAMcg": {
+          "nutrientId": 1106,
+          "nutrientName": "Vitamin A, RAE",
+          "unit": "µg",
+          "amount": 0.0,
+          "derivationCode": "NC",
+          "dataPoints": 0
+        },
+        "vitaminEMg": {
+          "nutrientId": 1109,
+          "nutrientName": "Vitamin E (alpha-tocopherol)",
+          "unit": "mg",
+          "amount": 1.8,
+          "derivationCode": null,
+          "dataPoints": 6
+        },
+        "vitaminB1Mg": {
+          "nutrientId": 1165,
+          "nutrientName": "Thiamin",
+          "unit": "mg",
+          "amount": 0.0,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "vitaminB2Mg": {
+          "nutrientId": 1166,
+          "nutrientName": "Riboflavin",
+          "unit": "mg",
+          "amount": 0.0,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "vitaminCMg": {
+          "nutrientId": 1162,
+          "nutrientName": "Vitamin C, total ascorbic acid",
+          "unit": "mg",
+          "amount": 0.0,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "saturatedFatG": {
+          "nutrientId": 1258,
+          "nutrientName": "Fatty acids, total saturated",
+          "unit": "g",
+          "amount": 59.7,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "saltG": {
+          "nutrientId": 1093,
+          "nutrientName": "Sodium, Na",
+          "unit": "mg",
+          "amount": 0.0,
+          "derivationCode": null,
+          "dataPoints": 0,
+          "conversion": {
+            "formula": "sodium_mg * 2.54 / 1000",
+            "multiplier": 0.00254,
+            "outputUnit": "g"
+          }
+        }
+      },
       "source": {
         "provider": "USDA FoodData Central",
         "fdcId": 171421,
@@ -44,7 +163,7 @@
         "reviewedAt": "2026-07-26",
         "license": "CC0 1.0 / U.S. public domain",
         "rawSha256": "56a456c2a3c133253406fe5299e07f22d4012af41d8aa9826a3b2ac93e0a3fd2",
-        "transformVersion": "fdc-ingredient-profile-0.1.0"
+        "transformVersion": "fdc-ingredient-profile-0.2.0"
       }
     },
     {
@@ -71,6 +190,125 @@
         "saturatedFatG": 0.63,
         "saltG": 0.00508
       },
+      "nutrientProvenance": {
+        "energyKcal": {
+          "nutrientId": 1008,
+          "nutrientName": "Energy",
+          "unit": "kcal",
+          "amount": 216.0,
+          "derivationCode": "NC",
+          "dataPoints": 0
+        },
+        "proteinG": {
+          "nutrientId": 1003,
+          "nutrientName": "Protein",
+          "unit": "g",
+          "amount": 15.6,
+          "derivationCode": null,
+          "dataPoints": 13
+        },
+        "fatG": {
+          "nutrientId": 1004,
+          "nutrientName": "Total lipid (fat)",
+          "unit": "g",
+          "amount": 4.25,
+          "derivationCode": null,
+          "dataPoints": 11
+        },
+        "carbohydrateG": {
+          "nutrientId": 1005,
+          "nutrientName": "Carbohydrate, by difference",
+          "unit": "g",
+          "amount": 64.5,
+          "derivationCode": "NC",
+          "dataPoints": 0
+        },
+        "fiberG": {
+          "nutrientId": 1079,
+          "nutrientName": "Fiber, total dietary",
+          "unit": "g",
+          "amount": 42.8,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "calciumMg": {
+          "nutrientId": 1087,
+          "nutrientName": "Calcium, Ca",
+          "unit": "mg",
+          "amount": 73.0,
+          "derivationCode": null,
+          "dataPoints": 4
+        },
+        "ironMg": {
+          "nutrientId": 1089,
+          "nutrientName": "Iron, Fe",
+          "unit": "mg",
+          "amount": 10.6,
+          "derivationCode": null,
+          "dataPoints": 5
+        },
+        "vitaminAMcg": {
+          "nutrientId": 1106,
+          "nutrientName": "Vitamin A, RAE",
+          "unit": "µg",
+          "amount": 0.0,
+          "derivationCode": "A",
+          "dataPoints": 1
+        },
+        "vitaminEMg": {
+          "nutrientId": 1109,
+          "nutrientName": "Vitamin E (alpha-tocopherol)",
+          "unit": "mg",
+          "amount": 1.49,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "vitaminB1Mg": {
+          "nutrientId": 1165,
+          "nutrientName": "Thiamin",
+          "unit": "mg",
+          "amount": 0.523,
+          "derivationCode": null,
+          "dataPoints": 4
+        },
+        "vitaminB2Mg": {
+          "nutrientId": 1166,
+          "nutrientName": "Riboflavin",
+          "unit": "mg",
+          "amount": 0.577,
+          "derivationCode": null,
+          "dataPoints": 3
+        },
+        "vitaminCMg": {
+          "nutrientId": 1162,
+          "nutrientName": "Vitamin C, total ascorbic acid",
+          "unit": "mg",
+          "amount": 0.0,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "saturatedFatG": {
+          "nutrientId": 1258,
+          "nutrientName": "Fatty acids, total saturated",
+          "unit": "g",
+          "amount": 0.63,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "saltG": {
+          "nutrientId": 1093,
+          "nutrientName": "Sodium, Na",
+          "unit": "mg",
+          "amount": 2.0,
+          "derivationCode": null,
+          "dataPoints": 4,
+          "conversion": {
+            "formula": "sodium_mg * 2.54 / 1000",
+            "multiplier": 0.00254,
+            "outputUnit": "g"
+          }
+        }
+      },
       "source": {
         "provider": "USDA FoodData Central",
         "fdcId": 169722,
@@ -83,7 +321,7 @@
         "reviewedAt": "2026-07-28",
         "license": "CC0 1.0 / U.S. public domain",
         "rawSha256": "a9a968cd97c7b0288219e30e786511f98b46fc915d270e7bdec0de08a112d235",
-        "transformVersion": "fdc-ingredient-profile-0.1.0"
+        "transformVersion": "fdc-ingredient-profile-0.2.0"
       }
     },
     {
@@ -110,6 +348,125 @@
         "saturatedFatG": 82.5,
         "saltG": 0.0
       },
+      "nutrientProvenance": {
+        "energyKcal": {
+          "nutrientId": 1008,
+          "nutrientName": "Energy",
+          "unit": "kcal",
+          "amount": 892.0,
+          "derivationCode": "NC",
+          "dataPoints": 0
+        },
+        "proteinG": {
+          "nutrientId": 1003,
+          "nutrientName": "Protein",
+          "unit": "g",
+          "amount": 0.0,
+          "derivationCode": "A",
+          "dataPoints": 6
+        },
+        "fatG": {
+          "nutrientId": 1004,
+          "nutrientName": "Total lipid (fat)",
+          "unit": "g",
+          "amount": 99.1,
+          "derivationCode": "A",
+          "dataPoints": 6
+        },
+        "carbohydrateG": {
+          "nutrientId": 1005,
+          "nutrientName": "Carbohydrate, by difference",
+          "unit": "g",
+          "amount": 0.0,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "fiberG": {
+          "nutrientId": 1079,
+          "nutrientName": "Fiber, total dietary",
+          "unit": "g",
+          "amount": 0.0,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "calciumMg": {
+          "nutrientId": 1087,
+          "nutrientName": "Calcium, Ca",
+          "unit": "mg",
+          "amount": 1.0,
+          "derivationCode": "A",
+          "dataPoints": 4
+        },
+        "ironMg": {
+          "nutrientId": 1089,
+          "nutrientName": "Iron, Fe",
+          "unit": "mg",
+          "amount": 0.05,
+          "derivationCode": "A",
+          "dataPoints": 4
+        },
+        "vitaminAMcg": {
+          "nutrientId": 1106,
+          "nutrientName": "Vitamin A, RAE",
+          "unit": "µg",
+          "amount": 0.0,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "vitaminEMg": {
+          "nutrientId": 1109,
+          "nutrientName": "Vitamin E (alpha-tocopherol)",
+          "unit": "mg",
+          "amount": 0.11,
+          "derivationCode": "A",
+          "dataPoints": 3
+        },
+        "vitaminB1Mg": {
+          "nutrientId": 1165,
+          "nutrientName": "Thiamin",
+          "unit": "mg",
+          "amount": 0.0,
+          "derivationCode": null,
+          "dataPoints": 1
+        },
+        "vitaminB2Mg": {
+          "nutrientId": 1166,
+          "nutrientName": "Riboflavin",
+          "unit": "mg",
+          "amount": 0.0,
+          "derivationCode": null,
+          "dataPoints": 1
+        },
+        "vitaminCMg": {
+          "nutrientId": 1162,
+          "nutrientName": "Vitamin C, total ascorbic acid",
+          "unit": "mg",
+          "amount": 0.0,
+          "derivationCode": null,
+          "dataPoints": 1
+        },
+        "saturatedFatG": {
+          "nutrientId": 1258,
+          "nutrientName": "Fatty acids, total saturated",
+          "unit": "g",
+          "amount": 82.5,
+          "derivationCode": "NC",
+          "dataPoints": 0
+        },
+        "saltG": {
+          "nutrientId": 1093,
+          "nutrientName": "Sodium, Na",
+          "unit": "mg",
+          "amount": 0.0,
+          "derivationCode": "A",
+          "dataPoints": 4,
+          "conversion": {
+            "formula": "sodium_mg * 2.54 / 1000",
+            "multiplier": 0.00254,
+            "outputUnit": "g"
+          }
+        }
+      },
       "source": {
         "provider": "USDA FoodData Central",
         "fdcId": 171412,
@@ -122,7 +479,7 @@
         "reviewedAt": "2026-07-28",
         "license": "CC0 1.0 / U.S. public domain",
         "rawSha256": "eefbc29187e9f40be33ffd234ae742b0940f92f42ca9ffe0f1c5fd13ae2ae63f",
-        "transformVersion": "fdc-ingredient-profile-0.1.0"
+        "transformVersion": "fdc-ingredient-profile-0.2.0"
       }
     },
     {
@@ -149,6 +506,125 @@
         "saturatedFatG": 29.8,
         "saltG": 0.0
       },
+      "nutrientProvenance": {
+        "energyKcal": {
+          "nutrientId": 1008,
+          "nutrientName": "Energy",
+          "unit": "kcal",
+          "amount": 900.0,
+          "derivationCode": "NC",
+          "dataPoints": 0
+        },
+        "proteinG": {
+          "nutrientId": 1003,
+          "nutrientName": "Protein",
+          "unit": "g",
+          "amount": 0.0,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "fatG": {
+          "nutrientId": 1004,
+          "nutrientName": "Total lipid (fat)",
+          "unit": "g",
+          "amount": 99.8,
+          "derivationCode": null,
+          "dataPoints": 3
+        },
+        "carbohydrateG": {
+          "nutrientId": 1005,
+          "nutrientName": "Carbohydrate, by difference",
+          "unit": "g",
+          "amount": 0.0,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "fiberG": {
+          "nutrientId": 1079,
+          "nutrientName": "Fiber, total dietary",
+          "unit": "g",
+          "amount": 0.0,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "calciumMg": {
+          "nutrientId": 1087,
+          "nutrientName": "Calcium, Ca",
+          "unit": "mg",
+          "amount": 0.0,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "ironMg": {
+          "nutrientId": 1089,
+          "nutrientName": "Iron, Fe",
+          "unit": "mg",
+          "amount": 0.0,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "vitaminAMcg": {
+          "nutrientId": 1106,
+          "nutrientName": "Vitamin A, RAE",
+          "unit": "µg",
+          "amount": 0.0,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "vitaminEMg": {
+          "nutrientId": 1109,
+          "nutrientName": "Vitamin E (alpha-tocopherol)",
+          "unit": "mg",
+          "amount": 2.7,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "vitaminB1Mg": {
+          "nutrientId": 1165,
+          "nutrientName": "Thiamin",
+          "unit": "mg",
+          "amount": 0.0,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "vitaminB2Mg": {
+          "nutrientId": 1166,
+          "nutrientName": "Riboflavin",
+          "unit": "mg",
+          "amount": 0.0,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "vitaminCMg": {
+          "nutrientId": 1162,
+          "nutrientName": "Vitamin C, total ascorbic acid",
+          "unit": "mg",
+          "amount": 0.0,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "saturatedFatG": {
+          "nutrientId": 1258,
+          "nutrientName": "Fatty acids, total saturated",
+          "unit": "g",
+          "amount": 29.8,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "saltG": {
+          "nutrientId": 1093,
+          "nutrientName": "Sodium, Na",
+          "unit": "mg",
+          "amount": 0.0,
+          "derivationCode": null,
+          "dataPoints": 0,
+          "conversion": {
+            "formula": "sodium_mg * 2.54 / 1000",
+            "multiplier": 0.00254,
+            "outputUnit": "g"
+          }
+        }
+      },
       "source": {
         "provider": "USDA FoodData Central",
         "fdcId": 173564,
@@ -161,7 +637,7 @@
         "reviewedAt": "2026-07-28",
         "license": "CC0 1.0 / U.S. public domain",
         "rawSha256": "2e4e62a9f0d500891387ac7c28e9a19ba5eaa1c9ae1c56a1762910611d3be399",
-        "transformVersion": "fdc-ingredient-profile-0.1.0"
+        "transformVersion": "fdc-ingredient-profile-0.2.0"
       }
     },
     {
@@ -188,6 +664,125 @@
         "saturatedFatG": 0.0,
         "saltG": 8.5852
       },
+      "nutrientProvenance": {
+        "energyKcal": {
+          "nutrientId": 1008,
+          "nutrientName": "Energy",
+          "unit": "kcal",
+          "amount": 185.0,
+          "derivationCode": "NC",
+          "dataPoints": 0
+        },
+        "proteinG": {
+          "nutrientId": 1003,
+          "nutrientName": "Protein",
+          "unit": "g",
+          "amount": 23.9,
+          "derivationCode": "A",
+          "dataPoints": 1
+        },
+        "fatG": {
+          "nutrientId": 1004,
+          "nutrientName": "Total lipid (fat)",
+          "unit": "g",
+          "amount": 0.9,
+          "derivationCode": "A",
+          "dataPoints": 1
+        },
+        "carbohydrateG": {
+          "nutrientId": 1005,
+          "nutrientName": "Carbohydrate, by difference",
+          "unit": "g",
+          "amount": 20.4,
+          "derivationCode": "NC",
+          "dataPoints": 0
+        },
+        "fiberG": {
+          "nutrientId": 1079,
+          "nutrientName": "Fiber, total dietary",
+          "unit": "g",
+          "amount": 6.5,
+          "derivationCode": "A",
+          "dataPoints": 1
+        },
+        "calciumMg": {
+          "nutrientId": 1087,
+          "nutrientName": "Calcium, Ca",
+          "unit": "mg",
+          "amount": 67.0,
+          "derivationCode": "A",
+          "dataPoints": 1
+        },
+        "ironMg": {
+          "nutrientId": 1089,
+          "nutrientName": "Iron, Fe",
+          "unit": "mg",
+          "amount": 4.04,
+          "derivationCode": "A",
+          "dataPoints": 1
+        },
+        "vitaminAMcg": {
+          "nutrientId": 1106,
+          "nutrientName": "Vitamin A, RAE",
+          "unit": "µg",
+          "amount": 0.0,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "vitaminEMg": {
+          "nutrientId": 1109,
+          "nutrientName": "Vitamin E (alpha-tocopherol)",
+          "unit": "mg",
+          "amount": 0.0,
+          "derivationCode": "A",
+          "dataPoints": 1
+        },
+        "vitaminB1Mg": {
+          "nutrientId": 1165,
+          "nutrientName": "Thiamin",
+          "unit": "mg",
+          "amount": 23.4,
+          "derivationCode": "A",
+          "dataPoints": 1
+        },
+        "vitaminB2Mg": {
+          "nutrientId": 1166,
+          "nutrientName": "Riboflavin",
+          "unit": "mg",
+          "amount": 17.5,
+          "derivationCode": "A",
+          "dataPoints": 1
+        },
+        "vitaminCMg": {
+          "nutrientId": 1162,
+          "nutrientName": "Vitamin C, total ascorbic acid",
+          "unit": "mg",
+          "amount": 0.0,
+          "derivationCode": "A",
+          "dataPoints": 1
+        },
+        "saturatedFatG": {
+          "nutrientId": 1258,
+          "nutrientName": "Fatty acids, total saturated",
+          "unit": "g",
+          "amount": 0.0,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "saltG": {
+          "nutrientId": 1093,
+          "nutrientName": "Sodium, Na",
+          "unit": "mg",
+          "amount": 3380.0,
+          "derivationCode": "LC",
+          "dataPoints": 0,
+          "conversion": {
+            "formula": "sodium_mg * 2.54 / 1000",
+            "multiplier": 0.00254,
+            "outputUnit": "g"
+          }
+        }
+      },
       "source": {
         "provider": "USDA FoodData Central",
         "fdcId": 167717,
@@ -200,7 +795,7 @@
         "reviewedAt": "2026-07-28",
         "license": "CC0 1.0 / U.S. public domain",
         "rawSha256": "315fa891ee4b33014e8490d9c915bd4a6adb3545ec3cc6539c73904530da32e7",
-        "transformVersion": "fdc-ingredient-profile-0.1.0"
+        "transformVersion": "fdc-ingredient-profile-0.2.0"
       }
     },
     {
@@ -227,6 +822,125 @@
         "saturatedFatG": 0.06,
         "saltG": 0.3175
       },
+      "nutrientProvenance": {
+        "energyKcal": {
+          "nutrientId": 1008,
+          "nutrientName": "Energy",
+          "unit": "kcal",
+          "amount": 332.0,
+          "derivationCode": "NC",
+          "dataPoints": 0
+        },
+        "proteinG": {
+          "nutrientId": 1003,
+          "nutrientName": "Protein",
+          "unit": "g",
+          "amount": 4.6,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "fatG": {
+          "nutrientId": 1004,
+          "nutrientName": "Total lipid (fat)",
+          "unit": "g",
+          "amount": 0.5,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "carbohydrateG": {
+          "nutrientId": 1005,
+          "nutrientName": "Carbohydrate, by difference",
+          "unit": "g",
+          "amount": 77.3,
+          "derivationCode": "NC",
+          "dataPoints": 0
+        },
+        "fiberG": {
+          "nutrientId": 1079,
+          "nutrientName": "Fiber, total dietary",
+          "unit": "g",
+          "amount": 77.3,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "calciumMg": {
+          "nutrientId": 1087,
+          "nutrientName": "Calcium, Ca",
+          "unit": "mg",
+          "amount": 294.0,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "ironMg": {
+          "nutrientId": 1089,
+          "nutrientName": "Iron, Fe",
+          "unit": "mg",
+          "amount": 0.0,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "vitaminAMcg": {
+          "nutrientId": 1106,
+          "nutrientName": "Vitamin A, RAE",
+          "unit": "µg",
+          "amount": 0.0,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "vitaminEMg": {
+          "nutrientId": 1109,
+          "nutrientName": "Vitamin E (alpha-tocopherol)",
+          "unit": "mg",
+          "amount": 0.0,
+          "derivationCode": "Z",
+          "dataPoints": 0
+        },
+        "vitaminB1Mg": {
+          "nutrientId": 1165,
+          "nutrientName": "Thiamin",
+          "unit": "mg",
+          "amount": 0.0,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "vitaminB2Mg": {
+          "nutrientId": 1166,
+          "nutrientName": "Riboflavin",
+          "unit": "mg",
+          "amount": 0.0,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "vitaminCMg": {
+          "nutrientId": 1162,
+          "nutrientName": "Vitamin C, total ascorbic acid",
+          "unit": "mg",
+          "amount": 0.0,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "saturatedFatG": {
+          "nutrientId": 1258,
+          "nutrientName": "Fatty acids, total saturated",
+          "unit": "g",
+          "amount": 0.06,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "saltG": {
+          "nutrientId": 1093,
+          "nutrientName": "Sodium, Na",
+          "unit": "mg",
+          "amount": 125.0,
+          "derivationCode": null,
+          "dataPoints": 0,
+          "conversion": {
+            "formula": "sodium_mg * 2.54 / 1000",
+            "multiplier": 0.00254,
+            "outputUnit": "g"
+          }
+        }
+      },
       "source": {
         "provider": "USDA FoodData Central",
         "fdcId": 169045,
@@ -239,7 +953,505 @@
         "reviewedAt": "2026-07-28",
         "license": "CC0 1.0 / U.S. public domain",
         "rawSha256": "4ac3a9f9bb434f13d33c2fc693bf9e7f7280502efa3c3d7033797010c062acad",
-        "transformVersion": "fdc-ingredient-profile-0.1.0"
+        "transformVersion": "fdc-ingredient-profile-0.2.0"
+      }
+    },
+    {
+      "profileId": "fdc_butter_oil_anhydrous",
+      "canonicalName": "バターオイル（無水乳脂肪）",
+      "replaceProfileId": "proxy_butter_oil_mext_14017",
+      "basis": {
+        "amount": 100,
+        "unit": "g"
+      },
+      "nutrients": {
+        "energyKcal": 876.0,
+        "proteinG": 0.28,
+        "fatG": 99.5,
+        "carbohydrateG": 0.0,
+        "fiberG": 0.0,
+        "calciumMg": 4.0,
+        "ironMg": 0.0,
+        "vitaminAMcg": 840.0,
+        "vitaminEMg": 2.8,
+        "vitaminB1Mg": 0.001,
+        "vitaminB2Mg": 0.005,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 61.9,
+        "saltG": 0.00508
+      },
+      "nutrientProvenance": {
+        "energyKcal": {
+          "nutrientId": 1008,
+          "nutrientName": "Energy",
+          "unit": "kcal",
+          "amount": 876.0,
+          "derivationCode": "NC",
+          "dataPoints": 0
+        },
+        "proteinG": {
+          "nutrientId": 1003,
+          "nutrientName": "Protein",
+          "unit": "g",
+          "amount": 0.28,
+          "derivationCode": null,
+          "dataPoints": 1
+        },
+        "fatG": {
+          "nutrientId": 1004,
+          "nutrientName": "Total lipid (fat)",
+          "unit": "g",
+          "amount": 99.5,
+          "derivationCode": null,
+          "dataPoints": 1
+        },
+        "carbohydrateG": {
+          "nutrientId": 1005,
+          "nutrientName": "Carbohydrate, by difference",
+          "unit": "g",
+          "amount": 0.0,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "fiberG": {
+          "nutrientId": 1079,
+          "nutrientName": "Fiber, total dietary",
+          "unit": "g",
+          "amount": 0.0,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "calciumMg": {
+          "nutrientId": 1087,
+          "nutrientName": "Calcium, Ca",
+          "unit": "mg",
+          "amount": 4.0,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "ironMg": {
+          "nutrientId": 1089,
+          "nutrientName": "Iron, Fe",
+          "unit": "mg",
+          "amount": 0.0,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "vitaminAMcg": {
+          "nutrientId": 1106,
+          "nutrientName": "Vitamin A, RAE",
+          "unit": "µg",
+          "amount": 840.0,
+          "derivationCode": "NC",
+          "dataPoints": 0
+        },
+        "vitaminEMg": {
+          "nutrientId": 1109,
+          "nutrientName": "Vitamin E (alpha-tocopherol)",
+          "unit": "mg",
+          "amount": 2.8,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "vitaminB1Mg": {
+          "nutrientId": 1165,
+          "nutrientName": "Thiamin",
+          "unit": "mg",
+          "amount": 0.001,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "vitaminB2Mg": {
+          "nutrientId": 1166,
+          "nutrientName": "Riboflavin",
+          "unit": "mg",
+          "amount": 0.005,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "vitaminCMg": {
+          "nutrientId": 1162,
+          "nutrientName": "Vitamin C, total ascorbic acid",
+          "unit": "mg",
+          "amount": 0.0,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "saturatedFatG": {
+          "nutrientId": 1258,
+          "nutrientName": "Fatty acids, total saturated",
+          "unit": "g",
+          "amount": 61.9,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "saltG": {
+          "nutrientId": 1093,
+          "nutrientName": "Sodium, Na",
+          "unit": "mg",
+          "amount": 2.0,
+          "derivationCode": null,
+          "dataPoints": 0,
+          "conversion": {
+            "formula": "sodium_mg * 2.54 / 1000",
+            "multiplier": 0.00254,
+            "outputUnit": "g"
+          }
+        }
+      },
+      "source": {
+        "provider": "USDA FoodData Central",
+        "fdcId": 173412,
+        "description": "Butter oil, anhydrous",
+        "dataType": "SR Legacy",
+        "publicationDate": "4/1/2019",
+        "datasetRelease": "SR Legacy 04/2018",
+        "sourceUrl": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/173412/nutrients",
+        "retrievedAt": "2026-10-03T09:35:29.879971Z",
+        "reviewedAt": "2026-10-03",
+        "license": "CC0 1.0 / U.S. public domain",
+        "rawSha256": "07c49875d2334dd259681209939ac3e08c692dd0eedaef2aab6e991e8c21684c",
+        "transformVersion": "fdc-ingredient-profile-0.2.0",
+        "sourceArchive": {
+          "url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_json_2018-04.zip",
+          "sha256": "0fe8ae486a2c8eb42cb96413f058deb51863a46c8fb8eeb4b1fb45006dd338ef",
+          "retrievedAt": "2026-10-03T09:35:29.879971Z",
+          "extractedAt": "2026-10-03T09:46:45Z"
+        }
+      }
+    },
+    {
+      "profileId": "fdc_sweet_whey_dried",
+      "canonicalName": "甘性ホエイ（乾燥）",
+      "replaceProfileId": "unresolved:sweet_dried_whey",
+      "basis": {
+        "amount": 100,
+        "unit": "g"
+      },
+      "nutrients": {
+        "energyKcal": 353.0,
+        "proteinG": 12.9,
+        "fatG": 1.07,
+        "carbohydrateG": 74.5,
+        "fiberG": 0.0,
+        "calciumMg": 796.0,
+        "ironMg": 0.88,
+        "vitaminAMcg": 8.0,
+        "vitaminEMg": 0.02,
+        "vitaminB1Mg": 0.519,
+        "vitaminB2Mg": 2.21,
+        "vitaminCMg": 1.5,
+        "saturatedFatG": 0.684,
+        "saltG": 2.7432
+      },
+      "nutrientProvenance": {
+        "energyKcal": {
+          "nutrientId": 1008,
+          "nutrientName": "Energy",
+          "unit": "kcal",
+          "amount": 353.0,
+          "derivationCode": "NC",
+          "dataPoints": 0
+        },
+        "proteinG": {
+          "nutrientId": 1003,
+          "nutrientName": "Protein",
+          "unit": "g",
+          "amount": 12.9,
+          "derivationCode": null,
+          "dataPoints": 165
+        },
+        "fatG": {
+          "nutrientId": 1004,
+          "nutrientName": "Total lipid (fat)",
+          "unit": "g",
+          "amount": 1.07,
+          "derivationCode": null,
+          "dataPoints": 148
+        },
+        "carbohydrateG": {
+          "nutrientId": 1005,
+          "nutrientName": "Carbohydrate, by difference",
+          "unit": "g",
+          "amount": 74.5,
+          "derivationCode": "NC",
+          "dataPoints": 0
+        },
+        "fiberG": {
+          "nutrientId": 1079,
+          "nutrientName": "Fiber, total dietary",
+          "unit": "g",
+          "amount": 0.0,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "calciumMg": {
+          "nutrientId": 1087,
+          "nutrientName": "Calcium, Ca",
+          "unit": "mg",
+          "amount": 796.0,
+          "derivationCode": null,
+          "dataPoints": 66
+        },
+        "ironMg": {
+          "nutrientId": 1089,
+          "nutrientName": "Iron, Fe",
+          "unit": "mg",
+          "amount": 0.88,
+          "derivationCode": null,
+          "dataPoints": 41
+        },
+        "vitaminAMcg": {
+          "nutrientId": 1106,
+          "nutrientName": "Vitamin A, RAE",
+          "unit": "µg",
+          "amount": 8.0,
+          "derivationCode": "NC",
+          "dataPoints": 0
+        },
+        "vitaminEMg": {
+          "nutrientId": 1109,
+          "nutrientName": "Vitamin E (alpha-tocopherol)",
+          "unit": "mg",
+          "amount": 0.02,
+          "derivationCode": "BFFN",
+          "dataPoints": 0
+        },
+        "vitaminB1Mg": {
+          "nutrientId": 1165,
+          "nutrientName": "Thiamin",
+          "unit": "mg",
+          "amount": 0.519,
+          "derivationCode": null,
+          "dataPoints": 44
+        },
+        "vitaminB2Mg": {
+          "nutrientId": 1166,
+          "nutrientName": "Riboflavin",
+          "unit": "mg",
+          "amount": 2.21,
+          "derivationCode": null,
+          "dataPoints": 44
+        },
+        "vitaminCMg": {
+          "nutrientId": 1162,
+          "nutrientName": "Vitamin C, total ascorbic acid",
+          "unit": "mg",
+          "amount": 1.5,
+          "derivationCode": null,
+          "dataPoints": 41
+        },
+        "saturatedFatG": {
+          "nutrientId": 1258,
+          "nutrientName": "Fatty acids, total saturated",
+          "unit": "g",
+          "amount": 0.684,
+          "derivationCode": null,
+          "dataPoints": 0
+        },
+        "saltG": {
+          "nutrientId": 1093,
+          "nutrientName": "Sodium, Na",
+          "unit": "mg",
+          "amount": 1080.0,
+          "derivationCode": null,
+          "dataPoints": 62,
+          "conversion": {
+            "formula": "sodium_mg * 2.54 / 1000",
+            "multiplier": 0.00254,
+            "outputUnit": "g"
+          }
+        }
+      },
+      "source": {
+        "provider": "USDA FoodData Central",
+        "fdcId": 171283,
+        "description": "Whey, sweet, dried",
+        "dataType": "SR Legacy",
+        "publicationDate": "4/1/2019",
+        "datasetRelease": "SR Legacy 04/2018",
+        "sourceUrl": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/171283/nutrients",
+        "retrievedAt": "2026-10-03T09:35:29.879971Z",
+        "reviewedAt": "2026-10-03",
+        "license": "CC0 1.0 / U.S. public domain",
+        "rawSha256": "dee38fb21fdf7ba552c4067a9a2e9ea4c9c47a24233982cc882935cb67f8c251",
+        "transformVersion": "fdc-ingredient-profile-0.2.0",
+        "sourceArchive": {
+          "url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_json_2018-04.zip",
+          "sha256": "0fe8ae486a2c8eb42cb96413f058deb51863a46c8fb8eeb4b1fb45006dd338ef",
+          "retrievedAt": "2026-10-03T09:35:29.879971Z",
+          "extractedAt": "2026-10-03T09:46:45Z"
+        }
+      }
+    },
+    {
+      "profileId": "fdc_onion_powder",
+      "canonicalName": "たまねぎ粉末",
+      "replaceProfileId": "general_mext_17056",
+      "basis": {
+        "amount": 100,
+        "unit": "g"
+      },
+      "nutrients": {
+        "energyKcal": 341.0,
+        "proteinG": 10.4,
+        "fatG": 1.04,
+        "carbohydrateG": 79.1,
+        "fiberG": 15.2,
+        "calciumMg": 384.0,
+        "ironMg": 3.9,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.27,
+        "vitaminB1Mg": 0.457,
+        "vitaminB2Mg": 0.08,
+        "vitaminCMg": 23.4,
+        "saturatedFatG": 0.219,
+        "saltG": 0.18542
+      },
+      "nutrientProvenance": {
+        "energyKcal": {
+          "nutrientId": 1008,
+          "nutrientName": "Energy",
+          "unit": "kcal",
+          "amount": 341.0,
+          "derivationCode": "NC",
+          "dataPoints": 0
+        },
+        "proteinG": {
+          "nutrientId": 1003,
+          "nutrientName": "Protein",
+          "unit": "g",
+          "amount": 10.4,
+          "derivationCode": "A",
+          "dataPoints": 1
+        },
+        "fatG": {
+          "nutrientId": 1004,
+          "nutrientName": "Total lipid (fat)",
+          "unit": "g",
+          "amount": 1.04,
+          "derivationCode": "JO",
+          "dataPoints": 2
+        },
+        "carbohydrateG": {
+          "nutrientId": 1005,
+          "nutrientName": "Carbohydrate, by difference",
+          "unit": "g",
+          "amount": 79.1,
+          "derivationCode": "NC",
+          "dataPoints": 0
+        },
+        "fiberG": {
+          "nutrientId": 1079,
+          "nutrientName": "Fiber, total dietary",
+          "unit": "g",
+          "amount": 15.2,
+          "derivationCode": "A",
+          "dataPoints": 1
+        },
+        "calciumMg": {
+          "nutrientId": 1087,
+          "nutrientName": "Calcium, Ca",
+          "unit": "mg",
+          "amount": 384.0,
+          "derivationCode": "A",
+          "dataPoints": 1
+        },
+        "ironMg": {
+          "nutrientId": 1089,
+          "nutrientName": "Iron, Fe",
+          "unit": "mg",
+          "amount": 3.9,
+          "derivationCode": "A",
+          "dataPoints": 1
+        },
+        "vitaminAMcg": {
+          "nutrientId": 1106,
+          "nutrientName": "Vitamin A, RAE",
+          "unit": "µg",
+          "amount": 0.0,
+          "derivationCode": "A",
+          "dataPoints": 1
+        },
+        "vitaminEMg": {
+          "nutrientId": 1109,
+          "nutrientName": "Vitamin E (alpha-tocopherol)",
+          "unit": "mg",
+          "amount": 0.27,
+          "derivationCode": "A",
+          "dataPoints": 1
+        },
+        "vitaminB1Mg": {
+          "nutrientId": 1165,
+          "nutrientName": "Thiamin",
+          "unit": "mg",
+          "amount": 0.457,
+          "derivationCode": "A",
+          "dataPoints": 1
+        },
+        "vitaminB2Mg": {
+          "nutrientId": 1166,
+          "nutrientName": "Riboflavin",
+          "unit": "mg",
+          "amount": 0.08,
+          "derivationCode": "A",
+          "dataPoints": 1
+        },
+        "vitaminCMg": {
+          "nutrientId": 1162,
+          "nutrientName": "Vitamin C, total ascorbic acid",
+          "unit": "mg",
+          "amount": 23.4,
+          "derivationCode": "JO",
+          "dataPoints": 2
+        },
+        "saturatedFatG": {
+          "nutrientId": 1258,
+          "nutrientName": "Fatty acids, total saturated",
+          "unit": "g",
+          "amount": 0.219,
+          "derivationCode": "NC",
+          "dataPoints": 0
+        },
+        "saltG": {
+          "nutrientId": 1093,
+          "nutrientName": "Sodium, Na",
+          "unit": "mg",
+          "amount": 73.0,
+          "derivationCode": "A",
+          "dataPoints": 1,
+          "conversion": {
+            "formula": "sodium_mg * 2.54 / 1000",
+            "multiplier": 0.00254,
+            "outputUnit": "g"
+          }
+        }
+      },
+      "source": {
+        "provider": "USDA FoodData Central",
+        "fdcId": 171327,
+        "description": "Spices, onion powder",
+        "dataType": "SR Legacy",
+        "publicationDate": "4/1/2019",
+        "datasetRelease": "SR Legacy 04/2018",
+        "sourceUrl": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/171327/nutrients",
+        "retrievedAt": "2026-10-03T09:35:29.879971Z",
+        "reviewedAt": "2026-10-03",
+        "license": "CC0 1.0 / U.S. public domain",
+        "rawSha256": "0a3cd48278cb3a7a26b49ebe943ca25c013574645d08331c2fdea95d1cc86ff5",
+        "transformVersion": "fdc-ingredient-profile-0.2.0",
+        "sourceArchive": {
+          "url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_json_2018-04.zip",
+          "sha256": "0fe8ae486a2c8eb42cb96413f058deb51863a46c8fb8eeb4b1fb45006dd338ef",
+          "retrievedAt": "2026-10-03T09:35:29.879971Z",
+          "extractedAt": "2026-10-03T09:46:45Z"
+        }
+      },
+      "nullSupplement": {
+        "targetProfileId": "general_mext_17056",
+        "nutrientKeys": [
+          "vitaminEMg"
+        ]
       }
     }
   ]

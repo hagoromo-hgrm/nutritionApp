@@ -730,6 +730,62 @@ describe('browser nutrient estimator', () => {
     expect(result.estimates.saturatedFatG.warnings.join(' ')).toContain('FoodData Central')
   })
 
+  it('同状態FDC直接値を使い、MEXT欠損ビタミンEの出典だけを単純・複合原材料へ伝える', () => {
+    const request = {
+      ...eligibleRequest,
+      productName: 'オニオンパウダー',
+      referenceMassG: 100,
+      knownNutrients: {
+        energyKcal: 363,
+        proteinG: 8.8,
+        fatG: 1.1,
+        carbohydrateG: 79.8,
+        saltG: 0.1,
+      },
+      requestedNutrients: ['vitaminEMg', 'calciumMg'] as const,
+    }
+    const direct = estimateNutrients({ ...request, ingredientsText: 'オニオンパウダー' })
+    const compound = estimateNutrients({ ...request, ingredientsText: 'オニオンパウダー（オニオンパウダー）' })
+
+    expect(direct.estimates.vitaminEMg).toMatchObject({
+      status: 'available',
+      sourceFoodIds: ['fdc:171327'],
+    })
+    expect(direct.estimates.calciumMg).toMatchObject({
+      status: 'available',
+      sourceFoodIds: ['mext_17056'],
+    })
+    expect(direct.estimates.vitaminEMg.warnings.join(' ')).toContain('ビタミンEのみ')
+    expect(compound.estimates.vitaminEMg.sourceFoodIds).toEqual(['fdc:171327'])
+    expect(compound.estimates.calciumMg.sourceFoodIds).toEqual(['mext_17056'])
+  })
+
+  it('無水乳脂肪と甘性乾燥ホエイの明示名をFDC直接項目へ結び付ける', () => {
+    const butterOil = estimateNutrients({
+      ...eligibleRequest,
+      productName: 'バターオイル',
+      referenceMassG: 100,
+      ingredientsText: 'バターオイル',
+    })
+    const sweetWhey = estimateNutrients({
+      ...eligibleRequest,
+      productName: '甘性ホエイパウダー',
+      referenceMassG: 100,
+      ingredientsText: '甘性ホエイパウダー',
+    })
+
+    expect(butterOil.estimates.saturatedFatG).toMatchObject({
+      status: 'available',
+      value: 61.9,
+      sourceFoodIds: ['fdc:173412'],
+    })
+    expect(sweetWhey.estimates.calciumMg).toMatchObject({
+      status: 'available',
+      value: 796,
+      sourceFoodIds: ['fdc:171283'],
+    })
+  })
+
   it('FDC直接値と乾物候補で小麦外皮・油脂・酵母エキスを解決する', () => {
     expect(unresolvedIngredientNames(
       '小麦外皮、ココナッツオイル、鶏脂、酵母エキスパウダー、グァーガム分解物',

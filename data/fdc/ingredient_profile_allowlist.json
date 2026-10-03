@@ -62,6 +62,60 @@
       "datasetRelease": "SR Legacy 04/2018",
       "retrievedAt": "2026-07-28T07:34:25Z",
       "reviewedAt": "2026-07-28"
+    },
+    {
+      "profileId": "fdc_butter_oil_anhydrous",
+      "canonicalName": "バターオイル（無水乳脂肪）",
+      "fdcId": 173412,
+      "descriptionIncludes": "Butter oil, anhydrous",
+      "replaceProfileId": "proxy_butter_oil_mext_14017",
+      "datasetRelease": "SR Legacy 04/2018",
+      "retrievedAt": "2026-10-03T09:35:29.879971Z",
+      "reviewedAt": "2026-10-03",
+      "sourceArchive": {
+        "url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_json_2018-04.zip",
+        "sha256": "0fe8ae486a2c8eb42cb96413f058deb51863a46c8fb8eeb4b1fb45006dd338ef",
+        "retrievedAt": "2026-10-03T09:35:29.879971Z",
+        "extractedAt": "2026-10-03T09:46:45Z"
+      }
+    },
+    {
+      "profileId": "fdc_sweet_whey_dried",
+      "canonicalName": "甘性ホエイ（乾燥）",
+      "fdcId": 171283,
+      "descriptionIncludes": "Whey, sweet, dried",
+      "replaceProfileId": "unresolved:sweet_dried_whey",
+      "datasetRelease": "SR Legacy 04/2018",
+      "retrievedAt": "2026-10-03T09:35:29.879971Z",
+      "reviewedAt": "2026-10-03",
+      "sourceArchive": {
+        "url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_json_2018-04.zip",
+        "sha256": "0fe8ae486a2c8eb42cb96413f058deb51863a46c8fb8eeb4b1fb45006dd338ef",
+        "retrievedAt": "2026-10-03T09:35:29.879971Z",
+        "extractedAt": "2026-10-03T09:46:45Z"
+      }
+    },
+    {
+      "profileId": "fdc_onion_powder",
+      "canonicalName": "たまねぎ粉末",
+      "fdcId": 171327,
+      "descriptionIncludes": "Spices, onion powder",
+      "replaceProfileId": "general_mext_17056",
+      "datasetRelease": "SR Legacy 04/2018",
+      "retrievedAt": "2026-10-03T09:35:29.879971Z",
+      "reviewedAt": "2026-10-03",
+      "sourceArchive": {
+        "url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_json_2018-04.zip",
+        "sha256": "0fe8ae486a2c8eb42cb96413f058deb51863a46c8fb8eeb4b1fb45006dd338ef",
+        "retrievedAt": "2026-10-03T09:35:29.879971Z",
+        "extractedAt": "2026-10-03T09:46:45Z"
+      },
+      "nullSupplement": {
+        "targetProfileId": "general_mext_17056",
+        "nutrientKeys": [
+          "vitaminEMg"
+        ]
+      }
     }
   ],
   "reviewQueue": [

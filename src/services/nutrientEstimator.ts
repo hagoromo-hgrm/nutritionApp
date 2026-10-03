@@ -3,7 +3,11 @@ import {
   type ParsedIngredient,
   type ParsedIngredientDeclaration,
 } from './ingredientParser'
-import { resolveIngredientCandidates, type IngredientProfile } from './nutrientEstimatorProfiles'
+import {
+  resolveIngredientCandidates,
+  sourceFoodIdsForNutrient,
+  type IngredientProfile,
+} from './nutrientEstimatorProfiles'
 import { calibratedEstimateRange } from './nutrientEstimatorCalibration'
 import { ESTIMATOR_GENRE_PRIOR_VERSION } from '../data/nutrientEstimatorGenrePriors'
 import {
@@ -63,7 +67,7 @@ export const ESTIMATE_FIT_NUTRIENT_KEYS = [
 export type EstimateFitNutrientKey = (typeof ESTIMATE_FIT_NUTRIENT_KEYS)[number]
 export type EstimateConfidence = 'high' | 'medium' | 'low' | 'unavailable'
 export type EstimateAdoptability = EstimationAdoptionClass | 'unavailable'
-export const NUTRIENT_ESTIMATOR_MODEL_VERSION = 'browser-rule-0.22.1' as const
+export const NUTRIENT_ESTIMATOR_MODEL_VERSION = 'browser-rule-0.23.0' as const
 const MEXT_SOURCE = '文部科学省 日本食品標準成分表（八訂）増補2023年（2026年3月27日正誤表対応）' as const
 const FDC_SOURCE = 'USDA FoodData Central SR Legacy 04/2018' as const
 const INGREDIENT_SPEC_SOURCE = '原料メーカー・業界団体公式仕様' as const
@@ -767,6 +771,10 @@ function makeCompoundProfile(
     canonicalName: ingredient.normalizedName,
     nutrients,
     sourceFoodIds: [...new Set(profiles.flatMap((profile) => profile.sourceFoodIds))],
+    nutrientSourceFoodIds: Object.fromEntries(NUTRIENT_KEYS.map((key) => [
+      key,
+      [...new Set(profiles.flatMap((profile) => sourceFoodIdsForNutrient(profile, key)))],
+    ])),
     priorProbability,
     ambiguous: true,
     derivationWarnings: [
@@ -1274,7 +1282,7 @@ function partialKnownIngredientEstimates(
       confidence: 'low',
       zeroEvidence,
     })
-    const sourceFoodIds = [...new Set(numeric.flatMap((item) => item.profile.sourceFoodIds))]
+    const sourceFoodIds = [...new Set(numeric.flatMap((item) => sourceFoodIdsForNutrient(item.profile, key)))]
     return {
       status: 'available',
       value,
@@ -1542,7 +1550,7 @@ export function estimateNutrients(
         })
         if (genrePrior) genrePriorContributionRatios[key] = missingMassFraction
         if (numericProfileIndexes.length === 0 && !genrePrior) {
-          const missingSourceFoodIds = [...new Set(missingProfiles.flatMap((profile) => profile.sourceFoodIds))]
+          const missingSourceFoodIds = [...new Set(missingProfiles.flatMap((profile) => sourceFoodIdsForNutrient(profile, key)))]
           return unavailable(
             `参照食品の${NUTRIENT_LABELS[key]}がすべて欠損しているため、この栄養素は推計できません。`,
             'パッケージの栄養成分表示を確認して手入力するか、この栄養素を採用せず食品登録を続けてください。',
@@ -1577,7 +1585,7 @@ export function estimateNutrients(
         )
         const baseRange = genrePrior?.range ?? calibrated.range
         const contributingProfiles = numericProfileIndexes.map((index) => selected.profiles[index])
-        const sourceFoodIds = [...new Set(contributingProfiles.flatMap((profile) => profile.sourceFoodIds))]
+        const sourceFoodIds = [...new Set(contributingProfiles.flatMap((profile) => sourceFoodIdsForNutrient(profile, key)))]
         return {
           status: 'available',
           value,
