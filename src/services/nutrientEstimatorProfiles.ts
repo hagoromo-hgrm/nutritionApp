@@ -45,6 +45,14 @@ function profile(
   }
 }
 
+function withStateWarning(candidate: IngredientProfile, warning: string): IngredientProfile {
+  return {
+    ...candidate,
+    ambiguous: true,
+    derivationWarnings: [...(candidate.derivationWarnings ?? []), warning],
+  }
+}
+
 function reviewedFdcProfile(profileId: string): IngredientProfile {
   const item = fdcProfilesArtifact.profiles.find((candidate) => candidate.profileId === profileId)
   if (!item) throw new Error(`レビュー済みFDCプロファイルが見つかりません: ${profileId}`)
@@ -608,7 +616,6 @@ const wholeMilkPowder = profile('mext_13009', '全粉乳', {
   vitaminB2Mg: 1.1, vitaminCMg: 5, saturatedFatG: 16.28,
 }, {
   priorProbability: 0.55,
-  ambiguous: true,
   priorSignals: [{ terms: ['ミルク', 'チョコ', '濃厚'], multiplier: 2 }],
 })
 const skimMilkPowder = profile('mext_13010', '脱脂粉乳', {
@@ -699,14 +706,15 @@ const sweetenedCondensedMilk = profile('mext_13013', '加糖練乳', {
   vitaminB2Mg: 0.37, vitaminCMg: 2, saturatedFatG: 5.59,
 })
 const milkProteinProxy = profile('proxy_milk_protein_mext_13010', '乳たんぱく（脱脂粉乳代理）', {
-  energyKcal: 354, proteinG: 34, fatG: 1, carbohydrateG: 53.3, fiberG: 0, saltG: 1.4,
-  calciumMg: 1100, ironMg: 0.5, vitaminAMcg: 6, vitaminEMg: null, vitaminB1Mg: 0.3,
-  vitaminB2Mg: 1.6, vitaminCMg: 5, saturatedFatG: 0.44,
+  energyKcal: 354, proteinG: 34, fatG: 1, carbohydrateG: 53.3, fiberG: null, saltG: null,
+  calciumMg: null, ironMg: null, vitaminAMcg: null, vitaminEMg: null, vitaminB1Mg: null,
+  vitaminB2Mg: null, vitaminCMg: null, saturatedFatG: null,
 }, {
   sourceFoodIds: ['mext_13010'],
   ambiguous: true,
   derivationWarnings: [
-    '乳清・乳たんぱくの独立したMEXT食品項目がないため、脱脂粉乳を乳由来たんぱく原料の代理参照として使用しています。',
+    '乳清・乳たんぱく濃縮物／分離物の独立したMEXT食品項目がないため、脱脂粉乳のエネルギー・たんぱく質・脂質・炭水化物を低信頼度のfit用候補として使用しています。',
+    '脱脂粉乳の食物繊維・食塩・ミネラル・ビタミン・飽和脂肪酸は乳清たんぱく濃縮物／分離物で確認できないため欠損を維持しています。',
   ],
 })
 const yogurt = profile('mext_13025', '発酵乳（全脂無糖ヨーグルト）', {
@@ -1256,7 +1264,7 @@ const GROUPS: readonly IngredientProfileGroup[] = [
   { aliases: ['脱脂粉乳', '脱脂乳粉'], candidates: [skimMilkPowder] },
   { aliases: ['ミルクカルシウム', '乳清ミネラル', 'ミルクミネラル'], candidates: [milkMinerals] },
   { aliases: ['全粉乳'], candidates: [wholeMilkPowder] },
-  { aliases: ['普通牛乳', '牛乳', '生乳', '生乳100%', '乳'], candidates: [milk] },
+  { aliases: ['普通牛乳', '牛乳', '生乳', '生乳100%'], candidates: [milk] },
   {
     aliases: [
       '乳清たんぱく', '乳清たんぱく質', 'ホエイたんぱく', 'ホエイパウダー',
@@ -1265,15 +1273,30 @@ const GROUPS: readonly IngredientProfileGroup[] = [
     ],
     candidates: [milkProteinProxy],
   },
-  { aliases: ['バターミルク', 'バターミルクパウダー'], candidates: [skimMilkPowder, wholeMilkPowder] },
+  {
+    aliases: ['バターミルク', 'バターミルクパウダー'],
+    candidates: [skimMilkPowder, wholeMilkPowder].map((candidate) => withStateWarning(
+      candidate,
+      'MEXTにバターミルクの直接項目がないため、全粉乳・脱脂粉乳を低信頼度の候補として使用しています。液状・粉末状態と製法を特定できません。',
+    )),
+  },
   { aliases: ['脱脂濃縮乳'], candidates: [concentratedMilkProxy] },
   { aliases: ['加糖練乳', '加糖脱脂練乳', '調製練乳', '練乳パウダー'], candidates: [sweetenedCondensedMilk] },
   { aliases: ['発酵乳'], candidates: [yogurt] },
   {
-    aliases: ['乳製品', '乳等を主要原料とする食品', '乳又は乳製品を主要原料とする食品'],
-    candidates: [wholeMilkPowder, skimMilkPowder, dairyCream],
+    aliases: ['乳製品', '乳等を主要原料とする食品', '乳又は乳製品を主要原料とする食品', '乳'],
+    candidates: [milk, wholeMilkPowder, skimMilkPowder, dairyCream].map((candidate) => withStateWarning(
+      candidate,
+      '一般名「乳製品」では液状乳・粉乳・クリームの加工状態を特定できないため、異なるMEXT状態を候補として示しています。',
+    )),
   },
-  { aliases: ['クリーミングパウダー'], candidates: [wholeMilkPowder, skimMilkPowder, plantCream] },
+  {
+    aliases: ['クリーミングパウダー'],
+    candidates: [wholeMilkPowder, skimMilkPowder, plantCream].map((candidate) => withStateWarning(
+      candidate,
+      'クリーミングパウダーの乳・植物油・賦形剤の配合が不明なため、粉乳や植物性クリームを低信頼度候補として使用しています。',
+    )),
+  },
   { aliases: ['乳脂肪クリーム', '生クリーム'], candidates: [dairyCream] },
   { aliases: ['植物性クリーム'], candidates: [plantCream] },
   { aliases: ['クリーム', 'ホイップクリーム'], candidates: [dairyCream, mixedCream, plantCream] },
@@ -1397,7 +1420,19 @@ const GROUPS: readonly IngredientProfileGroup[] = [
   { aliases: ['もも', '桃', 'もも果汁'], candidates: [peach] },
   { aliases: ['りんご', 'リンゴ', 'りんごペースト'], candidates: [apple] },
   { aliases: ['ぶどう果汁', 'グレープ果汁'], candidates: [grapeJuice] },
-  { aliases: ['レモン果汁', '濃縮レモン果汁', 'レモンジュース'], candidates: [lemonJuice] },
+  { aliases: ['レモン果汁', 'レモンジュース'], candidates: [lemonJuice] },
+  {
+    aliases: ['濃縮レモン果汁', 'レモン濃縮果汁'],
+    candidates: [{
+      ...lemonJuice,
+      profileId: 'proxy_concentrated_lemon_juice_mext_07156',
+      canonicalName: '濃縮レモン果汁（生レモン果汁代理）',
+      ambiguous: true,
+      derivationWarnings: [
+        '濃縮レモン果汁のBrix・希釈率に対応するMEXT直接値がないため、生レモン果汁を未補正の低信頼度代理候補として使用しています。',
+      ],
+    }],
+  },
   { aliases: ['果汁'], candidates: [grapeJuice, lemonJuice, yuzuJuice] },
   { aliases: ['果肉'], candidates: [strawberry, peach, banana, apple] },
   { aliases: ['豆乳'], candidates: [soyMilk] },
@@ -1414,7 +1449,13 @@ const GROUPS: readonly IngredientProfileGroup[] = [
   { aliases: ['サイリウム種皮粉末', 'サイリウムハスク', 'オオバコ種皮粉末'], candidates: [psylliumHuskFdc] },
   {
     aliases: ['乳酸菌粉末', '殺菌乳酸菌粉末', '乳酸菌末', 'プロバイオティクス粉末'],
-    candidates: [dextrinProxy, skimMilkPowder],
+    candidates: [
+      dextrinProxy,
+      withStateWarning(
+        skimMilkPowder,
+        '乳酸菌粉末に脱脂粉乳が担体として含まれる比率を確認できないため、脱脂粉乳を低信頼度の候補として使用しています。',
+      ),
+    ],
   },
   {
     aliases: ['酵母エキス粉末', '酵母エキスパウダー', '酵母エキス末', '粉末酵母エキス'],

@@ -6,7 +6,7 @@
     "version": "日本食品標準成分表（八訂）増補2023年（2026年3月27日正誤表対応）",
     "url": "https://www.mext.go.jp/a_menu/syokuhinseibun/mext_00001.html",
     "sourceDataSha256": "af5d1e9c623c3a23bdf29f471df65d2e324988dce3f9c8cf62e9795f15c819ea",
-    "profileSourcesSha256": "61169481f06e8fb35032c2feda5f5d045df768436c40f9a1351796b7dfc664d7"
+    "profileSourcesSha256": "95399975da107a1647c26e37a6a2fdfa5849bb83267b8a216bd5e5380fcdbbb3"
   },
   "profiles": [
     {
@@ -213,20 +213,20 @@
       ],
       "category": "複合原材料",
       "nutrients": {
-        "vitaminCMg": 5.714286,
-        "saturatedFatG": 7.801429,
-        "vitaminAMcg": 74.285714,
         "energyKcal": 364.428571,
-        "fatG": 16.457143,
-        "vitaminB2Mg": 1.39,
         "proteinG": 14.614286,
-        "vitaminEMg": 4.771429,
-        "fiberG": 6.357143,
-        "ironMg": 0.885714,
-        "calciumMg": 134.285714,
+        "fatG": 16.457143,
         "carbohydrateG": 45.785714,
+        "fiberG": 6.357143,
+        "saltG": 13.785714,
+        "calciumMg": 134.285714,
+        "ironMg": 0.885714,
+        "vitaminAMcg": 74.285714,
+        "vitaminEMg": 4.771429,
         "vitaminB1Mg": 2.274286,
-        "saltG": 13.785714
+        "vitaminB2Mg": 1.39,
+        "vitaminCMg": 5.714286,
+        "saturatedFatG": 7.801429
       },
       "sourceFoodIds": [
         "mext_01193",
@@ -263,20 +263,20 @@
       ],
       "category": "複合原材料",
       "nutrients": {
-        "vitaminCMg": 8.0,
-        "saturatedFatG": 7.55,
-        "vitaminAMcg": 104.0,
         "energyKcal": 329.0,
-        "fatG": 15.2,
-        "vitaminB2Mg": 1.87,
         "proteinG": 16.9,
-        "vitaminEMg": 5.8,
-        "fiberG": 6.7,
-        "ironMg": 1.0,
-        "calciumMg": 100.0,
+        "fatG": 15.2,
         "carbohydrateG": 37.9,
+        "fiberG": 6.7,
+        "saltG": 18.7,
+        "calciumMg": 100.0,
+        "ironMg": 1.0,
+        "vitaminAMcg": 104.0,
+        "vitaminEMg": 5.8,
         "vitaminB1Mg": 3.12,
-        "saltG": 18.7
+        "vitaminB2Mg": 1.87,
+        "vitaminCMg": 8.0,
+        "saturatedFatG": 7.55
       },
       "sourceFoodIds": [
         "mext_01193",
@@ -313,20 +313,20 @@
       ],
       "category": "複合原材料",
       "nutrients": {
-        "vitaminCMg": 10.0,
-        "saturatedFatG": 7.33,
-        "vitaminAMcg": 130.0,
         "energyKcal": 298.0,
-        "fatG": 14.1,
-        "vitaminB2Mg": 2.29,
         "proteinG": 18.9,
-        "vitaminEMg": 6.7,
-        "fiberG": 7.0,
-        "ironMg": 1.1,
-        "calciumMg": 70.0,
+        "fatG": 14.1,
         "carbohydrateG": 31.0,
+        "fiberG": 7.0,
+        "saltG": 23.0,
+        "calciumMg": 70.0,
+        "ironMg": 1.1,
+        "vitaminAMcg": 130.0,
+        "vitaminEMg": 6.7,
         "vitaminB1Mg": 3.86,
-        "saltG": 23.0
+        "vitaminB2Mg": 2.29,
+        "vitaminCMg": 10.0,
+        "saturatedFatG": 7.33
       },
       "sourceFoodIds": [
         "mext_01193",
@@ -363,20 +363,20 @@
       ],
       "category": "複合原材料",
       "nutrients": {
-        "vitaminCMg": 5.714286,
-        "saturatedFatG": 7.972857,
-        "vitaminAMcg": 34.285714,
         "energyKcal": 350.142857,
-        "fatG": 18.171429,
-        "vitaminB2Mg": 1.132857,
         "proteinG": 12.042857,
-        "vitaminEMg": 3.628571,
-        "fiberG": 7.214286,
-        "ironMg": 1.171429,
-        "calciumMg": 162.857143,
+        "fatG": 18.171429,
         "carbohydrateG": 34.357143,
+        "fiberG": 7.214286,
+        "saltG": 15.214286,
+        "calciumMg": 162.857143,
+        "ironMg": 1.171429,
+        "vitaminAMcg": 34.285714,
+        "vitaminEMg": 3.628571,
         "vitaminB1Mg": 1.445714,
-        "saltG": 15.214286
+        "vitaminB2Mg": 1.132857,
+        "vitaminCMg": 5.714286,
+        "saturatedFatG": 7.972857
       },
       "sourceFoodIds": [
         "mext_01191",
@@ -411,20 +411,20 @@
       ],
       "category": "複合原材料",
       "nutrients": {
-        "vitaminCMg": 8.0,
-        "saturatedFatG": 7.79,
-        "vitaminAMcg": 48.0,
         "energyKcal": 309.0,
-        "fatG": 17.6,
-        "vitaminB2Mg": 1.51,
         "proteinG": 13.3,
-        "vitaminEMg": 4.2,
-        "fiberG": 7.9,
-        "ironMg": 1.4,
-        "calciumMg": 140.0,
+        "fatG": 17.6,
         "carbohydrateG": 21.9,
+        "fiberG": 7.9,
+        "saltG": 20.7,
+        "calciumMg": 140.0,
+        "ironMg": 1.4,
+        "vitaminAMcg": 48.0,
+        "vitaminEMg": 4.2,
         "vitaminB1Mg": 1.96,
-        "saltG": 20.7
+        "vitaminB2Mg": 1.51,
+        "vitaminCMg": 8.0,
+        "saturatedFatG": 7.79
       },
       "sourceFoodIds": [
         "mext_01191",
@@ -459,20 +459,20 @@
       ],
       "category": "複合原材料",
       "nutrients": {
-        "vitaminCMg": 10.0,
-        "saturatedFatG": 7.63,
-        "vitaminAMcg": 60.0,
         "energyKcal": 273.0,
-        "fatG": 17.1,
-        "vitaminB2Mg": 1.84,
         "proteinG": 14.4,
-        "vitaminEMg": 4.7,
-        "fiberG": 8.5,
-        "ironMg": 1.6,
-        "calciumMg": 120.0,
+        "fatG": 17.1,
         "carbohydrateG": 11.0,
+        "fiberG": 8.5,
+        "saltG": 25.5,
+        "calciumMg": 120.0,
+        "ironMg": 1.6,
+        "vitaminAMcg": 60.0,
+        "vitaminEMg": 4.7,
         "vitaminB1Mg": 2.41,
-        "saltG": 25.5
+        "vitaminB2Mg": 1.84,
+        "vitaminCMg": 10.0,
+        "saturatedFatG": 7.63
       },
       "sourceFoodIds": [
         "mext_01191",
@@ -4187,11 +4187,7 @@
       "profileId": "general_mext_09017",
       "canonicalName": "まこんぶ（素干し）",
       "aliases": [
-        "昆布",
-        "昆布エキス",
-        "こんぶエキス",
-        "昆布エキスパウダー",
-        "こんぶエキスパウダー"
+        "昆布"
       ],
       "category": "藻類",
       "nutrients": {
@@ -4216,7 +4212,7 @@
       "priorProbability": 1,
       "ambiguous": true,
       "derivationWarnings": [
-        "昆布の種類・乾燥状態・エキスの濃縮度が不明なため、MEXTのまこんぶ（素干し）を代表参照として使用しています。"
+        "一般名「昆布」には種類・乾燥／水煮状態の区別がないため、MEXTのまこんぶ（素干し・乾）を低信頼度の代表候補として使用しています。"
       ]
     },
     {
@@ -6071,8 +6067,7 @@
         "オニオンパウダー",
         "乾燥オニオン",
         "乾燥たまねぎ",
-        "たまねぎ粉末",
-        "ローストオニオンパウダー"
+        "たまねぎ粉末"
       ],
       "category": "調味料",
       "nutrients": {
@@ -6617,6 +6612,39 @@
       ]
     },
     {
+      "profileId": "proxy_kombu_extract_mext_17020",
+      "canonicalName": "昆布エキス（水出し昆布だし代理）",
+      "aliases": [
+        "昆布エキス",
+        "こんぶエキス"
+      ],
+      "category": "調味料",
+      "nutrients": {
+        "energyKcal": 4.0,
+        "proteinG": 0.1,
+        "fatG": null,
+        "carbohydrateG": 0.9,
+        "fiberG": null,
+        "saltG": 0.2,
+        "calciumMg": 3.0,
+        "ironMg": null,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": 0.0,
+        "vitaminB1Mg": null,
+        "vitaminB2Mg": null,
+        "vitaminCMg": null,
+        "saturatedFatG": null
+      },
+      "sourceFoodIds": [
+        "mext_17020"
+      ],
+      "priorProbability": 1,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "昆布エキスの独立したMEXT食品項目がないため、水出し昆布だしを低信頼度の代理候補として使用しています。抽出濃度と液状・粉末の製品状態が不明なため、希釈・乾燥補正をしていません。"
+      ]
+    },
+    {
       "profileId": "proxy_malt_extract_dry",
       "canonicalName": "麦芽エキス（乾燥相当）",
       "aliases": [
@@ -6681,6 +6709,38 @@
       "ambiguous": true,
       "derivationWarnings": [
         "麦芽エキスの液状・乾燥状態が不明なため、液状製品の主要組成に近いMEXTの押麦を代理参照しています。"
+      ]
+    },
+    {
+      "profileId": "proxy_roasted_onion_powder_mext_17056",
+      "canonicalName": "ローストオニオンパウダー（通常オニオンパウダー代理）",
+      "aliases": [
+        "ローストオニオンパウダー"
+      ],
+      "category": "調味料",
+      "nutrients": {
+        "energyKcal": 363.0,
+        "proteinG": 8.8,
+        "fatG": 1.1,
+        "carbohydrateG": 79.8,
+        "fiberG": null,
+        "saltG": 0.1,
+        "calciumMg": 140.0,
+        "ironMg": 3.1,
+        "vitaminAMcg": 0.0,
+        "vitaminEMg": null,
+        "vitaminB1Mg": 0.3,
+        "vitaminB2Mg": 0.1,
+        "vitaminCMg": 10.0,
+        "saturatedFatG": 0.23
+      },
+      "sourceFoodIds": [
+        "mext_17056"
+      ],
+      "priorProbability": 1,
+      "ambiguous": true,
+      "derivationWarnings": [
+        "MEXTのオニオンパウダー項目にはロースト状態の別値がないため、通常オニオンパウダーを低信頼度の代理参照として使用しています。ローストによる水分・褐変差は補正していません。"
       ]
     }
   ]

@@ -207,4 +207,89 @@ describe('nutrient estimator candidate selection', () => {
       sourceFoodIds: ['mext_02035'],
     })
   })
+
+  it('一般名の乳製品に液状乳を含め、粉乳の明示名は直接値のまま保つ', () => {
+    const dairy = resolveIngredientCandidates('乳製品', null)
+    const milk = directCandidate('牛乳')
+    const wholePowder = directCandidate('全粉乳')
+    const skimPowder = directCandidate('脱脂粉乳')
+    const whey = directCandidate('ホエイたんぱく')
+
+    expect(dairy.map((item) => item.sourceFoodIds[0])).toContain('mext_13003')
+    expect(dairy.map((item) => item.sourceFoodIds[0])).toEqual(expect.arrayContaining([
+      'mext_13003', 'mext_13009', 'mext_13010', 'mext_13014',
+    ]))
+    expect(dairy.every((item) => item.ambiguous)).toBe(true)
+    expect(dairy.every((item) => item.derivationWarnings?.some((warning) => warning.includes('加工状態を特定できない')))).toBe(true)
+
+    expect(milk).toMatchObject({ profileId: 'mext_13003', nutrients: mextNutrients(milk) })
+    expect(milk.ambiguous).toBeUndefined()
+    expect(wholePowder).toMatchObject({ profileId: 'mext_13009', nutrients: mextNutrients(wholePowder) })
+    expect(wholePowder.ambiguous).toBeUndefined()
+    expect(skimPowder).toMatchObject({ profileId: 'mext_13010', nutrients: mextNutrients(skimPowder) })
+    expect(skimPowder.ambiguous).toBeUndefined()
+
+    expect(whey).toMatchObject({
+      profileId: 'proxy_milk_protein_mext_13010',
+      ambiguous: true,
+      nutrients: {
+        proteinG: 34,
+        calciumMg: null,
+        ironMg: null,
+        vitaminB2Mg: null,
+        saltG: null,
+        fiberG: null,
+        saturatedFatG: null,
+      },
+    })
+    expect(whey.derivationWarnings?.join(' ')).toContain('濃縮物／分離物で確認できない')
+  })
+
+  it('昆布エキスを乾燥昆布へ無警告対応せず、粉末エキスは未解決に保つ', () => {
+    const kombu = directCandidate('昆布')
+    const extract = directCandidate('昆布エキス')
+
+    expect(kombu).toMatchObject({ sourceFoodIds: ['mext_09017'], ambiguous: true })
+    expect(kombu.derivationWarnings?.join(' ')).toContain('素干し・乾')
+    expect(extract).toMatchObject({
+      profileId: 'proxy_kombu_extract_mext_17020',
+      sourceFoodIds: ['mext_17020'],
+      ambiguous: true,
+    })
+    expect(extract.nutrients).toEqual(mextNutrients(extract))
+    expect(extract.derivationWarnings?.join(' ')).toContain('抽出濃度と液状・粉末')
+    expect(resolveIngredientCandidates('昆布エキスパウダー', null)).toEqual([])
+    expect(resolveIngredientCandidates('こんぶエキスパウダー', null)).toEqual([])
+    expect(resolveIngredientCandidates('昆布エキス粉末', null)).toEqual([])
+    expect(resolveIngredientCandidates('こんぶエキス粉末', null)).toEqual([])
+  })
+
+  it('ローストオニオン粉末は通常オニオン粉末の警告付き代理とし、濃縮果汁や具・衣を推測しない', () => {
+    const onionPowder = directCandidate('オニオンパウダー')
+    const roastedOnionPowder = directCandidate('ローストオニオンパウダー')
+    const concentratedLemon = directCandidate('濃縮レモン果汁')
+    const lemonConcentrate = directCandidate('レモン濃縮果汁')
+
+    expect(onionPowder.profileId).toBe('general_mext_17056')
+    expect(onionPowder.nutrients).toEqual(mextNutrients(onionPowder))
+    expect(onionPowder.ambiguous).toBeUndefined()
+    expect(roastedOnionPowder).toMatchObject({
+      profileId: 'proxy_roasted_onion_powder_mext_17056',
+      sourceFoodIds: ['mext_17056'],
+      ambiguous: true,
+    })
+    expect(roastedOnionPowder.derivationWarnings?.join(' ')).toContain('ロースト状態')
+    expect(roastedOnionPowder.nutrients).toEqual(mextNutrients(roastedOnionPowder))
+    expect(concentratedLemon).toMatchObject({
+      profileId: 'proxy_concentrated_lemon_juice_mext_07156',
+      ambiguous: true,
+      sourceFoodIds: ['mext_07156'],
+    })
+    expect(concentratedLemon.derivationWarnings?.join(' ')).toContain('Brix・希釈率')
+    expect(concentratedLemon.nutrients).toEqual(mextNutrients(concentratedLemon))
+    expect(lemonConcentrate.profileId).toBe(concentratedLemon.profileId)
+    for (const unresolved of ['濃縮りんご果汁', '濃縮ぶどう果汁', '具', '衣']) {
+      expect(resolveIngredientCandidates(unresolved, null), unresolved).toEqual([])
+    }
+  })
 })

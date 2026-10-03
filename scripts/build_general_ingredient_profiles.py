@@ -95,7 +95,9 @@ def derive_nutrients(
     ):
         raise CatalogError(f"{field}.derivation.baseMassFraction must be between 0 and 1")
     result: dict[str, float | None] = {}
-    for key in NUTRIENT_KEYS:
+    # Preserve the stable key order from the MEXT source JSON; iterating the set
+    # above makes generated catalog bytes depend on PYTHONHASHSEED.
+    for key in base_nutrients:
         whole_value = nutrients[key]
         base_value = base_nutrients[key]
         if whole_value is None or base_value is None:

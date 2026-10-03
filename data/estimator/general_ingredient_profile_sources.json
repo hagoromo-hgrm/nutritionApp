@@ -195,7 +195,8 @@
     {"sourceFoodId":"mext_17067","category":"調味料","canonicalName":"シナモン（粉）","aliases":["シナモン","シナモン粉末"]},
     {"sourceFoodId":"mext_17066","category":"調味料","canonicalName":"さんしょう（粉）","aliases":["花椒","山椒"],"ambiguous":true,"derivationWarning":"花椒と山椒を区別できない表記では、MEXTのさんしょう粉を代表参照として使用しています。"},
     {"sourceFoodId":"mext_17069","category":"調味料","canonicalName":"おろししょうが","aliases":["おろししょうが","おろし生姜","ジンジャーペースト"]},
-    {"sourceFoodId":"mext_17056","category":"調味料","canonicalName":"オニオンパウダー","aliases":["オニオンパウダー","乾燥オニオン","乾燥たまねぎ","たまねぎ粉末","ローストオニオンパウダー"]},
+    {"sourceFoodId":"mext_17056","category":"調味料","canonicalName":"オニオンパウダー","aliases":["オニオンパウダー","乾燥オニオン","乾燥たまねぎ","たまねぎ粉末"]},
+    {"sourceFoodId":"mext_17056","profileId":"proxy_roasted_onion_powder_mext_17056","category":"調味料","canonicalName":"ローストオニオンパウダー（通常オニオンパウダー代理）","aliases":["ローストオニオンパウダー"],"ambiguous":true,"derivationWarning":"MEXTのオニオンパウダー項目にはロースト状態の別値がないため、通常オニオンパウダーを低信頼度の代理参照として使用しています。ローストによる水分・褐変差は補正していません。"},
     {"sourceFoodId":"mext_17075","category":"調味料","canonicalName":"ガーリックパウダー（食塩無添加）","aliases":["ガーリックパウダー","ガーリック粉末","にんにく粉末"]},
     {"sourceFoodId":"mext_17034","category":"調味料","canonicalName":"トマトピューレー","aliases":["トマトピューレ","トマトピューレー"]},
     {"sourceFoodId":"mext_05037","category":"調味料","canonicalName":"ピーナッツバター","aliases":["ピーナッツバター"]},
@@ -224,6 +225,7 @@
     {"sourceFoodId":"mext_09004","category":"藻類","canonicalName":"焼きのり","aliases":["のり","海苔","焼きのり"]},
     {"sourceFoodId":"mext_09039","category":"藻類","canonicalName":"わかめ（原藻・生）","aliases":["わかめ","ワカメ"]},
     {"sourceFoodId":"mext_09050","category":"藻類","canonicalName":"ほしひじき（乾）","aliases":["ひじき","ヒジキ"]}
-    ,{"sourceFoodId":"mext_09017","category":"藻類","canonicalName":"まこんぶ（素干し）","aliases":["昆布","昆布エキス","こんぶエキス","昆布エキスパウダー","こんぶエキスパウダー"],"ambiguous":true,"derivationWarning":"昆布の種類・乾燥状態・エキスの濃縮度が不明なため、MEXTのまこんぶ（素干し）を代表参照として使用しています。"}
+    ,{"sourceFoodId":"mext_09017","category":"藻類","canonicalName":"まこんぶ（素干し）","aliases":["昆布"],"ambiguous":true,"derivationWarning":"一般名「昆布」には種類・乾燥／水煮状態の区別がないため、MEXTのまこんぶ（素干し・乾）を低信頼度の代表候補として使用しています。"}
+    ,{"sourceFoodId":"mext_17020","profileId":"proxy_kombu_extract_mext_17020","category":"調味料","canonicalName":"昆布エキス（水出し昆布だし代理）","aliases":["昆布エキス","こんぶエキス"],"ambiguous":true,"derivationWarning":"昆布エキスの独立したMEXT食品項目がないため、水出し昆布だしを低信頼度の代理候補として使用しています。抽出濃度と液状・粉末の製品状態が不明なため、希釈・乾燥補正をしていません。"}
   ]
 }

@@ -808,9 +808,9 @@ describe('browser nutrient estimator', () => {
     expect(result.unresolvedIngredients).toEqual([])
     expect(result.estimates.fiberG.sourceFoodIds).toEqual(expect.arrayContaining([
       'mext_09049',
-      'mext_13010',
       'mext_11198',
     ]))
+    expect(result.estimates.fiberG.sourceFoodIds).not.toContain('mext_13010')
     expect(result.estimates.fiberG.warnings.join(' ')).toContain('代理参照')
   })
 
