@@ -860,8 +860,9 @@ describe('browser nutrient estimator', () => {
     })
     expect(fiberProduct.estimates.fiberG).toMatchObject({
       status: 'available',
-      value: 79,
-      sourceFoodIds: ['mext_09049'],
+      value: 0,
+      sourceFoodIds: ['mext_02035'],
     })
+    expect(fiberProduct.estimates.fiberG.warnings.join(' ')).toContain('とうもろこしでん粉を代理参照')
   })
 })

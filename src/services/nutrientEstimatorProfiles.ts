@@ -164,11 +164,56 @@ const glucose = profile('mext_03017', 'ぶどう糖', {
   calciumMg: null, ironMg: 0.1, vitaminAMcg: 0, vitaminEMg: 0, vitaminB1Mg: 0,
   vitaminB2Mg: 0, vitaminCMg: 0, saturatedFatG: 0,
 }, { derivationWarnings: [ZERO_SATURATED_FROM_ZERO_FAT] })
-const starchSyrup = profile('mext_03024', '水あめ', {
+const starchSyrup = profile('mext_03024', '水あめ（酵素糖化）', {
   energyKcal: 342, proteinG: 0, fatG: 0, carbohydrateG: 85, fiberG: 0, saltG: 0,
   calciumMg: null, ironMg: 0.1, vitaminAMcg: 0, vitaminEMg: 0, vitaminB1Mg: 0,
   vitaminB2Mg: 0, vitaminCMg: 0, saturatedFatG: 0,
 }, { derivationWarnings: [ZERO_SATURATED_FROM_ZERO_FAT] })
+const acidHydrolyzedStarchSyrup = profile('mext_03025', '水あめ（酸糖化）', {
+  energyKcal: 341, proteinG: 0, fatG: 0, carbohydrateG: 85, fiberG: 0, saltG: 0,
+  calciumMg: null, ironMg: 0.1, vitaminAMcg: 0, vitaminEMg: 0, vitaminB1Mg: 0,
+  vitaminB2Mg: 0, vitaminCMg: 0, saturatedFatG: 0,
+}, { derivationWarnings: [ZERO_SATURATED_FROM_ZERO_FAT] })
+const powderedStarchSyrup = profile('mext_03015', '粉あめ', {
+  energyKcal: 397, proteinG: 0, fatG: 0, carbohydrateG: 97, fiberG: 0, saltG: 0,
+  calciumMg: null, ironMg: 0.1, vitaminAMcg: 0, vitaminEMg: 0, vitaminB1Mg: 0,
+  vitaminB2Mg: 0, vitaminCMg: 0, saturatedFatG: 0,
+}, { derivationWarnings: [ZERO_SATURATED_FROM_ZERO_FAT] })
+const reducedWaterSyrup = profile('mext_03032', '還元水あめ', {
+  energyKcal: 210, proteinG: 0, fatG: null, carbohydrateG: 69.9, fiberG: 14, saltG: 0,
+  calciumMg: null, ironMg: 0, vitaminAMcg: null, vitaminEMg: null, vitaminB1Mg: 0,
+  vitaminB2Mg: 0, vitaminCMg: null, saturatedFatG: null,
+})
+const genericWaterSyrupCandidates: readonly IngredientProfile[] = [
+  {
+    ...starchSyrup,
+    ambiguous: true,
+    derivationWarnings: [
+      ...(starchSyrup.derivationWarnings ?? []),
+      'MEXTは水あめを酵素糖化と酸糖化に分けています。糖化法が表示されていないため、両方を候補として扱います。',
+    ],
+  },
+  {
+    ...acidHydrolyzedStarchSyrup,
+    ambiguous: true,
+    derivationWarnings: [
+      ...(acidHydrolyzedStarchSyrup.derivationWarnings ?? []),
+      'MEXTは水あめを酵素糖化と酸糖化に分けています。糖化法が表示されていないため、両方を候補として扱います。',
+    ],
+  },
+]
+const genericStarchHydrolysateCandidates: readonly IngredientProfile[] = [
+  powderedStarchSyrup,
+  ...genericWaterSyrupCandidates,
+  reducedWaterSyrup,
+].map((candidate) => ({
+  ...candidate,
+  ambiguous: true,
+  derivationWarnings: [
+    ...(candidate.derivationWarnings ?? []),
+    'でん粉糖化物だけでは粉あめ、水あめ、還元水あめ等の種類を特定できないため、近いMEXT項目を低信頼度の候補として使用しています。',
+  ],
+}))
 const fructose = profile('mext_03020', '果糖', {
   energyKcal: 375, proteinG: 0, fatG: 0, carbohydrateG: 99.9, fiberG: 0, saltG: 0,
   calciumMg: null, ironMg: null, vitaminAMcg: 0, vitaminEMg: 0, vitaminB1Mg: 0,
@@ -335,10 +380,44 @@ const declaredSolubleFiberProxy: IngredientProfile = {
   requiredProductTerms: undefined,
 }
 
-const butter = profile('mext_14017', 'バター', {
+const butter = profile('mext_14017', '無発酵バター（有塩）', {
   energyKcal: 700, proteinG: 0.6, fatG: 81, carbohydrateG: 0.2, fiberG: 0, saltG: 1.9,
   calciumMg: 15, ironMg: 0.1, vitaminAMcg: 520, vitaminEMg: 1.5, vitaminB1Mg: 0.01,
   vitaminB2Mg: 0.03, vitaminCMg: 0, saturatedFatG: 50.45,
+})
+const unsaltedButter = profile('mext_14018', '無発酵バター（食塩不使用）', {
+  energyKcal: 720, proteinG: 0.5, fatG: 83, carbohydrateG: 0.2, fiberG: 0, saltG: 0,
+  calciumMg: 14, ironMg: 0.4, vitaminAMcg: 800, vitaminEMg: 1.4, vitaminB1Mg: 0,
+  vitaminB2Mg: 0.03, vitaminCMg: 0, saturatedFatG: 52.43,
+})
+const culturedButter = profile('mext_14019', '発酵バター（有塩）', {
+  energyKcal: 713, proteinG: 0.6, fatG: 80, carbohydrateG: 4.4, fiberG: 0, saltG: 1.3,
+  calciumMg: 12, ironMg: 0.4, vitaminAMcg: 780, vitaminEMg: 1.3, vitaminB1Mg: 0,
+  vitaminB2Mg: 0.02, vitaminCMg: 0, saturatedFatG: 50.56,
+})
+const genericButterCandidateWarning = '「バター」だけでは発酵の有無と食塩の有無を特定できないため、MEXTのバター区分を低信頼度の候補として扱います。'
+const genericButterCandidates: readonly IngredientProfile[] = [butter, unsaltedButter, culturedButter].map((candidate) => ({
+  ...candidate,
+  ambiguous: true,
+  derivationWarnings: [genericButterCandidateWarning],
+}))
+const butterOilProxy = profile('proxy_butter_oil_mext_14017', 'バターオイル（無発酵有塩バター代理）', butter.nutrients, {
+  sourceFoodIds: ['mext_14017'],
+  priorProbability: 0.2,
+  ambiguous: true,
+  derivationWarnings: [
+    'バターオイルの直接値はMEXT食品項目にないため、無発酵有塩バターを低信頼度の代理参照として使用しています。',
+    'バターオイルは水分をほぼ除いた乳脂肪原料で、通常のバターとは濃縮度が異なります。製品表示値を優先してください。',
+  ],
+})
+const butterProcessedProxy = profile('proxy_butter_processed_mext_14017', 'バター加工品（無発酵有塩バター代理）', butter.nutrients, {
+  sourceFoodIds: ['mext_14017'],
+  priorProbability: 0.2,
+  ambiguous: true,
+  derivationWarnings: [
+    'バター加工品の配合・加工状態に対応するMEXT直接値がないため、無発酵有塩バターを低信頼度の代理参照として使用しています。',
+    '油脂や乳成分の配合で栄養組成が変わるため、製品表示値を優先してください。',
+  ],
 })
 const margarine = profile('mext_14029', 'マーガリン', {
   energyKcal: 740, proteinG: 0.3, fatG: 84.3, carbohydrateG: 0.1, fiberG: 0, saltG: 1.3,
@@ -480,7 +559,20 @@ const egg = profile('mext_12004', '鶏卵', {
   energyKcal: 142, proteinG: 12.2, fatG: 10.2, carbohydrateG: 0.4, fiberG: 0, saltG: 0.4,
   calciumMg: 46, ironMg: 1.5, vitaminAMcg: 210, vitaminEMg: 1.3, vitaminB1Mg: 0.06,
   vitaminB2Mg: 0.37, vitaminCMg: 0, saturatedFatG: 3.12,
-}, { ambiguous: true })
+}, {
+  ambiguous: true,
+  derivationWarnings: ['MEXTには生、ゆで、加工卵の別項目があります。原材料名「卵」だけでは処理状態を特定できないため、生の鶏卵を低信頼度の代表参照として使用しています。'],
+})
+const rawEggYolk = profile('mext_12010', '鶏卵 卵黄（生）', {
+  energyKcal: 336, proteinG: 16.5, fatG: 34.3, carbohydrateG: 0.2, fiberG: 0, saltG: 0.1,
+  calciumMg: 140, ironMg: 4.8, vitaminAMcg: 690, vitaminEMg: 4.5, vitaminB1Mg: 0.21,
+  vitaminB2Mg: 0.45, vitaminCMg: 0, saturatedFatG: 9.39,
+})
+const rawEggWhite = profile('mext_12014', '鶏卵 卵白（生）', {
+  energyKcal: 44, proteinG: 10.1, fatG: null, carbohydrateG: 0.5, fiberG: 0, saltG: 0.5,
+  calciumMg: 5, ironMg: null, vitaminAMcg: 0, vitaminEMg: 0, vitaminB1Mg: 0,
+  vitaminB2Mg: 0.35, vitaminCMg: 0, saturatedFatG: null,
+})
 const driedWholeEgg = profile('mext_12009', '乾燥全卵', {
   energyKcal: 542, proteinG: 49.1, fatG: 42, carbohydrateG: 0.2, fiberG: 0, saltG: 1.2,
   calciumMg: 210, ironMg: 3, vitaminAMcg: 420, vitaminEMg: 6.6, vitaminB1Mg: 0.29,
@@ -495,6 +587,15 @@ const driedEggWhite = profile('mext_12016', '乾燥卵白', {
   energyKcal: 350, proteinG: 86.5, fatG: 0.4, carbohydrateG: 0.2, fiberG: 0, saltG: 3.3,
   calciumMg: 60, ironMg: 0.1, vitaminAMcg: 0, vitaminEMg: 0.1, vitaminB1Mg: 0.03,
   vitaminB2Mg: 2.09, vitaminCMg: 0, saturatedFatG: 0.1,
+})
+const eggWhiteHydrolysateProxy = profile('proxy_egg_white_hydrolysate_mext_12016', '卵白加水分解物（乾燥卵白代理）', driedEggWhite.nutrients, {
+  sourceFoodIds: ['mext_12016'],
+  priorProbability: 0.25,
+  ambiguous: true,
+  derivationWarnings: [
+    '卵白加水分解物の直接値はMEXT食品項目にないため、乾燥卵白を低信頼度の代理参照として使用しています。',
+    '加水分解と製品ごとの濃縮度で栄養組成が変わるため、製品表示値を優先してください。',
+  ],
 })
 const milk = profile('mext_13003', '普通牛乳', {
   energyKcal: 61, proteinG: 3.3, fatG: 3.8, carbohydrateG: 4.8, fiberG: 0, saltG: 0.1,
@@ -945,6 +1046,15 @@ const soySauce = profile('mext_17007', 'こいくちしょうゆ', {
   calciumMg: 29, ironMg: 1.7, vitaminAMcg: 0, vitaminEMg: 0, vitaminB1Mg: 0.05,
   vitaminB2Mg: 0.17, vitaminCMg: 0, saturatedFatG: null,
 }, { ambiguous: true })
+const powderedSoySauceProxy = profile('proxy_powdered_soy_sauce_mext_17007', '粉末しょうゆ（こいくちしょうゆ代理）', soySauce.nutrients, {
+  sourceFoodIds: ['mext_17007'],
+  priorProbability: 0.2,
+  ambiguous: true,
+  derivationWarnings: [
+    '粉末しょうゆの直接値はMEXT食品項目にないため、こいくちしょうゆを低信頼度の代理参照として使用しています。',
+    '乾燥濃縮度やデキストリン等の賦形剤量が不明なため、粉末量と液状しょうゆの量を同一視できません。製品表示値を優先してください。',
+  ],
+})
 const miso = profile('mext_17045', '米みそ（淡色辛みそ）', {
   energyKcal: 182, proteinG: 12.5, fatG: 6, carbohydrateG: 21.9, fiberG: 4.9, saltG: 12.4,
   calciumMg: 100, ironMg: 4, vitaminAMcg: 0, vitaminEMg: 0.6, vitaminB1Mg: 0.03,
@@ -1039,7 +1149,12 @@ const GROUPS: readonly IngredientProfileGroup[] = [
   { aliases: ['砂糖', '上白糖', 'グラニュー糖', 'ショ糖'], candidates: [whiteSugar] },
   { aliases: ['粗糖', '黒みつ'], candidates: [whiteSugar, blackSugar] },
   { aliases: ['ぶどう糖', 'ブドウ糖', 'グルコース'], candidates: [glucose] },
-  { aliases: ['水あめ', '水飴'], candidates: [starchSyrup] },
+  { aliases: ['水あめ（酵素糖化）', '水飴（酵素糖化）', '水あめ酵素糖化'], candidates: [starchSyrup] },
+  { aliases: ['水あめ（酸糖化）', '水飴（酸糖化）', '水あめ酸糖化'], candidates: [acidHydrolyzedStarchSyrup] },
+  { aliases: ['水あめ', '水飴'], candidates: genericWaterSyrupCandidates },
+  { aliases: ['粉あめ', '粉飴'], candidates: [powderedStarchSyrup] },
+  { aliases: ['還元水あめ', '還元水飴'], candidates: [reducedWaterSyrup] },
+  { aliases: ['でん粉糖化物', '澱粉糖化物'], candidates: genericStarchHydrolysateCandidates },
   { aliases: ['果糖'], candidates: [fructose] },
   { aliases: ['ぶどう糖果糖液糖', '砂糖混合ぶどう糖果糖液糖'], candidates: [glucoseFructoseSyrup] },
   { aliases: ['果糖ぶどう糖液糖'], candidates: [fructoseGlucoseSyrup] },
@@ -1048,7 +1163,6 @@ const GROUPS: readonly IngredientProfileGroup[] = [
   { aliases: ['麦芽糖', 'マルトース'], candidates: [maltose] },
   { aliases: ['エリスリトール'], candidates: [erythritol] },
   { aliases: ['パラチノース', 'イソマルツロース'], candidates: [palatinose] },
-  { aliases: ['還元水あめ', '還元水飴', '粉あめ', 'でん粉糖化物'], candidates: [starchSyrup] },
   { aliases: ['はちみつ', '蜂蜜'], candidates: [honey] },
   { aliases: ['乳糖', 'ラクトース'], candidates: [lactoseProxy] },
   {
@@ -1066,13 +1180,42 @@ const GROUPS: readonly IngredientProfileGroup[] = [
     aliases: ['L-カルニチン', 'Lカルニチン', 'エルカルニチン', 'L-カルニチン酒石酸塩'],
     candidates: [lCarnitine],
   },
-  { aliases: ['デキストリン'], candidates: [dextrinProxy, solubleFiberProxy] },
+  { aliases: ['デキストリン'], candidates: [dextrinProxy] },
   { aliases: ['液状デキストリン', 'マルトデキストリン'], candidates: [dextrinProxy] },
   { aliases: ['ショートニング'], candidates: [shortening] },
   { aliases: ['ココアバター', 'カカオバター'], candidates: [cocoaButterFdc] },
   { aliases: ['ココナッツオイル', 'やし油', 'ヤシ油'], candidates: [coconutOilFdc] },
   { aliases: ['マーガリン', 'ファットスプレッド'], candidates: [margarine] },
-  { aliases: ['バター', '発酵バター', 'バターオイル', 'バター加工品'], candidates: [butter] },
+  { aliases: ['無発酵バター 有塩バター', '無発酵バター（有塩）'], candidates: [butter] },
+  { aliases: ['無発酵バター 食塩不使用バター', '無発酵バター（食塩不使用）', '食塩不使用バター', '無塩バター'], candidates: [unsaltedButter] },
+  { aliases: ['発酵バター 有塩バター', '発酵バター（有塩）', '有塩発酵バター'], candidates: [culturedButter] },
+  {
+    aliases: ['無発酵バター'],
+    candidates: [butter, unsaltedButter].map((candidate) => ({
+      ...candidate,
+      ambiguous: true,
+      derivationWarnings: ['無発酵の表示はありますが、食塩の有無を特定できないため、MEXTの有塩・食塩不使用バターを候補として扱います。'],
+    })),
+  },
+  {
+    aliases: ['発酵バター'],
+    candidates: [{
+      ...culturedButter,
+      ambiguous: true,
+      derivationWarnings: ['MEXTの発酵バターは有塩項目のみです。食塩不使用の発酵バターには直接対応せず、有塩品を低信頼度の候補として使用しています。'],
+    }],
+  },
+  {
+    aliases: ['有塩バター'],
+    candidates: [butter, culturedButter].map((candidate) => ({
+      ...candidate,
+      ambiguous: true,
+      derivationWarnings: ['有塩の表示だけでは発酵の有無を特定できないため、MEXTの無発酵・発酵バターを候補として扱います。'],
+    })),
+  },
+  { aliases: ['バター'], candidates: genericButterCandidates },
+  { aliases: ['バターオイル', 'バターオイル（無水乳脂肪）'], candidates: [butterOilProxy] },
+  { aliases: ['バター加工品'], candidates: [butterProcessedProxy] },
   { aliases: ['パーム油'], candidates: [palmOil] },
   { aliases: ['なたね油', '菜種油', 'キャノーラ油'], candidates: [canolaOil] },
   { aliases: ['大豆油'], candidates: [soyOil] },
@@ -1140,10 +1283,28 @@ const GROUPS: readonly IngredientProfileGroup[] = [
   { aliases: ['プロセスチーズ'], candidates: [processedCheese] },
   { aliases: ['ナチュラルチーズ', 'チーズ'], candidates: [creamCheese, goudaCheese, mozzarellaCheese] },
   { aliases: ['卵', '鶏卵', '全卵', '液卵'], candidates: [egg] },
-  { aliases: ['卵粉', '全卵粉', '乾燥全卵', '鶏卵加工品'], candidates: [driedWholeEgg, egg] },
-  { aliases: ['卵たん白加水分解物', '卵白加水分解物'], candidates: [driedEggWhite] },
-  { aliases: ['卵黄粉末', '卵黄粉', '乾燥卵黄', '卵黄'], candidates: [driedEggYolk, egg] },
-  { aliases: ['粉末卵白', '卵白粉末', '乾燥卵白', '卵たん白', '卵白'], candidates: [driedEggWhite] },
+  { aliases: ['卵粉', '全卵粉', '乾燥全卵'], candidates: [driedWholeEgg] },
+  { aliases: ['卵たん白加水分解物', '卵白加水分解物'], candidates: [eggWhiteHydrolysateProxy] },
+  { aliases: ['卵黄粉末', '卵黄粉', '乾燥卵黄'], candidates: [driedEggYolk] },
+  { aliases: ['鶏卵 卵黄 生', '生卵黄'], candidates: [rawEggYolk] },
+  {
+    aliases: ['卵黄'],
+    candidates: [{
+      ...rawEggYolk,
+      ambiguous: true,
+      derivationWarnings: ['MEXTの卵黄直接項目は生の状態です。原材料名「卵黄」だけでは乾燥等の状態を特定できないため、生卵黄を低信頼度の候補として使用しています。'],
+    }],
+  },
+  { aliases: ['粉末卵白', '卵白粉末', '乾燥卵白'], candidates: [driedEggWhite] },
+  { aliases: ['鶏卵 卵白 生', '生卵白'], candidates: [rawEggWhite] },
+  {
+    aliases: ['卵白'],
+    candidates: [{
+      ...rawEggWhite,
+      ambiguous: true,
+      derivationWarnings: ['MEXTの卵白直接項目は生の状態です。原材料名「卵白」だけでは乾燥等の状態を特定できないため、生卵白を低信頼度の候補として使用しています。'],
+    }],
+  },
   {
     aliases: [
       '大豆たんぱく', '大豆たん白', '脱脂大豆たんぱく', '脱脂大豆たん白',
@@ -1242,7 +1403,8 @@ const GROUPS: readonly IngredientProfileGroup[] = [
   { aliases: ['豆乳'], candidates: [soyMilk] },
   { aliases: ['しいたけ', '椎茸'], candidates: [shiitake] },
   { aliases: ['しいたけエキス', '椎茸エキス', 'しいたけエキスパウダー'], candidates: [shiitakeExtractProxy] },
-  { aliases: ['しょうゆ', '醤油', '粉末しょうゆ'], candidates: [soySauce] },
+  { aliases: ['しょうゆ', '醤油'], candidates: [soySauce] },
+  { aliases: ['粉末しょうゆ', 'しょうゆ粉末', '醤油粉末'], candidates: [powderedSoySauceProxy] },
   { aliases: ['みそ', '味噌', '粉末みそ'], candidates: [miso] },
   { aliases: ['醸造酢', '穀物酢', '酢'], candidates: [grainVinegar] },
   { aliases: ['みりん', '本みりん'], candidates: [mirin] },
