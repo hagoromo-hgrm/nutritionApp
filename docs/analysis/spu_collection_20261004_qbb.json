@@ -1,0 +1,33 @@
+{
+  "format": "nutrition-spu-source-csv-audit",
+  "formatVersion": 1,
+  "generatedAt": "2026-10-04T08:49:05.226866+00:00",
+  "files": [
+    {
+      "csvFile": "qbb_officialSite_261004.csv",
+      "csvSha256": "02055087b22dd8e6dc7d6fac6ca92e913812b38cebe78b3690044b4103e74711",
+      "maker": "六甲バター",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.3",
+      "rawRows": 66,
+      "completeMajorNutrientRows": 66,
+      "normalizationAcceptedRows": 64,
+      "normalizationDeferralReasons": {
+        "no_target_nutrient": 2
+      },
+      "targetLabelCounts": {
+        "calciumMg": 64,
+        "fiberG": 7,
+        "ironMg": 3
+      },
+      "targetLabelKindCounts": {
+        "estimated": 55,
+        "fixed": 19
+      },
+      "humanFamilyReview": "not_completed",
+      "modelOrPriorUpdated": false
+    }
+  ],
+  "rawRows": 66,
+  "normalizationAcceptedRows": 64,
+  "scope": "private_local_collection; not reviewed independent families or authorized model adoption"
+}
