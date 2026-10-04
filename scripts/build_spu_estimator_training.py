@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-TRANSFORM_VERSION = "spu-estimator-training-0.5.0"
+TRANSFORM_VERSION = "spu-estimator-training-0.5.1"
 FILENAME_RE = re.compile(
     r"^(?P<maker>.+)_(?P<source>[^_]+)_(?P<date>\d{6})\.csv$",
     re.IGNORECASE,
@@ -32,6 +32,12 @@ SOURCE_CONFIG: dict[str, dict[str, str]] = {
     "hagoromo": {"maker": "はごろもフーズ", "url": "https://www.hagoromofoods.co.jp/products/"},
     "kellogg": {"maker": "日本ケロッグ", "url": "https://www.kelloggs.com/ja-jp/products/"},
     "koikeya": {"maker": "湖池屋", "url": "https://koikeya.co.jp/commodity/"},
+    "kikkoman": {"maker": "キッコーマン", "url": "https://www.kikkoman.co.jp/products/"},
+    "housefoods": {"maker": "ハウス食品", "url": "https://housefoods.jp/products/catalog/"},
+    "otsuka": {"maker": "大塚製薬", "url": "https://www.otsuka.co.jp/nutraceutical/products/"},
+    "kameda": {"maker": "亀田製菓", "url": "https://www.kamedaseika.co.jp/product/"},
+    "meg_snow": {"maker": "雪印メグミルク", "url": "https://www.meg-snow.com/products/"},
+    "morinagamilk": {"maker": "森永乳業", "url": "https://www.morinagamilk.co.jp/products/"},
     "asahi_milky": {
         "maker": "アサヒ飲料",
         "url": "https://www.asahiinryo.co.jp/products/",
@@ -203,13 +209,15 @@ def parse_verified_at(raw: str) -> str:
     return f"20{raw[:2]}-{raw[2:4]}-{raw[4:6]}T00:00:00+09:00"
 
 
+def nutrient_label_pattern(label: str) -> str:
+    # B1 is a different label from B12. Requiring a delimiter for digit-ended
+    # labels avoids treating the suffix of B12 as a malformed B1 value.
+    return re.escape(label) + (r"(?![0-9])" if label[-1].isdigit() else "")
+
+
 def first_nutrient_offset(text: str) -> int | None:
-    positions = [
-        text.find(label)
-        for spec in NUTRIENT_SPECS.values()
-        for label in spec["labels"]
-        if text.find(label) >= 0
-    ]
+    positions = [match.start() for spec in NUTRIENT_SPECS.values()
+        for label in spec["labels"] for match in re.finditer(nutrient_label_pattern(label), text)]
     return min(positions) if positions else None
 
 
@@ -244,7 +252,7 @@ def annotation_scope(text: str, key: str) -> tuple[bool, str]:
     named = []
     for annotation in annotations:
         before = text[max(0, annotation.start() - 40):annotation.start()]
-        selected = [k for k, spec in NUTRIENT_SPECS.items() if any(re.search(re.escape(label) + rf"(?:のみ|だけ|は|:|：|\s)*(?:の値は)?(?:[+-]?{NUMBER_PATTERN}(?:{RANGE_SEPARATOR_PATTERN}[+-]?{NUMBER_PATTERN})?\s*{UNIT_PATTERN})?[\s(（※]*$", before) for label in spec["labels"])]
+        selected = [k for k, spec in NUTRIENT_SPECS.items() if any(re.search(nutrient_label_pattern(label) + rf"(?:のみ|だけ|は|:|：|\s)*(?:の値は)?(?:[+-]?{NUMBER_PATTERN}(?:{RANGE_SEPARATOR_PATTERN}[+-]?{NUMBER_PATTERN})?\s*{UNIT_PATTERN})?[\s(（※]*$", before) for label in spec["labels"])]
         if len(selected) == 1:
             named.append(selected[0])
         elif re.search(r"(?:栄養成分|表示値|全項目|これらの値|この値|数値).{0,12}$", before):
@@ -257,7 +265,7 @@ def annotation_scope(text: str, key: str) -> tuple[bool, str]:
 
 def parse_nutrient(text: str, key: str, basis: str, estimated: bool = False) -> dict[str, Any] | None:
     spec = NUTRIENT_SPECS[key]
-    labels = "|".join(re.escape(label) for label in spec["labels"])
+    labels = "|".join(nutrient_label_pattern(label) for label in spec["labels"])
     pattern = re.compile(rf"^(?:{labels})[\s:：;；=]*"
         rf"(?P<first>[+-]?{NUMBER_PATTERN})(?:\s*(?P<separator>{RANGE_SEPARATOR_PATTERN})\s*(?P<second>[+-]?{NUMBER_PATTERN}))?"
         rf"\s*(?P<unit>{UNIT_PATTERN})(?![A-Za-z0-9.%/])", re.IGNORECASE)
@@ -272,7 +280,7 @@ def parse_nutrient(text: str, key: str, basis: str, estimated: bool = False) -> 
         raw_unit = match.group("unit").casefold()
         unit = "mcg" if raw_unit in {"μg", "µg", "ug", "mcg"} else raw_unit
         if unit != spec["unit"]:
-            all_labels = "|".join(re.escape(name) for item in NUTRIENT_SPECS.values() for name in item["labels"])
+            all_labels = "|".join(nutrient_label_pattern(name) for item in NUTRIENT_SPECS.values() for name in item["labels"])
             if re.search(rf"(?:(?:{all_labels})\s+){{2,}}$", text[:label.start()], re.IGNORECASE):
                 continue
             return None
@@ -303,9 +311,10 @@ def has_mixed_basis(text: str) -> bool:
 def has_multiple_values(text: str) -> bool:
     for spec in NUTRIENT_SPECS.values():
         for label in spec["labels"]:
-            offset = text.find(label)
-            if offset < 0:
+            matched_label = re.search(nutrient_label_pattern(label), text)
+            if matched_label is None:
                 continue
+            offset = matched_label.start()
             segment = text[offset:offset + 100].split("；", 1)[0]
             if re.search(rf"{NUMBER_PATTERN}\s*/\s*{NUMBER_PATTERN}", segment):
                 return True
@@ -449,7 +458,7 @@ def normalize_row(
             "familyReviewStatus": "unreviewed_candidate",
             "basis": {"amount": reference_mass, "unit": "g"},
             "labelAudit": {key: {"annotationScope": annotation_scope(nutrition_text, key)[1], "status": "parsed_unreviewed",
-                "sourceSpans": [[m.start(), m.end()] for label in NUTRIENT_SPECS[key]["labels"] for m in re.finditer(re.escape(label), nutrition_text)]} for key in nutrients},
+                "sourceSpans": [[m.start(), m.end()] for label in NUTRIENT_SPECS[key]["labels"] for m in re.finditer(nutrient_label_pattern(label), nutrition_text)]} for key in nutrients},
         }, ensure_ascii=False, separators=(",", ":")),
     }, None
 

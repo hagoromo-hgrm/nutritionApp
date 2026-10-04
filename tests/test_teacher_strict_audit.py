@@ -12,6 +12,15 @@ class StrictTeacherAuditTests(unittest.TestCase):
         for value in ('-1g', '1~-2g', '5~2g', 'NaNg', 'Infinityg', '1.2.3g', '<1g', '1mg'):
             with self.subTest(value=value):
                 self.assertIsNone(parser.parse_nutrient('脂質 ' + value, 'fatG', '100g', False))
+    def test_numbered_vitamin_labels_do_not_match_longer_numbers(self):
+        text = 'ビタミンB1:0.40mg; ビタミンB12:0.80μg; ビタミンB2:0.12mg'
+        self.assertEqual(parser.parse_nutrient(text, 'vitaminB1Mg', '50g')['value'], .4)
+        self.assertEqual(parser.parse_nutrient(text, 'vitaminB2Mg', '50g')['value'], .12)
+        self.assertIsNone(parser.parse_nutrient('ビタミンB12:0.80μg', 'vitaminB1Mg', '50g'))
+        self.assertIsNone(parser.parse_nutrient('ビタミンB20:0.80mg', 'vitaminB2Mg', '50g'))
+    def test_numbered_label_does_not_hide_a_real_conflicting_duplicate(self):
+        text = 'ビタミンB1 0.4mg; ビタミンB12 0.8μg; ビタミンB1 0.5mg'
+        self.assertIsNone(parser.parse_nutrient(text, 'vitaminB1Mg', '50g'))
     def test_duplicates_are_equal_or_rejected_not_last_wins(self):
         self.assertEqual(parser.parse_nutrient('脂質 1g; 脂質 1g', 'fatG', '100g')['value'], 1)
         self.assertIsNone(parser.parse_nutrient('脂質 1g; 脂質 2g', 'fatG', '100g'))
