@@ -1,0 +1,32 @@
+{
+  "format": "nutrition-spu-source-csv-audit",
+  "formatVersion": 1,
+  "generatedAt": "2026-10-04T08:22:15.422477+00:00",
+  "files": [
+    {
+      "csvFile": "sbfoods_officialSite_261004.csv",
+      "csvSha256": "3123763d5cc8980704d93dad9d2a365e153cad3dd498b8d21e497c7df4a6b9e1",
+      "maker": "エスビー食品",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.2",
+      "rawRows": 42,
+      "completeMajorNutrientRows": 42,
+      "normalizationAcceptedRows": 1,
+      "normalizationDeferralReasons": {
+        "missing_explicit_reference_mass": 2,
+        "no_target_nutrient": 39
+      },
+      "targetLabelCounts": {
+        "calciumMg": 1,
+        "ironMg": 1
+      },
+      "targetLabelKindCounts": {
+        "estimated": 2
+      },
+      "humanFamilyReview": "not_completed",
+      "modelOrPriorUpdated": false
+    }
+  ],
+  "rawRows": 42,
+  "normalizationAcceptedRows": 1,
+  "scope": "private_local_collection; not reviewed independent families or authorized model adoption"
+}
