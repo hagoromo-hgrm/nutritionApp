@@ -1,0 +1,32 @@
+{
+  "format": "nutrition-spu-source-csv-audit",
+  "formatVersion": 1,
+  "generatedAt": "2026-10-04T09:08:03.316192+00:00",
+  "files": [
+    {
+      "csvFile": "marukome_officialSite_261004.csv",
+      "csvSha256": "584bae3e0d83de22854579001f398a1c4867e37a8bd45023b81522a4b0f742bf",
+      "maker": "マルコメ",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.4",
+      "rawRows": 91,
+      "completeMajorNutrientRows": 91,
+      "normalizationAcceptedRows": 29,
+      "normalizationDeferralReasons": {
+        "missing_explicit_reference_mass": 19,
+        "no_target_nutrient": 43
+      },
+      "targetLabelCounts": {
+        "fiberG": 29
+      },
+      "targetLabelKindCounts": {
+        "estimated": 25,
+        "fixed": 4
+      },
+      "humanFamilyReview": "not_completed",
+      "modelOrPriorUpdated": false
+    }
+  ],
+  "rawRows": 91,
+  "normalizationAcceptedRows": 29,
+  "scope": "private_local_collection; not reviewed independent families or authorized model adoption"
+}
