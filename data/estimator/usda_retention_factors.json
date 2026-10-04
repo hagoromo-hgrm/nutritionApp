@@ -1,0 +1,249 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "title": "USDA Table of Nutrient Retention Factors, Release 6 (2007)",
+    "version": "USDA RF6 (2007)",
+    "release": "6",
+    "publicationDate": "2007-12",
+    "officialSourceUrl": "https://www.ars.usda.gov/ARSUserFiles/80400535/Data/retn/retn06.pdf",
+    "csvSourceUrl": "https://ndownloader.figshare.com/files/44488754",
+    "datasetUrl": "https://agdatacommons.nal.usda.gov/articles/dataset/USDA_Table_of_Nutrient_Retention_Factors_Release_6_2007_/24660888",
+    "doi": "10.15482/USDA.ADC/1409034",
+    "license": "CC0 1.0 Universal",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "acquiredDate": "2026-10-04",
+    "processedDate": "2026-10-04",
+    "sourceDataSha256": "b863e891989020edf3a429af8060523e5dee275699ae08893a5f91ff9a84b1e5",
+    "transformVersion": "reviewed-usda-rf6-2026-10-04-v1",
+    "rawFoodGroupCodeField": "FdGrp_CD (source CSV ordinal retained verbatim; not interpreted as the PDF group number)",
+    "processCodeTransform": "numeric source Retn_Code normalized to four-character code with leading zero retained",
+    "factorConversion": "retentionPercent / 100 exactly once",
+    "saltMapping": "USDA sodium retention factor mapped to salt-equivalent key; only usable when sodium transfer is confirmed absent."
+  },
+  "processes": [
+    {
+      "code": "0105",
+      "rawFoodGroupCode": "1",
+      "officialDescription": "EGGS,HARD COOKED",
+      "sourceDate": "Sep-75",
+      "factors": [
+        {
+          "nutrientNo": "301",
+          "nutrientKey": "calciumMg",
+          "nutrientDescription": "Calcium, Ca",
+          "retentionPercent": 100,
+          "factor": 1.0,
+          "sourceDate": "Sep-75"
+        },
+        {
+          "nutrientNo": "303",
+          "nutrientKey": "ironMg",
+          "nutrientDescription": "Iron, Fe",
+          "retentionPercent": 100,
+          "factor": 1.0,
+          "sourceDate": "Sep-75"
+        },
+        {
+          "nutrientNo": "307",
+          "nutrientKey": "saltG",
+          "nutrientDescription": "Sodium, Na",
+          "retentionPercent": 100,
+          "factor": 1.0,
+          "sourceDate": "Sep-75"
+        },
+        {
+          "nutrientNo": "401",
+          "nutrientKey": "vitaminCMg",
+          "nutrientDescription": "Vitamin C, total ascorbic acid",
+          "retentionPercent": 80,
+          "factor": 0.8,
+          "sourceDate": "Sep-75"
+        },
+        {
+          "nutrientNo": "404",
+          "nutrientKey": "vitaminB1Mg",
+          "nutrientDescription": "Thiamin",
+          "retentionPercent": 85,
+          "factor": 0.85,
+          "sourceDate": "Sep-75"
+        },
+        {
+          "nutrientNo": "405",
+          "nutrientKey": "vitaminB2Mg",
+          "nutrientDescription": "Riboflavin",
+          "retentionPercent": 95,
+          "factor": 0.95,
+          "sourceDate": "Sep-75"
+        }
+      ]
+    },
+    {
+      "code": "2151",
+      "rawFoodGroupCode": "1",
+      "officialDescription": "MILK,HEATED APPROX 10MIN",
+      "sourceDate": "Sep-75",
+      "factors": [
+        {
+          "nutrientNo": "301",
+          "nutrientKey": "calciumMg",
+          "nutrientDescription": "Calcium, Ca",
+          "retentionPercent": 100,
+          "factor": 1.0,
+          "sourceDate": "Sep-75"
+        },
+        {
+          "nutrientNo": "303",
+          "nutrientKey": "ironMg",
+          "nutrientDescription": "Iron, Fe",
+          "retentionPercent": 100,
+          "factor": 1.0,
+          "sourceDate": "Sep-75"
+        },
+        {
+          "nutrientNo": "307",
+          "nutrientKey": "saltG",
+          "nutrientDescription": "Sodium, Na",
+          "retentionPercent": 100,
+          "factor": 1.0,
+          "sourceDate": "Sep-75"
+        },
+        {
+          "nutrientNo": "401",
+          "nutrientKey": "vitaminCMg",
+          "nutrientDescription": "Vitamin C, total ascorbic acid",
+          "retentionPercent": 85,
+          "factor": 0.85,
+          "sourceDate": "Sep-75"
+        },
+        {
+          "nutrientNo": "404",
+          "nutrientKey": "vitaminB1Mg",
+          "nutrientDescription": "Thiamin",
+          "retentionPercent": 90,
+          "factor": 0.9,
+          "sourceDate": "Sep-75"
+        },
+        {
+          "nutrientNo": "405",
+          "nutrientKey": "vitaminB2Mg",
+          "nutrientDescription": "Riboflavin",
+          "retentionPercent": 100,
+          "factor": 1.0,
+          "sourceDate": "Sep-75"
+        }
+      ]
+    },
+    {
+      "code": "3004",
+      "rawFoodGroupCode": "11",
+      "officialDescription": "VEG,GREENS,BOILD,LITTLE WATER DRAIN",
+      "sourceDate": "Sep-75",
+      "factors": [
+        {
+          "nutrientNo": "301",
+          "nutrientKey": "calciumMg",
+          "nutrientDescription": "Calcium, Ca",
+          "retentionPercent": 95,
+          "factor": 0.95,
+          "sourceDate": "Sep-75"
+        },
+        {
+          "nutrientNo": "303",
+          "nutrientKey": "ironMg",
+          "nutrientDescription": "Iron, Fe",
+          "retentionPercent": 95,
+          "factor": 0.95,
+          "sourceDate": "Sep-75"
+        },
+        {
+          "nutrientNo": "307",
+          "nutrientKey": "saltG",
+          "nutrientDescription": "Sodium, Na",
+          "retentionPercent": 95,
+          "factor": 0.95,
+          "sourceDate": "Sep-75"
+        },
+        {
+          "nutrientNo": "401",
+          "nutrientKey": "vitaminCMg",
+          "nutrientDescription": "Vitamin C, total ascorbic acid",
+          "retentionPercent": 60,
+          "factor": 0.6,
+          "sourceDate": "Sep-75"
+        },
+        {
+          "nutrientNo": "404",
+          "nutrientKey": "vitaminB1Mg",
+          "nutrientDescription": "Thiamin",
+          "retentionPercent": 85,
+          "factor": 0.85,
+          "sourceDate": "Sep-75"
+        },
+        {
+          "nutrientNo": "405",
+          "nutrientKey": "vitaminB2Mg",
+          "nutrientDescription": "Riboflavin",
+          "retentionPercent": 95,
+          "factor": 0.95,
+          "sourceDate": "Sep-75"
+        }
+      ]
+    },
+    {
+      "code": "3005",
+      "rawFoodGroupCode": "11",
+      "officialDescription": "VEG,GREENS,BOILED,WATER COVER DRAIN",
+      "sourceDate": "Sep-75",
+      "factors": [
+        {
+          "nutrientNo": "301",
+          "nutrientKey": "calciumMg",
+          "nutrientDescription": "Calcium, Ca",
+          "retentionPercent": 95,
+          "factor": 0.95,
+          "sourceDate": "Sep-75"
+        },
+        {
+          "nutrientNo": "303",
+          "nutrientKey": "ironMg",
+          "nutrientDescription": "Iron, Fe",
+          "retentionPercent": 95,
+          "factor": 0.95,
+          "sourceDate": "Sep-75"
+        },
+        {
+          "nutrientNo": "307",
+          "nutrientKey": "saltG",
+          "nutrientDescription": "Sodium, Na",
+          "retentionPercent": 95,
+          "factor": 0.95,
+          "sourceDate": "Sep-75"
+        },
+        {
+          "nutrientNo": "401",
+          "nutrientKey": "vitaminCMg",
+          "nutrientDescription": "Vitamin C, total ascorbic acid",
+          "retentionPercent": 55,
+          "factor": 0.55,
+          "sourceDate": "Sep-75"
+        },
+        {
+          "nutrientNo": "404",
+          "nutrientKey": "vitaminB1Mg",
+          "nutrientDescription": "Thiamin",
+          "retentionPercent": 80,
+          "factor": 0.8,
+          "sourceDate": "Sep-75"
+        },
+        {
+          "nutrientNo": "405",
+          "nutrientKey": "vitaminB2Mg",
+          "nutrientDescription": "Riboflavin",
+          "retentionPercent": 90,
+          "factor": 0.9,
+          "sourceDate": "Sep-75"
+        }
+      ]
+    }
+  ]
+}

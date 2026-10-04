@@ -786,7 +786,7 @@ describe('IndexedDB data safety', () => {
     const invalidFood = {
       ...userFood,
       id: 'invalid_evidence_food',
-      estimationEvidence: { schemaVersion: 2, declarationFingerprint: 'future-schema' },
+      estimationEvidence: { schemaVersion: 99, declarationFingerprint: 'future-schema' },
     } as unknown as Food
     const backup: BackupData = {
       format: 'nutrition-pwa-backup', dataFormatVersion: 1, exportedAt: '2026-07-15T00:00:00.000Z',

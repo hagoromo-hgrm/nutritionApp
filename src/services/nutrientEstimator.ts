@@ -16,6 +16,13 @@ import {
   type PreparedExplicitCompositionEvidence,
 } from './explicitCompositionEvidence'
 import {
+  processingDeclaredNameMatches,
+  processingRetentionFactors,
+  reviewedProcessingMethod,
+  reviewedProcessingProfile,
+  USDA_RF6_SOURCE,
+} from './explicitProcessingEvidence'
+import {
   REVIEWED_COMPOSITION_STATE_REGISTRY_VERSION,
   reviewedCompositionDeclaredNameMatches,
   reviewedCompositionProfile,
@@ -56,6 +63,8 @@ import {
   type ExplicitCompositionEvidenceTrace,
   type ExplicitCompositionGroup,
   type ExplicitCompositionTraceGroup,
+  type ExplicitProcessingProof,
+  type ExplicitProcessingTrace,
   type FoodUnit,
   type FoodUnitConversion,
   type IngredientsSource,
@@ -95,7 +104,7 @@ const LEGACY_SEED_NUTRIENT_KEYS = [
 ] as const satisfies readonly NutrientKey[]
 export type EstimateConfidence = 'high' | 'medium' | 'low' | 'unavailable'
 export type EstimateAdoptability = EstimationAdoptionClass | 'unavailable'
-export const NUTRIENT_ESTIMATOR_MODEL_VERSION = 'browser-rule-0.27.0' as const
+export const NUTRIENT_ESTIMATOR_MODEL_VERSION = 'browser-rule-0.28.0' as const
 const MEXT_SOURCE = '文部科学省 日本食品標準成分表（八訂）増補2023年（2026年3月27日正誤表対応）' as const
 const FDC_SOURCE = 'USDA FoodData Central SR Legacy 04/2018' as const
 const INGREDIENT_SPEC_SOURCE = '原料メーカー・業界団体公式仕様' as const
@@ -1644,6 +1653,19 @@ interface ExplicitCompositionOutput {
   unresolvedIngredients: string[]
 }
 
+function pathIsPrefix(left: readonly number[], right: readonly number[]): boolean {
+  return left.length <= right.length && left.every((index, at) => right[at] === index)
+}
+
+function processingTraceSource(source: ExplicitProcessingProof['source']): NonNullable<ExplicitProcessingTrace['source']> {
+  return {
+    kind: source.kind,
+    reference: source.reference,
+    ...(source.version === undefined ? {} : { version: source.version }),
+    ...(source.sourceSha256 === undefined ? {} : { sourceSha256: source.sourceSha256 }),
+  }
+}
+
 function fnv1aCompositionIdentity(value: string): string {
   let hash = 0xcbf29ce484222325n
   const mask = 0xffffffffffffffffn
@@ -1674,6 +1696,18 @@ function explicitCompositionReason(reason: ExplicitCompositionDeferredReason): s
     product_denominator_not_supported: '内側配合の製品全体分母は今回の直接計算に適用できません。',
     batch_mass_mismatch: '配合重量の分母または親子重量が一致しません。',
     additives_present: '添加物を含む表示には固定原材料配合を適用できません。',
+    processing_path_mismatch: '加工根拠の対象位置が原材料宣言と一致しません。',
+    processing_name_mismatch: '加工根拠の材料名が原材料宣言と一致しません。',
+    processing_state_unconfirmed: '加工前後の材料状態を確認できる根拠がありません。',
+    processing_state_mismatch: '加工根拠の材料状態または工程が登録済み対応と一致しません。',
+    processing_profile_stale: '加工参照profileまたは出典のレビュー版が一致しません。',
+    processing_mass_unconfirmed: '加工前後の材料重量を確認できません。',
+    processing_overlap: '同じ材料へ重複または入れ子の加工根拠を適用できません。',
+    processing_unbound: '加工根拠が完成品の固定配合へ結び付いていません。',
+    processing_not_supported: 'この加工工程または原材料状態は今回の計算対象外です。',
+    processing_retention_missing: '対応する加工保持率を確認できません。',
+    processing_sodium_transfer_unknown: 'ナトリウムの移行有無を確認できないため食塩相当量を計算できません。',
+    processing_root_deferred: '完成品の固定配合全体を確認できないため加工寄与を適用できません。',
   }
   return messages[reason]
 }
@@ -1728,6 +1762,69 @@ function explicitCompositionOutput(
   const defer = (groupId: string, reason: ExplicitCompositionDeferredReason): null => {
     reasons.set(groupId, reason)
     return null
+  }
+
+  const processingTraces = new Map<string, ExplicitProcessingTrace>()
+  const processingEntries = new Map(prepared.processing.map((entry) => [entry.proof.id, entry]))
+  const resolveProcessing = (id: string, path: number[], name: string, mass: number | null): Record<NutrientKey, ExplicitNutrientContribution> | null => {
+    const entry = processingEntries.get(id)
+    if (!entry) return null
+    const proof = entry.proof
+    const trace: ExplicitProcessingTrace = {
+      processingId: id, ingredientPath: [...proof.ingredientPath], status: 'deferred',
+      reason: entry.reason ?? 'processing_root_deferred',
+      inputProfileId: proof.inputProfileId, inputStateId: proof.inputStateId,
+      outputStateId: proof.outputStateId, processId: proof.processId,
+      finishedProfileId: proof.finishedProfileId ?? null,
+      rawMassG: proof.rawMassG, finishedMassG: proof.finishedMassG,
+      rawToFinishedRatio: null, resolution: null,
+      retentionCode: proof.retention.kind === 'usda_rf6' ? proof.retention.code : null,
+      retentionFactors: {}, retentionSource: processingTraceSource(proof.retention.source),
+      source: processingTraceSource(proof.source), sodiumTransfer: proof.sodiumTransfer ?? 'unknown',
+      missingNutrients: [...NUTRIENT_KEYS],
+    }
+    processingTraces.set(id, trace)
+    const fail = (reason: ExplicitCompositionDeferredReason): null => { trace.reason = reason; return null }
+    if (entry.status === 'deferred') return fail(entry.reason ?? 'processing_path_mismatch')
+    if (JSON.stringify(path) !== JSON.stringify(proof.ingredientPath)) return fail('processing_path_mismatch')
+    if (!processingDeclaredNameMatches(proof.inputProfileId, name)) return fail('processing_name_mismatch')
+    if (prepared.processing.some((other) => other.proof.id !== id
+      && (pathIsPrefix(path, other.proof.ingredientPath) || pathIsPrefix(other.proof.ingredientPath, path)))) return fail('processing_overlap')
+    const method = reviewedProcessingMethod(proof.processId)
+    const input = reviewedProcessingProfile(proof.inputProfileId)
+    if (!method) return fail('processing_not_supported')
+    if (!input) return fail('processing_profile_stale')
+    if (method.inputProfileId !== proof.inputProfileId || input.stateId !== proof.inputStateId
+      || method.inputStateId !== proof.inputStateId || method.outputStateId !== proof.outputStateId) return fail('processing_state_mismatch')
+    if (proof.source.reference.trim() === input.officialSourceUrl || proof.source.reference.trim() === USDA_RF6_SOURCE.reference) return fail('processing_state_unconfirmed')
+    if (mass === null || mass <= 0 || proof.rawMassG === null || proof.rawMassG <= 0
+      || proof.finishedMassG === null || proof.finishedMassG <= 0
+      || !nearCompositionMass(mass, proof.finishedMassG, 1)) return fail('processing_mass_unconfirmed')
+    const ratio = proof.rawMassG / proof.finishedMassG
+    trace.rawToFinishedRatio = ratio
+    let direct = null
+    if (proof.finishedProfileId !== undefined) {
+      direct = reviewedProcessingProfile(proof.finishedProfileId)
+      if (!direct) return fail('processing_profile_stale')
+      if (method.finishedProfileId !== proof.finishedProfileId || direct.stateId !== proof.outputStateId) return fail('processing_state_mismatch')
+    }
+    const factors = direct ? {} : processingRetentionFactors(proof, method)
+    if (!factors) return fail('processing_retention_missing')
+    trace.retentionFactors = { ...factors }
+    trace.resolution = direct ? 'direct_finished_profile' : 'retention_factors'
+    trace.missingNutrients = []
+    const nutrients = Object.fromEntries(NUTRIENT_KEYS.map((key) => {
+      const factor = factors[key as keyof typeof factors]
+      const value = direct ? direct.nutrients[key] : input.nutrients[key]
+      const missing = value === null || (!direct && (factor === undefined || (key === 'saltG' && proof.sodiumTransfer !== 'none_confirmed')))
+      if (missing) trace.missingNutrients.push(key)
+      return [key, missing ? { knownPer100g: 0, missingMassFraction: 1, sourceFoodIds: [] }
+        : { knownPer100g: value! * (direct ? 1 : ratio * factor!), missingMassFraction: 0,
+            sourceFoodIds: [...(direct ?? input).sourceFoodIds] }]
+    })) as Record<NutrientKey, ExplicitNutrientContribution>
+    trace.status = 'applied'
+    delete trace.reason
+    return nutrients
   }
 
   const resolveGroup = (
@@ -1831,6 +1928,15 @@ function explicitCompositionOutput(
                 sourceFoodIds: [...sourceFoodIdsForNutrient(reviewed.profile, key)],
               }]
         })) as Record<NutrientKey, ExplicitNutrientContribution>
+      } else if (binding.kind === 'processing') {
+        const processed = resolveProcessing(binding.processingId, [...group.parent.path, index], children[index].normalizedName, branchMass)
+        if (!processed) {
+          activeIds.delete(groupId)
+          return defer(groupId, processingTraces.get(binding.processingId)?.reason ?? 'processing_unbound')
+        }
+        branchNutrients = processed
+        selectedProfileIds[index] = `explicit-processing:${fnv1aCompositionIdentity(JSON.stringify(processingTraces.get(binding.processingId)))}`
+        nestedIdentities[index] = selectedProfileIds[index]
       } else {
         if (!groupsById.has(binding.compositionId)) {
           activeIds.delete(groupId)
@@ -1911,6 +2017,32 @@ function explicitCompositionOutput(
     }
   }
 
+  const unusedProcessing = prepared.processing.find((entry) => !processingTraces.has(entry.proof.id)
+    && !ignoredZeroPathPrefixes.some((prefix) => pathIsPrefix(prefix, entry.proof.ingredientPath)))
+  if (rootResolved && unusedProcessing) {
+    rootFailure = 'processing_unbound'
+    rootResolved = null
+  }
+  for (const entry of prepared.processing) {
+    if (!processingTraces.has(entry.proof.id)) {
+      const proof = entry.proof
+      processingTraces.set(proof.id, {
+        processingId: proof.id, ingredientPath: [...proof.ingredientPath], status: 'deferred',
+        reason: entry.reason ?? 'processing_unbound', inputProfileId: proof.inputProfileId,
+        inputStateId: proof.inputStateId, outputStateId: proof.outputStateId, processId: proof.processId,
+        finishedProfileId: proof.finishedProfileId ?? null, rawMassG: proof.rawMassG,
+        finishedMassG: proof.finishedMassG, rawToFinishedRatio: null, resolution: null,
+        retentionCode: proof.retention.kind === 'usda_rf6' ? proof.retention.code : null,
+        retentionFactors: {}, source: processingTraceSource(proof.source),
+        retentionSource: processingTraceSource(proof.retention.source),
+        sodiumTransfer: proof.sodiumTransfer ?? 'unknown', missingNutrients: [...NUTRIENT_KEYS],
+      })
+    }
+  }
+  if (rootFailure) for (const trace of processingTraces.values()) {
+    if (trace.status === 'applied') { trace.status = 'deferred'; trace.reason = 'processing_root_deferred' }
+  }
+
   const reasonForGroup = (item: PreparedExplicitCompositionEvidence['groups'][number]): ExplicitCompositionDeferredReason | undefined => {
     if (reasons.has(item.group.id)) return reasons.get(item.group.id)
     if (ignoredZeroPathPrefixes.some((prefix) => (
@@ -1958,6 +2090,7 @@ function explicitCompositionOutput(
     stateRegistryVersion: REVIEWED_COMPOSITION_STATE_REGISTRY_VERSION,
     status: deferred ? 'deferred' : 'applied',
     groups: traceGroups,
+    ...(processingTraces.size > 0 ? { processing: [...processingTraces.values()] } : {}),
   }
   const estimates = mapEstimatableNutrients<NutrientEstimate>((key) => {
     if (!requested.has(key)) {
@@ -1984,7 +2117,7 @@ function explicitCompositionOutput(
       return unavailable(
         `参照食品の${NUTRIENT_LABELS[key]}がすべて欠損しているため、この栄養素は推計できません。`,
         'パッケージの栄養成分表示を確認して手入力するか、この栄養素を採用せず食品登録を続けてください。',
-        ['正量材料のMEXT栄養値が欠損しています。欠損値は0として扱っていません。'],
+        ['正量材料の参照値または対応する加工根拠が不足しています。欠損値は0として扱っていません。'],
         ['reference_value_missing'],
       )
     }
@@ -2011,8 +2144,9 @@ function explicitCompositionOutput(
       source: estimateSource(nutrient.sourceFoodIds),
       sourceFoodIds: [...nutrient.sourceFoodIds],
       warnings: [
-        '完成品の固定配合を、確認済み材料状態に一致する直接MEXTプロファイルだけで計算しました。',
+        '完成品の固定配合と、確認済み材料状態に一致する参照値・明示された加工根拠で計算しました。',
         '固定配合は候補選択・比率探索・ジャンル事前分布・比率校正で変更していません。',
+        ...uncertainZeroWarning(point, zeroEvidence),
         ...(missing ? [
           `正量材料の${NUTRIENT_LABELS[key]}に欠損があります。表示値は確認できる材料分だけの部分参考値で、製品全体の下限や上限ではありません。`,
         ] : []),
@@ -2061,7 +2195,7 @@ export function estimateNutrients(
   if (invalidRequestEstimates) {
     estimates = invalidRequestEstimates
   } else {
-    if (request.estimationEvidence?.compositions && request.estimationEvidence.compositions.length > 0) {
+    if ((request.estimationEvidence?.compositions?.length ?? 0) > 0 || (request.estimationEvidence?.schemaVersion === 2 && (request.estimationEvidence.processing?.length ?? 0) > 0)) {
       const prepared = prepareExplicitCompositionEvidence(request.estimationEvidence, request.ingredientsText!)
       explicitOutput = explicitCompositionOutput(prepared, request, requested)
       estimates = explicitOutput.estimates
@@ -2492,6 +2626,7 @@ export function toStoredNutrientEstimateResult(
                       ? {
                           explicitCompositionEvidence: {
                             ...result.optimization.trace.explicitCompositionEvidence,
+                            ...(result.optimization.trace.explicitCompositionEvidence.processing ? { processing: structuredClone(result.optimization.trace.explicitCompositionEvidence.processing) } : {}),
                             groups: result.optimization.trace.explicitCompositionEvidence.groups.map((group) => ({
                               ...group,
                               parentPath: [...group.parentPath],

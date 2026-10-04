@@ -221,6 +221,40 @@ function traceEvidence(ingredientsText: string, ...groups: ExplicitCompositionGr
 }
 
 describe('estimation backup confirmed-input validation', () => {
+  it('preserves processing proof, source fingerprints and applied retention trace through backup', () => {
+    const ingredientsText = '牛乳'
+    const source = { kind: 'user_measurement' as const, reference: '合成の追加10分加熱記録', verified: true as const, checkedAt: now }
+    const evidence: ExplicitEstimationEvidence = {
+      schemaVersion: 2, declarationFingerprint: createIngredientDeclarationFingerprint(ingredientsText),
+      compositions: [{
+        ...traceCompositionGroup({ names: ['牛乳'], masses: [80] }),
+        childBindings: [{ kind: 'processing', index: 0, processingId: 'synthetic-heat' }],
+      }],
+      processing: [{
+        id: 'synthetic-heat', ingredientPath: [0], expectedName: '牛乳',
+        inputProfileId: 'processing_mext_13003_v1', inputStateId: 'mext_13003:listed-state-v1',
+        outputStateId: 'mext_13003:additional-heat-approx-10min:finished-v1',
+        processId: 'milk_additional_heat_approx_10min_v1', rawMassG: 100, finishedMassG: 80,
+        retention: { kind: 'usda_rf6', code: '2151', source: { kind: 'official_retention_table', reference: 'https://ndownloader.figshare.com/files/44488754', version: 'USDA RF6 (2007)', verified: true, checkedAt: now, sourceSha256: 'b863e891989020edf3a429af8060523e5dee275699ae08893a5f91ff9a84b1e5' } }, sodiumTransfer: 'none_confirmed', source,
+      }],
+    }
+    const { backup, storedTrace } = makeActualTraceBackup({ requestId: 'actual_processing_trace', ingredientsText, evidence })
+    const restored = parseBackupText(backupToJson(validateBackup(backup)))
+    expect(restored.foods[0].estimationEvidence).toEqual(evidence)
+    expect(restored.estimationRequests?.[0].inputSnapshot.estimationEvidence).toEqual(evidence)
+    expect(storedTrace.explicitCompositionEvidence?.processing?.[0].status).toBe('applied')
+    expect(restored.estimationResults?.[0].optimization?.trace?.explicitCompositionEvidence).toEqual(storedTrace.explicitCompositionEvidence)
+    const invalid = structuredClone(backup)
+    invalid.estimationResults![0].optimization!.trace!.explicitCompositionEvidence!.processing![0].retentionFactors.vitaminB1Mg = 1.01
+    expect(() => validateBackup(invalid)).toThrow('推計要求、結果または採用履歴')
+    const snapshot = restored.estimationRequests![0].inputSnapshot
+    const changed = structuredClone(snapshot)
+    const changedEvidence = changed.estimationEvidence
+    if (!changedEvidence || changedEvidence.schemaVersion !== 2) throw new Error('processing evidence missing')
+    changedEvidence.processing![0].source.reference = '変更後の確認記録'
+    expect(createNutrientEstimateRequestFingerprintFromSnapshot(changed)).not.toBe(snapshot.requestFingerprint)
+  })
+
   it('accepts real explicit-estimator applied and deferred traces through stored-result backup validation', () => {
     const simpleText = '上白糖、脱脂粉乳、ピュアココア'
     const simpleNames = ['上白糖', '脱脂粉乳', 'ピュアココア']
@@ -308,7 +342,7 @@ describe('estimation backup confirmed-input validation', () => {
   })
 
   it('rejects unknown evidence schema and fields in both Food and request snapshots', () => {
-    const unknownSchema = { ...makeExplicitEvidence(), schemaVersion: 2 }
+    const unknownSchema = { ...makeExplicitEvidence(), schemaVersion: 99 }
     const unknownField = { ...makeExplicitEvidence(), additives: [] }
     expect(() => validateBackup({ ...makeBackup(), foods: [{ ...food, estimationEvidence: unknownSchema }] })).toThrow('食品または食事記録')
     expect(() => validateBackup({ ...makeBackup(), foods: [{ ...food, estimationEvidence: unknownField }] })).toThrow('食品または食事記録')

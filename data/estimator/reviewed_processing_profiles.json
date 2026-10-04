@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "version": "日本食品標準成分表（八訂）増補2023年（2026年3月27日正誤表対応）",
+    "officialSourceUrl": "https://www.mext.go.jp/a_menu/syokuhinseibun/mext_00001.html",
+    "sourceDataSha256": "af5d1e9c623c3a23bdf29f471df65d2e324988dce3f9c8cf62e9795f15c819ea",
+    "acquiredDate": "2026-07-22",
+    "processedDate": "2026-10-04",
+    "processedSourceSha256": "af5d1e9c623c3a23bdf29f471df65d2e324988dce3f9c8cf62e9795f15c819ea",
+    "processedSourcePath": "data/mext/processed/mext_foods.json",
+    "processedSourceAt": "2026-07-23T11:52:55.779067Z",
+    "sourceTransform": {
+      "script": "scripts/convert_food_data.py",
+      "scriptSha256": "d8a2f2cd9d48cfe713705713b403672abfb5883a854fce129f3d4764f9437285"
+    },
+    "transformVersion": "reviewed-mext-processing-profiles-2026-10-04-v1",
+    "acquiredDateForOverridePage": "2026-10-04"
+  },
+  "profiles": [
+    {
+      "profileId": "processing_mext_13003_v1",
+      "canonicalName": "＜牛乳及び乳製品＞　（液状乳類）　普通牛乳",
+      "nutrients": {
+        "energyKcal": 61.0,
+        "proteinG": 3.3,
+        "fatG": 3.8,
+        "carbohydrateG": 4.8,
+        "fiberG": 0.0,
+        "calciumMg": 110.0,
+        "ironMg": 0.0,
+        "vitaminAMcg": 38.0,
+        "vitaminEMg": 0.1,
+        "vitaminB1Mg": 0.04,
+        "vitaminB2Mg": 0.15,
+        "vitaminCMg": 1.0,
+        "saturatedFatG": 2.33,
+        "saltG": 0.1
+      },
+      "sourceFoodIds": [
+        "mext_13003"
+      ],
+      "stateId": "mext_13003:listed-state-v1",
+      "sourceFoodId": "mext_13003",
+      "sourceVersion": "日本食品標準成分表（八訂）増補2023年（2026年3月27日正誤表対応）",
+      "officialSourceUrl": "https://fooddb.mext.go.jp/details/details.pl?ITEM_NO=13_13003_7",
+      "sourceDataSha256": "af5d1e9c623c3a23bdf29f471df65d2e324988dce3f9c8cf62e9795f15c819ea",
+      "nutrientFingerprint": "fnv1a64:c74c215e839337b0",
+      "reviewedOverrides": {
+        "ironMg": {
+          "fromValue": 0.02,
+          "toValue": 0.0,
+          "reason": "MEXT食品成分DB 13003_7の掲載値は鉄0 mg/100g。処理済み生成データの0.02との差を、レビュー済み加工プロファイルだけで補正する。通常食品マスターと汎用プロファイルは変更しない。",
+          "sourceUrl": "https://fooddb.mext.go.jp/details/details.pl?ITEM_NO=13_13003_7",
+          "pageAcquiredDate": "2026-10-04",
+          "pageSha256": "2dbcff6a49011deddace66c46f58c4e5c32c3bbebe29266a42140d4d028cdf90"
+        }
+      }
+    },
+    {
+      "profileId": "processing_mext_12004_v1",
+      "canonicalName": "鶏卵　全卵　生",
+      "nutrients": {
+        "energyKcal": 142.0,
+        "proteinG": 12.2,
+        "fatG": 10.2,
+        "carbohydrateG": 0.4,
+        "fiberG": 0.0,
+        "calciumMg": 46.0,
+        "ironMg": 1.5,
+        "vitaminAMcg": 210.0,
+        "vitaminEMg": 1.3,
+        "vitaminB1Mg": 0.06,
+        "vitaminB2Mg": 0.37,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 3.12,
+        "saltG": 0.4
+      },
+      "sourceFoodIds": [
+        "mext_12004"
+      ],
+      "stateId": "mext_12004:listed-raw-state-v1",
+      "sourceFoodId": "mext_12004",
+      "sourceVersion": "日本食品標準成分表（八訂）増補2023年（2026年3月27日正誤表対応）",
+      "officialSourceUrl": "https://fooddb.mext.go.jp/details/details.pl?ITEM_NO=12_12004_7",
+      "sourceDataSha256": "af5d1e9c623c3a23bdf29f471df65d2e324988dce3f9c8cf62e9795f15c819ea",
+      "nutrientFingerprint": "fnv1a64:ab496648be4df3e0"
+    },
+    {
+      "profileId": "processing_mext_12005_v1",
+      "canonicalName": "鶏卵　全卵　ゆで",
+      "nutrients": {
+        "energyKcal": 134.0,
+        "proteinG": 12.5,
+        "fatG": 10.4,
+        "carbohydrateG": 0.3,
+        "fiberG": 0.0,
+        "calciumMg": 47.0,
+        "ironMg": 1.5,
+        "vitaminAMcg": 170.0,
+        "vitaminEMg": 1.2,
+        "vitaminB1Mg": 0.06,
+        "vitaminB2Mg": 0.32,
+        "vitaminCMg": 0.0,
+        "saturatedFatG": 3.04,
+        "saltG": 0.3
+      },
+      "sourceFoodIds": [
+        "mext_12005"
+      ],
+      "stateId": "mext_12005:listed-boiled-state-v1",
+      "sourceFoodId": "mext_12005",
+      "sourceVersion": "日本食品標準成分表（八訂）増補2023年（2026年3月27日正誤表対応）",
+      "officialSourceUrl": "https://fooddb.mext.go.jp/details/details.pl?ITEM_NO=12_12005_7",
+      "sourceDataSha256": "af5d1e9c623c3a23bdf29f471df65d2e324988dce3f9c8cf62e9795f15c819ea",
+      "nutrientFingerprint": "fnv1a64:a8827be0a7a31903"
+    }
+  ]
+}

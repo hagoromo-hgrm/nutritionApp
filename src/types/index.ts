@@ -43,6 +43,51 @@ export interface ExplicitCompositionEvidenceSource {
   sourceSha256?: string
 }
 
+export interface ExplicitProcessingEvidenceSource {
+  kind: 'manufacturer_recipe' | 'user_measurement' | 'official_retention_table' | 'material_specification'
+  reference: string
+  verified: true
+  checkedAt: string
+  version?: string
+  sourceSha256?: string
+}
+
+export type ExplicitProcessingRetentionNutrientKey =
+  | 'calciumMg'
+  | 'ironMg'
+  | 'saltG'
+  | 'vitaminCMg'
+  | 'vitaminB1Mg'
+  | 'vitaminB2Mg'
+
+export type ExplicitProcessingRetention =
+  | {
+      kind: 'usda_rf6'
+      code: string
+      source: ExplicitProcessingEvidenceSource
+    }
+  | {
+      kind: 'user_supplied'
+      factors: Partial<Record<ExplicitProcessingRetentionNutrientKey, number>>
+      source: ExplicitProcessingEvidenceSource
+    }
+
+export interface ExplicitProcessingProof {
+  id: string
+  ingredientPath: readonly number[]
+  expectedName: string
+  inputProfileId: string
+  inputStateId: string
+  outputStateId: string
+  processId: string
+  rawMassG: number | null
+  finishedMassG: number | null
+  finishedProfileId?: string
+  retention: ExplicitProcessingRetention
+  sodiumTransfer?: 'none_confirmed' | 'unknown'
+  source: ExplicitProcessingEvidenceSource
+}
+
 export type ExplicitCompositionChildBinding =
   | {
       kind: 'profile'
@@ -56,6 +101,11 @@ export type ExplicitCompositionChildBinding =
       kind: 'composition'
       index: number
       compositionId: string
+    }
+  | {
+      kind: 'processing'
+      index: number
+      processingId: string
     }
 
 export interface ExplicitCompositionGroup {
@@ -71,12 +121,20 @@ export interface ExplicitCompositionGroup {
   source: ExplicitCompositionEvidenceSource
 }
 
-/** Step8 deliberately accepts composition evidence only; later schema versions add other evidence types. */
-export interface ExplicitEstimationEvidence {
+export interface ExplicitEstimationEvidenceV1 {
   schemaVersion: 1
   declarationFingerprint: string
   compositions?: readonly ExplicitCompositionGroup[]
 }
+
+export interface ExplicitEstimationEvidenceV2 {
+  schemaVersion: 2
+  declarationFingerprint: string
+  compositions?: readonly ExplicitCompositionGroup[]
+  processing?: readonly ExplicitProcessingProof[]
+}
+
+export type ExplicitEstimationEvidence = ExplicitEstimationEvidenceV1 | ExplicitEstimationEvidenceV2
 
 export type ExplicitCompositionDeferredReason =
   | 'declaration_stale'
@@ -97,6 +155,40 @@ export type ExplicitCompositionDeferredReason =
   | 'product_denominator_not_supported'
   | 'batch_mass_mismatch'
   | 'additives_present'
+  | 'processing_path_mismatch'
+  | 'processing_name_mismatch'
+  | 'processing_state_unconfirmed'
+  | 'processing_state_mismatch'
+  | 'processing_profile_stale'
+  | 'processing_mass_unconfirmed'
+  | 'processing_overlap'
+  | 'processing_unbound'
+  | 'processing_not_supported'
+  | 'processing_retention_missing'
+  | 'processing_sodium_transfer_unknown'
+  | 'processing_root_deferred'
+
+export interface ExplicitProcessingTrace {
+  processingId: string
+  ingredientPath: number[]
+  status: 'applied' | 'deferred'
+  reason?: ExplicitCompositionDeferredReason
+  inputProfileId: string | null
+  inputStateId: string | null
+  outputStateId: string | null
+  processId: string | null
+  finishedProfileId: string | null
+  rawMassG: number | null
+  finishedMassG: number | null
+  rawToFinishedRatio: number | null
+  resolution: 'direct_finished_profile' | 'retention_factors' | null
+  retentionCode: string | null
+  retentionFactors: Partial<Record<ExplicitProcessingRetentionNutrientKey, number>>
+  retentionSource?: Pick<ExplicitProcessingEvidenceSource, 'kind' | 'reference' | 'version' | 'sourceSha256'>
+  source?: Pick<ExplicitProcessingEvidenceSource, 'kind' | 'reference' | 'version' | 'sourceSha256'>
+  sodiumTransfer: 'none_confirmed' | 'unknown'
+  missingNutrients: NutrientKey[]
+}
 
 export interface ExplicitCompositionTraceGroup {
   compositionId: string
@@ -116,6 +208,7 @@ export interface ExplicitCompositionEvidenceTrace {
   stateRegistryVersion: string
   status: 'applied' | 'deferred'
   groups: ExplicitCompositionTraceGroup[]
+  processing?: ExplicitProcessingTrace[]
 }
 
 export type EstimationConfidence = 'high' | 'medium' | 'low' | 'unavailable'

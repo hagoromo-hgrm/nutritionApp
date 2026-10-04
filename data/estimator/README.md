@@ -111,3 +111,16 @@ node_modules/.bin/vite-node scripts/analyze_spu_ingredient_coverage.ts \
   --output data/estimator/private/spu_ingredient_coverage_analysis.json \
   --summary-output docs/analysis/spu_ingredient_coverage.json
 ```
+
+## 明示工程の残存率と直接参照
+
+`usda_retention_factors.json` はUSDA RF6（2007）の公式CSVから選択した4工程・24係数で、元CSVのSHA-256、公式栄養素ID、百分率、変換係数、取得日・加工日、CC0帰属情報を保持する。元CSVは公式配布URL `https://ndownloader.figshare.com/files/44488754` から別途取得し、次で生成または検証する。
+
+```bash
+python3 scripts/build_reviewed_processing_catalog.py --retention-csv /path/to/retn06.csv
+python3 scripts/build_reviewed_processing_catalog.py --retention-csv /path/to/retn06.csv --check
+```
+
+`reviewed_processing_profiles.json` は可食部100gの牛乳・生全卵・ゆで全卵だけを加工用の独立IDへ生成する。牛乳の鉄は公式ページ確認に基づく限定overrideを記録する。通常候補や食品マスターへ上書きしない。工程との対応はアプリ側のレビュー済み状態registryで管理し、catalogに存在するだけでは適用しない。
+
+使用には確認済みの加工前後可食重量、状態、単一工程、同じ宣言位置の固定finished配合が必要で、未収録係数を1として補完しない。根拠入力と保存のhookであり、商品名からの自動補正や通常フォームの工程入力機能ではない。
