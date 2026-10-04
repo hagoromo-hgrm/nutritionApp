@@ -1,0 +1,26 @@
+{
+  "format": "nutrition-estimator-collected-ingredient-coverage-comparison",
+  "formatVersion": 1,
+  "sourceRawRows": 2197,
+  "exactCoverageDuplicateRows": 3,
+  "coverageInputSha256": "e966aaebcbe6055e1599e9b70008ca723c322cc1ff8f9740f18784a6aa14ebb9",
+  "before": {
+    "modelVersion": "browser-rule-0.32.0",
+    "recordCount": 2194,
+    "fullyResolvedRecords": 765,
+    "fullyResolvedPercent": 34.868,
+    "unresolvedOccurrenceCount": 3216,
+    "unresolvedUniqueCount": 1049
+  },
+  "after": {
+    "modelVersion": "browser-rule-0.32.1",
+    "recordCount": 2194,
+    "fullyResolvedRecords": 796,
+    "fullyResolvedPercent": 36.281,
+    "unresolvedOccurrenceCount": 3093,
+    "unresolvedUniqueCount": 1039
+  },
+  "scope": "candidate-name resolution on collected development data; not independent accuracy evaluation",
+  "sourceRowsChanged": false,
+  "trainedPriorOrCalibrationUpdated": false
+}

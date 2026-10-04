@@ -1373,7 +1373,7 @@ const GROUPS: readonly IngredientProfileGroup[] = [
       derivationWarnings: ['MEXTの卵黄直接項目は生の状態です。原材料名「卵黄」だけでは乾燥等の状態を特定できないため、生卵黄を低信頼度の候補として使用しています。'],
     }],
   },
-  { aliases: ['粉末卵白', '卵白粉末', '乾燥卵白'], candidates: [driedEggWhite] },
+  { aliases: ['粉末卵白', '卵白粉末', '乾燥卵白', '卵白末'], candidates: [driedEggWhite] },
   { aliases: ['鶏卵 卵白 生', '生卵白'], candidates: [rawEggWhite] },
   {
     aliases: ['卵白'],
@@ -1493,7 +1493,7 @@ const GROUPS: readonly IngredientProfileGroup[] = [
   { aliases: ['豆乳'], candidates: [soyMilk] },
   { aliases: ['しいたけ', '椎茸'], candidates: [shiitake] },
   { aliases: ['しいたけエキス', '椎茸エキス', 'しいたけエキスパウダー'], candidates: [shiitakeExtractProxy] },
-  { aliases: ['しょうゆ', '醤油'], candidates: [soySauce] },
+  { aliases: ['しょうゆ', 'しょう油', '醤油'], candidates: [soySauce] },
   { aliases: ['粉末しょうゆ', 'しょうゆ粉末', '醤油粉末'], candidates: [powderedSoySauceProxy] },
   { aliases: ['みそ', '味噌', '粉末みそ'], candidates: [miso] },
   { aliases: ['醸造酢', '穀物酢', '酢'], candidates: [grainVinegar] },

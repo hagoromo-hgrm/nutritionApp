@@ -165,6 +165,14 @@ function normalizeName(value: string): string {
     .trim()
 }
 
+function stripLeadingIngredientHeading(value: string): string {
+  // 見出し語を含む未知の食品名まで削らないよう、表示上の区切りを必須にする。
+  const heading = value.match(/^\s*(?:原材料名|原材料)(?=$|[:：]|\s|[、,，;；/／])/u)
+  if (!heading) return value
+
+  return value.slice(heading[0].length).replace(/^(?:\s*[:：、,，;；]\s*|\s+)/u, '')
+}
+
 function looksLikeAdditive(value: string): boolean {
   const normalized = normalizeName(extractParentheticalGroups(value).name || value)
   return ADDITIVE_TERMS.some((term) => normalized.includes(term))
@@ -226,18 +234,18 @@ function parseItem(rawName: string, section: IngredientSection): {
  * 産地・アレルゲン注記は構成原材料として展開しない。
  */
 export function parseIngredientDeclaration(text: string): ParsedIngredientDeclaration {
-  const normalizedText = text
-    .normalize('NFKC')
-    .replace(/^\s*原材料(?:名)?\s*[:：]\s*/u, '')
+  const normalizedText = stripLeadingIngredientHeading(text.normalize('NFKC'))
   const ingredients: ParsedIngredient[] = []
   const additives: ParsedIngredient[] = []
   let additiveSection = false
+  let stripHeadingFromNextItem = false
   let usedExplicitAdditiveBoundary = false
   let inferredAdditiveBoundary = false
 
   for (const token of tokenizeDeclaration(normalizedText)) {
     if (token.kind === 'section-heading') {
       additiveSection = false
+      stripHeadingFromNextItem = true
       continue
     }
     if (token.kind === 'additive-boundary') {
@@ -245,8 +253,13 @@ export function parseIngredientDeclaration(text: string): ParsedIngredientDeclar
       usedExplicitAdditiveBoundary = true
       continue
     }
-    const rawName = token.value?.trim()
+    let rawName = token.value?.trim()
     if (!rawName) continue
+    if (stripHeadingFromNextItem) {
+      rawName = stripLeadingIngredientHeading(rawName)
+      stripHeadingFromNextItem = false
+      if (!rawName) continue
+    }
     const parenthetical = extractParentheticalGroups(rawName)
     // 原材料と独立して末尾へ置かれる「（一部に小麦を含む）」は食品ではなく表示注記。
     if (

@@ -2,6 +2,67 @@ import { describe, expect, it } from 'vitest'
 import { parseIngredientDeclaration } from '../src/services/ingredientParser'
 
 describe('ingredient declaration parser', () => {
+  it('先頭の原材料見出しは明確な区切りがあるときだけ除去する', () => {
+    const newlineSeparated = parseIngredientDeclaration('原材料名\n乳製品')
+    const spaced = parseIngredientDeclaration('原材料 乳製品')
+    const tokenSeparated = parseIngredientDeclaration('原材料名、乳製品')
+    const fullWidthColon = parseIngredientDeclaration('原材料名：乳製品')
+    const slashBoundary = parseIngredientDeclaration('原材料名／香料')
+
+    expect(newlineSeparated.ingredients.map((item) => item.normalizedName)).toEqual(['乳製品'])
+    expect(newlineSeparated.ingredients[0].rawName).toBe('乳製品')
+    expect(spaced.ingredients.map((item) => item.normalizedName)).toEqual(['乳製品'])
+    expect(tokenSeparated.ingredients.map((item) => item.normalizedName)).toEqual(['乳製品'])
+    expect(fullWidthColon.ingredients.map((item) => item.normalizedName)).toEqual(['乳製品'])
+    expect(slashBoundary.ingredients).toEqual([])
+    expect(slashBoundary.additives.map((item) => item.normalizedName)).toEqual(['香料'])
+    expect(slashBoundary.usedExplicitAdditiveBoundary).toBe(true)
+  })
+
+  it('見出しだけは食品にせず、見出しと一体化した食品名は保持する', () => {
+    expect(parseIngredientDeclaration('原材料名').ingredients).toEqual([])
+    expect(parseIngredientDeclaration('原材料：').ingredients).toEqual([])
+
+    const attached = parseIngredientDeclaration('原材料名乳製品、添加物由来食品')
+    expect(attached.ingredients.map((item) => item.normalizedName)).toEqual([
+      '原材料名乳製品',
+      '添加物由来食品',
+    ])
+    expect(attached.ingredients.map((item) => item.rawName)).toEqual([
+      '原材料名乳製品',
+      '添加物由来食品',
+    ])
+  })
+
+  it('先頭見出しの後も複合原材料と添加物境界を保持する', () => {
+    const parsed = parseIngredientDeclaration('原材料名：めん（小麦粉、卵粉／かんすい）、植物油脂／香料')
+
+    expect(parsed.ingredients.map((item) => item.normalizedName)).toEqual(['めん', '植物油脂'])
+    expect(parsed.ingredients[0].components.map((item) => item.normalizedName)).toEqual(['小麦粉', '卵粉'])
+    expect(parsed.additives.map((item) => item.normalizedName)).toEqual(['かんすい', '香料'])
+  })
+
+  it('区画見出し直後の原材料見出しを除去し、区画ごとの添加物境界を保つ', () => {
+    const parsed = parseIngredientDeclaration(
+      '【ヨーグルト】 原材料名 乳製品/香料【添付カップ】 原材料名 グラノーラ/乳化剤',
+    )
+
+    expect(parsed.ingredients.map((item) => item.normalizedName)).toEqual(['乳製品', 'グラノーラ'])
+    expect(parsed.additives.map((item) => item.normalizedName)).toEqual(['香料', '乳化剤'])
+    expect(parsed.usedExplicitAdditiveBoundary).toBe(true)
+  })
+
+  it('区画直後の独立見出しitemだけを消し、中間食品名は保持する', () => {
+    const separated = parseIngredientDeclaration('【区画A】原材料名、乳製品/香料')
+    const middle = parseIngredientDeclaration('乳製品、原材料名小麦粉、香料')
+
+    expect(separated.ingredients.map((item) => item.normalizedName)).toEqual(['乳製品'])
+    expect(separated.additives.map((item) => item.normalizedName)).toEqual(['香料'])
+    expect(middle.ingredients.map((item) => item.normalizedName)).toEqual(['乳製品', '原材料名小麦粉'])
+    expect(middle.ingredients[1].rawName).toBe('原材料名小麦粉')
+    expect(middle.additives.map((item) => item.normalizedName)).toEqual(['香料'])
+  })
+
   it('複合原材料の括弧内を構成原材料として展開する', () => {
     const parsed = parseIngredientDeclaration('ゆず砂糖漬け（ゆず、砂糖）')
 
