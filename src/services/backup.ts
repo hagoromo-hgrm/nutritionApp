@@ -1,5 +1,6 @@
 import { ESTIMATION_LIMITATION_REASONS, ESTIMATOR_GENRE_IDS, NUTRIENT_KEYS, type AppSettings, type BackupData, type EstimationDecision, type EstimationRequest, type EstimationResult, type EstimationSettings, type Food, type FoodAlias, type FoodGroup, type FoodRelatedTerm, type FoodSnapshot, type FoodUsageStat, type GeneralMenu, type MealEntry, type Menu, type MenuIngredient, type MenuSet, type NutrientKey, type NutrientMetadataMap, type Nutrients, type NutritionGoalRecord, type NutritionEstimationInput, type SearchLog, type WeightRecord } from '../types'
 import { createNutrientEstimateRequestFingerprintFromSnapshot } from './confirmedNutrientInputs'
+import { isExplicitCompositionDeferredReason, validateExplicitEstimationEvidence } from './explicitCompositionEvidence'
 import { isFoodAttributePreference } from './foodAttributePreferences'
 import { hasMenuCycles, menusWithUnsupportedIngredientUnits } from './menuIngredients'
 import { isMealMenuSnapshot } from './mealMenuSnapshots'
@@ -128,6 +129,16 @@ function isReferenceMass(value: unknown, source: unknown): boolean {
   return typeof value === 'number' && Number.isFinite(value) && value > 0 && value <= 100000 && isNonEmptyString(source)
 }
 
+function hasValidOptionalEstimationEvidence(value: Record<string, unknown>): boolean {
+  if (value.estimationEvidence === undefined) return true
+  try {
+    validateExplicitEstimationEvidence(value.estimationEvidence)
+    return true
+  } catch {
+    return false
+  }
+}
+
 function isFood(value: unknown): value is Food {
   if (!isRecord(value)) return false
   return isNonEmptyString(value.id) && isNonEmptyString(value.name) && isString(value.maker)
@@ -151,6 +162,7 @@ function isFood(value: unknown): value is Food {
     && isReferenceMass(value.estimationReferenceMassG, value.estimationReferenceMassSource)
     && isEstimatorGenrePair(value.estimatorGenreId, value.estimatorGenreSource)
     && isNutrientMetadataMap(value.nutrientMetadata)
+    && hasValidOptionalEstimationEvidence(value)
 }
 
 function isSnapshot(value: unknown): value is FoodSnapshot {
@@ -396,6 +408,7 @@ function hasNewEstimationInputFields(value: Record<string, unknown>): boolean {
     || value.fitMode !== undefined
     || value.requestedNutrients !== undefined
     || value.requestFingerprint !== undefined
+    || Object.prototype.hasOwnProperty.call(value, 'estimationEvidence')
 }
 
 function isCanonicalEstimationInputExtension(value: Record<string, unknown>, known: Record<string, unknown>): boolean {
@@ -406,8 +419,9 @@ function isCanonicalEstimationInputExtension(value: Record<string, unknown>, kno
     || (value.knownNutrientReferenceBasis !== undefined && value.knownNutrientReferenceBasis !== null && !isNutrientReferenceBasis(value.knownNutrientReferenceBasis))
     || (value.fitMode !== undefined && value.fitMode !== 'legacy_point' && value.fitMode !== 'robust_interval')
     || (value.requestedNutrients !== undefined && !isNutrientKeys(value.requestedNutrients))
+    || !hasValidOptionalEstimationEvidence(value)
     || !isNonEmptyString(value.requestFingerprint)
-    || (typeof value.inputHash !== 'string' || !/^fnv1a-v2:[0-9a-f]{8}$/.test(value.inputHash))) return false
+    || (typeof value.inputHash !== 'string' || !/^fnv1a-v[23]:[0-9a-f]{8}$/.test(value.inputHash))) return false
 
   const requestBasis = value.knownNutrientReferenceBasis
   if (requestBasis !== undefined && requestBasis !== null) {
@@ -569,6 +583,51 @@ function isFitReferenceIntervals(value: unknown): boolean {
   ))
 }
 
+function isExplicitCompositionEvidenceTrace(value: unknown): boolean {
+  if (!isRecord(value) || !isNonEmptyString(value.declarationFingerprint)
+    || value.declarationFingerprint.length > 128 || !isNonEmptyString(value.stateRegistryVersion) || value.stateRegistryVersion.length > 128
+    || !['applied', 'deferred'].includes(String(value.status))
+    || !Array.isArray(value.groups) || value.groups.length > 64) return false
+  const seenIds = new Set<string>()
+  const seenPaths = new Set<string>()
+  return value.groups.every((group) => {
+    const ratioCount = isRecord(group) && Array.isArray(group.fixedChildRatios) ? group.fixedChildRatios.length : 0
+    if (!isRecord(group) || !isNonEmptyString(group.compositionId)
+      || group.compositionId.length > 128
+      || !Array.isArray(group.parentPath) || group.parentPath.length > 16
+      || !group.parentPath.every((index) => Number.isSafeInteger(index) && Number(index) >= 0 && Number(index) <= 255)
+      || !['applied', 'deferred'].includes(String(group.status))
+      || (group.status === 'applied' && Object.prototype.hasOwnProperty.call(group, 'reason'))
+      || (group.status === 'deferred' && !isExplicitCompositionDeferredReason(group.reason))
+      || (group.reason !== undefined && !isExplicitCompositionDeferredReason(group.reason))
+      || (group.compositionProfileId !== undefined && (!isNonEmptyString(group.compositionProfileId) || group.compositionProfileId.length > 128))
+      || !Array.isArray(group.fixedChildRatios) || group.fixedChildRatios.length > 64
+      || !group.fixedChildRatios.every((ratio) => typeof ratio === 'number' && Number.isFinite(ratio) && ratio >= 0 && ratio <= 1)
+      || !Array.isArray(group.selectedProfileIds) || group.selectedProfileIds.length > 64
+      || !group.selectedProfileIds.every((id) => id === null || isNonEmptyString(id))
+      || !Array.isArray(group.stateRegistryIds) || group.stateRegistryIds.length > 64
+      || !group.stateRegistryIds.every((id) => id === null || isNonEmptyString(id))
+      || !Array.isArray(group.zeroWeightChildIndices) || group.zeroWeightChildIndices.length > 64
+      || !group.zeroWeightChildIndices.every((index) => Number.isSafeInteger(index) && Number(index) >= 0 && Number(index) < ratioCount)
+      || new Set(group.zeroWeightChildIndices).size !== group.zeroWeightChildIndices.length
+      || !isRecord(group.missingMassFractionByNutrient)
+      || !Object.entries(group.missingMassFractionByNutrient).every(([key, fraction]) => isNutrientKey(key)
+        && typeof fraction === 'number' && Number.isFinite(fraction) && fraction >= 0 && fraction <= 1)) return false
+    if (group.fixedChildRatios.length !== group.selectedProfileIds.length
+      || group.fixedChildRatios.length !== group.stateRegistryIds.length) return false
+    const ratioTotal = group.fixedChildRatios.reduce<number>((sum, ratio) => sum + ratio, 0)
+    if (group.fixedChildRatios.length > 0
+      && Math.abs(ratioTotal - 1) > Number.EPSILON * Math.max(1, group.fixedChildRatios.length) * 8) return false
+    const expectedZeroIndices = group.fixedChildRatios.flatMap((ratio, index) => ratio === 0 ? [index] : [])
+    if (JSON.stringify(expectedZeroIndices) !== JSON.stringify(group.zeroWeightChildIndices)) return false
+    const path = JSON.stringify(group.parentPath)
+    if (seenIds.has(group.compositionId) || seenPaths.has(path)) return false
+    seenIds.add(group.compositionId)
+    seenPaths.add(path)
+    return true
+  })
+}
+
 function isEstimationTrace(value: unknown): boolean {
   if (!isRecord(value)
     || !Array.isArray(value.ingredientNames) || !value.ingredientNames.every(isNonEmptyString)
@@ -584,12 +643,18 @@ function isEstimationTrace(value: unknown): boolean {
     || typeof value.retainedCandidateCombinationCount !== 'number' || !Number.isSafeInteger(value.retainedCandidateCombinationCount) || value.retainedCandidateCombinationCount < 0
     || typeof value.plausibleScenarioCount !== 'number' || !Number.isSafeInteger(value.plausibleScenarioCount) || value.plausibleScenarioCount < 0
     || value.retainedCandidateCombinationCount > value.candidateCombinationCount
-    || value.plausibleScenarioCount > value.retainedCandidateCombinationCount
+    || (value.plausibleScenarioCount > value.retainedCandidateCombinationCount
+      && !(isRecord(value.explicitCompositionEvidence)
+        && value.explicitCompositionEvidence.status === 'applied'
+        && value.candidateCombinationCount === 0
+        && value.retainedCandidateCombinationCount === 0
+        && value.plausibleScenarioCount === 1))
     || typeof value.unresolvedMassRatio !== 'number' || !Number.isFinite(value.unresolvedMassRatio) || value.unresolvedMassRatio < 0 || value.unresolvedMassRatio > 1
     || !isRecord(value.genrePriorContributionRatios)
     || (value.fitMode !== undefined && !['legacy_point', 'robust_interval'].includes(String(value.fitMode)))
     || (value.fitReferenceIntervals !== undefined && !isFitReferenceIntervals(value.fitReferenceIntervals))
-    || (value.ratioFeedback !== undefined && !isEstimationRatioFeedback(value.ratioFeedback))) return false
+    || (value.ratioFeedback !== undefined && !isEstimationRatioFeedback(value.ratioFeedback))
+    || (value.explicitCompositionEvidence !== undefined && !isExplicitCompositionEvidenceTrace(value.explicitCompositionEvidence))) return false
   const ratioTotal = value.ingredientRatios.reduce<number>((total, ratio) => total + ratio, 0)
   if (value.ingredientRatios.length > 0 && Math.abs(ratioTotal - 1) > 0.0001) return false
   return Object.entries(value.genrePriorContributionRatios).every(([key, ratio]) => (
@@ -753,7 +818,25 @@ export function validateBackup(value: unknown): BackupData {
     }
   }
   // 旧形式のバックアップは元の形を保ったまま復元し、読み込み側の設定正規化に任せる。
-  return value as unknown as BackupData
+  const foods = (value.foods as Food[]).map((food) => food.estimationEvidence !== undefined
+    ? { ...food, estimationEvidence: validateExplicitEstimationEvidence(food.estimationEvidence) }
+    : food)
+  const estimationRequests = Array.isArray(value.estimationRequests)
+    ? (value.estimationRequests as EstimationRequest[]).map((request) => {
+      const inputSnapshot = request.inputSnapshot
+      return inputSnapshot.estimationEvidence !== undefined
+        ? { ...request, inputSnapshot: {
+          ...inputSnapshot,
+          estimationEvidence: validateExplicitEstimationEvidence(inputSnapshot.estimationEvidence),
+        } }
+        : request
+    })
+    : undefined
+  return {
+    ...value,
+    foods,
+    ...(estimationRequests === undefined ? {} : { estimationRequests }),
+  } as unknown as BackupData
 }
 
 export function backupToJson(backup: BackupData): string {

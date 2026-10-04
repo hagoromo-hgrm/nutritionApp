@@ -14,7 +14,9 @@ import {
   type Nutrients,
   type NutrientEstimateFitMode,
   type NutritionEstimationInput,
+  type ExplicitEstimationEvidence,
 } from '../types'
+import { validateExplicitEstimationEvidence } from './explicitCompositionEvidence'
 
 export interface NutrientEstimateInputFields {
   productName?: string | null
@@ -28,6 +30,7 @@ export interface NutrientEstimateInputFields {
   ingredientsText?: string | null
   ingredientsSource?: IngredientsSource | null
   inputUnitConversions?: FoodUnitConversion[]
+  estimationEvidence?: ExplicitEstimationEvidence
   knownNutrients?: Partial<Nutrients>
   knownNutrientEvidence?: NutrientEvidenceMap
   knownNutrientReferences?: KnownNutrientReferenceMap
@@ -213,6 +216,9 @@ export function createNutrientEstimateRequestFingerprint(input: NutrientEstimate
         ]
       : null,
     inputUnitConversions: (input.inputUnitConversions ?? []).map((conversion) => [conversion.unit, conversion.baseAmount]),
+    ...(input.estimationEvidence === undefined ? {} : {
+      estimationEvidence: validateExplicitEstimationEvidence(input.estimationEvidence),
+    }),
     knownNutrients: NUTRIENT_KEYS.map((key) => [key, canonical.knownNutrients[key] ?? null]),
     knownNutrientEvidence: NUTRIENT_KEYS.map((key) => {
       const evidence = canonical.knownNutrientEvidence[key]
@@ -258,6 +264,7 @@ export function createNutrientEstimateRequestFingerprintFromSnapshot(snapshot: N
     referenceMassG: snapshot.referenceMassG ?? null,
     referenceMassSource: snapshot.referenceMassSource ?? null,
     inputUnitConversions: snapshot.inputUnitConversions,
+    estimationEvidence: snapshot.estimationEvidence,
     ingredientsText: snapshot.ingredientsText,
     ingredientsSource: snapshot.ingredientsSource,
     knownNutrients: snapshot.knownNutrients,

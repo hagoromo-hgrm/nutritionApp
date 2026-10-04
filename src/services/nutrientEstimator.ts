@@ -10,6 +10,16 @@ import {
 } from './nutrientEstimatorProfiles'
 import { calibratedEstimateRange } from './nutrientEstimatorCalibration'
 import { canonicalizeConfirmedNutrientInputs } from './confirmedNutrientInputs'
+import {
+  prepareExplicitCompositionEvidence,
+  validateExplicitEstimationEvidence,
+  type PreparedExplicitCompositionEvidence,
+} from './explicitCompositionEvidence'
+import {
+  REVIEWED_COMPOSITION_STATE_REGISTRY_VERSION,
+  reviewedCompositionDeclaredNameMatches,
+  reviewedCompositionProfile,
+} from './reviewedCompositionStates'
 import { ESTIMATOR_GENRE_PRIOR_VERSION } from '../data/nutrientEstimatorGenrePriors'
 import {
   normalizedIntervalHuberLoss,
@@ -41,6 +51,11 @@ import {
   type KnownNutrientReferenceMap,
   type EstimatorGenreId,
   type EstimatorGenreSource,
+  type ExplicitEstimationEvidence,
+  type ExplicitCompositionDeferredReason,
+  type ExplicitCompositionEvidenceTrace,
+  type ExplicitCompositionGroup,
+  type ExplicitCompositionTraceGroup,
   type FoodUnit,
   type FoodUnitConversion,
   type IngredientsSource,
@@ -80,7 +95,7 @@ const LEGACY_SEED_NUTRIENT_KEYS = [
 ] as const satisfies readonly NutrientKey[]
 export type EstimateConfidence = 'high' | 'medium' | 'low' | 'unavailable'
 export type EstimateAdoptability = EstimationAdoptionClass | 'unavailable'
-export const NUTRIENT_ESTIMATOR_MODEL_VERSION = 'browser-rule-0.26.0' as const
+export const NUTRIENT_ESTIMATOR_MODEL_VERSION = 'browser-rule-0.27.0' as const
 const MEXT_SOURCE = '文部科学省 日本食品標準成分表（八訂）増補2023年（2026年3月27日正誤表対応）' as const
 const FDC_SOURCE = 'USDA FoodData Central SR Legacy 04/2018' as const
 const INGREDIENT_SPEC_SOURCE = '原料メーカー・業界団体公式仕様' as const
@@ -103,6 +118,7 @@ export interface NutrientEstimateRequest {
   referenceMassSource: string | null
   ingredientsText: string | null
   ingredientsSource: IngredientsSource | null
+  estimationEvidence?: ExplicitEstimationEvidence
   knownNutrients?: Partial<Nutrients>
   knownNutrientEvidence?: NutrientEvidenceMap
   fitMode?: NutrientEstimateFitMode
@@ -116,6 +132,7 @@ interface EstimateDetails {
   method:
     | 'browser_ingredient_rule'
     | 'browser_ingredient_macro_fit'
+    | 'browser_explicit_composition_rule'
     | 'browser_ingredient_partial_rule'
     | 'browser_genre_prior_partial_rule'
   source: string
@@ -186,6 +203,7 @@ export function estimateAdoptability(
 
 const FALLBACK_METHOD: EstimateDetails['method'] = 'browser_ingredient_rule'
 const FIT_METHOD: EstimateDetails['method'] = 'browser_ingredient_macro_fit'
+export const EXPLICIT_COMPOSITION_METHOD: EstimateDetails['method'] = 'browser_explicit_composition_rule'
 export const PARTIAL_METHOD: EstimateDetails['method'] = 'browser_ingredient_partial_rule'
 export const GENRE_PRIOR_PARTIAL_METHOD: EstimateDetails['method'] = 'browser_genre_prior_partial_rule'
 const SOURCE = MEXT_SOURCE
@@ -1604,6 +1622,411 @@ function unavailableEstimatesForInvalidRequest(
   return null
 }
 
+interface ExplicitNutrientContribution {
+  knownPer100g: number
+  missingMassFraction: number
+  sourceFoodIds: string[]
+}
+
+interface ResolvedExplicitComposition {
+  group: ExplicitCompositionGroup
+  fixedChildRatios: number[]
+  zeroWeightChildIndices: number[]
+  selectedProfileIds: Array<string | null>
+  stateRegistryIds: Array<string | null>
+  nutrients: Record<NutrientKey, ExplicitNutrientContribution>
+  identity: string
+}
+
+interface ExplicitCompositionOutput {
+  estimates: Record<EstimatableNutrientKey, NutrientEstimate>
+  trace: ExplicitCompositionEvidenceTrace
+  unresolvedIngredients: string[]
+}
+
+function fnv1aCompositionIdentity(value: string): string {
+  let hash = 0xcbf29ce484222325n
+  const mask = 0xffffffffffffffffn
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= BigInt(value.charCodeAt(index))
+    hash = (hash * 0x100000001b3n) & mask
+  }
+  return hash.toString(16).padStart(16, '0')
+}
+
+function explicitCompositionReason(reason: ExplicitCompositionDeferredReason): string {
+  const messages: Record<ExplicitCompositionDeferredReason, string> = {
+    declaration_stale: '原材料宣言が確認時から変わっています。',
+    parent_path_mismatch: '配合根拠の対象位置が原材料宣言と一致しません。',
+    child_names_mismatch: '配合根拠の材料名が原材料宣言と一致しません。',
+    partial_group: '固定配合の量がそろっていないか合計が不足しています。',
+    raw_stage: '加熱前など製造途中の配合量は完成品へ適用できません。',
+    unknown_amount: '配合量が不明な材料があります。',
+    profile_binding_missing: '正量の材料に確認済み参照profileが結び付いていません。',
+    profile_state_unconfirmed: '材料状態を確認した製造者配合表または実測根拠がありません。',
+    profile_state_mismatch: '材料の種類または掲載状態が参照profileと一致しません。',
+    profile_registry_stale: '確認済み参照profileの版または栄養値が変わっています。',
+    zero_weight_branch: '配合量0のため、この材料枝は計算対象から除外しました。',
+    root_group_missing: '完成品全体の固定配合根拠がありません。',
+    nested_binding_missing: '括弧内の複合材料に適用済みの子配合根拠がありません。',
+    nested_parent_mismatch: '子配合根拠の親位置が一致しません。',
+    parent_mass_unconfirmed: '親材料の完成重量を確認できないため子配合を適用できません。',
+    product_denominator_not_supported: '内側配合の製品全体分母は今回の直接計算に適用できません。',
+    batch_mass_mismatch: '配合重量の分母または親子重量が一致しません。',
+    additives_present: '添加物を含む表示には固定原材料配合を適用できません。',
+  }
+  return messages[reason]
+}
+
+function parsedChildrenAtPath(
+  declaration: ParsedIngredientDeclaration,
+  path: readonly number[],
+): ParsedIngredient[] | null {
+  if (path.length === 0) return declaration.ingredients
+  let parent = declaration.ingredients[path[0]]
+  if (!parent) return null
+  for (const index of path.slice(1)) {
+    parent = parent.components[index]
+    if (!parent) return null
+  }
+  return parent.components
+}
+
+function compositionAmountAtIndex(group: ExplicitCompositionGroup, index: number): number | null | undefined {
+  return group.amounts.children.find((amount) => amount.index === index)?.value
+}
+
+function compositionWeightTotal(group: ExplicitCompositionGroup): number | null {
+  return group.amounts.kind === 'masses_g' ? group.amounts.denominatorMassG : null
+}
+
+function nearCompositionMass(left: number, right: number, itemCount: number): boolean {
+  const tolerance = Math.max(1, Math.abs(left), Math.abs(right)) * Number.EPSILON * Math.max(1, itemCount) * 8
+  return Math.abs(left - right) <= tolerance
+}
+
+function unresolvedExplicitNames(prepared: PreparedExplicitCompositionEvidence): string[] {
+  const root = prepared.groups.find((item) => item.group.parent.path.length === 0)
+  const rootZeros = new Set(root?.zeroWeightChildIndices ?? [])
+  return prepared.declaration.ingredients
+    .flatMap((item, index) => rootZeros.has(index) ? [] : [item.normalizedName])
+}
+
+function explicitCompositionOutput(
+  prepared: PreparedExplicitCompositionEvidence,
+  request: NutrientEstimateRequest,
+  requested: ReadonlySet<EstimatableNutrientKey>,
+): ExplicitCompositionOutput {
+  const groupsById = new Map(prepared.evidence.compositions?.map((group) => [group.id, group]) ?? [])
+  const preparedById = new Map(prepared.groups.map((entry) => [entry.group.id, entry]))
+  const root = prepared.groups.find((entry) => entry.group.parent.path.length === 0)
+  const resolvedGroups = new Map<string, ResolvedExplicitComposition>()
+  const reasons = new Map<string, ExplicitCompositionDeferredReason>()
+  const ignoredZeroPathPrefixes: number[][] = []
+  const activeIds = new Set<string>()
+
+  const defer = (groupId: string, reason: ExplicitCompositionDeferredReason): null => {
+    reasons.set(groupId, reason)
+    return null
+  }
+
+  const resolveGroup = (
+    groupId: string,
+    expectedParentMassG: number | null,
+    productBatchMassG: number | null,
+  ): ResolvedExplicitComposition | null => {
+    const item = preparedById.get(groupId)
+    const group = groupsById.get(groupId)
+    if (!item || !group) return defer(groupId, 'nested_binding_missing')
+    if (activeIds.has(groupId)) return defer(groupId, 'nested_parent_mismatch')
+    if (item.status === 'deferred') return defer(groupId, item.reason ?? 'partial_group')
+    if (group.parent.path.length > 0 && group.denominator === 'product') {
+      return defer(groupId, 'product_denominator_not_supported')
+    }
+    if (group.parent.path.length === 0 && group.denominator !== 'product') {
+      return defer(groupId, 'parent_mass_unconfirmed')
+    }
+
+    const denominatorMassG = compositionWeightTotal(group)
+    if (denominatorMassG !== null) {
+      const expectedMass = group.parent.path.length === 0
+        ? denominatorMassG
+        : group.denominator === 'parent'
+          ? expectedParentMassG
+          : productBatchMassG
+      if (expectedMass === null || expectedMass === undefined) return defer(groupId, 'parent_mass_unconfirmed')
+      if (!nearCompositionMass(denominatorMassG, expectedMass, group.expectedChildNames.length)) {
+        return defer(groupId, 'batch_mass_mismatch')
+      }
+    }
+
+    const children = parsedChildrenAtPath(prepared.declaration, group.parent.path)
+    if (!children || children.length !== group.expectedChildNames.length) return defer(groupId, 'parent_path_mismatch')
+    const preparedRatios = item.fixedChildRatios
+    if (preparedRatios.length !== children.length) return defer(groupId, item.reason ?? 'partial_group')
+    const bindings = new Map((group.childBindings ?? []).map((binding) => [binding.index, binding]))
+    const nutrients = Object.fromEntries(NUTRIENT_KEYS.map((key) => [key, {
+      knownPer100g: 0,
+      missingMassFraction: 0,
+      sourceFoodIds: [] as string[],
+    }])) as Record<NutrientKey, ExplicitNutrientContribution>
+    const selectedProfileIds: Array<string | null> = children.map(() => null)
+    const stateRegistryIds: Array<string | null> = children.map(() => null)
+    const nestedIdentities: Array<string | null> = children.map(() => null)
+    activeIds.add(groupId)
+
+    for (let index = 0; index < children.length; index += 1) {
+      const ratio = preparedRatios[index]
+      if (ratio === 0) {
+        ignoredZeroPathPrefixes.push([...group.parent.path, index])
+        continue
+      }
+      const binding = bindings.get(index)
+      if (!binding) {
+        activeIds.delete(groupId)
+        return defer(groupId, 'profile_binding_missing')
+      }
+      const branchAmount = compositionAmountAtIndex(group, index)
+      const branchMass = branchAmount !== undefined && branchAmount !== null && group.amounts.kind === 'masses_g'
+        ? branchAmount
+        : expectedParentMassG === null
+          ? null
+          : ratio * expectedParentMassG
+
+      let branchNutrients: Record<NutrientKey, ExplicitNutrientContribution>
+      if (binding.kind === 'profile') {
+        if (children[index].components.length > 0) {
+          activeIds.delete(groupId)
+          return defer(groupId, 'nested_binding_missing')
+        }
+        const reviewed = reviewedCompositionProfile(binding.expectedProfileId)
+        if (!reviewed) {
+          activeIds.delete(groupId)
+          return defer(groupId, 'profile_registry_stale')
+        }
+        if (binding.stateSource.reference.trim() === reviewed.state.officialSourceUrl) {
+          activeIds.delete(groupId)
+          return defer(groupId, 'profile_state_unconfirmed')
+        }
+        if (!reviewedCompositionDeclaredNameMatches(binding.expectedProfileId, children[index].normalizedName)) {
+          activeIds.delete(groupId)
+          return defer(groupId, 'profile_state_mismatch')
+        }
+        if (
+          reviewed.state.profileStateId !== binding.expectedProfileStateId
+          || reviewed.state.finishedIngredientStateId !== binding.finishedIngredientStateId
+        ) {
+          activeIds.delete(groupId)
+          return defer(groupId, 'profile_state_mismatch')
+        }
+        selectedProfileIds[index] = reviewed.profile.profileId
+        stateRegistryIds[index] = reviewed.state.registryId
+        branchNutrients = Object.fromEntries(NUTRIENT_KEYS.map((key) => {
+          const value = reviewed.profile.nutrients[key]
+          return [key, value === null
+            ? { knownPer100g: 0, missingMassFraction: 1, sourceFoodIds: [] }
+            : {
+                knownPer100g: value,
+                missingMassFraction: 0,
+                sourceFoodIds: [...sourceFoodIdsForNutrient(reviewed.profile, key)],
+              }]
+        })) as Record<NutrientKey, ExplicitNutrientContribution>
+      } else {
+        if (!groupsById.has(binding.compositionId)) {
+          activeIds.delete(groupId)
+          return defer(groupId, 'nested_binding_missing')
+        }
+        if (JSON.stringify(groupsById.get(binding.compositionId)?.parent.path) !== JSON.stringify([...group.parent.path, index])) {
+          activeIds.delete(groupId)
+          return defer(groupId, 'nested_parent_mismatch')
+        }
+        const nested = resolveGroup(binding.compositionId, branchMass, productBatchMassG)
+        if (!nested) {
+          activeIds.delete(groupId)
+          return defer(groupId, reasons.get(binding.compositionId) ?? 'nested_binding_missing')
+        }
+        branchNutrients = nested.nutrients
+        selectedProfileIds[index] = nested.identity
+        nestedIdentities[index] = nested.identity
+      }
+
+      for (const key of NUTRIENT_KEYS) {
+        nutrients[key].knownPer100g += branchNutrients[key].knownPer100g * ratio
+        nutrients[key].missingMassFraction += branchNutrients[key].missingMassFraction * ratio
+        nutrients[key].sourceFoodIds.push(...branchNutrients[key].sourceFoodIds)
+      }
+    }
+    activeIds.delete(groupId)
+
+    for (const key of NUTRIENT_KEYS) {
+      nutrients[key].missingMassFraction = Math.min(1, Math.max(0, nutrients[key].missingMassFraction))
+      nutrients[key].sourceFoodIds = [...new Set(nutrients[key].sourceFoodIds)]
+    }
+    const identityPayload = JSON.stringify({
+      groupId,
+      ratios: preparedRatios,
+      selectedProfileIds,
+      nestedIdentities,
+      registryIds: stateRegistryIds,
+    })
+    const resolved: ResolvedExplicitComposition = {
+      group,
+      fixedChildRatios: [...preparedRatios],
+      zeroWeightChildIndices: [...item.zeroWeightChildIndices],
+      selectedProfileIds,
+      stateRegistryIds,
+      nutrients,
+      identity: `explicit-composition:${fnv1aCompositionIdentity(identityPayload)}`,
+    }
+    resolvedGroups.set(groupId, resolved)
+    return resolved
+  }
+
+  let rootResolved: ResolvedExplicitComposition | null = null
+  let rootFailure: ExplicitCompositionDeferredReason | undefined
+  if (!root) {
+    rootFailure = 'root_group_missing'
+  } else {
+    const rootBatchMassG = compositionWeightTotal(root.group)
+    rootResolved = resolveGroup(root.group.id, null, rootBatchMassG)
+    rootFailure = rootResolved ? undefined : reasons.get(root.group.id) ?? root.reason ?? 'partial_group'
+  }
+
+  if (root && rootResolved) {
+    const used = new Set(resolvedGroups.keys())
+    const unusedRelevant = prepared.groups.find((item) => {
+      if (used.has(item.group.id)) return false
+      if (ignoredZeroPathPrefixes.some((prefix) => (
+        item.group.parent.path.length >= prefix.length
+        && prefix.every((index, at) => item.group.parent.path[at] === index)
+      ))) return false
+      return true
+    })
+    if (unusedRelevant) {
+      rootFailure = reasons.get(unusedRelevant.group.id) ?? unusedRelevant.reason ?? 'nested_binding_missing'
+      reasons.set(unusedRelevant.group.id, rootFailure)
+      reasons.set(root.group.id, rootFailure)
+      for (const groupId of resolvedGroups.keys()) reasons.set(groupId, rootFailure)
+      rootResolved = null
+    }
+  }
+
+  const reasonForGroup = (item: PreparedExplicitCompositionEvidence['groups'][number]): ExplicitCompositionDeferredReason | undefined => {
+    if (reasons.has(item.group.id)) return reasons.get(item.group.id)
+    if (ignoredZeroPathPrefixes.some((prefix) => (
+      item.group.parent.path.length >= prefix.length
+      && prefix.every((index, at) => item.group.parent.path[at] === index)
+    ))) return 'zero_weight_branch'
+    return item.reason ?? rootFailure
+  }
+
+  const traceGroups: ExplicitCompositionTraceGroup[] = prepared.groups.map((item) => {
+    const resolved = resolvedGroups.get(item.group.id)
+    const reason = reasonForGroup(item)
+    const zeroSubtree = reason === 'zero_weight_branch'
+    const ratios = zeroSubtree ? [] : resolved?.fixedChildRatios ?? item.fixedChildRatios
+    const selectedProfileIds = zeroSubtree
+      ? []
+      : resolved?.selectedProfileIds ?? (ratios.length > 0 ? ratios.map(() => null) : [])
+    const stateRegistryIds = zeroSubtree
+      ? []
+      : resolved?.stateRegistryIds ?? (ratios.length > 0 ? ratios.map(() => null) : [])
+    const missingMassFractionByNutrient: Partial<Record<NutrientKey, number>> = {}
+    if (resolved) {
+      for (const key of NUTRIENT_KEYS) {
+        const missing = resolved.nutrients[key].missingMassFraction
+        if (missing > 0) missingMassFractionByNutrient[key] = missing
+      }
+    }
+    return {
+      compositionId: item.group.id,
+      ...(resolved ? { compositionProfileId: resolved.identity } : {}),
+      parentPath: [...item.group.parent.path],
+      status: resolved && !rootFailure ? 'applied' : 'deferred',
+      ...(reason ? { reason } : {}),
+      fixedChildRatios: [...ratios],
+      selectedProfileIds: [...selectedProfileIds],
+      stateRegistryIds: [...stateRegistryIds],
+      zeroWeightChildIndices: zeroSubtree ? [] : [...(resolved?.zeroWeightChildIndices ?? item.zeroWeightChildIndices)],
+      missingMassFractionByNutrient,
+    }
+  })
+
+  const deferred = !rootResolved || Boolean(rootFailure)
+  const trace: ExplicitCompositionEvidenceTrace = {
+    declarationFingerprint: prepared.currentDeclarationFingerprint,
+    stateRegistryVersion: REVIEWED_COMPOSITION_STATE_REGISTRY_VERSION,
+    status: deferred ? 'deferred' : 'applied',
+    groups: traceGroups,
+  }
+  const estimates = mapEstimatableNutrients<NutrientEstimate>((key) => {
+    if (!requested.has(key)) {
+      return unavailable(
+        'この栄養素は今回の推計対象に選ばれていません。',
+        '必要な場合は推計対象に含めて再実行してください。',
+        [],
+        ['not_requested'],
+      )
+    }
+    if (deferred || !rootResolved) {
+      const reason = rootFailure ?? 'root_group_missing'
+      return unavailable(
+        `確認済み固定配合を適用できないため、${NUTRIENT_LABELS[key]}は推計できません。`,
+        '完成品の固定配合と材料状態を確認した根拠を更新するか、この栄養素を手入力してください。',
+        [`明示配合根拠を保留しました: ${explicitCompositionReason(reason)}`],
+        ['ingredient_unresolved'],
+      )
+    }
+    const nutrient = rootResolved.nutrients[key]
+    const point = round(nutrient.knownPer100g * request.referenceMassG! / 100)
+    const missing = nutrient.missingMassFraction > 0
+    if (missing && nutrient.sourceFoodIds.length === 0) {
+      return unavailable(
+        `参照食品の${NUTRIENT_LABELS[key]}がすべて欠損しているため、この栄養素は推計できません。`,
+        'パッケージの栄養成分表示を確認して手入力するか、この栄養素を採用せず食品登録を続けてください。',
+        ['正量材料のMEXT栄養値が欠損しています。欠損値は0として扱っていません。'],
+        ['reference_value_missing'],
+      )
+    }
+    const parentKey = COMPOSITION_PARENT_NUTRIENTS[key]
+    const zeroEvidence: EstimationZeroEvidence = !missing
+      && parentKey !== undefined
+      && rootResolved.nutrients[parentKey].missingMassFraction === 0
+      && rootResolved.nutrients[parentKey].knownPer100g === 0
+      ? 'derived_from_parent_zero'
+      : 'uncertain'
+    const calibrated = calibratedEstimateRange({
+      value: point,
+      nutrientKey: key,
+      genreId: null,
+      confidence: 'low',
+      zeroEvidence,
+    })
+    return {
+      status: 'available',
+      value: point,
+      range: calibrated.range,
+      confidence: 'low',
+      method: missing ? PARTIAL_METHOD : EXPLICIT_COMPOSITION_METHOD,
+      source: estimateSource(nutrient.sourceFoodIds),
+      sourceFoodIds: [...nutrient.sourceFoodIds],
+      warnings: [
+        '完成品の固定配合を、確認済み材料状態に一致する直接MEXTプロファイルだけで計算しました。',
+        '固定配合は候補選択・比率探索・ジャンル事前分布・比率校正で変更していません。',
+        ...(missing ? [
+          `正量材料の${NUTRIENT_LABELS[key]}に欠損があります。表示値は確認できる材料分だけの部分参考値で、製品全体の下限や上限ではありません。`,
+        ] : []),
+      ],
+      limitationReasons: missing ? ['reference_value_missing'] : [],
+      calibration: calibrated.calibration,
+      adoptionClass: 'limited_confirmation',
+      ...(point === 0 ? { zeroEvidence: missing ? 'uncertain' as const : zeroEvidence } : {}),
+    }
+  })
+  const unresolvedIngredients = deferred ? unresolvedExplicitNames(prepared) : []
+  return { estimates, trace, unresolvedIngredients }
+}
+
 /**
  * 原材料表示順、商品名の弱い事前確率、入力済み主要栄養値を使う、外部通信を行わない決定的な参考推計。
  * referenceMassG は request の baseAmount/baseUnit に対応する明示的な内容物重量でなければならない。
@@ -1623,17 +2046,50 @@ export function estimateNutrients(
     knownNutrients: canonicalInputs.knownNutrients,
     knownNutrientEvidence: canonicalInputs.knownNutrientEvidence,
     knownNutrientReferences: canonicalInputs.knownNutrientReferences,
+    ...(requestInput.estimationEvidence === undefined
+      ? {}
+      : { estimationEvidence: validateExplicitEstimationEvidence(requestInput.estimationEvidence) }),
   }
   validateKnownNutrientReferences(request)
   const requested = new Set(requestedKeys)
   const postprocessingKnownNutrients = knownNutrientsForEstimatePostprocessing(request)
   let estimates: Record<EstimatableNutrientKey, NutrientEstimate>
   let optimization: EstimationOptimization | undefined
+  let explicitOutput: ExplicitCompositionOutput | undefined
 
   const invalidRequestEstimates = unavailableEstimatesForInvalidRequest(request)
   if (invalidRequestEstimates) {
     estimates = invalidRequestEstimates
   } else {
+    if (request.estimationEvidence?.compositions && request.estimationEvidence.compositions.length > 0) {
+      const prepared = prepareExplicitCompositionEvidence(request.estimationEvidence, request.ingredientsText!)
+      explicitOutput = explicitCompositionOutput(prepared, request, requested)
+      estimates = explicitOutput.estimates
+      const rootGroup = explicitOutput.trace.groups.find((group) => group.parentPath.length === 0)
+      const rootHasAlignedRows = Boolean(rootGroup
+        && rootGroup.fixedChildRatios.length === prepared.declaration.ingredients.length
+        && rootGroup.selectedProfileIds.length === prepared.declaration.ingredients.length
+        && rootGroup.stateRegistryIds.length === prepared.declaration.ingredients.length)
+      optimization = {
+        converged: explicitOutput.trace.status === 'applied',
+        ...(explicitOutput.trace.status === 'applied' ? { scenarioCount: 1 } : {}),
+        trace: {
+          ingredientNames: rootHasAlignedRows
+            ? prepared.declaration.ingredients.map((ingredient) => ingredient.normalizedName)
+            : [],
+          selectedProfileIds: rootHasAlignedRows ? [...(rootGroup?.selectedProfileIds ?? [])] : [],
+          ingredientRatios: rootHasAlignedRows ? [...(rootGroup?.fixedChildRatios ?? [])] : [],
+          fitScore: null,
+          normalizedFitError: null,
+          candidateCombinationCount: 0,
+          retainedCandidateCombinationCount: 0,
+          plausibleScenarioCount: explicitOutput.trace.status === 'applied' ? 1 : 0,
+          unresolvedMassRatio: explicitOutput.trace.status === 'applied' ? 0 : 1,
+          genrePriorContributionRatios: {},
+          explicitCompositionEvidence: explicitOutput.trace,
+        },
+      }
+    } else {
     const declaration = parseIngredientDeclaration(request.ingredientsText!)
     const resolved: ResolvedIngredient[] = declaration.ingredients.map((ingredient) => ({
       ingredient,
@@ -1914,18 +2370,24 @@ export function estimateNutrients(
         },
       }
     }
+    }
   }
 
-  estimates = applySaturatedFatRatioPrior(
-    estimates,
-    postprocessingKnownNutrients,
-    request.estimatorGenreId,
-    ratioStrategy.postBlendWeight,
-  )
-  estimates = applyCompositionUpperBounds(estimates, postprocessingKnownNutrients)
-  const unresolvedIngredients = request.ingredientsText?.trim()
-    ? unresolvedIngredientNames(request.ingredientsText, request.productName, request.estimatorGenreId)
-    : []
+  if (!explicitOutput) {
+    estimates = applySaturatedFatRatioPrior(
+      estimates,
+      postprocessingKnownNutrients,
+      request.estimatorGenreId,
+      ratioStrategy.postBlendWeight,
+    )
+    estimates = applyCompositionUpperBounds(estimates, postprocessingKnownNutrients)
+  } else {
+    estimates = applyCompositionUpperBounds(estimates, postprocessingKnownNutrients)
+  }
+  const unresolvedIngredients = explicitOutput?.unresolvedIngredients
+    ?? (request.ingredientsText?.trim()
+      ? unresolvedIngredientNames(request.ingredientsText, request.productName, request.estimatorGenreId)
+      : [])
   const hasPartialEstimate = Object.values(estimates).some((estimate) => (
     estimate.status === 'available' && estimate.method === PARTIAL_METHOD
   ))
@@ -2025,6 +2487,22 @@ export function toStoredNutrientEstimateResult(
                       : {}),
                     ...(result.optimization.trace.ratioFeedback
                       ? { ratioFeedback: { ...result.optimization.trace.ratioFeedback } }
+                      : {}),
+                    ...(result.optimization.trace.explicitCompositionEvidence
+                      ? {
+                          explicitCompositionEvidence: {
+                            ...result.optimization.trace.explicitCompositionEvidence,
+                            groups: result.optimization.trace.explicitCompositionEvidence.groups.map((group) => ({
+                              ...group,
+                              parentPath: [...group.parentPath],
+                              fixedChildRatios: [...group.fixedChildRatios],
+                              selectedProfileIds: [...group.selectedProfileIds],
+                              stateRegistryIds: [...group.stateRegistryIds],
+                              zeroWeightChildIndices: [...group.zeroWeightChildIndices],
+                              missingMassFractionByNutrient: { ...group.missingMassFractionByNutrient },
+                            })),
+                          },
+                        }
                       : {}),
                   },
                 }

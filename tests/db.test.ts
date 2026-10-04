@@ -780,6 +780,24 @@ describe('IndexedDB data safety', () => {
     expect(await db.foods.get(replacement.id)).toBeUndefined()
   })
 
+  it('不正な明示推計根拠を含むバックアップでは既存食品を保持する', async () => {
+    await saveFood(userFood)
+    const beforeFood = await db.foods.get(userFood.id)
+    const invalidFood = {
+      ...userFood,
+      id: 'invalid_evidence_food',
+      estimationEvidence: { schemaVersion: 2, declarationFingerprint: 'future-schema' },
+    } as unknown as Food
+    const backup: BackupData = {
+      format: 'nutrition-pwa-backup', dataFormatVersion: 1, exportedAt: '2026-07-15T00:00:00.000Z',
+      foods: [invalidFood], mealEntries: [], favorites: [], settings: await getSettings(),
+    }
+
+    await expect(replaceAllData(backup)).rejects.toThrow()
+    expect(await db.foods.get(userFood.id)).toEqual(beforeFood)
+    expect(await db.foods.get(invalidFood.id)).toBeUndefined()
+  })
+
   it('全置換後の検索データ更新失敗を、復元済みの結果として返す', async () => {
     await saveFood(userFood)
     const replacement = { ...userFood, id: 'replacement_food', name: '復元食品' }

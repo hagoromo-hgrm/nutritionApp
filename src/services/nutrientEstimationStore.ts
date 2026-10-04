@@ -16,6 +16,7 @@ import {
   type NutritionEstimationInput,
 } from '../types'
 import { createId } from '../utils/id'
+import { validateExplicitEstimationEvidence } from './explicitCompositionEvidence'
 import {
   canonicalizeConfirmedNutrientInputs,
   confirmedNutrientInputsFromFood,
@@ -63,11 +64,16 @@ export function createEstimationInput(
     referenceMassSource,
     ingredientsText: food.ingredientsText ?? null,
     ingredientsSource: food.ingredientsSource ? { ...food.ingredientsSource } : null,
+    ...(food.estimationEvidence === undefined ? {} : {
+      estimationEvidence: validateExplicitEstimationEvidence(food.estimationEvidence),
+    }),
     ...fallbackEvidence,
     fitMode: 'legacy_point' as const,
     requestedNutrients: ESTIMATABLE_NUTRIENT_KEYS,
   }
   const canonicalInputs = canonicalizeConfirmedNutrientInputs(requestFields)
+  const estimationEvidence = requestFields.estimationEvidence === undefined
+    ? undefined : validateExplicitEstimationEvidence(requestFields.estimationEvidence)
   const knownNutrients = Object.fromEntries(NUTRIENT_KEYS
     .filter((key) => canonicalInputs.knownNutrients[key] !== undefined)
     .map((key) => [key, canonicalInputs.knownNutrients[key]]))
@@ -90,6 +96,7 @@ export function createEstimationInput(
     referenceMassSource: requestFields.referenceMassSource ?? null,
     ingredientsText: requestFields.ingredientsText ?? null,
     ingredientsSource: requestFields.ingredientsSource ? { ...requestFields.ingredientsSource } : null,
+    ...(estimationEvidence === undefined ? {} : { estimationEvidence }),
     knownNutrients: canonicalInputs.knownNutrients,
     knownNutrientEvidence: canonicalInputs.knownNutrientEvidence,
     knownNutrientReferences: canonicalInputs.knownNutrientReferences,
@@ -126,6 +133,7 @@ export function createEstimationInput(
     knownNutrientReferenceBasis: canonicalInputs.knownNutrientReferenceBasis
       ? { ...canonicalInputs.knownNutrientReferenceBasis }
       : null,
+    ...(estimationEvidence === undefined ? {} : { estimationEvidence }),
     fitMode: evaluatedRequest?.fitMode,
     requestedNutrients: [...snapshotContext.requestedNutrients],
     requestFingerprint: createNutrientEstimateRequestFingerprint(snapshotContext),

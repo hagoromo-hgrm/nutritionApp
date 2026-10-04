@@ -373,6 +373,18 @@ describe('export formats', () => {
     const robustV2 = { ...v2, estimationResults: [robustEstimationResult] }
     expect(validateBackup(robustV2).estimationResults?.[0].optimization?.trace?.fitReferenceIntervals)
       .toEqual(robustEstimationResult.optimization?.trace?.fitReferenceIntervals)
+    const invalidCompositionTrace = {
+      ...robustEstimationResult,
+      optimization: {
+        ...robustEstimationResult.optimization!,
+        trace: {
+          ...robustEstimationResult.optimization!.trace!,
+          explicitCompositionEvidence: { declarationFingerprint: 'test', status: 'applied', groups: [{}] },
+        },
+      },
+    }
+    expect(() => validateBackup({ ...robustV2, estimationResults: [invalidCompositionTrace] }))
+      .toThrow('推計要求、結果または採用履歴')
     expect(estimationResult.optimization?.trace?.ratioFeedback).toMatchObject({
       feedbackWeight: 0.2,
       pooledSampleSize: 113,

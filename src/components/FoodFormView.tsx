@@ -226,6 +226,7 @@ export function FoodFormView({ draft, returnView, allowCommercialClassification,
             knownNutrientReferences={confirmedInputs.knownNutrientReferences}
             knownNutrientReferenceBasis={confirmedInputs.knownNutrientReferenceBasis}
             fitMode={confirmedInputs.fitMode}
+            estimationEvidence={draft.estimationEvidence}
             inputUnitConversions={draft.inputUnitConversions
               .filter((conversion) => conversion.unit.trim())
               .map((conversion) => ({ unit: conversion.unit.trim(), baseAmount: Number(conversion.baseAmount) }))}

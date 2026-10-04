@@ -15,6 +15,7 @@ import { queueFoodEstimateAdoption } from '../src/components/formDrafts'
 import { confirmedNutrientInputsFromFood } from '../src/services/confirmedNutrientInputs'
 import { estimateNutrients, type NutrientEstimateRequest } from '../src/services/nutrientEstimator'
 import { EMPTY_NUTRIENTS } from '../src/types'
+import { createIngredientDeclarationFingerprint } from '../src/services/explicitCompositionEvidence'
 
 const screens = vi.hoisted(() => ({ form: null as ComponentProps<typeof FoodFormView> | null, settings: null as ComponentProps<typeof SettingsView> | null, releaseNotes: null as ComponentProps<typeof ReleaseNotesView> | null, foods: null as ComponentProps<typeof FoodsView> | null, input: null as ComponentProps<typeof SearchInputView> | null, results: null as ComponentProps<typeof SearchResultsView> | null }))
 vi.mock('../src/components/FoodFormView', () => ({ FoodFormView: (props: ComponentProps<typeof FoodFormView>) => { screens.form = props; return null } }))
@@ -119,6 +120,37 @@ it.each([false, true])('推計の実入力を保存し、数値が同じでも�
     expect(snapshot.requestedNutrients).toEqual(['fiberG'])
     expect((await db.foods.get('test-food'))!.nutrients.fiberG).toBe(result.estimates.fiberG.value)
   }
+})
+
+it('通常食品編集は配合根拠を保持し、原材料変更で根拠の宣言fingerprintを更新しない', async () => {
+  const ingredientsText = '上白糖、脱脂粉乳'
+  const evidence = {
+    schemaVersion: 1 as const,
+    declarationFingerprint: createIngredientDeclarationFingerprint(ingredientsText),
+    compositions: [{
+      id: 'app-synthetic-batch', parent: { section: 'ingredient' as const, path: [] },
+      expectedChildNames: ['上白糖', '脱脂粉乳'], denominator: 'product' as const, weightStage: 'finished' as const,
+      amounts: { kind: 'masses_g' as const, denominatorMassG: 100, children: [{ index: 0, value: 60 }, { index: 1, value: 40 }] },
+      source: { kind: 'user_measurement' as const, reference: '合成計測記録', verified: true as const, checkedAt: '2026-10-04T00:00:00.000Z' },
+    }],
+  }
+  await db.foods.update('test-food', { ingredientsText, estimationEvidence: evidence })
+  await act(async () => root.unmount())
+  root = createRoot(host)
+  await act(async () => root.render(createElement(App)))
+  await vi.waitFor(async () => { await act(async () => { await new Promise((resolve) => setTimeout(resolve, 10)) }); expect(host.querySelector('nav')).not.toBeNull() })
+  await act(async () => { Array.from(host.querySelectorAll('button')).find((button) => button.textContent?.includes('設定'))!.click() })
+  await act(async () => screens.settings!.onOpenFoodMaster())
+  await act(async () => screens.foods!.onOpenSearch!())
+  await act(async () => screens.input!.setBars(['テスト専用食品']))
+  await act(async () => screens.input!.onSearch())
+  await vi.waitFor(async () => { await act(async () => { await new Promise((resolve) => setTimeout(resolve, 10)) }); expect(screens.results?.groups[0]?.items).toHaveLength(1) })
+  const selected = screens.results!.groups[0]
+  await act(async () => screens.results!.onSelect(selected.query, selected.items[0]))
+  expect(screens.form!.draft.estimationEvidence).toEqual(evidence)
+  await act(async () => screens.form!.setDraft({ ...screens.form!.draft, ingredientsText: '上白糖、脱脂粉乳、ココアパウダー' }))
+  await act(async () => { await screens.form!.onSubmit() })
+  expect((await db.foods.get('test-food'))!.estimationEvidence).toEqual(evidence)
 })
 
 it('検索分類で除外された同一familyの食品を再選択候補へ追加しない', async () => {

@@ -56,6 +56,36 @@ beforeEach(async () => {
 })
 
 describe('nutrient estimation store', () => {
+  it('評価済みrequest evidenceをsnapshotへ独立コピーし、Food fallbackには混入しない', () => {
+    const sourceEvidence = {
+      schemaVersion: 1 as const,
+      declarationFingerprint: 'ingredient-declaration:evaluated',
+      compositions: [{
+        id: 'grain-blend', parent: { section: 'ingredient' as const, path: [0] }, expectedChildNames: ['小麦粉', '砂糖'],
+        denominator: 'product' as const, weightStage: 'finished' as const,
+        amounts: { kind: 'fractions' as const, children: [{ index: 0, value: 0.7 }, { index: 1, value: 0.3 }] },
+        source: { kind: 'user_measurement' as const, reference: '評価時の記録', verified: true as const, checkedAt: '2026-10-04T00:00:00.000Z' },
+      }],
+    }
+    const evaluatedRequest = {
+      requestId: 'evidence-evaluation', productName: food.name, baseAmount: 1, baseUnit: '個' as const,
+      referenceMassG: 50, referenceMassSource: 'test', ingredientsText: food.ingredientsText ?? null,
+      ingredientsSource: food.ingredientsSource ?? null, knownNutrients: {}, requestedNutrients: ['fiberG' as const],
+      estimationEvidence: sourceEvidence, requestedAt: '2026-10-04T00:00:00.000Z',
+    }
+    const snapshot = createEstimationInput(food, { evaluatedRequest })
+    sourceEvidence.compositions[0].amounts.children[0].value = 0.2
+
+    expect(snapshot.estimationEvidence?.compositions?.[0].amounts).toEqual({
+      kind: 'fractions', children: [{ index: 0, value: 0.7 }, { index: 1, value: 0.3 }],
+    })
+    expect(snapshot.estimationEvidence?.compositions).not.toBe(sourceEvidence.compositions)
+
+    const foodFallbackSnapshot = createEstimationInput({ ...food, estimationEvidence: sourceEvidence })
+    expect(foodFallbackSnapshot.estimationEvidence?.declarationFingerprint).toBe('ingredient-declaration:evaluated')
+    expect(foodFallbackSnapshot.estimationEvidence?.compositions).not.toBe(sourceEvidence.compositions)
+  })
+
   it('NutritionApp入力から端末内推計、履歴保存、欠損値採用まで接続する', async () => {
     const requestedAt = '2026-07-25T00:01:00.000Z'
     const request = createEstimationRequest(food, { requestId: 'request_browser_integration', now: requestedAt })

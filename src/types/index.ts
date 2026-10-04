@@ -33,6 +33,91 @@ export interface KnownNutrientReference {
   basis?: NutrientReferenceBasis | null
 }
 export type KnownNutrientReferenceMap = Partial<Record<NutrientKey, KnownNutrientReference>>
+
+export interface ExplicitCompositionEvidenceSource {
+  kind: 'manufacturer_recipe' | 'user_measurement'
+  reference: string
+  verified: true
+  checkedAt: string
+  version?: string
+  sourceSha256?: string
+}
+
+export type ExplicitCompositionChildBinding =
+  | {
+      kind: 'profile'
+      index: number
+      expectedProfileId: string
+      expectedProfileStateId: string
+      finishedIngredientStateId: string
+      stateSource: ExplicitCompositionEvidenceSource
+    }
+  | {
+      kind: 'composition'
+      index: number
+      compositionId: string
+    }
+
+export interface ExplicitCompositionGroup {
+  id: string
+  parent: { section: 'ingredient'; path: readonly number[] }
+  expectedChildNames: readonly string[]
+  denominator: 'product' | 'parent'
+  weightStage: 'raw' | 'finished'
+  childBindings?: readonly ExplicitCompositionChildBinding[]
+  amounts:
+    | { kind: 'fractions'; children: readonly { index: number; value: number | null }[] }
+    | { kind: 'masses_g'; denominatorMassG: number; children: readonly { index: number; value: number | null }[] }
+  source: ExplicitCompositionEvidenceSource
+}
+
+/** Step8 deliberately accepts composition evidence only; later schema versions add other evidence types. */
+export interface ExplicitEstimationEvidence {
+  schemaVersion: 1
+  declarationFingerprint: string
+  compositions?: readonly ExplicitCompositionGroup[]
+}
+
+export type ExplicitCompositionDeferredReason =
+  | 'declaration_stale'
+  | 'parent_path_mismatch'
+  | 'child_names_mismatch'
+  | 'partial_group'
+  | 'raw_stage'
+  | 'unknown_amount'
+  | 'profile_binding_missing'
+  | 'profile_state_unconfirmed'
+  | 'profile_state_mismatch'
+  | 'profile_registry_stale'
+  | 'zero_weight_branch'
+  | 'root_group_missing'
+  | 'nested_binding_missing'
+  | 'nested_parent_mismatch'
+  | 'parent_mass_unconfirmed'
+  | 'product_denominator_not_supported'
+  | 'batch_mass_mismatch'
+  | 'additives_present'
+
+export interface ExplicitCompositionTraceGroup {
+  compositionId: string
+  compositionProfileId?: string
+  parentPath: number[]
+  status: 'applied' | 'deferred'
+  reason?: ExplicitCompositionDeferredReason
+  fixedChildRatios: number[]
+  selectedProfileIds: Array<string | null>
+  stateRegistryIds: Array<string | null>
+  zeroWeightChildIndices: number[]
+  missingMassFractionByNutrient: Partial<Record<NutrientKey, number>>
+}
+
+export interface ExplicitCompositionEvidenceTrace {
+  declarationFingerprint: string
+  stateRegistryVersion: string
+  status: 'applied' | 'deferred'
+  groups: ExplicitCompositionTraceGroup[]
+}
+
 export type EstimationConfidence = 'high' | 'medium' | 'low' | 'unavailable'
 export type EstimationZeroEvidence = 'derived_from_parent_zero' | 'known_parent_zero' | 'uncertain'
 export type EstimationAdoptionClass =
@@ -182,6 +267,7 @@ export interface Food {
   estimatorGenreId?: EstimatorGenreId | null
   estimatorGenreSource?: EstimatorGenreSource | null
   nutrientMetadata?: NutrientMetadataMap
+  estimationEvidence?: ExplicitEstimationEvidence
   createdAt: string
   updatedAt: string
 }
@@ -543,6 +629,7 @@ export interface NutritionEstimationInput {
   knownNutrientEvidence?: NutrientEvidenceMap
   knownNutrientReferences?: KnownNutrientReferenceMap
   knownNutrientReferenceBasis?: NutrientReferenceBasis | null
+  estimationEvidence?: ExplicitEstimationEvidence
   fitMode?: NutrientEstimateFitMode
   requestedNutrients?: NutrientKey[]
   requestFingerprint?: string
@@ -652,6 +739,7 @@ export interface EstimationTrace {
   fitReferenceIntervals?: Partial<Record<NutrientKey, EstimationFitReferenceInterval>>
   /** 候補・配合探索へ弱い制約として戻した栄養素比率。 */
   ratioFeedback?: EstimationRatioFeedback
+  explicitCompositionEvidence?: ExplicitCompositionEvidenceTrace
 }
 
 export interface EstimationOptimization {

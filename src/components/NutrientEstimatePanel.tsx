@@ -3,6 +3,7 @@ import {
   ESTIMATABLE_NUTRIENT_KEYS,
   ESTIMATION_LIMITATION_LABELS,
   GENRE_PRIOR_PARTIAL_METHOD,
+  EXPLICIT_COMPOSITION_METHOD,
   PARTIAL_METHOD,
   estimateAdoptability,
   estimateNutrients,
@@ -17,6 +18,7 @@ import {
   canonicalizeConfirmedNutrientInputs,
 } from '../services/confirmedNutrientInputs'
 import { nutrientEstimatePanelRequestKey } from '../services/nutrientEstimateRequestKey'
+import { validateExplicitEstimationEvidence } from '../services/explicitCompositionEvidence'
 import {
   NUTRIENT_LABELS,
   NUTRIENT_UNITS,
@@ -28,6 +30,7 @@ import {
   type NutrientEvidenceMap,
   type NutrientReferenceBasis,
   type Nutrients,
+  type ExplicitEstimationEvidence,
 } from '../types'
 import { ESTIMATOR_GENRE_LABELS } from '../services/estimatorGenre'
 
@@ -65,6 +68,7 @@ export interface NutrientEstimatePanelProps {
   knownNutrientReferenceBasis?: NutrientReferenceBasis | null
   fitMode?: NutrientEstimateRequest['fitMode']
   inputUnitConversions?: FoodUnitConversion[]
+  estimationEvidence?: ExplicitEstimationEvidence
   onEvaluated?: (evaluation: NutrientEstimateEvaluation) => void
   onAdopt: (adoption: NutrientEstimateAdoption) => void
   onRejectAll?: (evaluation: NutrientEstimateEvaluation, nutrientKeys: EstimatableNutrientKey[]) => void
@@ -115,6 +119,7 @@ export function NutrientEstimatePanel(props: NutrientEstimatePanelProps) {
       baseAmount: props.basis.baseAmount,
       baseUnit: props.basis.baseUnit,
       inputUnitConversions: props.inputUnitConversions,
+      estimationEvidence: props.estimationEvidence,
       referenceMassG: props.referenceMassG,
       referenceMassSource: props.referenceMassSource,
       ingredientsText: props.ingredientsText,
@@ -135,6 +140,8 @@ export function NutrientEstimatePanel(props: NutrientEstimatePanelProps) {
       baseAmount: props.basis.baseAmount,
       baseUnit: props.basis.baseUnit,
       inputUnitConversions: props.inputUnitConversions,
+      estimationEvidence: props.estimationEvidence === undefined
+        ? undefined : validateExplicitEstimationEvidence(props.estimationEvidence),
       ingredientsText: props.ingredientsText,
       ingredientsSource: props.ingredientsSource,
       knownNutrients: canonicalInputs.knownNutrients,
@@ -333,6 +340,8 @@ function AvailableEstimateDetails({ estimate, unit }: { estimate: AvailableNutri
             ? '既知原材料とジャンル階層型事前分布による端末内推計'
             : isPartial
             ? '数値を確認できる原材料分だけの端末内推計'
+            : estimate.method === EXPLICIT_COMPOSITION_METHOD
+              ? '確認済み完成品配合による端末内推計'
             : estimate.method === 'browser_ingredient_macro_fit'
               ? '原材料表示順と主要栄養値による端末内推計'
               : '原材料表示順による端末内推計'}</dd></div>

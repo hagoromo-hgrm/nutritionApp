@@ -29,6 +29,36 @@ function stagedDraft() {
 }
 
 describe('staged nutrient estimate decisions', () => {
+  it('食品ドラフトは明示配合根拠をdeep copyして保持する', () => {
+    const evidence = {
+      schemaVersion: 1 as const,
+      declarationFingerprint: 'ingredient-declaration:test',
+      compositions: [{
+        id: 'grain-blend',
+        parent: { section: 'ingredient' as const, path: [0] },
+        expectedChildNames: ['米粉', '水'],
+        denominator: 'product' as const,
+        weightStage: 'finished' as const,
+        amounts: { kind: 'fractions' as const, children: [{ index: 0, value: 0.6 }, { index: 1, value: 0.4 }] },
+        source: { kind: 'user_measurement' as const, reference: '計量記録', verified: true as const, checkedAt: '2026-10-04T00:00:00.000Z' },
+      }],
+    }
+    const food: Food = {
+      id: 'with_evidence', name: '配合食品', maker: '', barcode: '', source: 'user', sourceVersion: 'test',
+      baseAmount: 100, baseUnit: 'g', servingAmount: null, servingUnit: null,
+      nutrients: { energyKcal: null, proteinG: null, fatG: null, carbohydrateG: null, fiberG: null, saltG: null,
+        calciumMg: null, ironMg: null, vitaminAMcg: null, vitaminEMg: null, vitaminB1Mg: null, vitaminB2Mg: null, vitaminCMg: null, saturatedFatG: null },
+      estimationEvidence: evidence, createdAt: '', updatedAt: '',
+    }
+
+    const draft = foodToDraft(food, undefined, [], [])
+    expect(draft.estimationEvidence).toEqual(evidence)
+    expect(draft.estimationEvidence).not.toBe(evidence)
+    expect(draft.estimationEvidence?.compositions).not.toBe(evidence.compositions)
+    expect(draft.estimationEvidence?.compositions?.[0].amounts).not.toBe(evidence.compositions[0].amounts)
+    expect(emptyFoodDraft().estimationEvidence).toBeUndefined()
+  })
+
   it('食品編集で既存の入力用単位換算をすべて保持する', () => {
     const food: Food = {
       id: 'potato', name: 'じゃがいも 塊茎 皮なし 生', maker: '', barcode: '', source: 'mext', sourceVersion: 'test',

@@ -1586,6 +1586,24 @@ const GENERAL_GROUPS: readonly IngredientProfileGroup[] = (() => {
   return [...aliases.values()]
 })()
 
+/** Resolve only the exact stable profile ID. This deliberately bypasses aliases and proxy candidates. */
+export function exactIngredientProfileById(profileId: string): IngredientProfile | null {
+  const candidate = [...GROUPS, ...GENERAL_GROUPS]
+    .flatMap((group) => group.candidates)
+    .find((item) => item.profileId === profileId)
+  return candidate
+    ? {
+        ...candidate,
+        nutrients: { ...candidate.nutrients },
+        sourceFoodIds: [...candidate.sourceFoodIds],
+        ...(candidate.nutrientSourceFoodIds
+          ? { nutrientSourceFoodIds: Object.fromEntries(Object.entries(candidate.nutrientSourceFoodIds).map(([key, ids]) => [key, [...ids!]])) }
+          : {}),
+        ...(candidate.derivationWarnings ? { derivationWarnings: [...candidate.derivationWarnings] } : {}),
+      }
+    : null
+}
+
 function adjustedPrior(profileItem: IngredientProfile, productName: string, genreId?: EstimatorGenreId | null): number {
   const normalizedProductName = normalize(productName)
   const nameAdjusted = (profileItem.priorSignals ?? []).reduce((prior, signal) => (

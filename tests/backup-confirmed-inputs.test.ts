@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest'
 import { backupToJson, parseBackupText, validateBackup } from '../src/services/backup'
 import { createNutrientEstimateRequestFingerprintFromSnapshot } from '../src/services/confirmedNutrientInputs'
 import { createEstimationRequest } from '../src/services/nutrientEstimationStore'
-import { DEFAULT_ESTIMATION_SETTINGS, EMPTY_NUTRIENTS, NUTRIENT_KEYS, type BackupData, type Food, type NutrientEvidenceMap, type NutritionEstimationInput } from '../src/types'
+import { estimateNutrients, toStoredNutrientEstimateResult, type NutrientEstimateRequest } from '../src/services/nutrientEstimator'
+import { createIngredientDeclarationFingerprint } from '../src/services/explicitCompositionEvidence'
+import { REVIEWED_COMPOSITION_STATES } from '../src/services/reviewedCompositionStates'
+import { DEFAULT_ESTIMATION_SETTINGS, EMPTY_NUTRIENTS, NUTRIENT_KEYS, type BackupData, type ExplicitCompositionChildBinding, type ExplicitCompositionGroup, type ExplicitEstimationEvidence, type Food, type NutrientEvidenceMap, type NutritionEstimationInput } from '../src/types'
 
 const now = '2026-10-04T00:00:00.000Z'
 const food: Food = {
@@ -66,8 +69,8 @@ function makeBackup(inputSnapshot?: NutritionEstimationInput, inputHash = 'fnv1a
     estimationSettings: { ...DEFAULT_ESTIMATION_SETTINGS, updatedAt: now },
     estimationRequests: [{
       requestId,
-      foodId: food.id,
-      barcode: food.barcode,
+      foodId: snapshot.foodId,
+      barcode: snapshot.barcode,
       inputSnapshot: snapshot,
       status: 'pending',
       inputHash: snapshot.inputHash,
@@ -109,11 +112,210 @@ function withInput(inputSnapshot: NutritionEstimationInput): BackupData {
   return makeBackup(inputSnapshot)
 }
 
+function makeExplicitEvidence() {
+  return {
+    schemaVersion: 1 as const,
+    declarationFingerprint: 'ingredient-declaration:backup',
+    compositions: [{
+      id: 'grain-blend', parent: { section: 'ingredient' as const, path: [0] }, expectedChildNames: ['米粉', '水'],
+      denominator: 'product' as const, weightStage: 'finished' as const,
+      amounts: { kind: 'fractions' as const, children: [{ index: 0, value: 0.6 }, { index: 1, value: 0.4 }] },
+      source: { kind: 'user_measurement' as const, reference: '計量記録', verified: true as const, checkedAt: now },
+    }],
+  }
+}
+
+function profileBinding(index: number, profileId: string): ExplicitCompositionChildBinding {
+  const state = REVIEWED_COMPOSITION_STATES[profileId]
+  return {
+    kind: 'profile', index, expectedProfileId: profileId,
+    expectedProfileStateId: state.profileStateId,
+    finishedIngredientStateId: state.finishedIngredientStateId,
+    stateSource: {
+      kind: 'manufacturer_recipe', reference: `synthetic-batch:${profileId}`, verified: true,
+      checkedAt: now,
+    },
+  }
+}
+
+function traceCompositionGroup(input: {
+  id?: string
+  names: string[]
+  masses: Array<number | null>
+  bindings?: ExplicitCompositionChildBinding[]
+  weightStage?: 'raw' | 'finished'
+}): ExplicitCompositionGroup {
+  return {
+    id: input.id ?? 'trace-root',
+    parent: { section: 'ingredient', path: [] },
+    expectedChildNames: input.names,
+    denominator: 'product',
+    weightStage: input.weightStage ?? 'finished',
+    amounts: {
+      kind: 'masses_g',
+      denominatorMassG: input.masses.reduce<number>((total, mass) => total + (mass ?? 0), 0),
+      children: input.masses.map((value, index) => ({ index, value })),
+    },
+    ...(input.bindings === undefined ? {} : { childBindings: input.bindings }),
+    source: { kind: 'manufacturer_recipe', reference: 'synthetic-recipe', verified: true, checkedAt: now },
+  }
+}
+
+function makeActualTraceBackup(input: {
+  requestId: string
+  ingredientsText: string
+  evidence: ExplicitEstimationEvidence
+}): { backup: BackupData; storedTrace: NonNullable<NonNullable<ReturnType<typeof estimateNutrients>['optimization']>['trace']> } {
+  const request: NutrientEstimateRequest = {
+    requestId: input.requestId,
+    productName: 'synthetic composition product',
+    baseAmount: 100,
+    baseUnit: 'g',
+    referenceMassG: 100,
+    referenceMassSource: 'synthetic 100g basis',
+    ingredientsText: input.ingredientsText,
+    ingredientsSource: { provider: 'synthetic', verified: true },
+    estimationEvidence: input.evidence,
+    knownNutrients: {},
+    requestedNutrients: ['fiberG'],
+    requestedAt: now,
+  }
+  const foodWithEvidence: Food = {
+    ...food,
+    id: `food_${input.requestId}`,
+    name: 'synthetic composition product',
+    baseAmount: 100,
+    baseUnit: 'g',
+    ingredientsText: input.ingredientsText,
+    ingredientsSource: request.ingredientsSource,
+    estimationEvidence: input.evidence,
+  }
+  const estimationRequest = createEstimationRequest(foodWithEvidence, {
+    requestId: input.requestId,
+    now,
+    evaluatedRequest: request,
+  })
+  const calculated = estimateNutrients(request)
+  const stored = toStoredNutrientEstimateResult(calculated, {
+    foodId: foodWithEvidence.id,
+    inputHash: estimationRequest.inputHash,
+    baseAmount: request.baseAmount,
+    baseUnit: 'g',
+  })
+  const backup = {
+    ...makeBackup(estimationRequest.inputSnapshot),
+    foods: [foodWithEvidence],
+    estimationResults: [stored],
+  }
+  const trace = calculated.optimization?.trace
+  if (!trace) throw new Error('synthetic estimate did not produce a trace')
+  return { backup, storedTrace: trace }
+}
+
+function traceEvidence(ingredientsText: string, ...groups: ExplicitCompositionGroup[]): ExplicitEstimationEvidence {
+  return {
+    schemaVersion: 1,
+    declarationFingerprint: createIngredientDeclarationFingerprint(ingredientsText),
+    compositions: groups,
+  }
+}
+
 describe('estimation backup confirmed-input validation', () => {
+  it('accepts real explicit-estimator applied and deferred traces through stored-result backup validation', () => {
+    const simpleText = '上白糖、脱脂粉乳、ピュアココア'
+    const simpleNames = ['上白糖', '脱脂粉乳', 'ピュアココア']
+    const directBindings = [profileBinding(0, 'mext_03003'), profileBinding(1, 'mext_13010'), profileBinding(2, 'mext_16048')]
+    const validRoot = traceCompositionGroup({ names: simpleNames, masses: [600, 300, 100], bindings: directBindings })
+    const nestedText = '外側ミックス、ピュアココア'
+    const nestedMissing = traceCompositionGroup({
+      names: ['外側ミックス', 'ピュアココア'], masses: [500, 100],
+      bindings: [{ kind: 'composition', index: 0, compositionId: 'missing-child' }, profileBinding(1, 'mext_16048')],
+    })
+    const scenarios = [
+      {
+        name: 'applied', ingredientsText: simpleText, evidence: traceEvidence(simpleText, validRoot),
+        status: 'applied', reason: undefined,
+      },
+      {
+        name: 'deferred', ingredientsText: simpleText,
+        evidence: traceEvidence(simpleText, traceCompositionGroup({ names: simpleNames, masses: [600, 300, 100] })),
+        status: 'deferred', reason: 'profile_binding_missing',
+      },
+      {
+        name: 'raw', ingredientsText: simpleText,
+        evidence: traceEvidence(simpleText, traceCompositionGroup({ names: simpleNames, masses: [600, 300, 100], bindings: directBindings, weightStage: 'raw' })),
+        status: 'deferred', reason: 'raw_stage',
+      },
+      {
+        name: 'stale', ingredientsText: `${simpleText}、水`, evidence: traceEvidence(simpleText, validRoot),
+        status: 'deferred', reason: 'declaration_stale',
+      },
+      {
+        name: 'nested-missing', ingredientsText: nestedText, evidence: traceEvidence(nestedText, nestedMissing),
+        status: 'deferred', reason: 'nested_binding_missing',
+      },
+    ] as const
+
+    for (const scenario of scenarios) {
+      const { backup, storedTrace } = makeActualTraceBackup({
+        requestId: `actual_trace_${scenario.name}`,
+        ingredientsText: scenario.ingredientsText,
+        evidence: scenario.evidence,
+      })
+      const explicitTrace = storedTrace.explicitCompositionEvidence
+      expect(explicitTrace?.status, scenario.name).toBe(scenario.status)
+      expect(explicitTrace?.groups[0]?.reason, scenario.name).toBe(scenario.reason)
+      const validated = validateBackup(backup)
+      const restoredTrace = validated.estimationResults?.[0].optimization?.trace
+      expect(restoredTrace?.explicitCompositionEvidence, scenario.name).toEqual(explicitTrace)
+      if (scenario.name === 'applied') {
+        expect(restoredTrace?.plausibleScenarioCount).toBe(1)
+        expect(restoredTrace?.explicitCompositionEvidence?.groups[0].compositionProfileId).toMatch(/^explicit-composition:/)
+      }
+    }
+  })
+
   it('continues accepting old JSON snapshots without the new evidence contract', () => {
     const oldBackup = makeBackup()
     expect(validateBackup(oldBackup).estimationRequests?.[0].inputSnapshot.knownNutrientEvidence).toBeUndefined()
     expect(parseBackupText(backupToJson(oldBackup)).estimationRequests?.[0].inputHash).toBe('fnv1a:12345678')
+  })
+
+  it('round-trips Food and request evidence as independent deep copies', () => {
+    const evidence = makeExplicitEvidence()
+    const evidenceFood = { ...food, estimationEvidence: evidence }
+    const snapshot = createEstimationRequest(evidenceFood, { requestId: 'evidence_backup_request', now }).inputSnapshot
+    const sourceBackup = { ...withInput(snapshot), foods: [evidenceFood] }
+    const restored = validateBackup(sourceBackup)
+
+    expect(restored.foods[0].estimationEvidence).toEqual(evidence)
+    expect(restored.estimationRequests?.[0].inputSnapshot.estimationEvidence).toEqual(evidence)
+    expect(restored.foods[0].estimationEvidence).not.toBe(evidence)
+    expect(restored.foods[0].estimationEvidence?.compositions).not.toBe(evidence.compositions)
+    expect(restored.estimationRequests?.[0].inputSnapshot.estimationEvidence?.compositions)
+      .not.toBe(evidence.compositions)
+
+    evidence.compositions[0].amounts.children[0].value = 0.2
+    expect(restored.foods[0].estimationEvidence?.compositions?.[0].amounts)
+      .toEqual({ kind: 'fractions', children: [{ index: 0, value: 0.6 }, { index: 1, value: 0.4 }] })
+    expect(restored.estimationRequests?.[0].inputSnapshot.estimationEvidence?.compositions?.[0].amounts)
+      .toEqual({ kind: 'fractions', children: [{ index: 0, value: 0.6 }, { index: 1, value: 0.4 }] })
+
+    const roundTripped = parseBackupText(backupToJson(restored))
+    expect(roundTripped.foods[0].estimationEvidence).toEqual(restored.foods[0].estimationEvidence)
+    expect(roundTripped.estimationRequests?.[0].inputSnapshot.estimationEvidence)
+      .toEqual(restored.estimationRequests?.[0].inputSnapshot.estimationEvidence)
+  })
+
+  it('rejects unknown evidence schema and fields in both Food and request snapshots', () => {
+    const unknownSchema = { ...makeExplicitEvidence(), schemaVersion: 2 }
+    const unknownField = { ...makeExplicitEvidence(), additives: [] }
+    expect(() => validateBackup({ ...makeBackup(), foods: [{ ...food, estimationEvidence: unknownSchema }] })).toThrow('食品または食事記録')
+    expect(() => validateBackup({ ...makeBackup(), foods: [{ ...food, estimationEvidence: unknownField }] })).toThrow('食品または食事記録')
+
+    const snapshot = makeConfirmedSnapshot()
+    expect(() => validateBackup(withInput({ ...snapshot, estimationEvidence: unknownSchema as never }))).toThrow('推計要求、結果または採用履歴')
+    expect(() => validateBackup(withInput({ ...snapshot, estimationEvidence: unknownField as never }))).toThrow('推計要求、結果または採用履歴')
   })
 
   it('round-trips the validated evidence, references, fit mode, targets, and fingerprint', () => {

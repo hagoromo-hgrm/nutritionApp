@@ -77,6 +77,7 @@ export function createEstimationInputHash(food: Food): string {
     estimationReferenceMassSource: food.estimationReferenceMassSource ?? null,
     estimatorGenreId: food.estimatorGenreId ?? null,
     estimatorGenreSource: food.estimatorGenreSource ?? null,
+    estimationEvidence: canonicalize(food.estimationEvidence),
     updatedAt: food.updatedAt,
   })
   // Web Crypto is asynchronous; this deterministic synchronous stamp is used inside IndexedDB transactions.
@@ -85,5 +86,5 @@ export function createEstimationInputHash(food: Food): string {
     hash ^= payload.charCodeAt(index)
     hash = Math.imul(hash, 0x01000193)
   }
-  return `fnv1a-v2:${(hash >>> 0).toString(16).padStart(8, '0')}`
+  return `fnv1a-v3:${(hash >>> 0).toString(16).padStart(8, '0')}`
 }

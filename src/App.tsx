@@ -136,6 +136,7 @@ import {
 } from './services/nutrientEstimationStore'
 import { NUTRIENT_ESTIMATOR_MODEL_VERSION, toStoredNutrientEstimateResult } from './services/nutrientEstimator'
 import { confirmedNutrientInputsFromFood, createNutrientEstimateRequestFingerprint } from './services/confirmedNutrientInputs'
+import { validateExplicitEstimationEvidence } from './services/explicitCompositionEvidence'
 import { calculateBmi, calculateNutrients, estimateDailyGoals, getFoodDefaultServing, getFoodQuantityUnits, mealDetailNutritionGoals, scaleNutritionGoals, sumByMealType, sumEntries } from './services/nutrition'
 import { resolveNutritionGoals } from './services/goalHistory'
 import { consumeSearchSelectionGroup } from './services/searchSelection'
@@ -684,6 +685,8 @@ function App() {
         estimationReferenceMassSource,
         estimatorGenreId: foodDraft.estimatorGenreId,
         estimatorGenreSource: foodDraft.estimatorGenreSource,
+        estimationEvidence: foodDraft.estimationEvidence === undefined
+          ? undefined : validateExplicitEstimationEvidence(foodDraft.estimationEvidence),
         nutrientMetadata: persistedMetadata,
         createdAt: foodDraft.id ? (foods.find((item) => item.id === foodDraft.id)?.createdAt ?? now) : now, updatedAt: now,
       }
@@ -749,6 +752,7 @@ function App() {
             estimatorGenreId: food.estimatorGenreId ?? 'other_unknown',
             estimatorGenreSource: food.estimatorGenreSource ?? null,
             inputUnitConversions,
+            estimationEvidence: food.estimationEvidence,
             baseAmount: food.baseAmount,
             baseUnit: food.baseUnit,
             referenceMassG,

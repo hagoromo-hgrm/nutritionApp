@@ -20,7 +20,34 @@ const food: Food = {
 
 describe('createEstimationInputHash', () => {
   it('uses a new explicit version so legacy hashes cannot validate a pending result', () => {
-    expect(createEstimationInputHash(food)).toMatch(/^fnv1a-v2:[0-9a-f]{8}$/)
+    expect(createEstimationInputHash(food)).toMatch(/^fnv1a-v3:[0-9a-f]{8}$/)
+  })
+
+  it('includes explicit composition provenance in the conflict stamp', () => {
+    const evidence = {
+      schemaVersion: 1 as const,
+      declarationFingerprint: 'ingredient-declaration:test',
+      compositions: [{
+        id: 'grain-blend',
+        parent: { section: 'ingredient' as const, path: [0] },
+        expectedChildNames: ['米粉', '水'],
+        denominator: 'product' as const,
+        weightStage: 'finished' as const,
+        amounts: { kind: 'fractions' as const, children: [{ index: 0, value: 0.6 }, { index: 1, value: 0.4 }] },
+        source: { kind: 'user_measurement' as const, reference: '計量記録', verified: true as const, checkedAt: '2026-10-04T00:00:00.000Z' },
+      }],
+    }
+    const withEvidence = { ...food, estimationEvidence: evidence } as Food
+    const changedSource = {
+      ...withEvidence,
+      estimationEvidence: {
+        ...evidence,
+        compositions: [{ ...evidence.compositions[0], source: { ...evidence.compositions[0].source, reference: '別の計量記録' } }],
+      },
+    }
+
+    expect(createEstimationInputHash(withEvidence)).not.toBe(createEstimationInputHash(food))
+    expect(createEstimationInputHash(changedSource)).not.toBe(createEstimationInputHash(withEvidence))
   })
 
   it.each(NUTRIENT_KEYS)('includes provenance for every nutrient key (%s)', (key) => {

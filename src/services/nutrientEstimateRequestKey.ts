@@ -12,6 +12,7 @@ import type {
   NutrientEvidenceMap,
   NutrientReferenceBasis,
   Nutrients,
+  ExplicitEstimationEvidence,
 } from '../types'
 
 export interface NutrientEstimateRequestKeyInput {
@@ -32,6 +33,7 @@ export interface NutrientEstimateRequestKeyInput {
   knownNutrientReferenceBasis?: NutrientReferenceBasis | null
   fitMode?: 'legacy_point' | 'robust_interval'
   inputUnitConversions?: FoodUnitConversion[]
+  estimationEvidence?: ExplicitEstimationEvidence
 }
 
 /** Keep an evaluated request current through staged adoption, until an input change clears it. */
@@ -46,6 +48,7 @@ export function nutrientEstimatePanelRequestKey(input: NutrientEstimateRequestKe
     baseAmount: input.basis.baseAmount,
     baseUnit: input.basis.baseUnit,
     inputUnitConversions: input.inputUnitConversions,
+    estimationEvidence: input.estimationEvidence,
     referenceMassG: input.referenceMassG,
     referenceMassSource: input.referenceMassSource,
     ingredientsText: input.ingredientsText,

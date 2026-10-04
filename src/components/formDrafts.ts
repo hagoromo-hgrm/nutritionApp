@@ -13,6 +13,7 @@ import {
   type BodyProfile,
   type EstimatorGenreId,
   type EstimatorGenreSource,
+  type ExplicitEstimationEvidence,
   type Food,
   type FoodAlias,
   type FoodAliasType,
@@ -26,6 +27,7 @@ import {
   type NutrientMetadataMap,
   type QuantityUnit,
 } from '../types'
+import { validateExplicitEstimationEvidence } from '../services/explicitCompositionEvidence'
 
 export type FoodFormReturnView = 'food-screen' | 'settings' | 'search-results'
 
@@ -105,6 +107,7 @@ export interface FoodDraft {
   estimationReferenceMassG: string
   estimationReferenceMassSource: string
   nutrientMetadata: NutrientMetadataMap
+  estimationEvidence?: ExplicitEstimationEvidence
   /** Legacy source=user values are eligible only when these old exclusion flags were absent. */
   legacyFallbackBlocked: boolean
   pendingEstimation: PendingEstimationDecision | null
@@ -225,6 +228,8 @@ export function foodToDraft(food: Food, group: FoodGroup | undefined, aliases: F
     estimatorGenreSource: food.estimatorGenreSource ?? inferredGenre.source,
     estimationReferenceMassG: food.estimationReferenceMassG === null || food.estimationReferenceMassG === undefined ? '' : String(food.estimationReferenceMassG),
     estimationReferenceMassSource: food.estimationReferenceMassSource ?? '',
+    estimationEvidence: food.estimationEvidence === undefined
+      ? undefined : validateExplicitEstimationEvidence(food.estimationEvidence),
     nutrientMetadata: Object.fromEntries(Object.entries(food.nutrientMetadata ?? {}).map(([key, metadata]) => [key, {
       ...metadata,
       sourceFoodIds: metadata.sourceFoodIds ? [...metadata.sourceFoodIds] : undefined,
