@@ -136,7 +136,7 @@ describe('explicit finished composition estimator', () => {
     expect(changedLabelAndGenre.optimization?.trace?.ingredientRatios).toEqual([0.6, 0.3, 0.1])
     expect(changedLabelAndGenre.estimates.fiberG).toMatchObject({ value: 2.39, method: 'browser_explicit_composition_rule' })
     expect(first.modelVersion).toBe(NUTRIENT_ESTIMATOR_MODEL_VERSION)
-    expect(first.modelVersion).toBe('browser-rule-0.29.0')
+    expect(first.modelVersion).toBe('browser-rule-0.30.0')
   })
 
   it('accepts reversed listing order and gives the same fixed mix', () => {

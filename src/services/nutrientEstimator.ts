@@ -105,7 +105,7 @@ const LEGACY_SEED_NUTRIENT_KEYS = [
 ] as const satisfies readonly NutrientKey[]
 export type EstimateConfidence = 'high' | 'medium' | 'low' | 'unavailable'
 export type EstimateAdoptability = EstimationAdoptionClass | 'unavailable'
-export const NUTRIENT_ESTIMATOR_MODEL_VERSION = 'browser-rule-0.29.0' as const
+export const NUTRIENT_ESTIMATOR_MODEL_VERSION = 'browser-rule-0.30.0' as const
 const MEXT_SOURCE = '文部科学省 日本食品標準成分表（八訂）増補2023年（2026年3月27日正誤表対応）' as const
 const FDC_SOURCE = 'USDA FoodData Central SR Legacy 04/2018' as const
 const INGREDIENT_SPEC_SOURCE = '原料メーカー・業界団体公式仕様' as const
@@ -786,7 +786,108 @@ function compoundRatioTemplates(count: number): Array<{ ratios: number[]; prior:
   ]
 }
 
-function quickCandidateFitError(
+/** Ordered simplex vertices are uniform weights on the first k ingredients.
+ * Unresolved candidate values widen this envelope; missing optional keys contribute zero
+ * and the denominator remains all observed keys, so this is a lower bound, not a forecast.
+ */
+export function orderedSimplexPredictionBounds(minimums: readonly number[], maximums: readonly number[]): { min: number; max: number } {
+  if (minimums.length === 0 || minimums.length !== maximums.length
+    || minimums.some((value, i) => !Number.isFinite(value) || !Number.isFinite(maximums[i]) || value > maximums[i])) throw new RangeError('ordered-simplex bounds require aligned finite values')
+  let lower = Infinity, upper = -Infinity, minSum = 0, maxSum = 0
+  for (let i = 0; i < minimums.length; i += 1) {
+    minSum += minimums[i]; maxSum += maximums[i]
+    lower = Math.min(lower, minSum / (i + 1)); upper = Math.max(upper, maxSum / (i + 1))
+  }
+  return { min: lower, max: upper }
+}
+
+export function candidateFitLowerBound(
+  combination: CandidateCombination,
+  candidateSets: readonly (readonly IngredientProfile[])[],
+  context: CandidateSelectionContext | undefined,
+): number | null {
+  if (!context || !Number.isFinite(context.referenceMassG) || context.referenceMassG <= 0) return null
+  const observations = new Map<EstimateFitNutrientKey, FitObservation>()
+  for (const key of ESTIMATE_FIT_NUTRIENT_KEYS) {
+    const observation = fitObservationForKey(key, context)
+    if (observation) observations.set(key, observation)
+  }
+  const fitKeys = [...observations.keys()]
+  const errors = fitKeys.flatMap((key) => {
+    const minimums: number[] = []
+    const maximums: number[] = []
+    for (let index = 0; index < candidateSets.length; index += 1) {
+      const profiles = index < combination.profiles.length
+        ? [combination.profiles[index]]
+        : candidateSets[index]
+      const values = profiles.flatMap((profile) => {
+        const value = profile.nutrients[key]
+        return value === null ? [] : [value]
+      })
+      if (values.length !== profiles.length) return []
+      minimums.push(Math.min(...values))
+      maximums.push(Math.max(...values))
+    }
+    const bounds = orderedSimplexPredictionBounds(minimums, maximums)
+    const predictedMin = bounds.min * context.referenceMassG / 100
+    const predictedMax = bounds.max * context.referenceMassG / 100
+    const observation = observations.get(key)!
+    if (context.fitMode === 'robust_interval') {
+      return [normalizedIntervalHuberLoss(
+        { min: predictedMin, max: predictedMax },
+        observation.interval,
+        fitObservationScale(key, observation),
+      )]
+    }
+    const observed = context.knownNutrients![key]!
+    const distance = observed < predictedMin
+      ? predictedMin - observed
+      : observed > predictedMax
+        ? observed - predictedMax
+        : 0
+    const scale = fitObservationScale(key, observation)
+    return [(distance / scale) ** 2]
+  })
+  const macroError = errors.length > 0
+    ? errors.reduce((sum, error) => sum + error, 0) / fitKeys.length
+    : null
+  const ratioFeedback = context.ratioFeedback
+  let ratioPenalty: number | null = null
+  if (ratioFeedback) {
+    const minimums: number[] = []
+    const maximums: number[] = []
+    let complete = true
+    for (let index = 0; index < candidateSets.length; index += 1) {
+      const profiles = index < combination.profiles.length
+        ? [combination.profiles[index]]
+        : candidateSets[index]
+      const values = profiles.flatMap((profile) => {
+        const value = profile.nutrients.saturatedFatG
+        return value === null ? [] : [value]
+      })
+      if (values.length !== profiles.length) {
+        complete = false
+        break
+      }
+      minimums.push(Math.min(...values))
+      maximums.push(Math.max(...values))
+    }
+    if (complete) {
+      const bounds = orderedSimplexPredictionBounds(minimums, maximums)
+      ratioPenalty = saturatedFatRatioIntervalPenalty(
+        bounds.min * context.referenceMassG / 100 / ratioFeedback.parentValue,
+        bounds.max * context.referenceMassG / 100 / ratioFeedback.parentValue,
+        ratioFeedback.prior,
+        ratioFeedback.parentValue,
+      )
+    }
+  }
+  if (macroError === null && ratioPenalty === null) return null
+  return (macroError ?? 0) + (ratioPenalty ?? 0) * (ratioFeedback?.feedbackWeight ?? 0)
+}
+
+// Fixed-mixture score breaks equal lower bounds; it is never presented as a pruning bound.
+function candidateFitHeuristic(
   combination: CandidateCombination,
   candidateSets: readonly (readonly IngredientProfile[])[],
   context: CandidateSelectionContext | undefined,
@@ -892,11 +993,12 @@ function selectCandidateBeam(
   // 栄養表示がない場面では従来の事前確率順を維持し、根拠のない候補順変更を避ける。
   if (pool.length <= limit || !hasFitEvidence) return pool.sort(byPrior).slice(0, limit)
   const scored = pool.map((combination) => {
-    const fitError = quickCandidateFitError(combination, candidateSets, context)
+    const fitError = candidateFitLowerBound(combination, candidateSets, context)
     const priorPenalty = -Math.log(Math.max(combination.priorProbability, 1e-12))
     return {
       combination,
       fitError,
+      fitHeuristic: candidateFitHeuristic(combination, candidateSets, context),
       priorPenalty,
       hybridScore: (fitError ?? 0) + priorPenalty * 0.08,
       id: combinationId(combination),
@@ -918,6 +1020,7 @@ function selectCandidateBeam(
     .filter((candidate) => candidate.fitError !== null)
     .sort((left, right) => (
       left.fitError! - right.fitError!
+      || (left.fitHeuristic ?? 0) - (right.fitHeuristic ?? 0)
       || left.priorPenalty - right.priorPenalty
       || left.id.localeCompare(right.id)
     ))) {
@@ -2751,4 +2854,20 @@ export function toStoredNutrientEstimateResult(
     modelVersion: result.modelVersion,
     estimatedAt: result.estimatedAt,
   }
+}
+
+/** Bounded developer benchmark; uses no product labels or app persistence. */
+export function benchmarkCandidateSearch(candidateSets: readonly (readonly IngredientProfile[])[], context: CandidateSelectionContext, limit: number, randomScenarioCount = 64) {
+  if (!Number.isSafeInteger(limit) || limit < 1 || limit > 4096 || !Number.isSafeInteger(randomScenarioCount) || randomScenarioCount < 1 || randomScenarioCount > 4096
+    || candidateSets.length < 1 || candidateSets.length > 8 || candidateSets.some((set) => !set.length || set.length > 16)
+    || cartesianCandidateCombinationCount(candidateSets) > 4096) throw new RangeError('benchmark search budget exceeded')
+  const start = performance.now()
+  const combinations = combineCandidateSets(candidateSets, limit, context)
+  const fits = combinations.map((combination) => {
+    // Restore the common original prior scale across different retained beam sizes.
+    const original = { ...combination, priorProbability: combination.profiles.reduce((p, profile) => p * profile.priorProbability, 1) }
+    return fitIngredientRatios(original, context.referenceMassG, context, context.ratioFeedback ?? null, JSON.stringify(combination.profiles.map((profile) => profile.profileId)), randomScenarioCount)
+  }).sort((a, b) => a.score - b.score || combinationId(a).localeCompare(combinationId(b)))
+  return { limit, retainedCombinationCount: combinations.length, cartesianCombinationCount: cartesianCandidateCombinationCount(candidateSets),
+    bestScore: fits[0].score, bestFitObjective: fits[0].fitObjective, bestProfileIds: fits[0].profiles.map((profile) => profile.profileId), bestRatios: [...fits[0].ratios], elapsedMs: performance.now() - start }
 }

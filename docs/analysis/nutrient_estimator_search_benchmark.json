@@ -1,0 +1,1069 @@
+{
+  "format": "nutrient-estimator-search-budget-benchmark",
+  "formatVersion": 1,
+  "syntheticOnly": true,
+  "reference": "all candidate combinations with the same deterministic ratio samples/refinement and original prior scale; not an analytic global optimum",
+  "platform": "macOS development process; not iPhone latency",
+  "randomScenarioCountPerCombination": 64,
+  "productionBudgetChanged": false,
+  "lowerBound": "ordered-simplex prefix vertices, widened unresolved candidate envelope, all-observed-key denominator",
+  "limitation": "Beam diversity is heuristic. A valid fit lower bound alone does not guarantee retention of the global optimum or real-product accuracy.",
+  "budgets": [
+    {
+      "limit": 2,
+      "meanObjectiveGap": 0.08351472295693585,
+      "missedReferenceCombinationCount": 2,
+      "meanElapsedMs": 2.0255727499999807
+    },
+    {
+      "limit": 4,
+      "meanObjectiveGap": 0.08351472295693585,
+      "missedReferenceCombinationCount": 2,
+      "meanElapsedMs": 0.9329426250000168
+    },
+    {
+      "limit": 8,
+      "meanObjectiveGap": 0.08351472295693585,
+      "missedReferenceCombinationCount": 2,
+      "meanElapsedMs": 2.3252447499999676
+    },
+    {
+      "limit": 16,
+      "meanObjectiveGap": 0,
+      "missedReferenceCombinationCount": 0,
+      "meanElapsedMs": 4.236526000000019
+    },
+    {
+      "limit": 64,
+      "meanObjectiveGap": 0,
+      "missedReferenceCombinationCount": 0,
+      "meanElapsedMs": 9.508390749999997
+    }
+  ],
+  "fixtures": [
+    {
+      "fixtureId": "synthetic-0",
+      "reference": {
+        "limit": 64,
+        "retainedCombinationCount": 64,
+        "cartesianCombinationCount": 64,
+        "bestScore": 0.3499437279762874,
+        "bestFitObjective": 0.000019050774311030105,
+        "bestProfileIds": [
+          "synthetic-0-0-0",
+          "synthetic-0-1-1",
+          "synthetic-0-2-2"
+        ],
+        "bestRatios": [
+          0.600079788520391,
+          0.2998851683278916,
+          0.10003504315171745
+        ],
+        "elapsedMs": 22.041209000000038
+      },
+      "runs": [
+        {
+          "limit": 2,
+          "retainedCombinationCount": 2,
+          "cartesianCombinationCount": 64,
+          "bestScore": 0.3499437279762874,
+          "bestFitObjective": 0.000019050774311030105,
+          "bestProfileIds": [
+            "synthetic-0-0-0",
+            "synthetic-0-1-1",
+            "synthetic-0-2-2"
+          ],
+          "bestRatios": [
+            0.600079788520391,
+            0.2998851683278916,
+            0.10003504315171745
+          ],
+          "elapsedMs": 1.2495409999999652,
+          "objectiveGap": 0,
+          "missedReferenceCombination": false,
+          "deterministic": true
+        },
+        {
+          "limit": 4,
+          "retainedCombinationCount": 4,
+          "cartesianCombinationCount": 64,
+          "bestScore": 0.3499437279762874,
+          "bestFitObjective": 0.000019050774311030105,
+          "bestProfileIds": [
+            "synthetic-0-0-0",
+            "synthetic-0-1-1",
+            "synthetic-0-2-2"
+          ],
+          "bestRatios": [
+            0.600079788520391,
+            0.2998851683278916,
+            0.10003504315171745
+          ],
+          "elapsedMs": 1.3460830000000215,
+          "objectiveGap": 0,
+          "missedReferenceCombination": false,
+          "deterministic": true
+        },
+        {
+          "limit": 8,
+          "retainedCombinationCount": 8,
+          "cartesianCombinationCount": 64,
+          "bestScore": 0.3499437279762874,
+          "bestFitObjective": 0.000019050774311030105,
+          "bestProfileIds": [
+            "synthetic-0-0-0",
+            "synthetic-0-1-1",
+            "synthetic-0-2-2"
+          ],
+          "bestRatios": [
+            0.600079788520391,
+            0.2998851683278916,
+            0.10003504315171745
+          ],
+          "elapsedMs": 1.577374999999961,
+          "objectiveGap": 0,
+          "missedReferenceCombination": false,
+          "deterministic": true
+        },
+        {
+          "limit": 16,
+          "retainedCombinationCount": 16,
+          "cartesianCombinationCount": 64,
+          "bestScore": 0.3499437279762874,
+          "bestFitObjective": 0.000019050774311030105,
+          "bestProfileIds": [
+            "synthetic-0-0-0",
+            "synthetic-0-1-1",
+            "synthetic-0-2-2"
+          ],
+          "bestRatios": [
+            0.600079788520391,
+            0.2998851683278916,
+            0.10003504315171745
+          ],
+          "elapsedMs": 10.90825000000001,
+          "objectiveGap": 0,
+          "missedReferenceCombination": false,
+          "deterministic": true
+        },
+        {
+          "limit": 64,
+          "retainedCombinationCount": 64,
+          "cartesianCombinationCount": 64,
+          "bestScore": 0.3499437279762874,
+          "bestFitObjective": 0.000019050774311030105,
+          "bestProfileIds": [
+            "synthetic-0-0-0",
+            "synthetic-0-1-1",
+            "synthetic-0-2-2"
+          ],
+          "bestRatios": [
+            0.600079788520391,
+            0.2998851683278916,
+            0.10003504315171745
+          ],
+          "elapsedMs": 3.892499999999984,
+          "objectiveGap": 0,
+          "missedReferenceCombination": false,
+          "deterministic": true
+        }
+      ]
+    },
+    {
+      "fixtureId": "synthetic-1",
+      "reference": {
+        "limit": 64,
+        "retainedCombinationCount": 64,
+        "cartesianCombinationCount": 64,
+        "bestScore": 0.5676274768371132,
+        "bestFitObjective": 0.05360114645808567,
+        "bestProfileIds": [
+          "synthetic-1-0-1",
+          "synthetic-1-1-2",
+          "synthetic-1-2-2"
+        ],
+        "bestRatios": [
+          0.47752588442727417,
+          0.4299999831453624,
+          0.09247413242736091
+        ],
+        "elapsedMs": 18.795166999999992
+      },
+      "runs": [
+        {
+          "limit": 2,
+          "retainedCombinationCount": 2,
+          "cartesianCombinationCount": 64,
+          "bestScore": 0.5676274768371132,
+          "bestFitObjective": 0.05360114645808567,
+          "bestProfileIds": [
+            "synthetic-1-0-1",
+            "synthetic-1-1-2",
+            "synthetic-1-2-2"
+          ],
+          "bestRatios": [
+            0.47752588442727417,
+            0.4299999831453624,
+            0.09247413242736091
+          ],
+          "elapsedMs": 1.1186660000000188,
+          "objectiveGap": 0,
+          "missedReferenceCombination": false,
+          "deterministic": true
+        },
+        {
+          "limit": 4,
+          "retainedCombinationCount": 4,
+          "cartesianCombinationCount": 64,
+          "bestScore": 0.5676274768371132,
+          "bestFitObjective": 0.05360114645808567,
+          "bestProfileIds": [
+            "synthetic-1-0-1",
+            "synthetic-1-1-2",
+            "synthetic-1-2-2"
+          ],
+          "bestRatios": [
+            0.47752588442727417,
+            0.4299999831453624,
+            0.09247413242736091
+          ],
+          "elapsedMs": 0.6203750000000241,
+          "objectiveGap": 0,
+          "missedReferenceCombination": false,
+          "deterministic": true
+        },
+        {
+          "limit": 8,
+          "retainedCombinationCount": 8,
+          "cartesianCombinationCount": 64,
+          "bestScore": 0.5676274768371132,
+          "bestFitObjective": 0.05360114645808567,
+          "bestProfileIds": [
+            "synthetic-1-0-1",
+            "synthetic-1-1-2",
+            "synthetic-1-2-2"
+          ],
+          "bestRatios": [
+            0.47752588442727417,
+            0.4299999831453624,
+            0.09247413242736091
+          ],
+          "elapsedMs": 1.2843749999999545,
+          "objectiveGap": 0,
+          "missedReferenceCombination": false,
+          "deterministic": true
+        },
+        {
+          "limit": 16,
+          "retainedCombinationCount": 16,
+          "cartesianCombinationCount": 64,
+          "bestScore": 0.5676274768371132,
+          "bestFitObjective": 0.05360114645808567,
+          "bestProfileIds": [
+            "synthetic-1-0-1",
+            "synthetic-1-1-2",
+            "synthetic-1-2-2"
+          ],
+          "bestRatios": [
+            0.47752588442727417,
+            0.4299999831453624,
+            0.09247413242736091
+          ],
+          "elapsedMs": 1.7010000000000218,
+          "objectiveGap": 0,
+          "missedReferenceCombination": false,
+          "deterministic": true
+        },
+        {
+          "limit": 64,
+          "retainedCombinationCount": 64,
+          "cartesianCombinationCount": 64,
+          "bestScore": 0.5676274768371132,
+          "bestFitObjective": 0.05360114645808567,
+          "bestProfileIds": [
+            "synthetic-1-0-1",
+            "synthetic-1-1-2",
+            "synthetic-1-2-2"
+          ],
+          "bestRatios": [
+            0.47752588442727417,
+            0.4299999831453624,
+            0.09247413242736091
+          ],
+          "elapsedMs": 12.220500000000015,
+          "objectiveGap": 0,
+          "missedReferenceCombination": false,
+          "deterministic": true
+        }
+      ]
+    },
+    {
+      "fixtureId": "synthetic-2",
+      "reference": {
+        "limit": 64,
+        "retainedCombinationCount": 64,
+        "cartesianCombinationCount": 64,
+        "bestScore": 0.5895835488389863,
+        "bestFitObjective": 2.897526905642179e-7,
+        "bestProfileIds": [
+          "synthetic-2-0-2",
+          "synthetic-2-1-3",
+          "synthetic-2-2-0"
+        ],
+        "bestRatios": [
+          0.6000028512548962,
+          0.3000070331384688,
+          0.09999011560663511
+        ],
+        "elapsedMs": 50.301583999999934
+      },
+      "runs": [
+        {
+          "limit": 2,
+          "retainedCombinationCount": 2,
+          "cartesianCombinationCount": 64,
+          "bestScore": 0.5895835488389863,
+          "bestFitObjective": 2.897526905642179e-7,
+          "bestProfileIds": [
+            "synthetic-2-0-2",
+            "synthetic-2-1-3",
+            "synthetic-2-2-0"
+          ],
+          "bestRatios": [
+            0.6000028512548962,
+            0.3000070331384688,
+            0.09999011560663511
+          ],
+          "elapsedMs": 0.7399159999999938,
+          "objectiveGap": 0,
+          "missedReferenceCombination": false,
+          "deterministic": true
+        },
+        {
+          "limit": 4,
+          "retainedCombinationCount": 4,
+          "cartesianCombinationCount": 64,
+          "bestScore": 0.5895835488389863,
+          "bestFitObjective": 2.897526905642179e-7,
+          "bestProfileIds": [
+            "synthetic-2-0-2",
+            "synthetic-2-1-3",
+            "synthetic-2-2-0"
+          ],
+          "bestRatios": [
+            0.6000028512548962,
+            0.3000070331384688,
+            0.09999011560663511
+          ],
+          "elapsedMs": 1.277166999999963,
+          "objectiveGap": 0,
+          "missedReferenceCombination": false,
+          "deterministic": true
+        },
+        {
+          "limit": 8,
+          "retainedCombinationCount": 8,
+          "cartesianCombinationCount": 64,
+          "bestScore": 0.5895835488389863,
+          "bestFitObjective": 2.897526905642179e-7,
+          "bestProfileIds": [
+            "synthetic-2-0-2",
+            "synthetic-2-1-3",
+            "synthetic-2-2-0"
+          ],
+          "bestRatios": [
+            0.6000028512548962,
+            0.3000070331384688,
+            0.09999011560663511
+          ],
+          "elapsedMs": 1.1812499999999773,
+          "objectiveGap": 0,
+          "missedReferenceCombination": false,
+          "deterministic": true
+        },
+        {
+          "limit": 16,
+          "retainedCombinationCount": 16,
+          "cartesianCombinationCount": 64,
+          "bestScore": 0.5895835488389863,
+          "bestFitObjective": 2.897526905642179e-7,
+          "bestProfileIds": [
+            "synthetic-2-0-2",
+            "synthetic-2-1-3",
+            "synthetic-2-2-0"
+          ],
+          "bestRatios": [
+            0.6000028512548962,
+            0.3000070331384688,
+            0.09999011560663511
+          ],
+          "elapsedMs": 9.50491599999998,
+          "objectiveGap": 0,
+          "missedReferenceCombination": false,
+          "deterministic": true
+        },
+        {
+          "limit": 64,
+          "retainedCombinationCount": 64,
+          "cartesianCombinationCount": 64,
+          "bestScore": 0.5895835488389863,
+          "bestFitObjective": 2.897526905642179e-7,
+          "bestProfileIds": [
+            "synthetic-2-0-2",
+            "synthetic-2-1-3",
+            "synthetic-2-2-0"
+          ],
+          "bestRatios": [
+            0.6000028512548962,
+            0.3000070331384688,
+            0.09999011560663511
+          ],
+          "elapsedMs": 20.87258399999996,
+          "objectiveGap": 0,
+          "missedReferenceCombination": false,
+          "deterministic": true
+        }
+      ]
+    },
+    {
+      "fixtureId": "synthetic-3",
+      "reference": {
+        "limit": 64,
+        "retainedCombinationCount": 64,
+        "cartesianCombinationCount": 64,
+        "bestScore": 0.5257036077008322,
+        "bestFitObjective": 9.643119582469563e-7,
+        "bestProfileIds": [
+          "synthetic-3-0-3",
+          "synthetic-3-1-0",
+          "synthetic-3-2-1"
+        ],
+        "bestRatios": [
+          0.5999992475733705,
+          0.2999854614289211,
+          0.10001529099770819
+        ],
+        "elapsedMs": 64.10854199999994
+      },
+      "runs": [
+        {
+          "limit": 2,
+          "retainedCombinationCount": 2,
+          "cartesianCombinationCount": 64,
+          "bestScore": 0.8597624659063383,
+          "bestFitObjective": 0.27017920682004254,
+          "bestProfileIds": [
+            "synthetic-3-0-3",
+            "synthetic-3-1-0",
+            "synthetic-3-2-2"
+          ],
+          "bestRatios": [
+            0.5052237350500659,
+            0.3028434412340981,
+            0.1919328237158359
+          ],
+          "elapsedMs": 4.938250000000039,
+          "objectiveGap": 0.33405885820550607,
+          "missedReferenceCombination": true,
+          "deterministic": true
+        },
+        {
+          "limit": 4,
+          "retainedCombinationCount": 4,
+          "cartesianCombinationCount": 64,
+          "bestScore": 0.8597624659063383,
+          "bestFitObjective": 0.27017920682004254,
+          "bestProfileIds": [
+            "synthetic-3-0-3",
+            "synthetic-3-1-0",
+            "synthetic-3-2-2"
+          ],
+          "bestRatios": [
+            0.5052237350500659,
+            0.3028434412340981,
+            0.1919328237158359
+          ],
+          "elapsedMs": 1.033916999999974,
+          "objectiveGap": 0.33405885820550607,
+          "missedReferenceCombination": true,
+          "deterministic": true
+        },
+        {
+          "limit": 8,
+          "retainedCombinationCount": 8,
+          "cartesianCombinationCount": 64,
+          "bestScore": 0.8597624659063383,
+          "bestFitObjective": 0.27017920682004254,
+          "bestProfileIds": [
+            "synthetic-3-0-3",
+            "synthetic-3-1-0",
+            "synthetic-3-2-2"
+          ],
+          "bestRatios": [
+            0.5052237350500659,
+            0.3028434412340981,
+            0.1919328237158359
+          ],
+          "elapsedMs": 3.414124999999899,
+          "objectiveGap": 0.33405885820550607,
+          "missedReferenceCombination": true,
+          "deterministic": true
+        },
+        {
+          "limit": 16,
+          "retainedCombinationCount": 16,
+          "cartesianCombinationCount": 64,
+          "bestScore": 0.5257036077008322,
+          "bestFitObjective": 9.643119582469563e-7,
+          "bestProfileIds": [
+            "synthetic-3-0-3",
+            "synthetic-3-1-0",
+            "synthetic-3-2-1"
+          ],
+          "bestRatios": [
+            0.5999992475733705,
+            0.2999854614289211,
+            0.10001529099770819
+          ],
+          "elapsedMs": 3.094041000000061,
+          "objectiveGap": 0,
+          "missedReferenceCombination": false,
+          "deterministic": true
+        },
+        {
+          "limit": 64,
+          "retainedCombinationCount": 64,
+          "cartesianCombinationCount": 64,
+          "bestScore": 0.5257036077008322,
+          "bestFitObjective": 9.643119582469563e-7,
+          "bestProfileIds": [
+            "synthetic-3-0-3",
+            "synthetic-3-1-0",
+            "synthetic-3-2-1"
+          ],
+          "bestRatios": [
+            0.5999992475733705,
+            0.2999854614289211,
+            0.10001529099770819
+          ],
+          "elapsedMs": 6.174292000000037,
+          "objectiveGap": 0,
+          "missedReferenceCombination": false,
+          "deterministic": true
+        }
+      ]
+    },
+    {
+      "fixtureId": "synthetic-4",
+      "reference": {
+        "limit": 64,
+        "retainedCombinationCount": 64,
+        "cartesianCombinationCount": 64,
+        "bestScore": 0.3499296651510283,
+        "bestFitObjective": 0.00000498794905192509,
+        "bestProfileIds": [
+          "synthetic-4-0-0",
+          "synthetic-4-1-1",
+          "synthetic-4-2-2"
+        ],
+        "bestRatios": [
+          0.5999477700543141,
+          0.30006885049568877,
+          0.09998337944999709
+        ],
+        "elapsedMs": 15.817084000000023
+      },
+      "runs": [
+        {
+          "limit": 2,
+          "retainedCombinationCount": 2,
+          "cartesianCombinationCount": 64,
+          "bestScore": 0.3499296651510283,
+          "bestFitObjective": 0.00000498794905192509,
+          "bestProfileIds": [
+            "synthetic-4-0-0",
+            "synthetic-4-1-1",
+            "synthetic-4-2-2"
+          ],
+          "bestRatios": [
+            0.5999477700543141,
+            0.30006885049568877,
+            0.09998337944999709
+          ],
+          "elapsedMs": 6.798249999999939,
+          "objectiveGap": 0,
+          "missedReferenceCombination": false,
+          "deterministic": true
+        },
+        {
+          "limit": 4,
+          "retainedCombinationCount": 4,
+          "cartesianCombinationCount": 64,
+          "bestScore": 0.3499296651510283,
+          "bestFitObjective": 0.00000498794905192509,
+          "bestProfileIds": [
+            "synthetic-4-0-0",
+            "synthetic-4-1-1",
+            "synthetic-4-2-2"
+          ],
+          "bestRatios": [
+            0.5999477700543141,
+            0.30006885049568877,
+            0.09998337944999709
+          ],
+          "elapsedMs": 1.6471250000000737,
+          "objectiveGap": 0,
+          "missedReferenceCombination": false,
+          "deterministic": true
+        },
+        {
+          "limit": 8,
+          "retainedCombinationCount": 8,
+          "cartesianCombinationCount": 64,
+          "bestScore": 0.3499296651510283,
+          "bestFitObjective": 0.00000498794905192509,
+          "bestProfileIds": [
+            "synthetic-4-0-0",
+            "synthetic-4-1-1",
+            "synthetic-4-2-2"
+          ],
+          "bestRatios": [
+            0.5999477700543141,
+            0.30006885049568877,
+            0.09998337944999709
+          ],
+          "elapsedMs": 6.161041999999952,
+          "objectiveGap": 0,
+          "missedReferenceCombination": false,
+          "deterministic": true
+        },
+        {
+          "limit": 16,
+          "retainedCombinationCount": 16,
+          "cartesianCombinationCount": 64,
+          "bestScore": 0.3499296651510283,
+          "bestFitObjective": 0.00000498794905192509,
+          "bestProfileIds": [
+            "synthetic-4-0-0",
+            "synthetic-4-1-1",
+            "synthetic-4-2-2"
+          ],
+          "bestRatios": [
+            0.5999477700543141,
+            0.30006885049568877,
+            0.09998337944999709
+          ],
+          "elapsedMs": 3.710666999999944,
+          "objectiveGap": 0,
+          "missedReferenceCombination": false,
+          "deterministic": true
+        },
+        {
+          "limit": 64,
+          "retainedCombinationCount": 64,
+          "cartesianCombinationCount": 64,
+          "bestScore": 0.3499296651510283,
+          "bestFitObjective": 0.00000498794905192509,
+          "bestProfileIds": [
+            "synthetic-4-0-0",
+            "synthetic-4-1-1",
+            "synthetic-4-2-2"
+          ],
+          "bestRatios": [
+            0.5999477700543141,
+            0.30006885049568877,
+            0.09998337944999709
+          ],
+          "elapsedMs": 10.997250000000008,
+          "objectiveGap": 0,
+          "missedReferenceCombination": false,
+          "deterministic": true
+        }
+      ]
+    },
+    {
+      "fixtureId": "synthetic-5",
+      "reference": {
+        "limit": 64,
+        "retainedCombinationCount": 64,
+        "cartesianCombinationCount": 64,
+        "bestScore": 0.5687807362677554,
+        "bestFitObjective": 0.05475440588872784,
+        "bestProfileIds": [
+          "synthetic-5-0-1",
+          "synthetic-5-1-2",
+          "synthetic-5-2-2"
+        ],
+        "bestRatios": [
+          0.47763692422970744,
+          0.42584114743582024,
+          0.09652192833446949
+        ],
+        "elapsedMs": 27.075708000000077
+      },
+      "runs": [
+        {
+          "limit": 2,
+          "retainedCombinationCount": 2,
+          "cartesianCombinationCount": 64,
+          "bestScore": 0.5687807362677554,
+          "bestFitObjective": 0.05475440588872784,
+          "bestProfileIds": [
+            "synthetic-5-0-1",
+            "synthetic-5-1-2",
+            "synthetic-5-2-2"
+          ],
+          "bestRatios": [
+            0.47763692422970744,
+            0.42584114743582024,
+            0.09652192833446949
+          ],
+          "elapsedMs": 0.8455000000000155,
+          "objectiveGap": 0,
+          "missedReferenceCombination": false,
+          "deterministic": true
+        },
+        {
+          "limit": 4,
+          "retainedCombinationCount": 4,
+          "cartesianCombinationCount": 64,
+          "bestScore": 0.5687807362677554,
+          "bestFitObjective": 0.05475440588872784,
+          "bestProfileIds": [
+            "synthetic-5-0-1",
+            "synthetic-5-1-2",
+            "synthetic-5-2-2"
+          ],
+          "bestRatios": [
+            0.47763692422970744,
+            0.42584114743582024,
+            0.09652192833446949
+          ],
+          "elapsedMs": 0.6713330000000042,
+          "objectiveGap": 0,
+          "missedReferenceCombination": false,
+          "deterministic": true
+        },
+        {
+          "limit": 8,
+          "retainedCombinationCount": 8,
+          "cartesianCombinationCount": 64,
+          "bestScore": 0.5687807362677554,
+          "bestFitObjective": 0.05475440588872784,
+          "bestProfileIds": [
+            "synthetic-5-0-1",
+            "synthetic-5-1-2",
+            "synthetic-5-2-2"
+          ],
+          "bestRatios": [
+            0.47763692422970744,
+            0.42584114743582024,
+            0.09652192833446949
+          ],
+          "elapsedMs": 3.50916600000005,
+          "objectiveGap": 0,
+          "missedReferenceCombination": false,
+          "deterministic": true
+        },
+        {
+          "limit": 16,
+          "retainedCombinationCount": 16,
+          "cartesianCombinationCount": 64,
+          "bestScore": 0.5687807362677554,
+          "bestFitObjective": 0.05475440588872784,
+          "bestProfileIds": [
+            "synthetic-5-0-1",
+            "synthetic-5-1-2",
+            "synthetic-5-2-2"
+          ],
+          "bestRatios": [
+            0.47763692422970744,
+            0.42584114743582024,
+            0.09652192833446949
+          ],
+          "elapsedMs": 1.9451250000000755,
+          "objectiveGap": 0,
+          "missedReferenceCombination": false,
+          "deterministic": true
+        },
+        {
+          "limit": 64,
+          "retainedCombinationCount": 64,
+          "cartesianCombinationCount": 64,
+          "bestScore": 0.5687807362677554,
+          "bestFitObjective": 0.05475440588872784,
+          "bestProfileIds": [
+            "synthetic-5-0-1",
+            "synthetic-5-1-2",
+            "synthetic-5-2-2"
+          ],
+          "bestRatios": [
+            0.47763692422970744,
+            0.42584114743582024,
+            0.09652192833446949
+          ],
+          "elapsedMs": 5.168084000000022,
+          "objectiveGap": 0,
+          "missedReferenceCombination": false,
+          "deterministic": true
+        }
+      ]
+    },
+    {
+      "fixtureId": "synthetic-6",
+      "reference": {
+        "limit": 64,
+        "retainedCombinationCount": 64,
+        "cartesianCombinationCount": 64,
+        "bestScore": 0.5895833983702934,
+        "bestFitObjective": 1.3928399763828693e-7,
+        "bestProfileIds": [
+          "synthetic-6-0-2",
+          "synthetic-6-1-3",
+          "synthetic-6-2-0"
+        ],
+        "bestRatios": [
+          0.5999902325385335,
+          0.300009227882484,
+          0.10000053957898226
+        ],
+        "elapsedMs": 4.940166999999974
+      },
+      "runs": [
+        {
+          "limit": 2,
+          "retainedCombinationCount": 2,
+          "cartesianCombinationCount": 64,
+          "bestScore": 0.5895833983702934,
+          "bestFitObjective": 1.3928399763828693e-7,
+          "bestProfileIds": [
+            "synthetic-6-0-2",
+            "synthetic-6-1-3",
+            "synthetic-6-2-0"
+          ],
+          "bestRatios": [
+            0.5999902325385335,
+            0.300009227882484,
+            0.10000053957898226
+          ],
+          "elapsedMs": 0.27241700000001856,
+          "objectiveGap": 0,
+          "missedReferenceCombination": false,
+          "deterministic": true
+        },
+        {
+          "limit": 4,
+          "retainedCombinationCount": 4,
+          "cartesianCombinationCount": 64,
+          "bestScore": 0.5895833983702934,
+          "bestFitObjective": 1.3928399763828693e-7,
+          "bestProfileIds": [
+            "synthetic-6-0-2",
+            "synthetic-6-1-3",
+            "synthetic-6-2-0"
+          ],
+          "bestRatios": [
+            0.5999902325385335,
+            0.300009227882484,
+            0.10000053957898226
+          ],
+          "elapsedMs": 0.4592079999999896,
+          "objectiveGap": 0,
+          "missedReferenceCombination": false,
+          "deterministic": true
+        },
+        {
+          "limit": 8,
+          "retainedCombinationCount": 8,
+          "cartesianCombinationCount": 64,
+          "bestScore": 0.5895833983702934,
+          "bestFitObjective": 1.3928399763828693e-7,
+          "bestProfileIds": [
+            "synthetic-6-0-2",
+            "synthetic-6-1-3",
+            "synthetic-6-2-0"
+          ],
+          "bestRatios": [
+            0.5999902325385335,
+            0.300009227882484,
+            0.10000053957898226
+          ],
+          "elapsedMs": 0.7744579999999814,
+          "objectiveGap": 0,
+          "missedReferenceCombination": false,
+          "deterministic": true
+        },
+        {
+          "limit": 16,
+          "retainedCombinationCount": 16,
+          "cartesianCombinationCount": 64,
+          "bestScore": 0.5895833983702934,
+          "bestFitObjective": 1.3928399763828693e-7,
+          "bestProfileIds": [
+            "synthetic-6-0-2",
+            "synthetic-6-1-3",
+            "synthetic-6-2-0"
+          ],
+          "bestRatios": [
+            0.5999902325385335,
+            0.300009227882484,
+            0.10000053957898226
+          ],
+          "elapsedMs": 1.6687500000000455,
+          "objectiveGap": 0,
+          "missedReferenceCombination": false,
+          "deterministic": true
+        },
+        {
+          "limit": 64,
+          "retainedCombinationCount": 64,
+          "cartesianCombinationCount": 64,
+          "bestScore": 0.5895833983702934,
+          "bestFitObjective": 1.3928399763828693e-7,
+          "bestProfileIds": [
+            "synthetic-6-0-2",
+            "synthetic-6-1-3",
+            "synthetic-6-2-0"
+          ],
+          "bestRatios": [
+            0.5999902325385335,
+            0.300009227882484,
+            0.10000053957898226
+          ],
+          "elapsedMs": 11.179832999999917,
+          "objectiveGap": 0,
+          "missedReferenceCombination": false,
+          "deterministic": true
+        }
+      ]
+    },
+    {
+      "fixtureId": "synthetic-7",
+      "reference": {
+        "limit": 64,
+        "retainedCombinationCount": 64,
+        "cartesianCombinationCount": 64,
+        "bestScore": 0.5257039763932513,
+        "bestFitObjective": 0.0000013330043773645097,
+        "bestProfileIds": [
+          "synthetic-7-0-3",
+          "synthetic-7-1-0",
+          "synthetic-7-2-1"
+        ],
+        "bestRatios": [
+          0.6000182634954863,
+          0.29997726390987234,
+          0.10000447259464133
+        ],
+        "elapsedMs": 3.444250000000011
+      },
+      "runs": [
+        {
+          "limit": 2,
+          "retainedCombinationCount": 2,
+          "cartesianCombinationCount": 64,
+          "bestScore": 0.859762901843232,
+          "bestFitObjective": 0.27017964275693634,
+          "bestProfileIds": [
+            "synthetic-7-0-3",
+            "synthetic-7-1-0",
+            "synthetic-7-2-2"
+          ],
+          "bestRatios": [
+            0.5052066722335167,
+            0.3028430746726055,
+            0.1919502530938778
+          ],
+          "elapsedMs": 0.24204199999985576,
+          "objectiveGap": 0.3340589254499807,
+          "missedReferenceCombination": true,
+          "deterministic": true
+        },
+        {
+          "limit": 4,
+          "retainedCombinationCount": 4,
+          "cartesianCombinationCount": 64,
+          "bestScore": 0.859762901843232,
+          "bestFitObjective": 0.27017964275693634,
+          "bestProfileIds": [
+            "synthetic-7-0-3",
+            "synthetic-7-1-0",
+            "synthetic-7-2-2"
+          ],
+          "bestRatios": [
+            0.5052066722335167,
+            0.3028430746726055,
+            0.1919502530938778
+          ],
+          "elapsedMs": 0.4083330000000842,
+          "objectiveGap": 0.3340589254499807,
+          "missedReferenceCombination": true,
+          "deterministic": true
+        },
+        {
+          "limit": 8,
+          "retainedCombinationCount": 8,
+          "cartesianCombinationCount": 64,
+          "bestScore": 0.859762901843232,
+          "bestFitObjective": 0.27017964275693634,
+          "bestProfileIds": [
+            "synthetic-7-0-3",
+            "synthetic-7-1-0",
+            "synthetic-7-2-2"
+          ],
+          "bestRatios": [
+            0.5052066722335167,
+            0.3028430746726055,
+            0.1919502530938778
+          ],
+          "elapsedMs": 0.7001669999999649,
+          "objectiveGap": 0.3340589254499807,
+          "missedReferenceCombination": true,
+          "deterministic": true
+        },
+        {
+          "limit": 16,
+          "retainedCombinationCount": 16,
+          "cartesianCombinationCount": 64,
+          "bestScore": 0.5257039763932513,
+          "bestFitObjective": 0.0000013330043773645097,
+          "bestProfileIds": [
+            "synthetic-7-0-3",
+            "synthetic-7-1-0",
+            "synthetic-7-2-1"
+          ],
+          "bestRatios": [
+            0.6000182634954863,
+            0.29997726390987234,
+            0.10000447259464133
+          ],
+          "elapsedMs": 1.3594590000000153,
+          "objectiveGap": 0,
+          "missedReferenceCombination": false,
+          "deterministic": true
+        },
+        {
+          "limit": 64,
+          "retainedCombinationCount": 64,
+          "cartesianCombinationCount": 64,
+          "bestScore": 0.5257039763932513,
+          "bestFitObjective": 0.0000013330043773645097,
+          "bestProfileIds": [
+            "synthetic-7-0-3",
+            "synthetic-7-1-0",
+            "synthetic-7-2-1"
+          ],
+          "bestRatios": [
+            0.6000182634954863,
+            0.29997726390987234,
+            0.10000447259464133
+          ],
+          "elapsedMs": 5.56208300000003,
+          "objectiveGap": 0,
+          "missedReferenceCombination": false,
+          "deterministic": true
+        }
+      ]
+    }
+  ]
+}
