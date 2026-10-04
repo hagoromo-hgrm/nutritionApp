@@ -453,6 +453,7 @@ function estimateKind(method: string): EstimateKind {
 export function buildRequest(record: TrainingRecord, target: EstimatableNutrientKey, mode: FitMode): NutrientEstimateRequest {
   const knownNutrients: Partial<Record<EstimateFitNutrientKey, number>> = {}
   const knownNutrientReferences: NonNullable<NutrientEstimateRequest['knownNutrientReferences']> = {}
+  const knownNutrientEvidence: NonNullable<NutrientEstimateRequest['knownNutrientEvidence']> = {}
   for (const key of ESTIMATE_FIT_NUTRIENT_KEYS) {
     if (String(key) === String(target)) continue
     const label = record.nutrients[key]
@@ -461,7 +462,9 @@ export function buildRequest(record: TrainingRecord, target: EstimatableNutrient
     const parsed = parseTargetReference(label)
     if (typeof parsed === 'string') continue
     knownNutrients[key] = value
+    knownNutrientEvidence[key] = { origin: 'manufacturer_label', verified: true, source: record.sourceReference, resolution: 'explicit_metadata' }
     knownNutrientReferences[key] = {
+      origin: 'manufacturer_label',
       verified: true,
       sourceReference: record.sourceReference,
       reference: parsed.reference,
@@ -480,6 +483,7 @@ export function buildRequest(record: TrainingRecord, target: EstimatableNutrient
     ingredientsText: record.ingredientsText,
     ingredientsSource: { provider: 'メーカー公式サイト', verified: true },
     knownNutrients,
+    knownNutrientEvidence,
     knownNutrientReferences,
     knownNutrientReferenceBasis: { amount: record.referenceMassG, unit: 'g' },
     requestedNutrients: [target],

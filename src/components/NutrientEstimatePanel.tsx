@@ -13,7 +13,22 @@ import {
   type NutrientEstimateRequest,
   type NutrientEstimateResult,
 } from '../services/nutrientEstimator'
-import { NUTRIENT_LABELS, NUTRIENT_UNITS, type EstimatorGenreId, type IngredientsSource, type Nutrients } from '../types'
+import {
+  canonicalizeConfirmedNutrientInputs,
+} from '../services/confirmedNutrientInputs'
+import { nutrientEstimatePanelRequestKey } from '../services/nutrientEstimateRequestKey'
+import {
+  NUTRIENT_LABELS,
+  NUTRIENT_UNITS,
+  type EstimatorGenreId,
+  type EstimatorGenreSource,
+  type FoodUnitConversion,
+  type IngredientsSource,
+  type KnownNutrientReferenceMap,
+  type NutrientEvidenceMap,
+  type NutrientReferenceBasis,
+  type Nutrients,
+} from '../types'
 import { ESTIMATOR_GENRE_LABELS } from '../services/estimatorGenre'
 
 type CurrentEstimateNutrients = Pick<Nutrients, EstimatableNutrientKey>
@@ -35,12 +50,21 @@ export interface NutrientEstimatePanelProps {
   basis: NutrientEstimateBasis
   productName: string | null
   estimatorGenreId: EstimatorGenreId
+  estimatorGenreSource?: EstimatorGenreSource | null
+  estimatorCategoryId?: string | null
   ingredientsText: string | null
   referenceMassG: number | null
   referenceMassSource: string | null
   ingredientsSource: IngredientsSource | null
   currentNutrients: CurrentEstimateNutrients
+  /** 評価済み要求を表示している間だけ固定し、採用後の残り栄養素で結果を無効にしない。 */
+  currentEvaluationRequestedNutrients?: readonly EstimatableNutrientKey[]
   knownNutrients: NutrientEstimateRequest['knownNutrients']
+  knownNutrientEvidence: NutrientEvidenceMap
+  knownNutrientReferences?: KnownNutrientReferenceMap
+  knownNutrientReferenceBasis?: NutrientReferenceBasis | null
+  fitMode?: NutrientEstimateRequest['fitMode']
+  inputUnitConversions?: FoodUnitConversion[]
   onEvaluated?: (evaluation: NutrientEstimateEvaluation) => void
   onAdopt: (adoption: NutrientEstimateAdoption) => void
   onRejectAll?: (evaluation: NutrientEstimateEvaluation, nutrientKeys: EstimatableNutrientKey[]) => void
@@ -64,26 +88,12 @@ function format(value: number): string {
   return value.toFixed(1)
 }
 
-function requestKey(props: NutrientEstimatePanelProps): string {
-  return JSON.stringify([
-    props.basis.baseAmount,
-    props.basis.baseUnit,
-    props.productName,
-    props.estimatorGenreId,
-    props.ingredientsText,
-    props.referenceMassG,
-    props.referenceMassSource,
-    props.ingredientsSource,
-    props.knownNutrients,
-  ])
-}
-
 export function NutrientEstimatePanel(props: NutrientEstimatePanelProps) {
   const id = useId()
   const [evaluation, setEvaluation] = useState<{ key: string; request: NutrientEstimateRequest; result: NutrientEstimateResult } | null>(null)
   const [selected, setSelected] = useState<Set<EstimatableNutrientKey>>(new Set())
   const [queuedAction, setQueuedAction] = useState<'adopt' | 'reject' | null>(null)
-  const currentKey = requestKey(props)
+  const currentKey = nutrientEstimatePanelRequestKey(props)
   const result = evaluation?.key === currentKey ? evaluation.result : null
   const resultKeys = result && evaluation
     ? requestedEstimatableNutrientKeys(evaluation.request.requestedNutrients)
@@ -97,22 +107,52 @@ export function NutrientEstimatePanel(props: NutrientEstimatePanelProps) {
 
   function runEstimate() {
     const requestedNutrients = ESTIMATABLE_NUTRIENT_KEYS.filter((key) => props.currentNutrients[key] === null)
-    const request: NutrientEstimateRequest = {
-      requestId: `browser-estimate-${Date.now()}`,
+    const canonicalInputs = canonicalizeConfirmedNutrientInputs({
       productName: props.productName,
+      estimatorCategoryId: props.estimatorCategoryId,
       estimatorGenreId: props.estimatorGenreId,
+      estimatorGenreSource: props.estimatorGenreSource,
       baseAmount: props.basis.baseAmount,
       baseUnit: props.basis.baseUnit,
+      inputUnitConversions: props.inputUnitConversions,
+      referenceMassG: props.referenceMassG,
+      referenceMassSource: props.referenceMassSource,
       ingredientsText: props.ingredientsText,
       ingredientsSource: props.ingredientsSource,
       knownNutrients: props.knownNutrients,
+      knownNutrientEvidence: props.knownNutrientEvidence,
+      knownNutrientReferences: props.knownNutrientReferences,
+      knownNutrientReferenceBasis: props.knownNutrientReferenceBasis,
+      fitMode: props.fitMode,
+      requestedNutrients,
+    })
+    const request: NutrientEstimateRequest = {
+      requestId: `browser-estimate-${Date.now()}`,
+      productName: props.productName,
+      estimatorCategoryId: props.estimatorCategoryId,
+      estimatorGenreId: props.estimatorGenreId,
+      estimatorGenreSource: props.estimatorGenreSource,
+      baseAmount: props.basis.baseAmount,
+      baseUnit: props.basis.baseUnit,
+      inputUnitConversions: props.inputUnitConversions,
+      ingredientsText: props.ingredientsText,
+      ingredientsSource: props.ingredientsSource,
+      knownNutrients: canonicalInputs.knownNutrients,
+      knownNutrientEvidence: canonicalInputs.knownNutrientEvidence,
+      knownNutrientReferences: canonicalInputs.knownNutrientReferences,
+      knownNutrientReferenceBasis: canonicalInputs.knownNutrientReferenceBasis,
+      fitMode: props.fitMode,
       referenceMassG: props.referenceMassG,
       referenceMassSource: props.referenceMassSource,
       requestedNutrients,
       requestedAt: new Date().toISOString(),
     }
     const estimated = estimateNutrients(request)
-    setEvaluation({ key: currentKey, request, result: estimated })
+    const evaluatedKey = nutrientEstimatePanelRequestKey({
+      ...props,
+      currentEvaluationRequestedNutrients: requestedNutrients,
+    })
+    setEvaluation({ key: evaluatedKey, request, result: estimated })
     setSelected(new Set())
     setQueuedAction(null)
     props.onEvaluated?.({ request, result: estimated })

@@ -1,4 +1,5 @@
-import { ESTIMATION_LIMITATION_REASONS, ESTIMATOR_GENRE_IDS, NUTRIENT_KEYS, type AppSettings, type BackupData, type EstimationDecision, type EstimationRequest, type EstimationResult, type EstimationSettings, type Food, type FoodAlias, type FoodGroup, type FoodRelatedTerm, type FoodSnapshot, type FoodUsageStat, type GeneralMenu, type MealEntry, type Menu, type MenuIngredient, type MenuSet, type NutrientKey, type NutrientMetadataMap, type Nutrients, type NutritionGoalRecord, type SearchLog, type WeightRecord } from '../types'
+import { ESTIMATION_LIMITATION_REASONS, ESTIMATOR_GENRE_IDS, NUTRIENT_KEYS, type AppSettings, type BackupData, type EstimationDecision, type EstimationRequest, type EstimationResult, type EstimationSettings, type Food, type FoodAlias, type FoodGroup, type FoodRelatedTerm, type FoodSnapshot, type FoodUsageStat, type GeneralMenu, type MealEntry, type Menu, type MenuIngredient, type MenuSet, type NutrientKey, type NutrientMetadataMap, type Nutrients, type NutritionGoalRecord, type NutritionEstimationInput, type SearchLog, type WeightRecord } from '../types'
+import { createNutrientEstimateRequestFingerprintFromSnapshot } from './confirmedNutrientInputs'
 import { isFoodAttributePreference } from './foodAttributePreferences'
 import { hasMenuCycles, menusWithUnsupportedIngredientUnits } from './menuIngredients'
 import { isMealMenuSnapshot } from './mealMenuSnapshots'
@@ -334,16 +335,136 @@ function isNutrientKey(value: unknown): value is NutrientKey {
   return typeof value === 'string' && (NUTRIENT_KEYS as readonly string[]).includes(value)
 }
 
+function isNutrientOrigin(value: unknown): value is 'manufacturer_label' | 'external_source' | 'user_input' | 'estimated' | 'derived' | 'unknown' {
+  return ['manufacturer_label', 'external_source', 'user_input', 'estimated', 'derived', 'unknown'].includes(String(value))
+}
+
+function isNutrientEvidence(value: unknown): boolean {
+  if (!isRecord(value) || !isNutrientOrigin(value.origin) || value.verified !== true
+    || !['manufacturer_label', 'user_input'].includes(String(value.origin))
+    || (value.source !== undefined && !isString(value.source))) return false
+  if (!['explicit_metadata', 'legacy_source_user'].includes(String(value.resolution))) return false
+  return value.resolution !== 'legacy_source_user' || value.origin === 'user_input'
+}
+
+function isNutrientEvidenceMap(value: unknown): boolean {
+  return isRecord(value) && Object.entries(value).every(([key, evidence]) => isNutrientKey(key) && isNutrientEvidence(evidence))
+}
+
+function isNutrientReferenceBasis(value: unknown): value is { amount: number; unit: 'g' | 'ml' } {
+  return isRecord(value) && typeof value.amount === 'number' && Number.isFinite(value.amount) && value.amount > 0
+    && (value.unit === 'g' || value.unit === 'ml')
+}
+
+function isKnownNutrientReference(value: unknown): boolean {
+  if (!isRecord(value) || !isNutrientOrigin(value.origin) || !['manufacturer_label', 'user_input'].includes(String(value.origin))
+    || value.verified !== true
+    || (value.sourceReference !== undefined && !isString(value.sourceReference))
+    || (value.provider !== undefined && !isString(value.provider))) return false
+  if (![value.sourceReference, value.provider].some((source) => isNonEmptyString(source))) return false
+
+  const reference = value.reference
+  if (!isRecord(reference) || (reference.decimalPlaces !== undefined
+    && (!Number.isSafeInteger(reference.decimalPlaces) || Number(reference.decimalPlaces) < 0))) return false
+  if (reference.kind === 'fixed') {
+    if (typeof reference.value !== 'number' || !Number.isFinite(reference.value) || reference.value < 0
+      || reference.min !== undefined || reference.max !== undefined) return false
+  } else if (reference.kind === 'declared_range') {
+    if (typeof reference.min !== 'number' || !Number.isFinite(reference.min) || reference.min < 0
+      || typeof reference.max !== 'number' || !Number.isFinite(reference.max) || reference.max < reference.min
+      || reference.value !== undefined) return false
+  } else {
+    // An estimated label reference cannot be promoted to a fixed or interval constraint.
+    return false
+  }
+  return isNutrientReferenceBasis(value.basis)
+}
+
+function isKnownNutrientReferenceMap(value: unknown): boolean {
+  return isRecord(value) && Object.entries(value).every(([key, reference]) => isNutrientKey(key) && isKnownNutrientReference(reference))
+}
+
+function isNutrientKeys(value: unknown): value is NutrientKey[] {
+  return Array.isArray(value) && value.every(isNutrientKey) && new Set(value).size === value.length
+}
+
+function hasNewEstimationInputFields(value: Record<string, unknown>): boolean {
+  return Object.prototype.hasOwnProperty.call(value, 'productName')
+    || value.knownNutrientEvidence !== undefined
+    || value.knownNutrientReferences !== undefined
+    || value.knownNutrientReferenceBasis !== undefined
+    || value.fitMode !== undefined
+    || value.requestedNutrients !== undefined
+    || value.requestFingerprint !== undefined
+}
+
+function isCanonicalEstimationInputExtension(value: Record<string, unknown>, known: Record<string, unknown>): boolean {
+  const hasExtension = hasNewEstimationInputFields(value)
+  if (!hasExtension) return true
+  if (value.knownNutrientEvidence === undefined || !isNutrientEvidenceMap(value.knownNutrientEvidence)
+    || (value.knownNutrientReferences !== undefined && !isKnownNutrientReferenceMap(value.knownNutrientReferences))
+    || (value.knownNutrientReferenceBasis !== undefined && value.knownNutrientReferenceBasis !== null && !isNutrientReferenceBasis(value.knownNutrientReferenceBasis))
+    || (value.fitMode !== undefined && value.fitMode !== 'legacy_point' && value.fitMode !== 'robust_interval')
+    || (value.requestedNutrients !== undefined && !isNutrientKeys(value.requestedNutrients))
+    || !isNonEmptyString(value.requestFingerprint)
+    || (typeof value.inputHash !== 'string' || !/^fnv1a-v2:[0-9a-f]{8}$/.test(value.inputHash))) return false
+
+  const requestBasis = value.knownNutrientReferenceBasis
+  if (requestBasis !== undefined && requestBasis !== null) {
+    if (!isRecord(requestBasis)
+      || (requestBasis.unit === 'g' && requestBasis.amount !== value.referenceMassG)
+      || (requestBasis.unit === 'ml' && (value.baseUnit !== 'ml' || requestBasis.amount !== value.baseAmount))) return false
+  }
+
+  const evidence = value.knownNutrientEvidence as Record<string, unknown>
+  const references = value.knownNutrientReferences as Record<string, unknown> | undefined
+  const knownKeys = Object.keys(known)
+  const targetKeys = new Set((value.requestedNutrients ?? []) as string[])
+  if (!knownKeys.every((key) => Object.prototype.hasOwnProperty.call(evidence, key))) return false
+  if (knownKeys.some((key) => typeof known[key] !== 'number' || !Number.isFinite(known[key]) || Number(known[key]) < 0)) return false
+  if (!Object.keys(evidence).every((key) => {
+    const hasNumericValue = Object.prototype.hasOwnProperty.call(known, key)
+      && typeof known[key] === 'number' && Number.isFinite(known[key]) && Number(known[key]) >= 0
+    const hasReference = references !== undefined && Object.prototype.hasOwnProperty.call(references, key)
+    return (hasNumericValue || hasReference) && !targetKeys.has(key)
+  })) return false
+
+  for (const [key, reference] of Object.entries(references ?? {})) {
+    const nutrientEvidence = evidence[key]
+    if (!isRecord(nutrientEvidence) || !isRecord(reference) || reference.origin !== nutrientEvidence.origin) return false
+    if (targetKeys.has(key)) return false
+    const numericValue = known[key]
+    const label = reference.reference
+    if (!isRecord(label)) return false
+    if (typeof numericValue === 'number' && label.kind === 'fixed' && label.value !== numericValue) return false
+    if (typeof numericValue === 'number' && label.kind === 'declared_range'
+      && (typeof label.min !== 'number' || typeof label.max !== 'number' || numericValue < label.min || numericValue > label.max)) return false
+    const basis = reference.basis
+    if (basis !== undefined && basis !== null) {
+      if (!isNutrientReferenceBasis(basis) || !isNutrientReferenceBasis(requestBasis)
+        || basis.amount !== requestBasis.amount || basis.unit !== requestBasis.unit) return false
+    }
+  }
+
+  try {
+    return value.requestFingerprint === createNutrientEstimateRequestFingerprintFromSnapshot(value as unknown as NutritionEstimationInput)
+  } catch {
+    return false
+  }
+}
+
 function isEstimationInput(value: unknown): boolean {
   if (!isRecord(value)) return false
   const known = value.knownNutrients
   return isNonEmptyString(value.requestId) && isNonEmptyString(value.foodId) && isString(value.barcode) && (!value.barcode || isValidBarcode(value.barcode))
     && isString(value.name) && isString(value.maker) && (value.estimatorCategoryId === undefined || value.estimatorCategoryId === null || isNonEmptyString(value.estimatorCategoryId))
+    && (value.productName === undefined || value.productName === null || isString(value.productName))
     && isEstimatorGenrePair(value.estimatorGenreId, value.estimatorGenreSource)
     && typeof value.baseAmount === 'number' && Number.isFinite(value.baseAmount) && value.baseAmount > 0 && value.baseAmount <= 100000 && isValidUnit(String(value.baseUnit))
     && isInputUnitConversions(value.inputUnitConversions, String(value.baseUnit))
     && isReferenceMass(value.referenceMassG, value.referenceMassSource)
     && isRecord(known) && Object.entries(known).every(([key, nutrient]) => isNutrientKey(key) && isNullableNumber(nutrient))
+    && isCanonicalEstimationInputExtension(value, known)
     && Array.isArray(value.missingNutrients) && value.missingNutrients.every(isNutrientKey) && new Set(value.missingNutrients).size === value.missingNutrients.length
     && (value.ingredientsText === null || isString(value.ingredientsText)) && isIngredientsSource(value.ingredientsSource)
     && isIsoDateTime(value.requestedAt) && isIsoDateTime(value.foodUpdatedAt) && isNonEmptyString(value.inputHash)

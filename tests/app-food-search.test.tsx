@@ -11,6 +11,10 @@ import type { SearchInputView, SearchResultsView } from '../src/components/Searc
 import { db } from '../src/db/db'
 import { DEFAULT_SETTINGS } from '../src/types'
 import App from '../src/App'
+import { queueFoodEstimateAdoption } from '../src/components/formDrafts'
+import { confirmedNutrientInputsFromFood } from '../src/services/confirmedNutrientInputs'
+import { estimateNutrients, type NutrientEstimateRequest } from '../src/services/nutrientEstimator'
+import { EMPTY_NUTRIENTS } from '../src/types'
 
 const screens = vi.hoisted(() => ({ form: null as ComponentProps<typeof FoodFormView> | null, settings: null as ComponentProps<typeof SettingsView> | null, releaseNotes: null as ComponentProps<typeof ReleaseNotesView> | null, foods: null as ComponentProps<typeof FoodsView> | null, input: null as ComponentProps<typeof SearchInputView> | null, results: null as ComponentProps<typeof SearchResultsView> | null }))
 vi.mock('../src/components/FoodFormView', () => ({ FoodFormView: (props: ComponentProps<typeof FoodFormView>) => { screens.form = props; return null } }))
@@ -59,6 +63,62 @@ it('FOODMASTER保存後に同じ検索結果を再編集すると更新値を開
   expect(screens.results!.groups[0].items[0].subtitle).toContain('456')
   await act(async () => screens.results!.onSelect(result.query, result.items[0]))
   expect(screens.form!.draft.nutrients.energyKcal).toBe('456')
+})
+
+it.each([false, true])('推計の実入力を保存し、数値が同じでも根拠変更=%sなら採用を止める', async (changeEvidence) => {
+  await act(async () => { Array.from(host.querySelectorAll('button')).find((button) => button.textContent?.includes('設定'))!.click() })
+  await act(async () => screens.settings!.onOpenFoodMaster())
+  await act(async () => screens.foods!.onOpenSearch!())
+  await act(async () => screens.input!.setBars(['テスト専用食品']))
+  await act(async () => screens.input!.onSearch())
+  await vi.waitFor(async () => { await act(async () => { await new Promise((resolve) => setTimeout(resolve, 10)) }); expect(screens.results?.groups[0]?.items).toHaveLength(1) })
+  const selected = screens.results!.groups[0]
+  await act(async () => screens.results!.onSelect(selected.query, selected.items[0]))
+  const draft = {
+    ...screens.form!.draft,
+    ingredientsText: '薄力粉、砂糖', ingredientsSourceProvider: '合成テスト出典',
+    estimatorGenreId: 'other_unknown' as const,
+    estimatorGenreSource: 'user' as const,
+  }
+  const known = confirmedNutrientInputsFromFood({
+    source: draft.source, nutrients: { ...EMPTY_NUTRIENTS, energyKcal: 123 },
+    nutrientMetadata: draft.nutrientMetadata, legacyFallbackBlocked: draft.legacyFallbackBlocked,
+  })
+  const request: NutrientEstimateRequest = {
+    requestId: 'actual-evaluated-input', productName: draft.name, estimatorGenreId: draft.estimatorGenreId,
+    estimatorGenreSource: draft.estimatorGenreSource, inputUnitConversions: [],
+    baseAmount: 100, baseUnit: 'g', referenceMassG: 100, referenceMassSource: '基準単位がg',
+    ingredientsText: draft.ingredientsText, ingredientsSource: { provider: draft.ingredientsSourceProvider, verified: true },
+    ...known, requestedNutrients: ['fiberG'], requestedAt: '2026-10-04T00:00:00.000Z',
+    fitMode: 'robust_interval', knownNutrientReferenceBasis: { amount: 100, unit: 'g' },
+    knownNutrientReferences: { energyKcal: {
+      origin: 'user_input', verified: true, sourceReference: '合成ラベル記録',
+      reference: { kind: 'fixed', value: 123 }, basis: { amount: 100, unit: 'g' },
+    } },
+  }
+  const result = estimateNutrients(request)
+  expect(result.estimates.fiberG.status).toBe('available')
+  if (result.estimates.fiberG.status !== 'available') return
+  const staged = queueFoodEstimateAdoption(draft, {
+    requestId: request.requestId, request, result, basis: result.basis,
+    values: { fiberG: result.estimates.fiberG.value },
+  })
+  await act(async () => screens.form!.setDraft(changeEvidence
+    ? { ...staged, nutrientMetadata: { ...staged.nutrientMetadata, energyKcal: { origin: 'user_input', verified: false } } }
+    : staged))
+  await act(async () => { await screens.form!.onSubmit() })
+  if (changeEvidence) {
+    expect(await db.estimationRequests.count()).toBe(0)
+    expect((await db.foods.get('test-food'))!.nutrients.fiberG).toBeNull()
+    expect(host.textContent).toContain('もう一度推計')
+  } else {
+    const snapshot = (await db.estimationRequests.get(request.requestId))!.inputSnapshot
+    expect(snapshot.knownNutrientEvidence).toEqual(request.knownNutrientEvidence)
+    expect(snapshot.knownNutrientReferences).toEqual(request.knownNutrientReferences)
+    expect(snapshot.fitMode).toBe('robust_interval')
+    expect(snapshot.requestedNutrients).toEqual(['fiberG'])
+    expect((await db.foods.get('test-food'))!.nutrients.fiberG).toBe(result.estimates.fiberG.value)
+  }
 })
 
 it('検索分類で除外された同一familyの食品を再選択候補へ追加しない', async () => {

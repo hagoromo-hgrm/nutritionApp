@@ -280,6 +280,13 @@ describe('export formats', () => {
       status: 'completed',
       now: estimatedAt,
     })
+    const knownNutrientEvidence = {
+      energyKcal: { origin: 'user_input' as const, verified: true, source: 'test fixture', resolution: 'explicit_metadata' as const },
+      proteinG: { origin: 'user_input' as const, verified: true, source: 'test fixture', resolution: 'explicit_metadata' as const },
+      fatG: { origin: 'user_input' as const, verified: true, source: 'test fixture', resolution: 'explicit_metadata' as const },
+      carbohydrateG: { origin: 'user_input' as const, verified: true, source: 'test fixture', resolution: 'explicit_metadata' as const },
+      saltG: { origin: 'user_input' as const, verified: true, source: 'test fixture', resolution: 'explicit_metadata' as const },
+    }
     const browserResult = estimateNutrients({
       requestId: estimationRequest.requestId,
       productName: traceFood.name,
@@ -297,6 +304,7 @@ describe('export formats', () => {
         carbohydrateG: 83.6,
         saltG: 0,
       },
+      knownNutrientEvidence,
       requestedNutrients: ['fiberG', 'saturatedFatG'],
       requestedAt: estimatedAt,
     }, { feedbackWeight: 0.2, postBlendWeight: 0.75 })
@@ -323,10 +331,12 @@ describe('export formats', () => {
         carbohydrateG: 83.6,
         saltG: 0,
       },
+      knownNutrientEvidence,
       fitMode: 'robust_interval',
       knownNutrientReferenceBasis: { amount: 100, unit: 'g' },
       knownNutrientReferences: {
         energyKcal: {
+          origin: 'user_input',
           verified: true,
           sourceReference: 'https://example.test/label',
           reference: { kind: 'fixed', value: 363 },

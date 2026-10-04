@@ -16,10 +16,22 @@ import {
   type NutritionEstimationInput,
 } from '../types'
 import { createId } from '../utils/id'
+import {
+  canonicalizeConfirmedNutrientInputs,
+  confirmedNutrientInputsFromFood,
+  createNutrientEstimateRequestFingerprint,
+  type NutrientEstimateInputFields,
+} from './confirmedNutrientInputs'
+import { ESTIMATABLE_NUTRIENT_KEYS, type NutrientEstimateRequest } from './nutrientEstimator'
 
 export function createEstimationInput(
   food: Food,
-  options: { requestId?: string; estimatorCategoryId?: string | null; requestedAt?: string } = {},
+  options: {
+    requestId?: string
+    estimatorCategoryId?: string | null
+    requestedAt?: string
+    evaluatedRequest?: NutrientEstimateRequest
+  } = {},
 ): NutritionEstimationInput {
   const requestId = options.requestId ?? createId('estimate')
   const requestedAt = options.requestedAt ?? new Date().toISOString()
@@ -30,16 +42,17 @@ export function createEstimationInput(
   const referenceMassSource = food.baseUnit === 'g'
     ? '基準単位がg'
     : (hasExplicitReferenceMass ? food.estimationReferenceMassSource ?? null : null)
-  const knownNutrients = Object.fromEntries(NUTRIENT_KEYS
-    .filter((key) => food.nutrients[key] !== null)
-    .map((key) => [key, food.nutrients[key]]))
-  const missingNutrients = NUTRIENT_KEYS.filter((key) => food.nutrients[key] === null)
-  return {
-    requestId,
-    foodId: food.id,
-    barcode: food.barcode,
-    name: food.name,
-    maker: food.maker,
+  const evaluatedRequest = options.evaluatedRequest
+  const legacyFallbackBlocked = Object.prototype.hasOwnProperty.call(food, 'estimatedNutrients')
+    || Object.prototype.hasOwnProperty.call(food, 'externalSource')
+  const fallbackEvidence = confirmedNutrientInputsFromFood({
+    source: food.source,
+    nutrients: food.nutrients,
+    nutrientMetadata: food.nutrientMetadata,
+    legacyFallbackBlocked,
+  })
+  const requestFields: NutrientEstimateInputFields = evaluatedRequest ?? {
+    productName: food.name,
     estimatorCategoryId: options.estimatorCategoryId ?? null,
     estimatorGenreId: food.estimatorGenreId ?? null,
     estimatorGenreSource: food.estimatorGenreSource ?? null,
@@ -48,10 +61,77 @@ export function createEstimationInput(
     inputUnitConversions: (food.inputUnitConversions ?? []).map((conversion) => ({ ...conversion })),
     referenceMassG,
     referenceMassSource,
-    knownNutrients,
-    missingNutrients,
     ingredientsText: food.ingredientsText ?? null,
     ingredientsSource: food.ingredientsSource ? { ...food.ingredientsSource } : null,
+    ...fallbackEvidence,
+    fitMode: 'legacy_point' as const,
+    requestedNutrients: ESTIMATABLE_NUTRIENT_KEYS,
+  }
+  const canonicalInputs = canonicalizeConfirmedNutrientInputs(requestFields)
+  const knownNutrients = Object.fromEntries(NUTRIENT_KEYS
+    .filter((key) => canonicalInputs.knownNutrients[key] !== undefined)
+    .map((key) => [key, canonicalInputs.knownNutrients[key]]))
+  const missingNutrients = NUTRIENT_KEYS.filter((key) => food.nutrients[key] === null)
+  const estimatorCategoryId = requestFields.estimatorCategoryId ?? options.estimatorCategoryId ?? null
+  const estimatorGenreId = requestFields.estimatorGenreId ?? null
+  const estimatorGenreSource = requestFields.estimatorGenreSource ?? null
+  const inputUnitConversions = (requestFields.inputUnitConversions ?? []).map((conversion) => ({ ...conversion }))
+  const snapshotContext = {
+    productName: evaluatedRequest
+      ? requestFields.productName ?? null
+      : requestFields.productName ?? food.name,
+    estimatorCategoryId,
+    estimatorGenreId,
+    estimatorGenreSource,
+    baseAmount: requestFields.baseAmount ?? food.baseAmount,
+    baseUnit: requestFields.baseUnit ?? food.baseUnit,
+    inputUnitConversions,
+    referenceMassG: requestFields.referenceMassG ?? null,
+    referenceMassSource: requestFields.referenceMassSource ?? null,
+    ingredientsText: requestFields.ingredientsText ?? null,
+    ingredientsSource: requestFields.ingredientsSource ? { ...requestFields.ingredientsSource } : null,
+    knownNutrients: canonicalInputs.knownNutrients,
+    knownNutrientEvidence: canonicalInputs.knownNutrientEvidence,
+    knownNutrientReferences: canonicalInputs.knownNutrientReferences,
+    knownNutrientReferenceBasis: canonicalInputs.knownNutrientReferenceBasis,
+    fitMode: evaluatedRequest?.fitMode,
+    requestedNutrients: evaluatedRequest?.requestedNutrients
+      ? [...evaluatedRequest.requestedNutrients]
+      : [...ESTIMATABLE_NUTRIENT_KEYS],
+  }
+  return {
+    requestId,
+    foodId: food.id,
+    barcode: food.barcode,
+    name: food.name,
+    productName: snapshotContext.productName,
+    maker: food.maker,
+    estimatorCategoryId,
+    estimatorGenreId,
+    estimatorGenreSource,
+    baseAmount: snapshotContext.baseAmount,
+    baseUnit: snapshotContext.baseUnit as Food['baseUnit'],
+    inputUnitConversions,
+    referenceMassG: snapshotContext.referenceMassG,
+    referenceMassSource: snapshotContext.referenceMassSource,
+    knownNutrients,
+    knownNutrientEvidence: Object.fromEntries(Object.entries(canonicalInputs.knownNutrientEvidence)
+      .map(([key, evidence]) => [key, { ...evidence }])),
+    knownNutrientReferences: Object.fromEntries(Object.entries(canonicalInputs.knownNutrientReferences)
+      .map(([key, reference]) => [key, reference ? {
+        ...reference,
+        reference: { ...reference.reference },
+        basis: reference.basis ? { ...reference.basis } : reference.basis,
+      } : reference])),
+    knownNutrientReferenceBasis: canonicalInputs.knownNutrientReferenceBasis
+      ? { ...canonicalInputs.knownNutrientReferenceBasis }
+      : null,
+    fitMode: evaluatedRequest?.fitMode,
+    requestedNutrients: [...snapshotContext.requestedNutrients],
+    requestFingerprint: createNutrientEstimateRequestFingerprint(snapshotContext),
+    missingNutrients,
+    ingredientsText: snapshotContext.ingredientsText,
+    ingredientsSource: snapshotContext.ingredientsSource,
     requestedAt,
     foodUpdatedAt: food.updatedAt,
     inputHash: createEstimationInputHash(food),
@@ -60,13 +140,20 @@ export function createEstimationInput(
 
 export function createEstimationRequest(
   food: Food,
-  options: { requestId?: string; estimatorCategoryId?: string | null; status?: EstimationRequestStatus; now?: string } = {},
+  options: {
+    requestId?: string
+    estimatorCategoryId?: string | null
+    status?: EstimationRequestStatus
+    now?: string
+    evaluatedRequest?: NutrientEstimateRequest
+  } = {},
 ): EstimationRequest {
   const now = options.now ?? new Date().toISOString()
   const inputSnapshot = createEstimationInput(food, {
     requestId: options.requestId,
     estimatorCategoryId: options.estimatorCategoryId,
     requestedAt: now,
+    evaluatedRequest: options.evaluatedRequest,
   })
   return {
     requestId: inputSnapshot.requestId,

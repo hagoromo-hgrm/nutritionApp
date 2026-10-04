@@ -57,6 +57,8 @@ function calculateBenchmark(): AccuracyBenchmark {
       ingredientsText: fixture.ingredientsText,
       ingredientsSource: { provider: '人工配合fixture', verified: true },
       knownNutrients: fixture.knownNutrients,
+    knownNutrientEvidence: Object.fromEntries(Object.keys(fixture.knownNutrients)
+      .map((key) => [key, { origin: 'user_input' as const, verified: true, source: '人工配合fixture', resolution: 'explicit_metadata' as const }])),
       requestedNutrients: SYNTHETIC_TARGET_NUTRIENTS,
       requestedAt: '2026-07-26T00:00:00.000Z',
     })

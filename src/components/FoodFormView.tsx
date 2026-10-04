@@ -10,7 +10,8 @@ import {
   refreshEstimatorGenre,
 } from '../services/estimatorGenre'
 import { shouldFollowFoodName } from '../services/foodDraft'
-import { ESTIMATABLE_NUTRIENT_KEYS, ESTIMATE_FIT_NUTRIENT_KEYS, GENRE_PRIOR_PARTIAL_METHOD, PARTIAL_METHOD } from '../services/nutrientEstimator'
+import { ESTIMATABLE_NUTRIENT_KEYS, GENRE_PRIOR_PARTIAL_METHOD, PARTIAL_METHOD } from '../services/nutrientEstimator'
+import { canonicalizeConfirmedNutrientInputs, confirmedNutrientInputsFromFood } from '../services/confirmedNutrientInputs'
 import { recordUnresolvedIngredients } from '../services/unresolvedIngredients'
 import {
   FOOD_UNITS,
@@ -27,7 +28,7 @@ import {
   type Nutrients,
 } from '../types'
 import { isPositiveFinite } from '../utils/validation'
-import { queueFoodEstimateAdoption, queueFoodEstimateEvaluation, queueFoodEstimateRejection, withoutPendingEstimation, variantAttributeKeys, variantAttributeLabels, type FoodDraft, type FoodFormReturnView } from './formDrafts'
+import { nutrientMetadataAfterManualEdit, queueFoodEstimateAdoption, queueFoodEstimateEvaluation, queueFoodEstimateRejection, withoutPendingEstimation, variantAttributeKeys, variantAttributeLabels, type FoodDraft, type FoodFormReturnView } from './formDrafts'
 
 export function FoodFormView({ draft, returnView, allowCommercialClassification, estimationEnabled, setDraft, foodGroups, foodAliases, foodRelatedTerms, externalNote, onRevertEstimate, onSubmit, onDelete, onClose }: { draft: FoodDraft; returnView: FoodFormReturnView; allowCommercialClassification: boolean; estimationEnabled: boolean; setDraft: React.Dispatch<React.SetStateAction<FoodDraft | null>>; foodGroups: FoodGroup[]; foodAliases: FoodAlias[]; foodRelatedTerms: FoodRelatedTerm[]; externalNote: string | null; onRevertEstimate: (foodId: string, nutrientKey: NutrientKey) => void; onSubmit: () => void | Promise<void>; onDelete?: () => void; onClose: () => void }) {
   const [activeTab, setActiveTab] = useState<'basic' | 'nutrition' | 'search'>('basic')
@@ -110,11 +111,23 @@ export function FoodFormView({ draft, returnView, allowCommercialClassification,
     key,
     draft.nutrients[key].trim() === '' ? null : Number(draft.nutrients[key]),
   ])) as Pick<Nutrients, (typeof ESTIMATABLE_NUTRIENT_KEYS)[number]>
-  const knownEstimateFitNutrients = Object.fromEntries(ESTIMATE_FIT_NUTRIENT_KEYS.map((key) => [
-    key,
-    draft.nutrients[key].trim() === '' ? null : Number(draft.nutrients[key]),
-  ])) as Pick<Nutrients, (typeof ESTIMATE_FIT_NUTRIENT_KEYS)[number]>
   const hasEstimatableMissingValue = ESTIMATABLE_NUTRIENT_KEYS.some((key) => currentEstimateNutrients[key] === null)
+  const parsedNutrients = Object.fromEntries(NUTRIENT_KEYS.map((key) => {
+    const raw = draft.nutrients[key].trim()
+    return [key, raw === '' ? null : Number(raw)]
+  })) as Nutrients
+  const foodNutrientInputs = confirmedNutrientInputsFromFood({
+    source: draft.source,
+    nutrients: parsedNutrients,
+    nutrientMetadata: draft.nutrientMetadata,
+    legacyFallbackBlocked: draft.legacyFallbackBlocked,
+  })
+  const estimateRequestedNutrients = ESTIMATABLE_NUTRIENT_KEYS.filter((key) => currentEstimateNutrients[key] === null)
+  const confirmedInputs = canonicalizeConfirmedNutrientInputs({
+    ...foodNutrientInputs,
+    fitMode: 'legacy_point',
+    requestedNutrients: estimateRequestedNutrients,
+  })
   const queueEvaluation = (evaluation: NutrientEstimateEvaluation) => {
     if (evaluation.result.unresolvedIngredients.length > 0) {
       void recordUnresolvedIngredients(evaluation.result.unresolvedIngredients, draft.estimatorGenreId).catch(() => undefined)
@@ -135,8 +148,7 @@ export function FoodFormView({ draft, returnView, allowCommercialClassification,
   const updateNutrientValue = (key: NutrientKey, value: string) => setDraft((current) => {
     if (!current) return current
     const cleared = withoutPendingEstimation(current)
-    const nutrientMetadata = { ...cleared.nutrientMetadata }
-    if (nutrientMetadata[key]?.origin === 'estimated') delete nutrientMetadata[key]
+    const nutrientMetadata = nutrientMetadataAfterManualEdit(cleared.nutrientMetadata, key, value)
     return { ...cleared, nutrients: { ...cleared.nutrients, [key]: value }, nutrientMetadata }
   })
   return <>
@@ -202,12 +214,21 @@ export function FoodFormView({ draft, returnView, allowCommercialClassification,
             basis={{ baseAmount: Number(draft.baseAmount), baseUnit: draft.baseUnit }}
             productName={draft.name.trim() || null}
             estimatorGenreId={draft.estimatorGenreId}
+            estimatorGenreSource={draft.estimatorGenreSource}
             ingredientsText={draft.ingredientsText.trim() || null}
             ingredientsSource={ingredientsSource}
             referenceMassG={referenceMassG}
             referenceMassSource={referenceMassSource}
             currentNutrients={currentEstimateNutrients}
-            knownNutrients={knownEstimateFitNutrients}
+            currentEvaluationRequestedNutrients={draft.pendingEstimation?.evaluation.request.requestedNutrients}
+            knownNutrients={confirmedInputs.knownNutrients}
+            knownNutrientEvidence={confirmedInputs.knownNutrientEvidence}
+            knownNutrientReferences={confirmedInputs.knownNutrientReferences}
+            knownNutrientReferenceBasis={confirmedInputs.knownNutrientReferenceBasis}
+            fitMode={confirmedInputs.fitMode}
+            inputUnitConversions={draft.inputUnitConversions
+              .filter((conversion) => conversion.unit.trim())
+              .map((conversion) => ({ unit: conversion.unit.trim(), baseAmount: Number(conversion.baseAmount) }))}
             onEvaluated={queueEvaluation}
             onAdopt={queueAdoption}
             onRejectAll={queueRejection}

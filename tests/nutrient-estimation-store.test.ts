@@ -12,6 +12,7 @@ import {
   saveEstimationResult,
 } from '../src/services/nutrientEstimationStore'
 import { ESTIMATABLE_NUTRIENT_KEYS, estimateNutrients, toStoredNutrientEstimateResult } from '../src/services/nutrientEstimator'
+import { createNutrientEstimateRequestFingerprintFromSnapshot } from '../src/services/confirmedNutrientInputs'
 import type { EstimationResult, Food, MealEntry } from '../src/types'
 
 const nutrients = {
@@ -99,6 +100,78 @@ describe('nutrient estimation store', () => {
     expect(createEstimationInput(withoutMass).referenceMassG).toBeNull()
     const gramFood = { ...withoutMass, baseAmount: 100, baseUnit: 'g' as const }
     expect(createEstimationInput(gramFood).referenceMassG).toBe(100)
+  })
+
+  it('保存する要求スナップショットは実評価入力・根拠・指紋をそのまま保持する', () => {
+    const editedFood: Food = {
+      ...food,
+      name: '保存前に編集中の食品名',
+      baseAmount: 50,
+      baseUnit: 'g',
+      inputUnitConversions: [{ unit: '1食', baseAmount: 50 }],
+      nutrients: { ...food.nutrients, proteinG: 8 },
+      estimatorGenreId: 'other_unknown',
+      estimatorGenreSource: 'user',
+    }
+    const evaluatedRequest = {
+      requestId: 'browser-evaluation',
+      productName: editedFood.name,
+      estimatorCategoryId: 'staple',
+      estimatorGenreId: 'other_unknown' as const,
+      estimatorGenreSource: 'user' as const,
+      baseAmount: 50,
+      baseUnit: 'g',
+      inputUnitConversions: [{ unit: '1食', baseAmount: 50 }],
+      referenceMassG: 50,
+      referenceMassSource: '基準単位がg',
+      ingredientsText: '米、食塩',
+      ingredientsSource: { provider: 'package', verified: true as const },
+      knownNutrients: { proteinG: 8 },
+      knownNutrientEvidence: {
+        proteinG: { origin: 'manufacturer_label' as const, verified: true, source: '食品表示', resolution: 'explicit_metadata' as const },
+      },
+      knownNutrientReferences: {
+        proteinG: {
+          origin: 'manufacturer_label' as const,
+          verified: true,
+          sourceReference: '食品表示',
+          reference: { kind: 'fixed' as const, value: 8, decimalPlaces: 0 },
+          basis: { amount: 50, unit: 'g' as const },
+        },
+      },
+      knownNutrientReferenceBasis: { amount: 50, unit: 'g' as const },
+      fitMode: 'legacy_point' as const,
+      requestedNutrients: ['fiberG'] as const,
+      requestedAt: '2026-10-04T00:00:00.000Z',
+    }
+
+    const snapshot = createEstimationInput(editedFood, { evaluatedRequest })
+
+    expect(snapshot.name).toBe(editedFood.name)
+    expect(snapshot.estimatorCategoryId).toBe('staple')
+    expect(snapshot.estimatorGenreSource).toBe('user')
+    expect(snapshot.baseAmount).toBe(50)
+    expect(snapshot.inputUnitConversions).toEqual([{ unit: '1食', baseAmount: 50 }])
+    expect(snapshot.knownNutrients).toEqual({ proteinG: 8 })
+    expect(snapshot.knownNutrientEvidence?.proteinG).toMatchObject({ origin: 'manufacturer_label', verified: true })
+    expect(snapshot.knownNutrientReferences?.proteinG?.reference).toEqual({ kind: 'fixed', value: 8, decimalPlaces: 0 })
+    expect(snapshot.requestedNutrients).toEqual(['fiberG'])
+    expect(snapshot.fitMode).toBe('legacy_point')
+    expect(snapshot.requestFingerprint).toBe(createNutrientEstimateRequestFingerprintFromSnapshot(snapshot))
+
+    const nullNamedSnapshot = createEstimationInput(editedFood, {
+      evaluatedRequest: { ...evaluatedRequest, productName: null },
+    })
+    expect(nullNamedSnapshot.name).toBe(editedFood.name)
+    expect(nullNamedSnapshot.productName).toBeNull()
+    expect(nullNamedSnapshot.requestFingerprint).toBe(createNutrientEstimateRequestFingerprintFromSnapshot(nullNamedSnapshot))
+  })
+
+  it('旧推計・外部取得フラグ付きユーザー食品の未確認値を要求の既知入力へ昇格しない', () => {
+    const blockedFood = { ...food, estimatedNutrients: { proteinG: true } } as Food & { estimatedNutrients: { proteinG: boolean } }
+    const snapshot = createEstimationInput(blockedFood)
+    expect(snapshot.knownNutrients).toEqual({})
+    expect(snapshot.knownNutrientEvidence).toEqual({})
   })
 
   it('欠損値だけを採用し、食品・メタデータ・判断をまとめて保存して食事履歴へ遡及しない', async () => {

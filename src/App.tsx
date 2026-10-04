@@ -134,7 +134,8 @@ import {
   revertEstimatedNutrient,
   saveEstimationSettings,
 } from './services/nutrientEstimationStore'
-import { ESTIMATE_FIT_NUTRIENT_KEYS, toStoredNutrientEstimateResult } from './services/nutrientEstimator'
+import { NUTRIENT_ESTIMATOR_MODEL_VERSION, toStoredNutrientEstimateResult } from './services/nutrientEstimator'
+import { confirmedNutrientInputsFromFood, createNutrientEstimateRequestFingerprint } from './services/confirmedNutrientInputs'
 import { calculateBmi, calculateNutrients, estimateDailyGoals, getFoodDefaultServing, getFoodQuantityUnits, mealDetailNutritionGoals, scaleNutritionGoals, sumByMealType, sumEntries } from './services/nutrition'
 import { resolveNutritionGoals } from './services/goalHistory'
 import { consumeSearchSelectionGroup } from './services/searchSelection'
@@ -661,6 +662,16 @@ function App() {
         persistedNutrients[key] = null
         delete persistedMetadata[key]
       }
+      if (foodDraft.legacyFallbackBlocked || foodDraft.source !== 'user') {
+        for (const key of nutrientKeys) {
+          if (persistedNutrients[key] === null || Object.prototype.hasOwnProperty.call(persistedMetadata, key)) continue
+          // Saving a draft must not lose a legacy exclusion hint and turn untouched values into confirmed input.
+          persistedMetadata[key] = {
+            origin: foodDraft.source === 'user' ? 'unknown' : 'external_source',
+            verified: false,
+          }
+        }
+      }
       const food: Food = {
         id: foodId, name: foodDraft.name.trim(), officialName: foodDraft.name.trim(), displayName: groupDisplayName, maker: foodDraft.maker.trim(), barcode: foodDraft.barcode.trim(),
         isCommercial: resolveBarcodeCommercialFlag(foodDraft.isCommercial, foodDraft.barcode, foodFormOrigin === 'barcode'),
@@ -720,21 +731,33 @@ function App() {
       const evaluated = pendingEstimation?.evaluation.request
       const referenceMassG = food.baseUnit === 'g' ? food.baseAmount : (food.estimationReferenceMassG ?? null)
       const referenceMassSource = food.baseUnit === 'g' ? '基準単位がg' : (food.estimationReferenceMassSource ?? null)
+      const currentKnownInputs = confirmedNutrientInputsFromFood({
+        source: food.source,
+        nutrients: food.nutrients,
+        nutrientMetadata: food.nutrientMetadata,
+        legacyFallbackBlocked: Object.prototype.hasOwnProperty.call(food, 'estimatedNutrients')
+          || Object.prototype.hasOwnProperty.call(food, 'externalSource'),
+      })
       const evaluationStillCurrent = Boolean(evaluated
-        && (evaluated.productName?.trim() ?? '') === food.name.trim()
-        && evaluated.baseAmount === food.baseAmount
-        && evaluated.baseUnit === food.baseUnit
-        && evaluated.referenceMassG === referenceMassG
-        && evaluated.referenceMassSource === referenceMassSource
-        && evaluated.ingredientsText?.trim() === food.ingredientsText?.trim()
-        && evaluated.ingredientsSource?.provider === food.ingredientsSource?.provider
-        && evaluated.ingredientsSource?.verified === food.ingredientsSource?.verified
-        && (evaluated.estimatorGenreId ?? 'other_unknown') === (food.estimatorGenreId ?? 'other_unknown')
-        && ESTIMATE_FIT_NUTRIENT_KEYS.every((key) => (
-          (evaluated.knownNutrients?.[key] ?? null) === food.nutrients[key]
-        )))
+        && evaluated.knownNutrientEvidence !== undefined
+        && pendingEstimation?.evaluation.result.modelVersion === NUTRIENT_ESTIMATOR_MODEL_VERSION
+        && createNutrientEstimateRequestFingerprint(evaluated)
+          === createNutrientEstimateRequestFingerprint({
+            ...evaluated,
+            ...currentKnownInputs,
+            productName: food.name,
+            estimatorGenreId: food.estimatorGenreId ?? 'other_unknown',
+            estimatorGenreSource: food.estimatorGenreSource ?? null,
+            inputUnitConversions,
+            baseAmount: food.baseAmount,
+            baseUnit: food.baseUnit,
+            referenceMassG,
+            referenceMassSource,
+            ingredientsText: food.ingredientsText ?? null,
+            ingredientsSource: food.ingredientsSource ?? null,
+          }))
       if (pendingEstimation && !evaluationStillCurrent && (pendingAdoptionKeys.length > 0 || pendingEstimation.rejectedKeys.length > 0)) {
-        showError('推計後に原材料、基準量または確認済み重量が変更されています。もう一度推計してから保存してください。')
+        showError('推計後に栄養値、原材料または基準量の根拠が変更されています。もう一度推計してから保存してください。')
         return
       }
       let savedFood = food
@@ -742,6 +765,7 @@ function App() {
         const request = createEstimationRequest(food, {
           requestId: evaluated!.requestId,
           now: evaluated!.requestedAt,
+          evaluatedRequest: evaluated!,
         })
         savedFood = await saveFoodAndEstimation(food, { group, aliases, relatedTerms: related }, {
           request,

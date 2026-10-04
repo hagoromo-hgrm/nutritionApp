@@ -9,6 +9,18 @@ import {
   unresolvedIngredientNames,
   type NutrientEstimateRequest,
 } from '../src/services/nutrientEstimator'
+import { NUTRIENT_KEYS, type NutrientEvidenceMap, type Nutrients } from '../src/types'
+
+function manufacturerEvidence(knownNutrients: Partial<Nutrients>): NutrientEvidenceMap {
+  return Object.fromEntries(NUTRIENT_KEYS
+    .filter((key) => knownNutrients[key] !== null && knownNutrients[key] !== undefined)
+    .map((key) => [key, {
+      origin: 'manufacturer_label',
+      verified: true,
+      source: 'verified test label',
+      resolution: 'explicit_metadata',
+    }]))
+}
 
 const eligibleRequest: NutrientEstimateRequest = {
   requestId: 'estimate-test-1',
@@ -58,10 +70,12 @@ describe('browser nutrient estimator', () => {
       referenceMassG: 100,
       ingredientsText: '薄力粉、砂糖',
       knownNutrients: { energyKcal: 363, proteinG: 5.5, fatG: 1, carbohydrateG: 83.6, saltG: 0 },
+      knownNutrientEvidence: manufacturerEvidence({ energyKcal: 363, proteinG: 5.5, fatG: 1, carbohydrateG: 83.6, saltG: 0 }),
       fitMode: 'robust_interval',
       knownNutrientReferenceBasis: { amount: 100, unit: 'g' },
       knownNutrientReferences: {
         energyKcal: {
+          origin: 'manufacturer_label' as const,
           verified: true,
           sourceReference: 'https://example.test/label',
           reference: { kind: 'fixed', value: 363, decimalPlaces: 0 },
@@ -87,6 +101,47 @@ describe('browser nutrient estimator', () => {
     expect(trace?.fitReferenceIntervals?.proteinG).toBeUndefined()
   })
 
+  it('追加の確認済みミネラル値はrequested対象でない場合に配合fitへ加わる', () => {
+    const request = {
+      ...eligibleRequest,
+      baseAmount: 100,
+      baseUnit: 'g' as const,
+      referenceMassG: 100,
+      ingredientsText: '小麦粉、砂糖',
+      requestedNutrients: ['fiberG'] as const,
+    }
+    const withoutCalcium = estimateNutrients(request)
+    const withCalcium = estimateNutrients({
+      ...request,
+      knownNutrients: { calciumMg: 450 },
+      knownNutrientEvidence: manufacturerEvidence({ calciumMg: 450 }),
+    })
+
+    expect(withCalcium.optimization?.trace?.fitScore).not.toBe(withoutCalcium.optimization?.trace?.fitScore)
+  })
+
+  it('推計対象自身の数値と不正表示参照は検証前に除外する', () => {
+    const request = {
+      ...eligibleRequest,
+      requestedNutrients: ['fiberG'] as const,
+    }
+    const baseline = estimateNutrients(request)
+    const attemptedLeak = estimateNutrients({
+      ...request,
+      knownNutrients: { fiberG: 99 },
+      knownNutrientEvidence: manufacturerEvidence({ fiberG: 99 }),
+      knownNutrientReferences: {
+        fiberG: {
+          origin: 'manufacturer_label',
+          verified: false,
+          reference: { kind: 'estimated' },
+        },
+      },
+    })
+
+    expect(attemptedLeak).toEqual(baseline)
+  })
+
   it('無参照の要求は従来point動作を保ち、robust modeの欠損参照はpoint値へfallbackする', () => {
     const request = {
       ...eligibleRequest,
@@ -95,6 +150,7 @@ describe('browser nutrient estimator', () => {
       referenceMassG: 100,
       ingredientsText: '薄力粉、砂糖',
       knownNutrients: { energyKcal: 363, proteinG: 5.5, fatG: 1, carbohydrateG: 83.6, saltG: 0 },
+      knownNutrientEvidence: manufacturerEvidence({ energyKcal: 363, proteinG: 5.5, fatG: 1, carbohydrateG: 83.6, saltG: 0 }),
       requestedNutrients: ['fiberG'] as const,
     }
     const defaultResult = estimateNutrients(request)
@@ -107,7 +163,7 @@ describe('browser nutrient estimator', () => {
     expect(robustPointFallback.optimization?.trace?.fitReferenceIntervals).toEqual({})
   })
 
-  it('estimated・未確認・出典なし・基準量不一致のtyped referenceを受け付けない', () => {
+  it('estimated・未確認・出典なしのtyped referenceは数値fallbackも含めてfitから除外する', () => {
     const request: NutrientEstimateRequest = {
       ...eligibleRequest,
       baseAmount: 100,
@@ -115,29 +171,36 @@ describe('browser nutrient estimator', () => {
       referenceMassG: 100,
       ingredientsText: '薄力粉、砂糖',
       knownNutrients: { energyKcal: 363 },
+      knownNutrientEvidence: manufacturerEvidence({ energyKcal: 363 }),
       fitMode: 'robust_interval',
       knownNutrientReferenceBasis: { amount: 100, unit: 'g' },
       requestedNutrients: ['fiberG'],
     }
     const verified = {
+      origin: 'manufacturer_label' as const,
       verified: true,
       sourceReference: 'https://example.test/label',
       reference: { kind: 'fixed' as const, value: 363 },
       basis: { amount: 100, unit: 'g' as const },
     }
 
-    expect(() => estimateNutrients({
+    const withoutTrustedValue = estimateNutrients({
+      ...request,
+      knownNutrients: undefined,
+      knownNutrientEvidence: undefined,
+    })
+    expect(estimateNutrients({
       ...request,
       knownNutrientReferences: { energyKcal: { ...verified, reference: { kind: 'estimated', value: 363 } } },
-    })).toThrow(/推定表示値/)
-    expect(() => estimateNutrients({
+    })).toEqual(withoutTrustedValue)
+    expect(estimateNutrients({
       ...request,
       knownNutrientReferences: { energyKcal: { ...verified, verified: false } },
-    })).toThrow(/確認済み/)
-    expect(() => estimateNutrients({
+    })).toEqual(withoutTrustedValue)
+    expect(estimateNutrients({
       ...request,
       knownNutrientReferences: { energyKcal: { ...verified, sourceReference: '  ' } },
-    })).toThrow(/出典/)
+    })).toEqual(withoutTrustedValue)
     expect(() => estimateNutrients({
       ...request,
       knownNutrientReferenceBasis: { amount: 90, unit: 'g' },
@@ -153,10 +216,12 @@ describe('browser nutrient estimator', () => {
       referenceMassG: 93,
       ingredientsText: '薄力粉、砂糖',
       knownNutrients: { energyKcal: 100 },
+      knownNutrientEvidence: manufacturerEvidence({ energyKcal: 100 }),
       fitMode: 'robust_interval',
       knownNutrientReferenceBasis: { amount: 100, unit: 'ml' },
       knownNutrientReferences: {
         energyKcal: {
+          origin: 'manufacturer_label',
           verified: true,
           sourceReference: 'https://example.test/beverage-label',
           reference: { kind: 'fixed', value: 100 },
@@ -191,9 +256,11 @@ describe('browser nutrient estimator', () => {
       referenceMassG: 100,
       ingredientsText: 'バター',
       knownNutrients: { fatG: 0 },
+      knownNutrientEvidence: manufacturerEvidence({ fatG: 0 }),
       knownNutrientReferenceBasis: { amount: 100, unit: 'g' as const },
       knownNutrientReferences: {
         fatG: {
+          origin: 'manufacturer_label' as const,
           verified: true,
           sourceReference: 'https://example.test/label',
           reference: { kind: 'fixed' as const, value: 0 },
@@ -287,6 +354,9 @@ describe('browser nutrient estimator', () => {
         carbohydrateG: 83.6,
         saltG: 0,
       },
+      knownNutrientEvidence: manufacturerEvidence({
+        energyKcal: 363, proteinG: 5.5, fatG: 1, carbohydrateG: 83.6, saltG: 0,
+      }),
       requestedNutrients: ['fiberG'],
     })
 
@@ -306,6 +376,7 @@ describe('browser nutrient estimator', () => {
         fatG: 0.25,
         carbohydrateG: 0.25,
       },
+      knownNutrientEvidence: manufacturerEvidence({ fatG: 0.25, carbohydrateG: 0.25 }),
       requestedNutrients: ['saturatedFatG', 'fiberG'],
     })
 
@@ -349,6 +420,7 @@ describe('browser nutrient estimator', () => {
       referenceMassG: 100,
       ingredientsText: '植物油脂',
       knownNutrients: { fatG: 10 },
+      knownNutrientEvidence: manufacturerEvidence({ fatG: 10 }),
       requestedNutrients: ['saturatedFatG'],
     })
     const estimate = result.estimates.saturatedFatG
@@ -374,6 +446,7 @@ describe('browser nutrient estimator', () => {
     const result = estimateNutrients({
       ...eligibleRequest,
       knownNutrients: { fatG: 0.00000051 },
+      knownNutrientEvidence: manufacturerEvidence({ fatG: 0.00000051 }),
       requestedNutrients: ['saturatedFatG'],
     })
     const estimate = result.estimates.saturatedFatG
@@ -389,6 +462,7 @@ describe('browser nutrient estimator', () => {
     const result = estimateNutrients({
       ...eligibleRequest,
       knownNutrients: { fatG: 0 },
+      knownNutrientEvidence: manufacturerEvidence({ fatG: 0 }),
       requestedNutrients: ['saturatedFatG'],
     })
     const estimate = result.estimates.saturatedFatG
@@ -403,6 +477,37 @@ describe('browser nutrient estimator', () => {
     expect(estimate.ratioAdjustment).toBeUndefined()
   })
 
+  it('表示上0でも確認済み正の許容区間があれば飽和脂肪酸を真の0へ潰さない', () => {
+    const result = estimateNutrients({
+      ...eligibleRequest,
+      productName: 'なたね油',
+      baseAmount: 100,
+      baseUnit: 'g',
+      referenceMassG: 100,
+      ingredientsText: 'なたね油',
+      knownNutrients: { fatG: 0 },
+      knownNutrientEvidence: manufacturerEvidence({ fatG: 0 }),
+      knownNutrientReferenceBasis: { amount: 100, unit: 'g' },
+      knownNutrientReferences: {
+        fatG: {
+          origin: 'manufacturer_label',
+          verified: true,
+          sourceReference: '確認済み栄養表示',
+          reference: { kind: 'fixed', value: 0, decimalPlaces: 0 },
+          basis: { amount: 100, unit: 'g' },
+        },
+      },
+      fitMode: 'legacy_point',
+      requestedNutrients: ['saturatedFatG'],
+    })
+    const estimate = result.estimates.saturatedFatG
+
+    expect(estimate.status).toBe('available')
+    if (estimate.status !== 'available') return
+    expect(estimate.value).toBeGreaterThan(0)
+    expect(estimate.zeroEvidence).not.toBe('known_parent_zero')
+  })
+
   it('比率フィードバックを弱い探索制約として監査し、明示原材料は置換しない', () => {
     const request = {
       ...eligibleRequest,
@@ -413,6 +518,7 @@ describe('browser nutrient estimator', () => {
       referenceMassG: 100,
       ingredientsText: 'なたね油',
       knownNutrients: { fatG: 100 },
+      knownNutrientEvidence: manufacturerEvidence({ fatG: 100 }),
       requestedNutrients: ['saturatedFatG'] as const,
     }
     const baseline = estimateNutrients(request, { feedbackWeight: 0, postBlendWeight: 0 })
@@ -444,6 +550,7 @@ describe('browser nutrient estimator', () => {
       referenceMassG: 100,
       ingredientsText: 'パーム油',
       knownNutrients: { fatG: 100 },
+      knownNutrientEvidence: manufacturerEvidence({ fatG: 100 }),
       requestedNutrients: ['saturatedFatG'],
     }, { feedbackWeight: 0.2, postBlendWeight: 0 })
     const optimized = estimateNutrients({
@@ -454,6 +561,7 @@ describe('browser nutrient estimator', () => {
       referenceMassG: 100,
       ingredientsText: 'なたね油、大豆油',
       knownNutrients: { fatG: 100 },
+      knownNutrientEvidence: manufacturerEvidence({ fatG: 100 }),
       requestedNutrients: ['saturatedFatG'],
     }, { feedbackWeight: 0.2, postBlendWeight: 0 })
 
@@ -474,6 +582,7 @@ describe('browser nutrient estimator', () => {
       referenceMassG: 100,
       ingredientsText: 'ココナッツオイル',
       knownNutrients: { fatG: 0.000001 },
+      knownNutrientEvidence: manufacturerEvidence({ fatG: 0.000001 }),
       requestedNutrients: ['saturatedFatG'],
     }, { feedbackWeight: 0.4, postBlendWeight: 0 })
     const partial = estimateNutrients({
@@ -484,6 +593,7 @@ describe('browser nutrient estimator', () => {
       referenceMassG: 100,
       ingredientsText: 'なたね油、未解決原料',
       knownNutrients: { fatG: 10 },
+      knownNutrientEvidence: manufacturerEvidence({ fatG: 10 }),
       requestedNutrients: ['saturatedFatG'],
     }, { feedbackWeight: 0.4, postBlendWeight: 0 })
 
@@ -612,6 +722,9 @@ describe('browser nutrient estimator', () => {
         carbohydrateG: 48.9,
         saltG: 0.5,
       },
+      knownNutrientEvidence: manufacturerEvidence({
+        energyKcal: 439, proteinG: 8.2, fatG: 24.9, carbohydrateG: 48.9, saltG: 0.5,
+      }),
     }
     const result = estimateNutrients(request)
 
@@ -678,6 +791,9 @@ describe('browser nutrient estimator', () => {
         carbohydrateG: 52.5,
         saltG: 0,
       },
+      knownNutrientEvidence: manufacturerEvidence({
+        energyKcal: 203, proteinG: 0.7, fatG: 0.3, carbohydrateG: 52.5, saltG: 0,
+      }),
     })
 
     expect(result.estimates.fiberG.status).toBe('available')
@@ -843,6 +959,9 @@ describe('browser nutrient estimator', () => {
         carbohydrateG: 62,
         saltG: 0.2,
       },
+      knownNutrientEvidence: manufacturerEvidence({
+        energyKcal: 500, proteinG: 7, fatG: 25, carbohydrateG: 62, saltG: 0.2,
+      }),
     })
 
     expect(result.status).toBe('partial')
@@ -903,6 +1022,9 @@ describe('browser nutrient estimator', () => {
         carbohydrateG: 79.8,
         saltG: 0.1,
       },
+      knownNutrientEvidence: manufacturerEvidence({
+        energyKcal: 363, proteinG: 8.8, fatG: 1.1, carbohydrateG: 79.8, saltG: 0.1,
+      }),
       requestedNutrients: ['vitaminEMg', 'calciumMg'] as const,
     }
     const direct = estimateNutrients({ ...request, ingredientsText: 'オニオンパウダー' })
@@ -1019,6 +1141,9 @@ describe('browser nutrient estimator', () => {
         carbohydrateG: 40,
         saltG: 0.5,
       },
+      knownNutrientEvidence: manufacturerEvidence({
+        energyKcal: 250, proteinG: 20, fatG: 5, carbohydrateG: 40, saltG: 0.5,
+      }),
     })
 
     expect(result.status).not.toBe('failed')

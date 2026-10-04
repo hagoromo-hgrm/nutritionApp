@@ -17,6 +17,8 @@ function makeRequest(): NutrientEstimateRequest {
     ingredientsText: contract.scenario.ingredientsText,
     ingredientsSource: { provider: 'shared_contract', verified: true },
     knownNutrients: contract.scenario.knownNutrients,
+    knownNutrientEvidence: Object.fromEntries(Object.keys(contract.scenario.knownNutrients)
+      .map((key) => [key, { origin: 'user_input' as const, verified: true, source: '共有推計契約fixture', resolution: 'explicit_metadata' as const }])),
     requestedNutrients: ESTIMATABLE_NUTRIENT_KEYS,
     requestedAt: '2026-07-30T00:00:00.000Z',
   }

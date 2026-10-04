@@ -82,6 +82,7 @@ describe('nutrient estimator candidate selection', () => {
       fitMode: 'robust_interval',
       knownNutrientReferences: {
         energyKcal: {
+          origin: 'manufacturer_label',
           verified: true,
           sourceReference: 'official test reference',
           reference: { kind: 'fixed', value: 400 },

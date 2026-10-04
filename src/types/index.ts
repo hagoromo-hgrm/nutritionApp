@@ -7,6 +7,32 @@ export type NutrientKey = (typeof NUTRIENT_KEYS)[number]
 export type Nutrients = Record<NutrientKey, number | null>
 
 export type NutrientOrigin = 'manufacturer_label' | 'external_source' | 'user_input' | 'estimated' | 'derived' | 'unknown'
+export type NutrientEvidenceResolution = 'explicit_metadata' | 'legacy_source_user'
+export interface NutrientEvidence {
+  origin: NutrientOrigin
+  verified: boolean
+  source?: string
+  resolution: NutrientEvidenceResolution
+}
+export type NutrientEvidenceMap = Partial<Record<NutrientKey, NutrientEvidence>>
+export type NutrientEstimateFitMode = 'legacy_point' | 'robust_interval'
+export type NutrientReferenceBasis = { amount: number; unit: 'g' | 'ml' }
+export interface NutrientReferenceValue {
+  kind: 'fixed' | 'declared_range' | 'estimated'
+  value?: number
+  min?: number
+  max?: number
+  decimalPlaces?: number
+}
+export interface KnownNutrientReference {
+  origin: NutrientOrigin
+  verified: boolean
+  sourceReference?: string
+  provider?: string
+  reference: NutrientReferenceValue
+  basis?: NutrientReferenceBasis | null
+}
+export type KnownNutrientReferenceMap = Partial<Record<NutrientKey, KnownNutrientReference>>
 export type EstimationConfidence = 'high' | 'medium' | 'low' | 'unavailable'
 export type EstimationZeroEvidence = 'derived_from_parent_zero' | 'known_parent_zero' | 'uncertain'
 export type EstimationAdoptionClass =
@@ -502,6 +528,8 @@ export interface NutritionEstimationInput {
   foodId: string
   barcode: string
   name: string
+  /** 実際の推計要求の商品名。旧snapshotでは未保存のためnameを使用する。 */
+  productName?: string | null
   maker: string
   estimatorCategoryId?: string | null
   estimatorGenreId?: EstimatorGenreId | null
@@ -512,6 +540,12 @@ export interface NutritionEstimationInput {
   referenceMassG?: number | null
   referenceMassSource?: string | null
   knownNutrients: Partial<Nutrients>
+  knownNutrientEvidence?: NutrientEvidenceMap
+  knownNutrientReferences?: KnownNutrientReferenceMap
+  knownNutrientReferenceBasis?: NutrientReferenceBasis | null
+  fitMode?: NutrientEstimateFitMode
+  requestedNutrients?: NutrientKey[]
+  requestFingerprint?: string
   missingNutrients: NutrientKey[]
   ingredientsText: string | null
   ingredientsSource: IngredientsSource | null

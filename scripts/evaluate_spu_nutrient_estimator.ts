@@ -209,6 +209,9 @@ function estimateTrainingRecord(
     ingredientsText: record.ingredientsText,
     ingredientsSource: { provider: 'メーカー公式サイト', verified: true },
     knownNutrients,
+    knownNutrientEvidence: Object.fromEntries(ESTIMATE_FIT_NUTRIENT_KEYS
+      .filter((key) => knownNutrients[key] !== null)
+      .map((key) => [key, { origin: 'manufacturer_label' as const, verified: true, source: record.sourceReference, resolution: 'explicit_metadata' as const }])),
     requestedNutrients: requestedNutrientsForRecord(record),
     requestedAt: record.verifiedAt,
   }, ratioStrategy)

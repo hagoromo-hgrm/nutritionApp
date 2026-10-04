@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import type { NutrientEstimateAdoption } from '../src/components/NutrientEstimatePanel'
-import { emptyFoodDraft, foodToDraft, queueFoodEstimateAdoption, queueFoodEstimateEvaluation, queueFoodEstimateRejection, withoutPendingEstimation } from '../src/components/formDrafts'
+import { nutrientEstimatePanelRequestKey, type NutrientEstimateRequestKeyInput } from '../src/services/nutrientEstimateRequestKey'
+import { emptyFoodDraft, foodToDraft, nutrientMetadataAfterManualEdit, previewToDraft, queueFoodEstimateAdoption, queueFoodEstimateEvaluation, queueFoodEstimateRejection, withoutPendingEstimation } from '../src/components/formDrafts'
+import type { ExternalFoodPreview } from '../src/services/externalFoodApi'
 import type { Food } from '../src/types'
 import { estimateNutrients, type NutrientEstimateRequest } from '../src/services/nutrientEstimator'
 import contract from './fixtures/estimation-contract/core-invariants.json'
@@ -40,6 +42,73 @@ describe('staged nutrient estimate decisions', () => {
       { unit: '個', baseAmount: '90' },
       { unit: '袋', baseAmount: '450' },
     ])
+  })
+
+  it('旧推計フラグを持つ食品の確認状態をドラフトでも維持する', () => {
+    const food = {
+      id: 'legacy_estimated_food', name: '旧推計食品', maker: '', barcode: '', source: 'user' as const,
+      sourceVersion: 'test', baseAmount: 100, baseUnit: 'g' as const, servingAmount: null, servingUnit: null,
+      nutrients: {
+        energyKcal: 100, proteinG: 2, fatG: 3, carbohydrateG: 10, fiberG: null, calciumMg: null,
+        ironMg: null, vitaminAMcg: null, vitaminEMg: null, vitaminB1Mg: null, vitaminB2Mg: null,
+        vitaminCMg: null, saturatedFatG: null, saltG: 0.1,
+      },
+      estimatedNutrients: { proteinG: true }, createdAt: '', updatedAt: '',
+    } as Food & { estimatedNutrients: { proteinG: boolean } }
+
+    const draft = foodToDraft(food, undefined, [], [])
+    expect(draft.nutrients.proteinG).toBe('2')
+    expect(draft.legacyFallbackBlocked).toBe(true)
+    expect(draft.nutrientMetadata.proteinG).toBeUndefined()
+  })
+
+  it('Open Food Facts値は未確認のまま保ち、編集した栄養素だけ手入力根拠へ置き換える', () => {
+    const preview: ExternalFoodPreview = {
+      name: '外部商品', maker: 'メーカー', barcode: '0012345678901', quantity: '100 g', categories: [],
+      ingredientsText: null, baseAmount: 100, baseUnit: 'g',
+      nutrients: {
+        energyKcal: 100, proteinG: 2, fatG: null, carbohydrateG: null, fiberG: null,
+        calciumMg: null, ironMg: null, vitaminAMcg: null, vitaminEMg: null,
+        vitaminB1Mg: null, vitaminB2Mg: null, vitaminCMg: null, saturatedFatG: null, saltG: null,
+      },
+    }
+    const draft = previewToDraft(preview)
+    const metadata = nutrientMetadataAfterManualEdit(draft.nutrientMetadata, 'proteinG', '2')
+
+    expect(draft.nutrientMetadata.proteinG).toMatchObject({ origin: 'external_source', verified: false })
+    expect(metadata.proteinG).toMatchObject({ origin: 'user_input', verified: true })
+    expect(metadata.energyKcal).toMatchObject({ origin: 'external_source', verified: false })
+  })
+
+  it('同じ推計の残りを順次採用でき、手編集では古い評価を無効にする', () => {
+    const allTargets = ['saturatedFatG', 'fiberG', 'calciumMg', 'ironMg', 'vitaminAMcg', 'vitaminEMg', 'vitaminB1Mg', 'vitaminB2Mg', 'vitaminCMg'] as const
+    const base: NutrientEstimateRequestKeyInput = {
+      basis: { baseAmount: 100, baseUnit: 'g' },
+      productName: 'テスト食品', estimatorGenreId: 'other_unknown', ingredientsText: null,
+      referenceMassG: 100, referenceMassSource: '基準単位がg', ingredientsSource: null,
+      currentNutrients: {
+        saturatedFatG: null, fiberG: null, calciumMg: null, ironMg: null, vitaminAMcg: null,
+        vitaminEMg: null, vitaminB1Mg: null, vitaminB2Mg: null, vitaminCMg: null,
+      },
+      knownNutrients: {}, knownNutrientEvidence: {},
+    }
+    const originalKey = nutrientEstimatePanelRequestKey(base)
+    const afterOneAdoption = nutrientEstimatePanelRequestKey({
+      ...base,
+      currentNutrients: { ...base.currentNutrients, fiberG: 1.2 },
+      currentEvaluationRequestedNutrients: allTargets,
+    })
+    const afterManualEdit = nutrientEstimatePanelRequestKey({
+      ...base,
+      currentNutrients: { ...base.currentNutrients, fiberG: 1.2 },
+      knownNutrients: { fiberG: 1.2 },
+      knownNutrientEvidence: {
+        fiberG: { origin: 'user_input', verified: true, source: '手入力', resolution: 'explicit_metadata' },
+      },
+    })
+
+    expect(afterOneAdoption).toBe(originalKey)
+    expect(afterManualEdit).not.toBe(originalKey)
   })
 
   it('keeps every sequential adoption and its full precision under one request', () => {

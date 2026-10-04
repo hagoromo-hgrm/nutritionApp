@@ -105,19 +105,39 @@ export interface FoodDraft {
   estimationReferenceMassG: string
   estimationReferenceMassSource: string
   nutrientMetadata: NutrientMetadataMap
+  /** Legacy source=user values are eligible only when these old exclusion flags were absent. */
+  legacyFallbackBlocked: boolean
   pendingEstimation: PendingEstimationDecision | null
 }
 
 export const nutrientKeys = [...NUTRIENT_KEYS]
 export const emptyNutrientInputs = (): Record<NutrientKey, string> => Object.fromEntries(nutrientKeys.map((key) => [key, ''])) as Record<NutrientKey, string>
 export const formatEstimateInput = (value: number): string => value.toFixed(1)
+export function nutrientMetadataAfterManualEdit(
+  metadata: NutrientMetadataMap,
+  key: NutrientKey,
+  value: string,
+): NutrientMetadataMap {
+  const updated = { ...metadata }
+  if (value.trim() === '') delete updated[key]
+  else updated[key] = {
+    origin: 'user_input',
+    verified: true,
+    source: '食品登録画面での手入力',
+  }
+  return updated
+}
 // Only untouched staged displays are cleared; explicit edits remain user input.
 export function withoutPendingEstimation(current: FoodDraft): FoodDraft {
   const nutrients = { ...current.nutrients }
+  const nutrientMetadata = { ...current.nutrientMetadata }
   for (const [key, value] of Object.entries(current.pendingEstimation?.adoption?.values ?? {}) as Array<[NutrientKey, number]>) {
-    if (nutrients[key] === formatEstimateInput(value)) nutrients[key] = ''
+    if (nutrients[key] === formatEstimateInput(value)) {
+      nutrients[key] = ''
+      if (nutrientMetadata[key]?.origin === 'estimated') delete nutrientMetadata[key]
+    }
   }
-  return { ...current, nutrients, pendingEstimation: null }
+  return { ...current, nutrients, nutrientMetadata, pendingEstimation: null }
 }
 
 export function queueFoodEstimateEvaluation(current: FoodDraft, evaluation: NutrientEstimateEvaluation): FoodDraft {
@@ -135,10 +155,15 @@ export function queueFoodEstimateAdoption(current: FoodDraft, adoption: Nutrient
   // Retain unrounded values for every adoption from this evaluation until save.
   const values = { ...(sameRequest ? previous.values : {}), ...adoption.values }
   const nutrients = { ...cleared.nutrients }
-  for (const [key, value] of Object.entries(adoption.values) as Array<[NutrientKey, number]>) nutrients[key] = formatEstimateInput(value)
+  const nutrientMetadata = { ...cleared.nutrientMetadata }
+  for (const [key, value] of Object.entries(adoption.values) as Array<[NutrientKey, number]>) {
+    nutrients[key] = formatEstimateInput(value)
+    nutrientMetadata[key] = { origin: 'estimated', verified: false, source: 'pending nutrient estimate' }
+  }
   return {
     ...cleared,
     nutrients,
+    nutrientMetadata,
     pendingEstimation: {
       evaluation: { request: adoption.request, result: adoption.result },
       adoption: { ...adoption, values },
@@ -165,7 +190,7 @@ export function emptyFoodDraft(barcode = '', initialName = ''): FoodDraft {
     groupReading: '', groupCategory: '', aliases: [], relatedTerms: [], variantAttributes: emptyVariantInputs(), nutrients: emptyNutrientInputs(),
     ingredientsText: '', ingredientsSourceProvider: '', estimationReferenceMassG: '', estimationReferenceMassSource: '',
     estimatorGenreId: genre.id, estimatorGenreSource: genre.source,
-    nutrientMetadata: {}, pendingEstimation: null,
+    nutrientMetadata: {}, legacyFallbackBlocked: false, pendingEstimation: null,
   }
 }
 
@@ -178,6 +203,8 @@ export function bodyProfileToDraft(profile: BodyProfile | undefined): BodyProfil
 }
 
 export function foodToDraft(food: Food, group: FoodGroup | undefined, aliases: FoodAlias[], relatedTerms: FoodRelatedTerm[]): FoodDraft {
+  const legacyFallbackBlocked = Object.prototype.hasOwnProperty.call(food, 'estimatedNutrients')
+    || Object.prototype.hasOwnProperty.call(food, 'externalSource')
   const storedInputUnitConversions = (food.inputUnitConversions ?? []).map((conversion) => ({ unit: conversion.unit, baseAmount: String(conversion.baseAmount) }))
   const inputUnitConversions = storedInputUnitConversions.length > 0 ? storedInputUnitConversions : [{ unit: '', baseAmount: '' }]
   const inferredGenre = inferEstimatorGenre({ productName: food.name, ingredientsText: food.ingredientsText })
@@ -203,6 +230,7 @@ export function foodToDraft(food: Food, group: FoodGroup | undefined, aliases: F
       sourceFoodIds: metadata.sourceFoodIds ? [...metadata.sourceFoodIds] : undefined,
       calibration: metadata.calibration ? { ...metadata.calibration } : undefined,
     }])) as NutrientMetadataMap,
+    legacyFallbackBlocked,
     pendingEstimation: null,
   }
 }
@@ -219,5 +247,8 @@ export function previewToDraft(preview: ExternalFoodPreview): FoodDraft {
     estimatorGenreId: genre.id,
     estimatorGenreSource: genre.source,
     nutrients: Object.fromEntries(nutrientKeys.map((key) => [key, preview.nutrients[key] === null ? '' : String(preview.nutrients[key])])) as Record<NutrientKey, string>,
+    nutrientMetadata: Object.fromEntries(nutrientKeys
+      .filter((key) => preview.nutrients[key] !== null)
+      .map((key) => [key, { origin: 'external_source', verified: false, source: 'Open Food Facts' }])) as NutrientMetadataMap,
   }
 }
