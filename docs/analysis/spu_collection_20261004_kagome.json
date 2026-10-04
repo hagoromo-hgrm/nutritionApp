@@ -1,0 +1,37 @@
+{
+  "format": "nutrition-spu-source-csv-audit",
+  "formatVersion": 1,
+  "generatedAt": "2026-10-04T09:24:21.501308+00:00",
+  "files": [
+    {
+      "csvFile": "kagome_officialSite_261004.csv",
+      "csvSha256": "5feebd4eca96fe3600ee174853ec09ed7d946525dc6bb730ad11d36e90edb56f",
+      "maker": "カゴメ",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.4",
+      "rawRows": 117,
+      "completeMajorNutrientRows": 117,
+      "normalizationAcceptedRows": 25,
+      "normalizationDeferralReasons": {
+        "missing_explicit_reference_mass": 39,
+        "no_target_nutrient": 53
+      },
+      "targetLabelCounts": {
+        "calciumMg": 15,
+        "fiberG": 25,
+        "ironMg": 1,
+        "vitaminAMcg": 3,
+        "vitaminCMg": 2,
+        "vitaminEMg": 4
+      },
+      "targetLabelKindCounts": {
+        "declared_range": 31,
+        "fixed": 19
+      },
+      "humanFamilyReview": "not_completed",
+      "modelOrPriorUpdated": false
+    }
+  ],
+  "rawRows": 117,
+  "normalizationAcceptedRows": 25,
+  "scope": "private_local_collection; not reviewed independent families or authorized model adoption"
+}
