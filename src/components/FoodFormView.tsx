@@ -27,7 +27,7 @@ import {
   type NutrientKey,
   type Nutrients,
 } from '../types'
-import { isPositiveFinite } from '../utils/validation'
+import { isPositiveFinite, isValidQuantityUnit } from '../utils/validation'
 import { nutrientMetadataAfterManualEdit, queueFoodEstimateAdoption, queueFoodEstimateEvaluation, queueFoodEstimateRejection, withoutPendingEstimation, variantAttributeKeys, variantAttributeLabels, type FoodDraft, type FoodFormReturnView } from './formDrafts'
 
 export function FoodFormView({ draft, returnView, allowCommercialClassification, estimationEnabled, setDraft, foodGroups, foodAliases, foodRelatedTerms, externalNote, onRevertEstimate, onSubmit, onDelete, onClose }: { draft: FoodDraft; returnView: FoodFormReturnView; allowCommercialClassification: boolean; estimationEnabled: boolean; setDraft: React.Dispatch<React.SetStateAction<FoodDraft | null>>; foodGroups: FoodGroup[]; foodAliases: FoodAlias[]; foodRelatedTerms: FoodRelatedTerm[]; externalNote: string | null; onRevertEstimate: (foodId: string, nutrientKey: NutrientKey) => void; onSubmit: () => void | Promise<void>; onDelete?: () => void; onClose: () => void }) {
@@ -49,7 +49,13 @@ export function FoodFormView({ draft, returnView, allowCommercialClassification,
       ? { ...conversion, unit: inputUnit, baseAmount: normalized && normalized !== current.baseUnit ? conversion.baseAmount : '' }
       : conversion)
     const allowed = [current.baseUnit, ...inputUnitConversions.map((conversion) => conversion.unit.trim()).filter(Boolean)]
-    return { ...withoutPendingEstimation(current), inputUnitConversions, servingUnit: allowed.includes(current.servingUnit) ? current.servingUnit : current.baseUnit }
+    const canUseAsDefault = normalized !== current.baseUnit && isValidQuantityUnit(normalized)
+    return {
+      ...withoutPendingEstimation(current),
+      inputUnitConversions,
+      servingAmount: canUseAsDefault ? '1' : current.servingAmount,
+      servingUnit: canUseAsDefault ? normalized : allowed.includes(current.servingUnit) ? current.servingUnit : current.baseUnit,
+    }
   })
   const updateInputUnitBaseAmount = (index: number, baseAmount: string) => update('inputUnitConversions', draft.inputUnitConversions.map((conversion, conversionIndex) => conversionIndex === index ? { ...conversion, baseAmount } : conversion))
   const addInputUnit = () => update('inputUnitConversions', [...draft.inputUnitConversions, { unit: '', baseAmount: '' }])
