@@ -1,0 +1,34 @@
+{
+  "format": "nutrition-spu-source-csv-audit",
+  "formatVersion": 1,
+  "generatedAt": "2026-10-04T09:10:06.217732+00:00",
+  "files": [
+    {
+      "csvFile": "nipponluna_officialSite_261004.csv",
+      "csvSha256": "7a63c378d39014c97f3bbb9b64fc7894e3ab906cf60f37876241e9bfb9fa1f0a",
+      "maker": "日本ルナ",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.4",
+      "rawRows": 20,
+      "completeMajorNutrientRows": 20,
+      "normalizationAcceptedRows": 15,
+      "normalizationDeferralReasons": {
+        "missing_explicit_reference_mass": 1,
+        "mixed_basis_panels": 3,
+        "no_target_nutrient": 1
+      },
+      "targetLabelCounts": {
+        "calciumMg": 15,
+        "fiberG": 4,
+        "ironMg": 4
+      },
+      "targetLabelKindCounts": {
+        "fixed": 23
+      },
+      "humanFamilyReview": "not_completed",
+      "modelOrPriorUpdated": false
+    }
+  ],
+  "rawRows": 20,
+  "normalizationAcceptedRows": 15,
+  "scope": "private_local_collection; not reviewed independent families or authorized model adoption"
+}
