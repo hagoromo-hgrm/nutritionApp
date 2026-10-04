@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-TRANSFORM_VERSION = "spu-estimator-training-0.4.0"
+TRANSFORM_VERSION = "spu-estimator-training-0.5.0"
 FILENAME_RE = re.compile(
     r"^(?P<maker>.+)_(?P<source>[^_]+)_(?P<date>\d{6})\.csv$",
     re.IGNORECASE,
@@ -231,67 +231,68 @@ def parse_basis(text: str) -> tuple[str, float, str, float] | None:
     return basis, 1.0, "その他", reference_mass
 
 
-def parse_nutrient(text: str, key: str, basis: str, estimated: bool) -> dict[str, Any] | None:
+def annotation_scope(text: str, key: str) -> tuple[bool, str]:
+    terms = r"(?:推定値|推定|目安)"
+    annotations = list(re.finditer(terms, text))
+    if not annotations:
+        return False, "none"
+    named = []
+    for annotation in annotations:
+        before = text[max(0, annotation.start() - 40):annotation.start()]
+        selected = [k for k, spec in NUTRIENT_SPECS.items() if any(re.search(re.escape(label) + rf"(?:のみ|だけ|は|:|：|\s)*(?:の値は)?(?:[+-]?{NUMBER_PATTERN}(?:{RANGE_SEPARATOR_PATTERN}[+-]?{NUMBER_PATTERN})?\s*{UNIT_PATTERN})?[\s(（※]*$", before) for label in spec["labels"])]
+        if len(selected) == 1:
+            named.append(selected[0])
+        elif re.search(r"(?:栄養成分|表示値|全項目|これらの値|この値|数値).{0,12}$", before):
+            return True, "whole_panel"
+        else:
+            # Unresolved footnotes cannot become fixed formal labels.
+            return True, "unresolved"
+    return key in named, "per_nutrient" if key in named else "none"
+
+
+def parse_nutrient(text: str, key: str, basis: str, estimated: bool = False) -> dict[str, Any] | None:
     spec = NUTRIENT_SPECS[key]
     labels = "|".join(re.escape(label) for label in spec["labels"])
-    value_pattern = re.compile(
-        rf"^(?:{labels})(?:[^\d]{{0,20}})"
-        rf"(?P<first>{NUMBER_PATTERN})"
-        rf"(?:\s*(?P<separator>{RANGE_SEPARATOR_PATTERN})\s*(?P<second>{NUMBER_PATTERN}))?"
-        rf"\s*(?P<unit>{UNIT_PATTERN})",
-        re.IGNORECASE,
-    )
-    label_matches = list(re.finditer(rf"(?:{labels})", text, re.IGNORECASE))
-    match = None
-    for label_match in reversed(label_matches):
-        candidate = value_pattern.match(text[label_match.start():])
-        if candidate is None or "/" in candidate.group(0):
+    pattern = re.compile(rf"^(?:{labels})[\s:：;；=]*"
+        rf"(?P<first>[+-]?{NUMBER_PATTERN})(?:\s*(?P<separator>{RANGE_SEPARATOR_PATTERN})\s*(?P<second>[+-]?{NUMBER_PATTERN}))?"
+        rf"\s*(?P<unit>{UNIT_PATTERN})(?![A-Za-z0-9.%/])", re.IGNORECASE)
+    candidates = []
+    for label in re.finditer(rf"(?:{labels})", text, re.IGNORECASE):
+        match = pattern.match(text[label.start():])
+        if match is None:
+            suffix = text[label.end():].lstrip(" :：;；")
+            if re.match(r"[+\-0-9]|NaN|Infinity|[<>≤≥]", suffix, re.IGNORECASE):
+                return None
             continue
-        raw_unit = candidate.group("unit").casefold()
+        raw_unit = match.group("unit").casefold()
         unit = "mcg" if raw_unit in {"μg", "µg", "ug", "mcg"} else raw_unit
-        if unit == spec["unit"]:
-            match = candidate
-            break
-    if match is None:
+        if unit != spec["unit"]:
+            all_labels = "|".join(re.escape(name) for item in NUTRIENT_SPECS.values() for name in item["labels"])
+            if re.search(rf"(?:(?:{all_labels})\s+){{2,}}$", text[:label.start()], re.IGNORECASE):
+                continue
+            return None
+        first = float(match.group("first"))
+        second_text = match.group("second")
+        second = float(second_text) if second_text is not None else None
+        if first < 0 or not math.isfinite(first) or (second is not None and (second < first or not math.isfinite(second))):
+            return None
+        item_estimated, _ = annotation_scope(text, key)
+        places = max(decimal_places(match.group("first")), decimal_places(second_text or ""))
+        candidates.append({"displayText": match.group(0).strip(), "value": first if second is None else (first + second) / 2 if estimated or item_estimated else None,
+            "rangeMin": first if second is not None else None, "rangeMax": second, "unit": unit, "basis": basis,
+            "decimalPlaces": places, "valueKind": "estimated" if estimated or item_estimated else "declared_range" if second is not None else "fixed"})
+    if not candidates:
         return None
-    first = float(match.group("first"))
-    second_text = match.group("second")
-    display_text = match.group(0).strip()
-    places = decimal_places(match.group("first"))
-    if second_text is not None:
-        second = float(second_text)
-        places = max(places, decimal_places(second_text))
-        if estimated:
-            return {
-                "displayText": display_text,
-                "value": (first + second) / 2,
-                "rangeMin": None,
-                "rangeMax": None,
-                "unit": unit,
-                "basis": basis,
-                "decimalPlaces": places,
-                "valueKind": "estimated",
-            }
-        return {
-            "displayText": display_text,
-            "value": None,
-            "rangeMin": min(first, second),
-            "rangeMax": max(first, second),
-            "unit": unit,
-            "basis": basis,
-            "decimalPlaces": places,
-            "valueKind": "declared_range",
-        }
-    return {
-        "displayText": display_text,
-        "value": first,
-        "rangeMin": None,
-        "rangeMax": None,
-        "unit": unit,
-        "basis": basis,
-        "decimalPlaces": places,
-        "valueKind": "estimated" if estimated else "fixed",
-    }
+    signatures = {json.dumps({k: v for k, v in item.items() if k != "displayText"}, sort_keys=True) for item in candidates}
+    return candidates[0] if len(signatures) == 1 else None
+
+
+def has_mixed_basis(text: str) -> bool:
+    offset = first_nutrient_offset(text)
+    if offset is None:
+        return False
+    tail = text[offset:]
+    return bool(re.search(rf"{NUMBER_PATTERN}\s*(?:g|ml|個|袋|食|本)\s*(?:当たり|あたり|につき)", tail, re.IGNORECASE))
 
 
 def has_multiple_values(text: str) -> bool:
@@ -396,11 +397,13 @@ def normalize_row(
         return None, "missing_nutrition"
     if has_multiple_values(nutrition_text):
         return None, "multiple_products_in_one_row"
+    if has_mixed_basis(nutrition_text):
+        return None, "mixed_basis_panels"
     parsed_basis = parse_basis(nutrition_text)
     if parsed_basis is None:
         return None, "missing_explicit_reference_mass"
     basis, base_amount, base_unit, reference_mass = parsed_basis
-    estimated = "推定値" in nutrition_text
+    estimated = False
     nutrients = {
         key: parsed
         for key in NUTRIENT_SPECS
@@ -434,6 +437,14 @@ def normalize_row(
             "sourceFile": filename,
             "sourceRow": row_number,
             "transformVersion": TRANSFORM_VERSION,
+            "teacherAuditStatus": "legacy_unreviewed",
+            "verificationDateSource": "filename_unreviewed",
+            "sourceNutritionText": row.get("栄養素", ""),
+            "spanBasis": "normalized_nutrition_text",
+            "familyReviewStatus": "unreviewed_candidate",
+            "basis": {"amount": reference_mass, "unit": "g"},
+            "labelAudit": {key: {"annotationScope": annotation_scope(nutrition_text, key)[1], "status": "parsed_unreviewed",
+                "sourceSpans": [[m.start(), m.end()] for label in NUTRIENT_SPECS[key]["labels"] for m in re.finditer(re.escape(label), nutrition_text)]} for key in nutrients},
         }, ensure_ascii=False, separators=(",", ":")),
     }, None
 
@@ -465,6 +476,8 @@ def _source_config_for(path: Path) -> tuple[dict[str, str], str]:
 
 
 def build_dataset(input_dir: Path) -> tuple[dict[str, Any], dict[str, Any]]:
+    if "sealed_20261003" in input_dir.resolve().parts:
+        raise SpuDataError("sealed labels are not accepted by normalizer")
     files = _input_csv_files(input_dir)
     records: list[dict[str, Any]] = []
     exclusions = Counter()
@@ -497,6 +510,9 @@ def build_dataset(input_dir: Path) -> tuple[dict[str, Any], dict[str, Any]]:
                     file_counts["excluded:exact_duplicate"] += 1
                     continue
                 seen_records.add(record["recordId"])
+                notes = json.loads(record["notes"])
+                notes["sourceFileSha256"] = sha256(path)
+                record["notes"] = json.dumps(notes, ensure_ascii=False, separators=(",", ":"))
                 records.append(record)
                 category = normalize_text(row.get("カテゴリ", ""))
                 category_genre_counts[

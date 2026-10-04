@@ -96,7 +96,8 @@ function isEstimatorGenrePair(genreId: unknown, source: unknown): boolean {
 
 function isCalibrationMetadata(value: unknown): boolean {
   if (!isRecord(value)) return false
-  return isNonEmptyString(value.calibrationVersion)
+  return (value.teacherAuditStatus === undefined || ['legacy_unreviewed', 'strict_reviewed'].includes(String(value.teacherAuditStatus)))
+    && isNonEmptyString(value.calibrationVersion)
     && typeof value.targetCoverage === 'number' && Number.isFinite(value.targetCoverage) && value.targetCoverage > 0 && value.targetCoverage < 1
     && (value.actualCoverage === undefined || (typeof value.actualCoverage === 'number' && Number.isFinite(value.actualCoverage) && value.actualCoverage >= 0 && value.actualCoverage <= 1))
     && Number.isInteger(value.sampleSize) && Number(value.sampleSize) >= 0

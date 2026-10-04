@@ -245,29 +245,11 @@ class NutrientEstimatorTrainingBiasAuditTests(unittest.TestCase):
                     manifest_path,
                 )
 
-    def test_cli_audit_counts_upstream_boolean_coercion_as_invalid_label(self):
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            bool_fiber = {
-                "displayText": "invalid fixture",
-                "value": True,
-                "rangeMin": None,
-                "rangeMax": None,
-                "unit": "g",
-                "basis": "per_100g",
-                "decimalPlaces": 1,
-                "valueKind": "fixed",
-            }
-            training_path, manifest_path, _ = write_inputs(
-                root, [record("bool-label", "family", fiber=bool_fiber)]
-            )
-            sealed_path = root / "sealed-collection.json"
-            sealed_path.write_text(json.dumps({"familyCount": 0, "familyHashes": []}))
-            result = audit.build_audit(training_path, manifest_path, sealed_path)
-            fiber = result["genres"]["bread"]["nutrients"]["fiberG"]
-            self.assertEqual(fiber["acceptedCount"], 0)
-            self.assertEqual(fiber["invalidExcludedCount"], 1)
-            self.assertEqual(fiber["invalidExclusionReasons"], {"invalid_boolean": 1})
+    def test_validator_rejects_boolean_labels_before_canonical_hashing(self):
+        bool_fiber = {"displayText": "invalid fixture", "value": True, "rangeMin": None, "rangeMax": None,
+            "unit": "g", "basis": "per_100g", "decimalPlaces": 1, "valueKind": "fixed"}
+        with self.assertRaises(validator.ValidationError):
+            validator.normalize_record(record("bool-label", "family", fiber=bool_fiber))
 
     def test_counts_missing_estimated_and_invalid_labels_with_family_level_ess(self):
         labels = [

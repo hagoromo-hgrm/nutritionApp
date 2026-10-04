@@ -18,6 +18,7 @@ interface ArtifactPrior {
 export interface GenreNutrientPrior extends ArtifactPrior {
   datasetHash: string
   priorVersion: string
+  teacherAuditStatus: 'legacy_unreviewed' | 'strict_reviewed'
 }
 
 interface RatioArtifactPrior extends Omit<ArtifactPrior, 'scope'> {
@@ -27,10 +28,12 @@ interface RatioArtifactPrior extends Omit<ArtifactPrior, 'scope'> {
 export interface SaturatedFatRatioPrior extends RatioArtifactPrior {
   datasetHash: string
   priorVersion: string
+  teacherAuditStatus: 'legacy_unreviewed' | 'strict_reviewed'
 }
 
 interface PriorArtifact {
   transformVersion: string
+  teacherAudit?: { teacherAuditStatus: 'legacy_unreviewed' | 'strict_reviewed' }
   source: {
     provider: string
     datasetSha256: string
@@ -63,6 +66,7 @@ export function saturatedFatRatioPrior(
         ...prior,
         datasetHash: artifact.source.datasetSha256,
         priorVersion: artifact.transformVersion,
+        teacherAuditStatus: artifact.teacherAudit?.teacherAuditStatus ?? 'legacy_unreviewed',
       }
     : null
 }
@@ -84,6 +88,7 @@ export function genreNutrientPrior(
         ...prior,
         datasetHash: artifact.source.datasetSha256,
         priorVersion: artifact.transformVersion,
+        teacherAuditStatus: artifact.teacherAudit?.teacherAuditStatus ?? 'legacy_unreviewed',
       }
     : null
 }

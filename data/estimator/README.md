@@ -130,3 +130,7 @@ python3 scripts/build_reviewed_processing_catalog.py --retention-csv /path/to/re
 `node scripts/run_nutrient_estimator_comparison.mjs --training data/estimator/private/spu_training.json --manifest data/estimator/private/spu_training_manifest.json --comparison ratio --output-json docs/analysis/nutrient_estimator_ratio_strategy_comparison.json --output-markdown docs/analysis/nutrient_estimator_ratio_strategy_comparison.md`
 
 `--comparison fit`（省略時もfit）は区間fit比較、`ratio`は24組の飽和脂肪酸戦略比較。起動器はvite-nodeが削除するargvを明示引数へ渡す。Python整合監査と承認済み訓練hashを必須とし、calibrationだけを評価する。封印パス・入力を出力として上書きする指定は拒否する。
+
+### 厳密教師監査
+
+prior CLIは共通byte/canonical hashとID/系列split監査を必須にする。`--review-sidecar <private.json> --require-strict-review`を指定すると `teacher_review_schema.json` の全label/familyレビュー対応を要求する。未指定の既存教師はlegacy_unreviewedで、数値を正式校正済みへ再分類しない。source spans/原票文/review sidecarはprivateへ保存し、Git/PWAには含めない。v1の非推定件数は独立系列確認数ではなくnonEstimatedRecordCountsと呼ぶ。

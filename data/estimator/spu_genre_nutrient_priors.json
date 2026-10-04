@@ -2088,5 +2088,12 @@
         }
       }
     }
+  },
+  "teacherAudit": {
+    "teacherAuditStatus": "legacy_unreviewed",
+    "reviewedFamilyCount": 0,
+    "sourceFileSha256": "3edf63aa78c138460c528a75a1870839c710332e68f781cab86aff93132db89b",
+    "manifestFileSha256": "79adc1258b0e0aa5a2f115bff9ada6de499c196b6912d3cd95ba334fa2eed8d2",
+    "legacyTeacherTransformVersion": "spu-estimator-training-0.4.0"
   }
 }

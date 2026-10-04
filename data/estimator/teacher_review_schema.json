@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Private reviewed teacher provenance sidecar",
+  "type": "object",
+  "required": [
+    "format",
+    "formatVersion",
+    "sourceFileSha256",
+    "normalizedDatasetSha256",
+    "records"
+  ],
+  "properties": {
+    "format": {
+      "const": "nutrition-estimator-teacher-review"
+    },
+    "formatVersion": {
+      "const": 1
+    },
+    "sourceFileSha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "normalizedDatasetSha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "recordId",
+          "canonicalFamilyId",
+          "status",
+          "reviewer",
+          "reviewedAt",
+          "rationale",
+          "labels"
+        ],
+        "properties": {
+          "recordId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "canonicalFamilyId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "enum": [
+              "reviewed",
+              "review_required"
+            ]
+          },
+          "reviewer": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reviewedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "rationale": {
+            "type": "string",
+            "minLength": 1
+          },
+          "labels": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "required": [
+                "status",
+                "annotationScope",
+                "sourceType",
+                "sourceReference",
+                "basis",
+                "stateConfirmed"
+              ],
+              "properties": {
+                "status": {
+                  "enum": [
+                    "reviewed",
+                    "review_required"
+                  ]
+                },
+                "annotationScope": {
+                  "enum": [
+                    "none",
+                    "per_nutrient",
+                    "whole_panel",
+                    "unresolved"
+                  ]
+                },
+                "sourceType": {
+                  "enum": [
+                    "manufacturer",
+                    "package"
+                  ]
+                },
+                "sourceReference": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "basis": {
+                  "type": "object",
+                  "required": [
+                    "amount",
+                    "unit"
+                  ],
+                  "properties": {
+                    "amount": {
+                      "type": "number",
+                      "exclusiveMinimum": 0
+                    },
+                    "unit": {
+                      "const": "g"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "stateConfirmed": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

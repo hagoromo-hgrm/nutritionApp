@@ -82,6 +82,8 @@ def number(
         if nullable:
             return None
         raise ValidationError(f"{record_id}: {field} is required")
+    if isinstance(value, bool):
+        raise ValidationError(f"{record_id}: {field} must not be boolean")
     try:
         converted = float(value)
     except (TypeError, ValueError) as exc:
@@ -106,6 +108,8 @@ def parse_datetime(value: str, record_id: str) -> str:
 def normalize_nutrient(raw: Any, key: str, record_id: str) -> dict[str, Any]:
     if not isinstance(raw, dict):
         raise ValidationError(f"{record_id}: nutrients.{key} must be an object")
+    if set(raw) - set(NUTRIENT_FIELDS):
+        raise ValidationError(f"{record_id}: nutrients.{key} has unknown fields")
     kind = raw.get("valueKind")
     if kind not in {"fixed", "declared_range", "estimated"}:
         raise ValidationError(f"{record_id}: nutrients.{key}.valueKind is invalid")
@@ -140,6 +144,8 @@ def normalize_nutrient(raw: Any, key: str, record_id: str) -> dict[str, Any]:
 def normalize_record(raw: Any) -> dict[str, Any]:
     if not isinstance(raw, dict):
         raise ValidationError("each record must be an object")
+    if set(raw) - set(BASE_FIELDS) - {"nutrients"}:
+        raise ValidationError("record has unknown fields")
     record_id = require_text(raw, "recordId", "<unknown>")
     genre_id = require_text(raw, "genreId", record_id)
     if genre_id not in GENRE_IDS:
@@ -268,7 +274,7 @@ def build_manifest(records: list[dict[str, Any]], source_path: Path) -> dict[str
         "recordCount": len(normalized),
         "genreCounts": dict(sorted(genre_counts.items())),
         "splitCounts": dict(sorted(split_counts.items())),
-        "independentEvaluationCounts": {
+        "nonEstimatedRecordCounts": {
             genre: dict(sorted(counts.items()))
             for genre, counts in sorted(independent_counts.items())
         },

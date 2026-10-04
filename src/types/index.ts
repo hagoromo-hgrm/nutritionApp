@@ -816,6 +816,7 @@ export interface NutrientEstimate {
 }
 
 export interface EstimationCalibrationMetadata {
+  teacherAuditStatus?: 'legacy_unreviewed' | 'strict_reviewed'
   calibrationVersion: string
   targetCoverage: number
   actualCoverage?: number

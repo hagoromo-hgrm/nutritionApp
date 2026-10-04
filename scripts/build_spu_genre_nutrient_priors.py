@@ -469,20 +469,35 @@ def main() -> int:
     parser.add_argument("--prior-strength", type=float, default=30.0)
     parser.add_argument("--minimum-genre-samples", type=int, default=10)
     parser.add_argument("--minimum-genre-makers", type=int, default=2)
+    parser.add_argument("--review-sidecar", type=Path)
+    parser.add_argument("--require-strict-review", action="store_true")
     args = parser.parse_args()
     manifest = _load_object(args.manifest)
     try:
         validate_output_destination(manifest, args.output)
     except PriorBuildError as exc:
         parser.error(str(exc))
+    try:
+        from .nutrient_estimator_integrity import _validate_integrity, _reject_sealed_path, reviewed_teacher_status
+    except ImportError:
+        from nutrient_estimator_integrity import _validate_integrity, _reject_sealed_path, reviewed_teacher_status
+    training = _load_object(args.training)
+    _reject_sealed_path(args.training)
+    _reject_sealed_path(args.manifest)
+    _validate_integrity(training, manifest, args.training, args.manifest)
+    review = _load_object(args.review_sidecar) if args.review_sidecar else None
+    audit_status = reviewed_teacher_status(review, training, manifest, require_strict=args.require_strict_review)
     artifact = build_priors(
-        _load_object(args.training),
+        training,
         manifest,
         manifest_sha256=file_sha256(args.manifest),
         prior_strength=args.prior_strength,
         minimum_genre_samples=args.minimum_genre_samples,
         minimum_genre_makers=args.minimum_genre_makers,
     )
+    artifact["teacherAudit"] = audit_status
+    artifact["teacherAudit"]["sourceFileSha256"] = manifest["sourceFileSha256"]
+    artifact["teacherAudit"]["manifestFileSha256"] = file_sha256(args.manifest)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(
         json.dumps(artifact, ensure_ascii=False, indent=2) + "\n",
