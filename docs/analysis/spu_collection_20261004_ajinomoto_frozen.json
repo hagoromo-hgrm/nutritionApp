@@ -1,0 +1,30 @@
+{
+  "format": "nutrition-spu-source-csv-audit",
+  "formatVersion": 1,
+  "generatedAt": "2026-10-04T07:42:56.716089+00:00",
+  "files": [
+    {
+      "csvFile": "ajinomoto_frozen_officialSite_261004.csv",
+      "csvSha256": "1871e02e98d952ec16344878db4aac649aa20ef0a0db206a9c2e92c9579548ad",
+      "maker": "味の素冷凍食品",
+      "rawRows": 87,
+      "completeMajorNutrientRows": 87,
+      "normalizationAcceptedRows": 6,
+      "normalizationDeferralReasons": {
+        "missing_explicit_reference_mass": 3,
+        "no_target_nutrient": 78
+      },
+      "targetLabelCounts": {
+        "calciumMg": 6
+      },
+      "targetLabelKindCounts": {
+        "fixed": 6
+      },
+      "humanFamilyReview": "not_completed",
+      "modelOrPriorUpdated": false
+    }
+  ],
+  "rawRows": 87,
+  "normalizationAcceptedRows": 6,
+  "scope": "private_local_collection; not reviewed independent families or authorized model adoption"
+}

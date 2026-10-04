@@ -38,6 +38,8 @@ SOURCE_CONFIG: dict[str, dict[str, str]] = {
     "kameda": {"maker": "亀田製菓", "url": "https://www.kamedaseika.co.jp/product/"},
     "meg_snow": {"maker": "雪印メグミルク", "url": "https://www.meg-snow.com/products/"},
     "morinagamilk": {"maker": "森永乳業", "url": "https://www.morinagamilk.co.jp/products/"},
+    "ajinomoto_frozen": {"maker": "味の素冷凍食品", "url": "https://www.ffa.ajinomoto.com/product"},
+    "sbfoods": {"maker": "エスビー食品", "url": "https://www.sbfoods.co.jp/products/"},
     "asahi_milky": {
         "maker": "アサヒ飲料",
         "url": "https://www.asahiinryo.co.jp/products/",
