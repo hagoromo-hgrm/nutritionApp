@@ -1,0 +1,25 @@
+{
+  "format": "nutrition-spu-source-csv-audit",
+  "formatVersion": 1,
+  "generatedAt": "2026-10-04T07:35:34.340351+00:00",
+  "files": [
+    {
+      "csvFile": "akagi_officialSite_261004.csv",
+      "csvSha256": "8bf45f47245e022b430c4be0ea76a2ee63912250f525be599fcce16570d5cb0d",
+      "maker": "赤城乳業",
+      "rawRows": 52,
+      "completeMajorNutrientRows": 52,
+      "normalizationAcceptedRows": 0,
+      "normalizationDeferralReasons": {
+        "missing_explicit_reference_mass": 52
+      },
+      "targetLabelCounts": {},
+      "targetLabelKindCounts": {},
+      "humanFamilyReview": "not_completed",
+      "modelOrPriorUpdated": false
+    }
+  ],
+  "rawRows": 52,
+  "normalizationAcceptedRows": 0,
+  "scope": "private_local_collection; not reviewed independent families or authorized model adoption"
+}
