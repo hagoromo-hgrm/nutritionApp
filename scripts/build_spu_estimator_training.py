@@ -46,6 +46,8 @@ SOURCE_CONFIG: dict[str, dict[str, str]] = {
     "asahi_gf": {"maker": "アサヒグループ食品", "url": "https://www.asahi-gf.co.jp/products/"},
     "hamada_confect": {"maker": "ハマダコンフェクト", "url": "https://www.hamadaconfect.com/product"},
     "nisshin_oillio": {"maker": "日清オイリオ", "url": "https://www.nisshin-oillio.com/products/"},
+    "hakubaku": {"maker": "はくばく", "url": "https://www.hakubaku.co.jp/products/"},
+    "kanro": {"maker": "カンロ", "url": "https://kanro.jp/products/"},
     "asahi_milky": {
         "maker": "アサヒ飲料",
         "url": "https://www.asahiinryo.co.jp/products/",
