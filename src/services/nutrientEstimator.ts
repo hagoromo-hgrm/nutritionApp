@@ -1,3 +1,4 @@
+import { additiveTrace } from './explicitAdditiveEvidence'
 import {
   parseIngredientDeclaration,
   type ParsedIngredient,
@@ -104,7 +105,7 @@ const LEGACY_SEED_NUTRIENT_KEYS = [
 ] as const satisfies readonly NutrientKey[]
 export type EstimateConfidence = 'high' | 'medium' | 'low' | 'unavailable'
 export type EstimateAdoptability = EstimationAdoptionClass | 'unavailable'
-export const NUTRIENT_ESTIMATOR_MODEL_VERSION = 'browser-rule-0.28.0' as const
+export const NUTRIENT_ESTIMATOR_MODEL_VERSION = 'browser-rule-0.29.0' as const
 const MEXT_SOURCE = '文部科学省 日本食品標準成分表（八訂）増補2023年（2026年3月27日正誤表対応）' as const
 const FDC_SOURCE = 'USDA FoodData Central SR Legacy 04/2018' as const
 const INGREDIENT_SPEC_SOURCE = '原料メーカー・業界団体公式仕様' as const
@@ -225,11 +226,12 @@ const CANDIDATE_SCENARIO_TEMPERATURE = 2
 
 function estimateSource(sourceFoodIds: readonly string[]): string {
   const sources = [
-    ...(sourceFoodIds.some((id) => !id.startsWith('fdc:') && !id.startsWith('spec:'))
+    ...(sourceFoodIds.some((id) => !id.startsWith('fdc:') && !id.startsWith('spec:') && !id.startsWith('additive:'))
       ? [MEXT_SOURCE]
       : []),
     ...(sourceFoodIds.some((id) => id.startsWith('fdc:')) ? [FDC_SOURCE] : []),
     ...(sourceFoodIds.some((id) => id.startsWith('spec:')) ? [INGREDIENT_SPEC_SOURCE] : []),
+    ...(sourceFoodIds.some((id) => id.startsWith('additive:')) ? ['確認済み製剤資料'] : []),
   ]
   return sources.length > 0 ? sources.join(' / ') : MEXT_SOURCE
 }
@@ -1678,6 +1680,12 @@ function fnv1aCompositionIdentity(value: string): string {
 
 function explicitCompositionReason(reason: ExplicitCompositionDeferredReason): string {
   const messages: Record<ExplicitCompositionDeferredReason, string> = {
+    additive_unbound: '添加物根拠が宣言または配合へ結合されていません。',
+    additive_path_mismatch: '添加物根拠の位置・名称が一致しません。',
+    additive_mass_unconfirmed: '加工後製剤重量または製品全重量が未確認です。',
+    additive_mass_conflict: '食品配合と添加物の重量が製品全重量に一致しません。',
+    additive_raw_stage: '加工前添加量は加工後量へ転用できません。',
+    additive_root_deferred: '全体配合が保留されたため添加物寄与も保留しました。',
     declaration_stale: '原材料宣言が確認時から変わっています。',
     parent_path_mismatch: '配合根拠の対象位置が原材料宣言と一致しません。',
     child_names_mismatch: '配合根拠の材料名が原材料宣言と一致しません。',
@@ -1764,6 +1772,35 @@ function explicitCompositionOutput(
     return null
   }
 
+  const additiveProofs = prepared.evidence.schemaVersion === 3 ? prepared.evidence.additives ?? [] : []
+  const wholeBatchMass = root?.group.wholeParentMassG ?? (root ? compositionWeightTotal(root.group) : null)
+  const additiveTraces = new Map(additiveProofs.map((proof) => [proof.id, additiveTrace(proof, wholeBatchMass)]))
+  const boundAdditives = new Set<string>()
+  const additiveAtPath = (section: 'ingredient' | 'additive', path: readonly number[]) => {
+    let node = (section === 'ingredient' ? prepared.declaration.ingredients : prepared.declaration.additives)[path[0]]
+    for (const index of path.slice(1)) node = node?.components[index]
+    return node
+  }
+  const additiveFailure = (id: string, reason: ExplicitCompositionDeferredReason): null => {
+    const trace = additiveTraces.get(id)
+    if (trace) trace.reason = reason
+    return null
+  }
+  const checkAdditive = (id: string, section: 'ingredient' | 'additive', path: readonly number[], mass?: number | null) => {
+    const proof = additiveProofs.find((item) => item.id === id)
+    if (!proof) return additiveFailure(id, 'additive_unbound')
+    const node = additiveAtPath(section, path)
+    if (proof.declaration.section !== section || JSON.stringify(proof.declaration.path) !== JSON.stringify(path)
+      || !node || node.components.length > 0 || proof.declaration.expectedName.normalize('NFKC').trim() !== node.normalizedName.normalize('NFKC').trim()) return additiveFailure(id, 'additive_path_mismatch')
+    if (proof.dose.stage !== 'finished') return additiveFailure(id, 'additive_raw_stage')
+    if (proof.dose.kind !== 'preparation_mass_g' || proof.dose.value === null || wholeBatchMass === null
+      || (mass !== undefined && (mass === null || !nearCompositionMass(proof.dose.value, mass, 1)))) return additiveFailure(id, 'additive_mass_unconfirmed')
+    boundAdditives.add(id)
+    const trace = additiveTraces.get(id)!
+    trace.status = 'applied'; delete trace.reason
+    return proof
+  }
+
   const processingTraces = new Map<string, ExplicitProcessingTrace>()
   const processingEntries = new Map(prepared.processing.map((entry) => [entry.proof.id, entry]))
   const resolveProcessing = (id: string, path: number[], name: string, mass: number | null): Record<NutrientKey, ExplicitNutrientContribution> | null => {
@@ -1837,6 +1874,7 @@ function explicitCompositionOutput(
     if (!item || !group) return defer(groupId, 'nested_binding_missing')
     if (activeIds.has(groupId)) return defer(groupId, 'nested_parent_mismatch')
     if (item.status === 'deferred') return defer(groupId, item.reason ?? 'partial_group')
+    if (group.parent.path.length > 0 && (group.massScope === 'food_remainder_after_additives' || group.wholeParentMassG !== undefined)) return defer(groupId, 'additive_mass_conflict')
     if (group.parent.path.length > 0 && group.denominator === 'product') {
       return defer(groupId, 'product_denominator_not_supported')
     }
@@ -1928,6 +1966,18 @@ function explicitCompositionOutput(
                 sourceFoodIds: [...sourceFoodIdsForNutrient(reviewed.profile, key)],
               }]
         })) as Record<NutrientKey, ExplicitNutrientContribution>
+      } else if (binding.kind === 'additive') {
+        const proof = checkAdditive(binding.additiveId, 'ingredient', [...group.parent.path, index], branchMass)
+        if (!proof) { activeIds.delete(groupId); return defer(groupId, additiveTraces.get(binding.additiveId)?.reason ?? 'additive_unbound') }
+        const dose = proof.dose.value!
+        branchNutrients = Object.fromEntries(NUTRIENT_KEYS.map((key) => {
+          const c = proof.contentsPerG[key]
+          const point = c && (c.kind === 'fixed' || c.kind === 'published_reference') ? c.valuePerG : null
+          return [key, point === null && dose > 0 ? { knownPer100g: 0, missingMassFraction: 1, sourceFoodIds: [] }
+            : { knownPer100g: (point ?? 0) * 100, missingMassFraction: 0, sourceFoodIds: [`additive:${proof.materialId}:${proof.grade}`] }]
+        })) as Record<NutrientKey, ExplicitNutrientContribution>
+        selectedProfileIds[index] = `explicit-additive:${fnv1aCompositionIdentity(JSON.stringify(proof))}`
+        nestedIdentities[index] = selectedProfileIds[index]
       } else if (binding.kind === 'processing') {
         const processed = resolveProcessing(binding.processingId, [...group.parent.path, index], children[index].normalizedName, branchMass)
         if (!processed) {
@@ -2043,6 +2093,44 @@ function explicitCompositionOutput(
     if (trace.status === 'applied') { trace.status = 'deferred'; trace.reason = 'processing_root_deferred' }
   }
 
+  if (rootResolved && root) {
+    if (root.group.massScope !== 'food_remainder_after_additives' && root.group.wholeParentMassG !== undefined
+      && (compositionWeightTotal(root.group) === null || !nearCompositionMass(root.group.wholeParentMassG, compositionWeightTotal(root.group)!, 1))) rootFailure = 'additive_mass_conflict'
+    const outsideProofs = additiveProofs.filter((proof) => proof.declaration.section === 'additive')
+    const expectedOutside = prepared.declaration.additives
+    if (outsideProofs.length !== expectedOutside.length || expectedOutside.some((_, index) => !outsideProofs.some((proof) => JSON.stringify(proof.declaration.path) === JSON.stringify([index])))) {
+      rootFailure = 'additive_unbound'
+    } else {
+      for (const proof of outsideProofs) if (!checkAdditive(proof.id, 'additive', proof.declaration.path)) rootFailure = additiveTraces.get(proof.id)?.reason ?? 'additive_unbound'
+      const doseTotal = outsideProofs.reduce((total, proof) => total + (proof.dose.value ?? 0), 0)
+      const foodMass = compositionWeightTotal(root.group)
+      if (outsideProofs.length > 0 && !rootFailure) {
+        if (root.group.massScope !== 'food_remainder_after_additives' || wholeBatchMass === null || foodMass === null
+          || !nearCompositionMass(foodMass + doseTotal, wholeBatchMass, outsideProofs.length + 1)) rootFailure = 'additive_mass_conflict'
+        else {
+          for (const key of NUTRIENT_KEYS) {
+            const nutrient = rootResolved.nutrients[key]
+            nutrient.knownPer100g *= foodMass / wholeBatchMass
+            nutrient.missingMassFraction *= foodMass / wholeBatchMass
+            for (const proof of outsideProofs) {
+              const dose = proof.dose.value ?? 0
+              if (dose === 0) continue
+              const point = additiveTraces.get(proof.id)!.pointsPer100g[key]
+              if (point === undefined) nutrient.missingMassFraction += dose / wholeBatchMass
+              else { nutrient.knownPer100g += point; nutrient.sourceFoodIds.push(`additive:${proof.materialId}:${proof.grade}`) }
+            }
+          }
+          rootResolved.identity = `explicit-composition:${fnv1aCompositionIdentity(JSON.stringify([rootResolved.identity, wholeBatchMass, outsideProofs]))}`
+        }
+      } else if (root.group.massScope === 'food_remainder_after_additives' && (wholeBatchMass === null || foodMass === null || !nearCompositionMass(foodMass, wholeBatchMass, 1))) rootFailure = 'additive_mass_conflict'
+    }
+    if (additiveProofs.some((proof) => !boundAdditives.has(proof.id) && !ignoredZeroPathPrefixes.some((prefix) => proof.declaration.section === 'ingredient' && pathIsPrefix(prefix, proof.declaration.path)))) rootFailure ??= 'additive_unbound'
+    if (rootFailure) rootResolved = null
+  }
+  if (rootFailure) for (const trace of additiveTraces.values()) if (trace.status === 'applied') { trace.status = 'deferred'; trace.reason = 'additive_root_deferred' }
+  // Additive failure can invalidate processing already resolved above.
+  if (rootFailure) for (const trace of processingTraces.values()) if (trace.status === 'applied') { trace.status = 'deferred'; trace.reason = 'processing_root_deferred' }
+
   const reasonForGroup = (item: PreparedExplicitCompositionEvidence['groups'][number]): ExplicitCompositionDeferredReason | undefined => {
     if (reasons.has(item.group.id)) return reasons.get(item.group.id)
     if (ignoredZeroPathPrefixes.some((prefix) => (
@@ -2091,6 +2179,7 @@ function explicitCompositionOutput(
     status: deferred ? 'deferred' : 'applied',
     groups: traceGroups,
     ...(processingTraces.size > 0 ? { processing: [...processingTraces.values()] } : {}),
+    ...(additiveTraces.size > 0 ? { additives: [...additiveTraces.values()] } : {}),
   }
   const estimates = mapEstimatableNutrients<NutrientEstimate>((key) => {
     if (!requested.has(key)) {
@@ -2146,6 +2235,7 @@ function explicitCompositionOutput(
       warnings: [
         '完成品の固定配合と、確認済み材料状態に一致する参照値・明示された加工根拠で計算しました。',
         '固定配合は候補選択・比率探索・ジャンル事前分布・比率校正で変更していません。',
+        ...(additiveTraces.size > 0 && [...additiveTraces.values()].some((trace) => trace.referenceOnlyNutrients.includes(key)) ? ['製剤含有量に公表参考値を使用しました。保証値や製品全体の保証範囲ではありません。'] : []),
         ...uncertainZeroWarning(point, zeroEvidence),
         ...(missing ? [
           `正量材料の${NUTRIENT_LABELS[key]}に欠損があります。表示値は確認できる材料分だけの部分参考値で、製品全体の下限や上限ではありません。`,
@@ -2195,7 +2285,7 @@ export function estimateNutrients(
   if (invalidRequestEstimates) {
     estimates = invalidRequestEstimates
   } else {
-    if ((request.estimationEvidence?.compositions?.length ?? 0) > 0 || (request.estimationEvidence?.schemaVersion === 2 && (request.estimationEvidence.processing?.length ?? 0) > 0)) {
+    if ((request.estimationEvidence?.compositions?.length ?? 0) > 0 || (request.estimationEvidence?.schemaVersion !== undefined && request.estimationEvidence.schemaVersion !== 1 && (request.estimationEvidence.processing?.length ?? 0) > 0) || (request.estimationEvidence?.schemaVersion === 3 && ((request.estimationEvidence.additives?.length ?? 0) > 0))) {
       const prepared = prepareExplicitCompositionEvidence(request.estimationEvidence, request.ingredientsText!)
       explicitOutput = explicitCompositionOutput(prepared, request, requested)
       estimates = explicitOutput.estimates
@@ -2626,6 +2716,7 @@ export function toStoredNutrientEstimateResult(
                       ? {
                           explicitCompositionEvidence: {
                             ...result.optimization.trace.explicitCompositionEvidence,
+                            ...(result.optimization.trace.explicitCompositionEvidence.additives ? { additives: structuredClone(result.optimization.trace.explicitCompositionEvidence.additives) } : {}),
                             ...(result.optimization.trace.explicitCompositionEvidence.processing ? { processing: structuredClone(result.optimization.trace.explicitCompositionEvidence.processing) } : {}),
                             groups: result.optimization.trace.explicitCompositionEvidence.groups.map((group) => ({
                               ...group,

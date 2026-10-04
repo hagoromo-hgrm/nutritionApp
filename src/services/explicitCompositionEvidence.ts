@@ -1,3 +1,4 @@
+import { ADDITIVE_DEFERRED_REASONS, validateExplicitAdditiveProofs } from './explicitAdditiveEvidence'
 import {
   parseIngredientDeclaration,
   type ParsedIngredient,
@@ -21,14 +22,14 @@ import {
   reviewedCompositionProfile,
 } from './reviewedCompositionStates'
 
-export const EXPLICIT_ESTIMATION_EVIDENCE_SCHEMA_VERSION = 2 as const
+export const EXPLICIT_ESTIMATION_EVIDENCE_SCHEMA_VERSION = 3 as const
 export const INGREDIENT_DECLARATION_FINGERPRINT_VERSION = 'ingredient-parser-path-v1'
 export const EXPLICIT_COMPOSITION_DEFERRED_REASONS: readonly ExplicitCompositionDeferredReason[] = Object.freeze([
   'declaration_stale', 'parent_path_mismatch', 'child_names_mismatch', 'partial_group', 'raw_stage',
   'unknown_amount', 'profile_binding_missing', 'profile_state_unconfirmed', 'profile_state_mismatch',
   'profile_registry_stale', 'zero_weight_branch', 'root_group_missing', 'nested_binding_missing',
   'nested_parent_mismatch', 'parent_mass_unconfirmed', 'product_denominator_not_supported',
-  'batch_mass_mismatch', 'additives_present', ...EXPLICIT_PROCESSING_DEFERRED_REASONS,
+  'batch_mass_mismatch', 'additives_present', ...EXPLICIT_PROCESSING_DEFERRED_REASONS, ...ADDITIVE_DEFERRED_REASONS,
 ])
 const MAX_GROUPS = 64
 const MAX_CHILDREN = 64
@@ -179,7 +180,7 @@ function validateAmounts(value: unknown, expectedChildCount: number): ExplicitCo
   throw new Error('配合量の種別を確認してください。')
 }
 
-function validateBinding(value: unknown, childCount: number, schemaVersion: 1 | 2): ExplicitCompositionChildBinding {
+function validateBinding(value: unknown, childCount: number, schemaVersion: 1 | 2 | 3): ExplicitCompositionChildBinding {
   if (!isRecord(value) || !Number.isInteger(value.index) || Number(value.index) < 0 || Number(value.index) >= childCount) {
     throw new Error('配合の参照位置を確認してください。')
   }
@@ -198,16 +199,20 @@ function validateBinding(value: unknown, childCount: number, schemaVersion: 1 | 
     assertKeys(value, ['kind', 'index', 'compositionId'], [], '子配合結合')
     return { kind: 'composition', index: Number(value.index), compositionId: boundedString(value.compositionId, '子配合ID', 128) }
   }
-  if (value.kind === 'processing' && schemaVersion === 2) {
+  if (value.kind === 'processing' && schemaVersion >= 2) {
     assertKeys(value, ['kind', 'index', 'processingId'], [], '加工根拠結合')
     return { kind: 'processing', index: Number(value.index), processingId: boundedString(value.processingId, '加工根拠ID', 128) }
+  }
+  if (value.kind === 'additive' && schemaVersion === 3) {
+    assertKeys(value, ['kind', 'index', 'additiveId'], [], '添加物結合')
+    return { kind: 'additive', index: Number(value.index), additiveId: boundedString(value.additiveId, '添加物根拠ID', 128) }
   }
   throw new Error('配合profileの結合種別を確認してください。')
 }
 
-function validateGroup(value: unknown, schemaVersion: 1 | 2): ExplicitCompositionGroup {
+function validateGroup(value: unknown, schemaVersion: 1 | 2 | 3): ExplicitCompositionGroup {
   if (!isRecord(value)) throw new Error('配合群を確認してください。')
-  assertKeys(value, ['id', 'parent', 'expectedChildNames', 'denominator', 'weightStage', 'amounts', 'source'], ['childBindings'], '配合群')
+  assertKeys(value, ['id', 'parent', 'expectedChildNames', 'denominator', 'weightStage', 'amounts', 'source'], schemaVersion === 3 ? ['childBindings', 'massScope', 'wholeParentMassG'] : ['childBindings'], '配合群')
   const id = boundedString(value.id, '配合群ID', 128)
   if (!isRecord(value.parent)) throw new Error('配合親pathを確認してください。')
   assertKeys(value.parent, ['section', 'path'], [], '配合親')
@@ -220,6 +225,8 @@ function validateGroup(value: unknown, schemaVersion: 1 | 2): ExplicitCompositio
   const childNames = expectedChildNames.map((name) => boundedString(name, '期待原材料名', 256))
   if (value.denominator !== 'product' && value.denominator !== 'parent') throw new Error('配合比率の分母を確認してください。')
   if (value.weightStage !== 'raw' && value.weightStage !== 'finished') throw new Error('配合重量段階を確認してください。')
+  if (value.massScope !== undefined && value.massScope !== 'whole_parent' && value.massScope !== 'food_remainder_after_additives') throw new Error('配合重量scopeを確認してください。')
+  if (value.wholeParentMassG !== undefined && (typeof value.wholeParentMassG !== 'number' || !Number.isFinite(value.wholeParentMassG) || value.wholeParentMassG <= 0 || value.wholeParentMassG > 1e9)) throw new Error('全体重量を確認してください。')
   const amounts = validateAmounts(value.amounts, childNames.length)
   let childBindings: ExplicitCompositionChildBinding[] | undefined
   if (value.childBindings !== undefined) {
@@ -240,6 +247,8 @@ function validateGroup(value: unknown, schemaVersion: 1 | 2): ExplicitCompositio
     weightStage: value.weightStage,
     ...(childBindings === undefined ? {} : { childBindings }),
     amounts,
+    ...(value.massScope === undefined ? {} : { massScope: value.massScope as ExplicitCompositionGroup['massScope'] }),
+    ...(value.wholeParentMassG === undefined ? {} : { wholeParentMassG: value.wholeParentMassG as number }),
     source: validateSource(value.source, '配合根拠'),
   }
 }
@@ -247,9 +256,9 @@ function validateGroup(value: unknown, schemaVersion: 1 | 2): ExplicitCompositio
 /** Versioned evidence boundary: reject unknown fields and copy every nested array. */
 export function validateExplicitEstimationEvidence(value: unknown): ExplicitEstimationEvidence {
   if (!isRecord(value)) throw new Error('明示推計根拠の形式を確認してください。')
-  if (value.schemaVersion !== 1 && value.schemaVersion !== 2) throw new Error('明示推計根拠のschemaVersionに対応していません。')
+  if (value.schemaVersion !== 1 && value.schemaVersion !== 2 && value.schemaVersion !== 3) throw new Error('明示推計根拠のschemaVersionに対応していません。')
   const schemaVersion = value.schemaVersion
-  assertKeys(value, ['schemaVersion', 'declarationFingerprint'], schemaVersion === 1 ? ['compositions'] : ['compositions', 'processing'], '明示推計根拠')
+  assertKeys(value, ['schemaVersion', 'declarationFingerprint'], schemaVersion === 1 ? ['compositions'] : schemaVersion === 2 ? ['compositions', 'processing'] : ['compositions', 'processing', 'additives'], '明示推計根拠')
   const declarationFingerprint = boundedString(value.declarationFingerprint, '原材料宣言fingerprint', 128)
   if (value.compositions !== undefined && !Array.isArray(value.compositions)) {
     throw new Error('配合群は配列で指定してください。')
@@ -265,7 +274,7 @@ export function validateExplicitEstimationEvidence(value: unknown): ExplicitEsti
     ids.add(group.id)
     paths.add(path)
   }
-  const processing = schemaVersion === 2 && value.processing !== undefined
+  const processing = schemaVersion >= 2 && value.processing !== undefined
     ? validateExplicitProcessingProofs(value.processing)
     : undefined
   return {
@@ -273,6 +282,7 @@ export function validateExplicitEstimationEvidence(value: unknown): ExplicitEsti
     declarationFingerprint,
     ...(value.compositions === undefined ? {} : { compositions }),
     ...(processing === undefined ? {} : { processing }),
+    ...(schemaVersion === 3 && value.additives !== undefined ? { additives: validateExplicitAdditiveProofs(value.additives) } : {}),
   } as ExplicitEstimationEvidence
 }
 
@@ -385,7 +395,7 @@ function childBindingReason(
       if (!child) return 'nested_binding_missing'
       const expectedPath = [...group.parent.path, index]
       if (JSON.stringify(child.parent.path) !== JSON.stringify(expectedPath)) return 'nested_parent_mismatch'
-    } else {
+    } else if (binding.kind === 'processing') {
       const proof = processingById.get(binding.processingId)
       const prepared = preparedProcessingById.get(binding.processingId)
       if (!proof || !prepared) return 'processing_unbound'
@@ -410,7 +420,7 @@ export function prepareExplicitCompositionEvidence(
   const currentDeclarationFingerprint = createIngredientDeclarationFingerprint(ingredientsText)
   const stale = evidence.declarationFingerprint !== currentDeclarationFingerprint
   const groupsById = new Map((evidence.compositions ?? []).map((group) => [group.id, group]))
-  const rawProcessing = evidence.schemaVersion === 2 ? evidence.processing ?? [] : []
+  const rawProcessing = evidence.schemaVersion !== 1 ? evidence.processing ?? [] : []
   const processing = rawProcessing.map((proof): PreparedExplicitCompositionEvidence['processing'][number] => {
     if (stale) return { proof, status: 'deferred', reason: 'declaration_stale' }
     const ingredient = ingredientAtPath(declaration, proof.ingredientPath)
@@ -425,7 +435,7 @@ export function prepareExplicitCompositionEvidence(
   const preparedProcessingById = new Map(processing.map((proof) => [proof.proof.id, proof]))
   const groups = (evidence.compositions ?? []).map((group): PreparedCompositionGroup => {
     if (stale) return { group, status: 'deferred', reason: 'declaration_stale', fixedChildRatios: [], zeroWeightChildIndices: [] }
-    if (declaration.additives.length > 0) return { group, status: 'deferred', reason: 'additives_present', fixedChildRatios: [], zeroWeightChildIndices: [] }
+    if (declaration.additives.length > 0 && evidence.schemaVersion !== 3) return { group, status: 'deferred', reason: 'additives_present', fixedChildRatios: [], zeroWeightChildIndices: [] }
     if (group.weightStage !== 'finished') return { group, status: 'deferred', reason: 'raw_stage', fixedChildRatios: [], zeroWeightChildIndices: [] }
     const children = childrenAtPath(declaration, group.parent.path)
     if (!children) return { group, status: 'deferred', reason: 'parent_path_mismatch', fixedChildRatios: [], zeroWeightChildIndices: [] }

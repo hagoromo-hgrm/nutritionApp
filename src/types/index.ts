@@ -88,6 +88,42 @@ export interface ExplicitProcessingProof {
   source: ExplicitProcessingEvidenceSource
 }
 
+export type ExplicitAdditiveContent =
+  | { kind: 'fixed'; valuePerG: number }
+  | { kind: 'published_reference'; valuePerG: number }
+  | { kind: 'declared_range'; minPerG: number; maxPerG: number }
+  | { kind: 'minimum'; minPerG: number }
+
+export interface ExplicitAdditiveProof {
+  id: string
+  declaration: { section: 'ingredient' | 'additive'; path: readonly number[]; expectedName: string }
+  materialId: string
+  grade: string
+  dose:
+    | { kind: 'preparation_mass_g'; value: number | null; stage: 'raw' | 'finished' }
+    | { kind: 'active_nutrient_amount'; nutrient: NutrientKey; value: number | null; stage: 'raw' | 'finished' }
+  contentsPerG: Partial<Record<NutrientKey, ExplicitAdditiveContent>>
+  doseSource: ExplicitProcessingEvidenceSource
+  contentSource: ExplicitProcessingEvidenceSource
+}
+
+export interface ExplicitAdditiveTrace {
+  additiveId: string
+  section: 'ingredient' | 'additive'
+  path: number[]
+  status: 'applied' | 'deferred'
+  reason?: ExplicitCompositionDeferredReason
+  materialId: string
+  grade: string
+  preparationMassG: number | null
+  unknownAdditiveMass: boolean
+  pointsPer100g: Partial<Record<NutrientKey, number>>
+  boundsPer100g: Partial<Record<NutrientKey, { min: number; max: number | null }>>
+  referenceOnlyNutrients: NutrientKey[]
+  doseSource: Pick<ExplicitProcessingEvidenceSource, 'kind' | 'reference' | 'version' | 'sourceSha256'>
+  contentSource: Pick<ExplicitProcessingEvidenceSource, 'kind' | 'reference' | 'version' | 'sourceSha256'>
+}
+
 export type ExplicitCompositionChildBinding =
   | {
       kind: 'profile'
@@ -107,8 +143,11 @@ export type ExplicitCompositionChildBinding =
       index: number
       processingId: string
     }
+  | { kind: 'additive'; index: number; additiveId: string }
 
 export interface ExplicitCompositionGroup {
+  massScope?: 'whole_parent' | 'food_remainder_after_additives'
+  wholeParentMassG?: number
   id: string
   parent: { section: 'ingredient'; path: readonly number[] }
   expectedChildNames: readonly string[]
@@ -134,7 +173,15 @@ export interface ExplicitEstimationEvidenceV2 {
   processing?: readonly ExplicitProcessingProof[]
 }
 
-export type ExplicitEstimationEvidence = ExplicitEstimationEvidenceV1 | ExplicitEstimationEvidenceV2
+export interface ExplicitEstimationEvidenceV3 {
+  schemaVersion: 3
+  declarationFingerprint: string
+  compositions?: readonly ExplicitCompositionGroup[]
+  processing?: readonly ExplicitProcessingProof[]
+  additives?: readonly ExplicitAdditiveProof[]
+}
+
+export type ExplicitEstimationEvidence = ExplicitEstimationEvidenceV1 | ExplicitEstimationEvidenceV2 | ExplicitEstimationEvidenceV3
 
 export type ExplicitCompositionDeferredReason =
   | 'declaration_stale'
@@ -167,6 +214,12 @@ export type ExplicitCompositionDeferredReason =
   | 'processing_retention_missing'
   | 'processing_sodium_transfer_unknown'
   | 'processing_root_deferred'
+  | 'additive_unbound'
+  | 'additive_path_mismatch'
+  | 'additive_mass_unconfirmed'
+  | 'additive_mass_conflict'
+  | 'additive_raw_stage'
+  | 'additive_root_deferred'
 
 export interface ExplicitProcessingTrace {
   processingId: string
@@ -209,6 +262,7 @@ export interface ExplicitCompositionEvidenceTrace {
   status: 'applied' | 'deferred'
   groups: ExplicitCompositionTraceGroup[]
   processing?: ExplicitProcessingTrace[]
+  additives?: ExplicitAdditiveTrace[]
 }
 
 export type EstimationConfidence = 'high' | 'medium' | 'low' | 'unavailable'

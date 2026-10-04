@@ -225,3 +225,7 @@ Food保存・request snapshot・入力fingerprint・backupの全経路へ同じn
 - 加工profileは通常候補から分離した `processing_mext_13003_v1`、`processing_mext_12004_v1`、`processing_mext_12005_v1` の3項目に限定する。基準は可食部100g。牛乳の追加約10分加熱と全卵のゆで工程をレビュー済み状態IDで照合し、葉の実finished重量とFが一致する場合だけ使用する。
 - 普通牛乳の既存正規化データと通常候補は鉄0.02mgを保持しているが、2026-10-04に確認した公式MEXT普通牛乳の鉄は0mg。加工専用catalogでは、元値・修正値・公式ページ取得hash・日付・理由を持つ限定overrideで0へ修正する。現行ユーザー食品、一般食品マスター、過去食事はこの処理では更新しない。
 - ゆで卵directをproof内で指定して状態を確認した場合は、MEXTゆで濃度を優先しRFを重ねない。指定しない場合は生の参照と0105で、対応6栄養素だけを計算する。RF未収録項目、入力参照欠損、R/F不足、状態不一致、無結合proofは補完せず保留または欠損にする。
+
+### Step10実装結果（2026-10-04）
+
+v3は`additives`と`kind: additive` binding、rootの`massScope`/`wholeParentMassG`に対応。contentsPerGの単位は各NutrientKeyのアプリ単位/g製剤で、質量%からの暗黙変換はしない。製剤量は`preparation_mass_g`、active直接量は`active_nutrient_amount`として分離する。今回activeだけの全体計算は保留し、確認できた直接寄与をtraceに残す。root以外の食品残量scopeは未対応として保留。下限/範囲を持つ製剤は当該栄養素を欠損寄与として扱い、食品の既知小計と製剤の出典境界を別に保持する。実製剤の全14項目が確認されなければ全項目完全値とは扱わない。通常フォームに根拠エディタを追加せず、型付きhook/backupに限定する。supplier numeric catalogの追加は0件。

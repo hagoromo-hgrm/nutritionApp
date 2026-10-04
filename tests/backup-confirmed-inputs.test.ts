@@ -221,6 +221,28 @@ function traceEvidence(ingredientsText: string, ...groups: ExplicitCompositionGr
 }
 
 describe('estimation backup confirmed-input validation', () => {
+  it('validates and restores actual additive bounds, materials and dose evidence', () => {
+    const text = '上白糖／合成製剤'
+    const source = { kind: 'user_measurement' as const, reference: 'synthetic batch', verified: true as const, checkedAt: now }
+    const evidence: ExplicitEstimationEvidence = {
+      schemaVersion: 3, declarationFingerprint: createIngredientDeclarationFingerprint(text),
+      compositions: [{ ...traceCompositionGroup({ names: ['上白糖'], masses: [99], bindings: [profileBinding(0, 'mext_03003')] }), massScope: 'food_remainder_after_additives', wholeParentMassG: 100 }],
+      additives: [{ id: 'dose', declaration: { section: 'additive', path: [0], expectedName: '合成製剤' }, materialId: 'synthetic', grade: 'confirmed',
+        dose: { kind: 'preparation_mass_g', value: 1, stage: 'finished' }, contentsPerG: { calciumMg: { kind: 'minimum', minPerG: 200 } }, doseSource: source, contentSource: source }],
+    }
+    const { backup, storedTrace } = makeActualTraceBackup({ requestId: 'additive_backup', ingredientsText: text, evidence })
+    const restored = parseBackupText(backupToJson(validateBackup(backup)))
+    expect(restored.foods[0].estimationEvidence).toEqual(evidence)
+    expect(restored.estimationResults![0].optimization!.trace!.explicitCompositionEvidence).toEqual(storedTrace.explicitCompositionEvidence)
+    expect(storedTrace.explicitCompositionEvidence!.additives![0].boundsPer100g.calciumMg).toEqual({ min: 200, max: null })
+    evidence.compositions![0].wholeParentMassG = 101
+    const deferred = makeActualTraceBackup({ requestId: 'additive_deferred', ingredientsText: text, evidence })
+    expect(validateBackup(deferred.backup).estimationResults![0].optimization!.trace!.explicitCompositionEvidence!.groups[0].reason).toBe('additive_mass_conflict')
+    const invalid = structuredClone(backup)
+    invalid.estimationResults![0].optimization!.trace!.explicitCompositionEvidence!.additives![0].boundsPer100g.calciumMg = { min: 200, max: 100 }
+    expect(() => validateBackup(invalid)).toThrow()
+  })
+
   it('preserves processing proof, source fingerprints and applied retention trace through backup', () => {
     const ingredientsText = '牛乳'
     const source = { kind: 'user_measurement' as const, reference: '合成の追加10分加熱記録', verified: true as const, checkedAt: now }

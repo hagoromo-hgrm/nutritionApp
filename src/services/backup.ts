@@ -1,3 +1,4 @@
+import { isExplicitAdditiveTraceArray } from './explicitAdditiveEvidence'
 import { ESTIMATION_LIMITATION_REASONS, ESTIMATOR_GENRE_IDS, NUTRIENT_KEYS, type AppSettings, type BackupData, type EstimationDecision, type EstimationRequest, type EstimationResult, type EstimationSettings, type Food, type FoodAlias, type FoodGroup, type FoodRelatedTerm, type FoodSnapshot, type FoodUsageStat, type GeneralMenu, type MealEntry, type Menu, type MenuIngredient, type MenuSet, type NutrientKey, type NutrientMetadataMap, type Nutrients, type NutritionGoalRecord, type NutritionEstimationInput, type SearchLog, type WeightRecord } from '../types'
 import { createNutrientEstimateRequestFingerprintFromSnapshot } from './confirmedNutrientInputs'
 import { isExplicitCompositionDeferredReason, validateExplicitEstimationEvidence } from './explicitCompositionEvidence'
@@ -588,6 +589,7 @@ function isExplicitCompositionEvidenceTrace(value: unknown): boolean {
   if (!isRecord(value) || !isNonEmptyString(value.declarationFingerprint)
     || value.declarationFingerprint.length > 128 || !isNonEmptyString(value.stateRegistryVersion) || value.stateRegistryVersion.length > 128
     || !['applied', 'deferred'].includes(String(value.status))
+    || (value.additives !== undefined && !isExplicitAdditiveTraceArray(value.additives))
     || (value.processing !== undefined && !isExplicitProcessingTraceArray(value.processing))
     || !Array.isArray(value.groups) || value.groups.length > 64) return false
   const seenIds = new Set<string>()
