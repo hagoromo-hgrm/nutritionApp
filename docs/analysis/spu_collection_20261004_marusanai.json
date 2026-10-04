@@ -1,0 +1,35 @@
+{
+  "format": "nutrition-spu-source-csv-audit",
+  "formatVersion": 1,
+  "generatedAt": "2026-10-04T09:11:16.223531+00:00",
+  "files": [
+    {
+      "csvFile": "marusanai_officialSite_261004.csv",
+      "csvSha256": "4864464c5804cf16964acc85936f85dd5b779e89c0e03b5eab0d43b1fbdee5e0",
+      "maker": "マルサンアイ",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.4",
+      "rawRows": 77,
+      "completeMajorNutrientRows": 77,
+      "normalizationAcceptedRows": 6,
+      "normalizationDeferralReasons": {
+        "missing_explicit_reference_mass": 48,
+        "no_target_nutrient": 23
+      },
+      "targetLabelCounts": {
+        "calciumMg": 2,
+        "fiberG": 2,
+        "ironMg": 1,
+        "saturatedFatG": 4
+      },
+      "targetLabelKindCounts": {
+        "estimated": 5,
+        "fixed": 4
+      },
+      "humanFamilyReview": "not_completed",
+      "modelOrPriorUpdated": false
+    }
+  ],
+  "rawRows": 77,
+  "normalizationAcceptedRows": 6,
+  "scope": "private_local_collection; not reviewed independent families or authorized model adoption"
+}
