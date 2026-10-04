@@ -1,0 +1,36 @@
+{
+  "format": "nutrition-spu-source-csv-audit",
+  "formatVersion": 1,
+  "generatedAt": "2026-10-04T08:43:44.487127+00:00",
+  "files": [
+    {
+      "csvFile": "hakubaku_officialSite_261004.csv",
+      "csvSha256": "378d2968cc4125b7475e78eadff48d7552affe44191bb9e5f736695506e9ed33",
+      "maker": "はくばく",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.3",
+      "rawRows": 79,
+      "completeMajorNutrientRows": 79,
+      "normalizationAcceptedRows": 33,
+      "normalizationDeferralReasons": {
+        "missing_explicit_reference_mass": 20,
+        "no_target_nutrient": 26
+      },
+      "targetLabelCounts": {
+        "calciumMg": 11,
+        "fiberG": 31,
+        "ironMg": 10,
+        "vitaminB1Mg": 7,
+        "vitaminB2Mg": 4
+      },
+      "targetLabelKindCounts": {
+        "estimated": 41,
+        "fixed": 22
+      },
+      "humanFamilyReview": "not_completed",
+      "modelOrPriorUpdated": false
+    }
+  ],
+  "rawRows": 79,
+  "normalizationAcceptedRows": 33,
+  "scope": "private_local_collection; not reviewed independent families or authorized model adoption"
+}
