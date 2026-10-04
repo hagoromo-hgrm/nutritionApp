@@ -1,13 +1,13 @@
 {
   "format": "nutrition-spu-source-csv-audit",
   "formatVersion": 1,
-  "generatedAt": "2026-10-04T08:34:16.715270+00:00",
+  "generatedAt": "2026-10-04T08:39:31.273361+00:00",
   "files": [
     {
       "csvFile": "nissin_cisco_officialSite_261004.csv",
       "csvSha256": "3740d513622c444c940123671cf8074f92c8060fcacdffefc875cd26e485da97",
       "maker": "日清シスコ",
-      "normalizationTransformVersion": "spu-estimator-training-0.5.2",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.3",
       "rawRows": 46,
       "completeMajorNutrientRows": 46,
       "normalizationAcceptedRows": 33,

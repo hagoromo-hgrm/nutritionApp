@@ -1,7 +1,7 @@
 {
   "format": "nutrition-spu-source-csv-audit",
   "formatVersion": 1,
-  "generatedAt": "2026-10-04T08:37:11.388188+00:00",
+  "generatedAt": "2026-10-04T08:39:30.674491+00:00",
   "files": [
     {
       "csvFile": "asahi_gf_officialSite_261004.csv",

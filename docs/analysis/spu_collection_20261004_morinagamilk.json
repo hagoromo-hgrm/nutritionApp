@@ -1,13 +1,13 @@
 {
   "format": "nutrition-spu-source-csv-audit",
   "formatVersion": 1,
-  "generatedAt": "2026-10-04T08:18:04.664215+00:00",
+  "generatedAt": "2026-10-04T08:39:31.130884+00:00",
   "files": [
     {
       "csvFile": "morinagamilk_officialSite_261004.csv",
       "csvSha256": "eb27a7e1e445d9e0b501588699eeb2fc3db7894b255bbab20b6a0e882d836532",
       "maker": "森永乳業",
-      "normalizationTransformVersion": "spu-estimator-training-0.5.2",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.3",
       "rawRows": 179,
       "completeMajorNutrientRows": 179,
       "normalizationAcceptedRows": 83,

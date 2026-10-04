@@ -48,6 +48,7 @@ SOURCE_CONFIG: dict[str, dict[str, str]] = {
     "nisshin_oillio": {"maker": "日清オイリオ", "url": "https://www.nisshin-oillio.com/products/"},
     "hakubaku": {"maker": "はくばく", "url": "https://www.hakubaku.co.jp/products/"},
     "kanro": {"maker": "カンロ", "url": "https://kanro.jp/products/"},
+    "marukome": {"maker": "マルコメ", "url": "https://www.marukome.co.jp/product/"},
     "asahi_milky": {
         "maker": "アサヒ飲料",
         "url": "https://www.asahiinryo.co.jp/products/",

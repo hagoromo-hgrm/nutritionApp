@@ -24,5 +24,6 @@
   "termsSource": "https://koike-ya.com/usage.html",
   "sourceManifestSha256": "f50671b6806207b69a733e02a8785c0e7effe12f7541d72b95f524544e3fcd4f",
   "existingFilesOverwritten": false,
-  "appPriorOrModelUpdated": false
+  "appPriorOrModelUpdated": false,
+  "normalizationTransformVersion": "spu-estimator-training-0.5.3"
 }

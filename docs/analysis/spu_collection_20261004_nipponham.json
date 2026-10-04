@@ -1,12 +1,13 @@
 {
   "format": "nutrition-spu-source-csv-audit",
   "formatVersion": 1,
-  "generatedAt": "2026-10-04T08:00:17.318243+00:00",
+  "generatedAt": "2026-10-04T08:39:31.209776+00:00",
   "files": [
     {
       "csvFile": "nipponham_officialSite_261004.csv",
       "csvSha256": "750c562adb9d9ecaf1897ca31025024d4d2fb4cb99b3ec16e8ad490da742af18",
       "maker": "日本ハム",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.3",
       "rawRows": 197,
       "completeMajorNutrientRows": 197,
       "normalizationAcceptedRows": 7,
@@ -23,8 +24,7 @@
         "fixed": 5
       },
       "humanFamilyReview": "not_completed",
-      "modelOrPriorUpdated": false,
-      "normalizationTransformVersion": "spu-estimator-training-0.5.2"
+      "modelOrPriorUpdated": false
     }
   ],
   "rawRows": 197,

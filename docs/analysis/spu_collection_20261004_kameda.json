@@ -1,13 +1,13 @@
 {
   "format": "nutrition-spu-source-csv-audit",
   "formatVersion": 1,
-  "generatedAt": "2026-10-04T08:12:46.156115+00:00",
+  "generatedAt": "2026-10-04T08:39:30.874464+00:00",
   "files": [
     {
       "csvFile": "kameda_officialSite_261004.csv",
       "csvSha256": "30f933e5542652fdd70ca3561988dde580fb41e0ef922a88835d6ce8f196233d",
       "maker": "亀田製菓",
-      "normalizationTransformVersion": "spu-estimator-training-0.5.2",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.3",
       "rawRows": 134,
       "completeMajorNutrientRows": 134,
       "normalizationAcceptedRows": 7,

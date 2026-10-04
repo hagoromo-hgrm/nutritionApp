@@ -1,12 +1,13 @@
 {
   "format": "nutrition-spu-source-csv-audit",
   "formatVersion": 1,
-  "generatedAt": "2026-10-04T07:35:34.480678+00:00",
+  "generatedAt": "2026-10-04T08:39:30.974834+00:00",
   "files": [
     {
       "csvFile": "kikkoman_officialSite_261004.csv",
       "csvSha256": "7a73fa61a0951d6b96cfa0dfffa007efcd18ab16e36840091667ec83d6e56d04",
       "maker": "キッコーマン",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.3",
       "rawRows": 220,
       "completeMajorNutrientRows": 220,
       "normalizationAcceptedRows": 108,
@@ -27,8 +28,7 @@
         "fixed": 149
       },
       "humanFamilyReview": "not_completed",
-      "modelOrPriorUpdated": false,
-      "normalizationTransformVersion": "spu-estimator-training-0.5.2"
+      "modelOrPriorUpdated": false
     }
   ],
   "rawRows": 220,
