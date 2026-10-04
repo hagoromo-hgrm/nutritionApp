@@ -16,7 +16,8 @@
       "targetLabelCounts": {},
       "targetLabelKindCounts": {},
       "humanFamilyReview": "not_completed",
-      "modelOrPriorUpdated": false
+      "modelOrPriorUpdated": false,
+      "normalizationTransformVersion": "spu-estimator-training-0.5.2"
     }
   ],
   "rawRows": 52,

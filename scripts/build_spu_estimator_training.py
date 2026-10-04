@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-TRANSFORM_VERSION = "spu-estimator-training-0.5.1"
+TRANSFORM_VERSION = "spu-estimator-training-0.5.2"
 FILENAME_RE = re.compile(
     r"^(?P<maker>.+)_(?P<source>[^_]+)_(?P<date>\d{6})\.csv$",
     re.IGNORECASE,
@@ -42,6 +42,7 @@ SOURCE_CONFIG: dict[str, dict[str, str]] = {
     "sbfoods": {"maker": "エスビー食品", "url": "https://www.sbfoods.co.jp/products/"},
     "nipponham": {"maker": "日本ハム", "url": "https://www.nipponham.co.jp/products/"},
     "glico": {"maker": "江崎グリコ", "url": "https://www.glico.com/jp/product/"},
+    "nissin_cisco": {"maker": "日清シスコ", "url": "https://www.nissin.com/jp/products/"},
     "asahi_milky": {
         "maker": "アサヒ飲料",
         "url": "https://www.asahiinryo.co.jp/products/",
@@ -278,10 +279,14 @@ def parse_nutrient(text: str, key: str, basis: str, estimated: bool = False) -> 
         match = pattern.match(text[label.start():])
         if match is None:
             suffix = text[label.end():].lstrip(" :：;；")
-            if re.match(r"[+\-0-9]|NaN|Infinity|[<>≤≥]", suffix, re.IGNORECASE):
+            if re.match(r"[+\-0-9]|NaN|Infinity|[<>≤≥]|(?:約|およそ)\s*[0-9]", suffix, re.IGNORECASE):
                 return None
             continue
         raw_unit = match.group("unit").casefold()
+        # A one-sided bound is not a fixed label or a closed declared range.
+        # Keep its original CSV text, but do not turn the boundary into a point.
+        if re.match(r"\s*[（(]?\s*(?:未満|以下|以上|超)", text[label.start() + match.end():]):
+            return None
         unit = "mcg" if raw_unit in {"μg", "µg", "ug", "mcg"} else raw_unit
         if unit != spec["unit"]:
             all_labels = "|".join(nutrient_label_pattern(name) for item in NUTRIENT_SPECS.values() for name in item["labels"])

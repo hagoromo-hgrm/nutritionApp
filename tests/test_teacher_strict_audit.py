@@ -21,6 +21,11 @@ class StrictTeacherAuditTests(unittest.TestCase):
     def test_numbered_label_does_not_hide_a_real_conflicting_duplicate(self):
         text = 'ビタミンB1 0.4mg; ビタミンB12 0.8μg; ビタミンB1 0.5mg'
         self.assertIsNone(parser.parse_nutrient(text, 'vitaminB1Mg', '50g'))
+    def test_one_sided_bounds_never_become_fixed_points(self):
+        for qualifier in ('未満', '以下', '以上', '超', '（未満）'):
+            with self.subTest(qualifier=qualifier):
+                self.assertIsNone(parser.parse_nutrient('カルシウム 10mg' + qualifier, 'calciumMg', '100g'))
+        self.assertIsNone(parser.parse_nutrient('カルシウム 10mg; カルシウム 約11mg', 'calciumMg', '100g'))
     def test_duplicates_are_equal_or_rejected_not_last_wins(self):
         self.assertEqual(parser.parse_nutrient('脂質 1g; 脂質 1g', 'fatG', '100g')['value'], 1)
         self.assertIsNone(parser.parse_nutrient('脂質 1g; 脂質 2g', 'fatG', '100g'))

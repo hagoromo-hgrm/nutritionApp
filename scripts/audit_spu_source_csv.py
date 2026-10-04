@@ -12,9 +12,9 @@ from datetime import datetime,timezone
 from pathlib import Path
 from urllib.parse import urlparse
 try:
- from .build_spu_estimator_training import _source_config_for,clean_nutrition_text,first_nutrient_offset,normalize_row,parse_nutrient,validate_columns
+ from .build_spu_estimator_training import TRANSFORM_VERSION,_source_config_for,clean_nutrition_text,first_nutrient_offset,normalize_row,parse_nutrient,validate_columns
 except ImportError:
- from build_spu_estimator_training import _source_config_for,clean_nutrition_text,first_nutrient_offset,normalize_row,parse_nutrient,validate_columns
+ from build_spu_estimator_training import TRANSFORM_VERSION,_source_config_for,clean_nutrition_text,first_nutrient_offset,normalize_row,parse_nutrient,validate_columns
 MAJOR=('energyKcal','proteinG','fatG','carbohydrateG','saltG')
 TARGET=('saturatedFatG','fiberG','calciumMg','ironMg','vitaminAMcg','vitaminEMg','vitaminB1Mg','vitaminB2Mg','vitaminCMg')
 DISPLAYED_BASIS = re.compile(r'\d+(?:\.\d+)?\s*(?:ml|g|個|袋|食|本|枚|包|粒|カップ|箱|缶|瓶|杯|パック|包装|グラム|ミリリットル)(?![A-Za-z])', re.IGNORECASE)
@@ -49,7 +49,7 @@ def audit_csv(path:Path)->tuple[dict,list[dict]]:
     for key in TARGET:
      if key in record['nutrients']:target_counts[key]+=1;kind_counts[record['nutrients'][key]['valueKind']]+=1
    private.append({'rowNumber':row_number,'productName':row['商品名'],'productUrl':row['製品URL'],'teacherCandidateAccepted':reason is None,'deferralReason':reason})
- summary={'csvFile':path.name,'csvSha256':hashlib.sha256(source_bytes).hexdigest(),'maker':config['maker'],'rawRows':len(private),'completeMajorNutrientRows':len(private),'normalizationAcceptedRows':len(accepted),'normalizationDeferralReasons':dict(sorted(reasons.items())),'targetLabelCounts':dict(sorted(target_counts.items())),'targetLabelKindCounts':dict(sorted(kind_counts.items())),'humanFamilyReview':'not_completed','modelOrPriorUpdated':False}
+ summary={'csvFile':path.name,'csvSha256':hashlib.sha256(source_bytes).hexdigest(),'maker':config['maker'],'normalizationTransformVersion':TRANSFORM_VERSION,'rawRows':len(private),'completeMajorNutrientRows':len(private),'normalizationAcceptedRows':len(accepted),'normalizationDeferralReasons':dict(sorted(reasons.items())),'targetLabelCounts':dict(sorted(target_counts.items())),'targetLabelKindCounts':dict(sorted(kind_counts.items())),'humanFamilyReview':'not_completed','modelOrPriorUpdated':False}
  return summary,private
 
 def main()->int:
