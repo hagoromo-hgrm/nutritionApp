@@ -1,0 +1,34 @@
+{
+  "format": "nutrition-spu-source-csv-audit",
+  "formatVersion": 1,
+  "generatedAt": "2026-10-04T08:35:11.365531+00:00",
+  "files": [
+    {
+      "csvFile": "hamada_confect_officialSite_261004.csv",
+      "csvSha256": "ac8f67bf6c8c1c6e7d83c62c4a60fd368d9183ea91ed513018fcdff82c9fddde",
+      "maker": "ハマダコンフェクト",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.3",
+      "rawRows": 32,
+      "completeMajorNutrientRows": 32,
+      "normalizationAcceptedRows": 32,
+      "normalizationDeferralReasons": {},
+      "targetLabelCounts": {
+        "calciumMg": 29,
+        "fiberG": 32,
+        "ironMg": 25,
+        "vitaminAMcg": 15,
+        "vitaminB1Mg": 4,
+        "vitaminB2Mg": 19,
+        "vitaminEMg": 7
+      },
+      "targetLabelKindCounts": {
+        "estimated": 131
+      },
+      "humanFamilyReview": "not_completed",
+      "modelOrPriorUpdated": false
+    }
+  ],
+  "rawRows": 32,
+  "normalizationAcceptedRows": 32,
+  "scope": "private_local_collection; not reviewed independent families or authorized model adoption"
+}

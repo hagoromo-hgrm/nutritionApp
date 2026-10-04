@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-TRANSFORM_VERSION = "spu-estimator-training-0.5.2"
+TRANSFORM_VERSION = "spu-estimator-training-0.5.3"
 FILENAME_RE = re.compile(
     r"^(?P<maker>.+)_(?P<source>[^_]+)_(?P<date>\d{6})\.csv$",
     re.IGNORECASE,
@@ -43,6 +43,9 @@ SOURCE_CONFIG: dict[str, dict[str, str]] = {
     "nipponham": {"maker": "日本ハム", "url": "https://www.nipponham.co.jp/products/"},
     "glico": {"maker": "江崎グリコ", "url": "https://www.glico.com/jp/product/"},
     "nissin_cisco": {"maker": "日清シスコ", "url": "https://www.nissin.com/jp/products/"},
+    "asahi_gf": {"maker": "アサヒグループ食品", "url": "https://www.asahi-gf.co.jp/products/"},
+    "hamada_confect": {"maker": "ハマダコンフェクト", "url": "https://www.hamadaconfect.com/product"},
+    "nisshin_oillio": {"maker": "日清オイリオ", "url": "https://www.nisshin-oillio.com/products/"},
     "asahi_milky": {
         "maker": "アサヒ飲料",
         "url": "https://www.asahiinryo.co.jp/products/",
@@ -320,13 +323,15 @@ def has_mixed_basis(text: str) -> bool:
 def has_multiple_values(text: str) -> bool:
     for spec in NUTRIENT_SPECS.values():
         for label in spec["labels"]:
-            matched_label = re.search(nutrient_label_pattern(label), text)
-            if matched_label is None:
-                continue
-            offset = matched_label.start()
-            segment = text[offset:offset + 100].split("；", 1)[0]
-            if re.search(rf"{NUMBER_PATTERN}\s*/\s*{NUMBER_PATTERN}", segment):
-                return True
+            for matched_label in re.finditer(nutrient_label_pattern(label), text):
+                # A later publication date is not a second value for this label.
+                suffix = text[matched_label.end():].lstrip(" :：;；=")
+                if re.match(
+                    rf"{NUMBER_PATTERN}\s*(?:{UNIT_PATTERN}\s*)?/\s*{NUMBER_PATTERN}",
+                    suffix,
+                    re.IGNORECASE,
+                ):
+                    return True
     return False
 
 
