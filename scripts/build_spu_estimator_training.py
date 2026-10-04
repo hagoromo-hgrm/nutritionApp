@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-TRANSFORM_VERSION = "spu-estimator-training-0.5.4"
+TRANSFORM_VERSION = "spu-estimator-training-0.5.5"
 FILENAME_RE = re.compile(
     r"^(?P<maker>.+)_(?P<source>[^_]+)_(?P<date>\d{6})\.csv$",
     re.IGNORECASE,
@@ -111,7 +111,7 @@ NUTRIENT_SPECS: dict[str, dict[str, Any]] = {
     "carbohydrateG": {"labels": ("炭水化物",), "unit": "g"},
     "fiberG": {"labels": ("食物繊維",), "unit": "g"},
     "calciumMg": {"labels": ("カルシウム",), "unit": "mg"},
-    "ironMg": {"labels": ("鉄",), "unit": "mg"},
+    "ironMg": {"labels": ("鉄分", "鉄"), "unit": "mg"},
     "vitaminAMcg": {"labels": ("ビタミンA",), "unit": "mcg"},
     "vitaminEMg": {"labels": ("ビタミンE",), "unit": "mg"},
     "vitaminB1Mg": {"labels": ("ビタミンB1",), "unit": "mg"},
@@ -123,6 +123,9 @@ NUTRIENT_SPECS: dict[str, dict[str, Any]] = {
 UNIT_PATTERN = r"(?:kcal|g|mg|μg|µg|ug|mcg)"
 NUMBER_PATTERN = r"[0-9]+(?:\.[0-9]+)?"
 RANGE_SEPARATOR_PATTERN = r"[~〜～]"
+FAT_ZERO_DEFINITION_PATTERN = re.compile(
+    r"※\s*[「『]脂肪\s*0[」』]\s*は[^。;；\n]{0,160}表示できる。"
+)
 HTML_SUFFIX_MARKERS = (
     "class s extends HTMLElement",
     "customElements.define(",
@@ -229,7 +232,15 @@ def parse_verified_at(raw: str) -> str:
 def nutrient_label_pattern(label: str) -> str:
     # B1 is a different label from B12. Requiring a delimiter for digit-ended
     # labels avoids treating the suffix of B12 as a malformed B1 value.
-    return re.escape(label) + (r"(?![0-9])" if label[-1].isdigit() else "")
+    suffix_guard = r"(?![0-9])" if label[-1].isdigit() else ""
+    # "鉄" is a legacy alias for "鉄分"; it must not match the prefix of it.
+    if label == "鉄":
+        suffix_guard += r"(?!分)"
+    return re.escape(label) + suffix_guard
+
+
+def fat_zero_definition_spans(text: str) -> list[re.Match[str]]:
+    return list(FAT_ZERO_DEFINITION_PATTERN.finditer(text))
 
 
 def first_nutrient_offset(text: str) -> int | None:
@@ -289,10 +300,7 @@ def parse_nutrient(text: str, key: str, basis: str, estimated: bool = False) -> 
     candidates = []
     # This quoted labeling definition describes a threshold, not this product's fat.
     # Keep the source note; only omit its label from value candidates.
-    fat_definition_notes = list(re.finditer(
-        r"※\s*[「『]脂肪\s*0[」』]\s*は[^。;；\n]{0,160}表示できる。",
-        text,
-    )) if key == "fatG" else []
+    fat_definition_notes = fat_zero_definition_spans(text) if key == "fatG" else []
     for label in re.finditer(rf"(?:{labels})", text, re.IGNORECASE):
         if any(note.start() <= label.start() < note.end() for note in fat_definition_notes):
             continue
@@ -334,6 +342,15 @@ def has_mixed_basis(text: str) -> bool:
     if offset is None:
         return False
     tail = text[offset:]
+    # This narrow quoted definition mentions a 100g threshold without declaring
+    # a second panel. Mask it only for basis detection; source text and offsets
+    # remain untouched everywhere else.
+    tail_chars = list(tail)
+    for note in fat_zero_definition_spans(tail):
+        for index in range(note.start(), note.end()):
+            if tail_chars[index] != "\n":
+                tail_chars[index] = " "
+    tail = "".join(tail_chars)
     return bool(re.search(rf"{NUMBER_PATTERN}\s*(?:g|ml|個|袋|食|本)\s*(?:当たり|あたり|につき)", tail, re.IGNORECASE))
 
 

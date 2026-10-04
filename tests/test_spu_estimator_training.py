@@ -1,4 +1,5 @@
 import csv
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -6,6 +7,8 @@ from pathlib import Path
 from scripts.build_spu_estimator_training import (
     build_dataset,
     build_ingredient_coverage_dataset,
+    annotation_scope,
+    has_mixed_basis,
     infer_genre,
     has_multiple_values,
     parse_nutrient,
@@ -41,6 +44,97 @@ class SpuEstimatorTrainingTests(unittest.TestCase):
             "※「脂肪0」は、100g当たり脂質0.5g未満のものに表示できる。",
             "fatG", "80g当たり",
         ))
+
+    def test_fat_zero_definition_is_ignored_only_for_mixed_basis_detection(self) -> None:
+        definition = "※「脂肪0」は、100g当たり脂質0.5g未満のものに表示できる。"
+        single_panel = f"1個(80g)当たり；脂質0.2g；{definition}"
+        self.assertFalse(has_mixed_basis(single_panel))
+        self.assertTrue(has_mixed_basis("1個(80g)当たり；脂質0.2g；通常100g当たりの表示値"))
+        self.assertTrue(has_mixed_basis(
+            f"1個(80g)当たり；脂質0.2g；{definition}；別表示100g当たり"
+        ))
+        self.assertTrue(has_mixed_basis(
+            f"1個(80g)当たり；脂質0.2g；{definition}；100g当たり；脂質0.3g"
+        ))
+
+    def test_iron_labels_parse_without_alias_overlap_and_preserve_rejections(self) -> None:
+        fixed = parse_nutrient("鉄分:1.25mg", "ironMg", "80g当たり")
+        self.assertIsNotNone(fixed)
+        self.assertEqual(fixed["value"], 1.25)
+        self.assertEqual(fixed["valueKind"], "fixed")
+
+        declared_range = parse_nutrient("鉄分:1.2～1.4mg", "ironMg", "80g当たり")
+        self.assertIsNotNone(declared_range)
+        self.assertEqual(declared_range["valueKind"], "declared_range")
+        self.assertEqual(declared_range["rangeMin"], 1.2)
+        self.assertEqual(declared_range["rangeMax"], 1.4)
+
+        estimated = parse_nutrient("鉄分:1.2mg（推定値）", "ironMg", "80g当たり")
+        self.assertIsNotNone(estimated)
+        self.assertEqual(estimated["valueKind"], "estimated")
+        self.assertEqual(estimated["value"], 1.2)
+        self.assertEqual(annotation_scope("鉄分:1.2mg（推定値）", "ironMg"), (True, "per_nutrient"))
+        self.assertEqual(annotation_scope("鉄分:1.2mg（推定値）", "calciumMg"), (False, "none"))
+
+        self.assertIsNone(parse_nutrient("鉄分:0.5mg未満", "ironMg", "80g当たり"))
+        self.assertIsNone(parse_nutrient("鉄分:1.2g", "ironMg", "80g当たり"))
+        self.assertIsNone(parse_nutrient(
+            "鉄分:1.0mg；鉄:1.2mg", "ironMg", "80g当たり"
+        ))
+        self.assertFalse(has_multiple_values("鉄分:1.2mg；鉄:1.2mg"))
+        self.assertTrue(has_multiple_values("鉄分:1/2mg"))
+        self.assertTrue(has_multiple_values("鉄:1mg/2mg"))
+
+    def test_iron_source_span_is_single_and_fat_definition_keeps_raw_text(self) -> None:
+        nutrition = (
+            "1個(80g)当たり；エネルギー100kcal；たんぱく質3g；脂質0.2g；"
+            "炭水化物20g；食塩相当量0.1g；鉄分1.2mg；"
+            "注記※「脂肪0」は、100g当たり脂質0.5g未満のものに表示できる。"
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory)
+            write_csv(source / "nipponluna_officialSite_260728.csv", [[
+                "ヨーグルト", "テストヨーグルト", nutrition, "生乳、砂糖",
+            ]])
+            dataset, report = build_dataset(source)
+
+        self.assertEqual(report["acceptedRows"], 1)
+        record = dataset["records"][0]
+        self.assertEqual(record["nutrients"]["fatG"]["value"], 0.2)
+        self.assertEqual(record["nutrients"]["ironMg"]["value"], 1.2)
+        notes = json.loads(record["notes"])
+        iron_audit = notes["labelAudit"]["ironMg"]
+        start = nutrition.index("鉄分")
+        self.assertEqual(iron_audit["sourceSpans"], [[start, start + 2]])
+        self.assertEqual(notes["sourceNutritionText"], nutrition)
+        self.assertEqual(notes["transformVersion"], "spu-estimator-training-0.5.5")
+
+    def test_nippon_luna_fat_values_survive_definition_note_and_real_mixed_panels_stay_excluded(self) -> None:
+        definition = "注記※「脂肪0」は、100g当たり脂質0.5g未満のものに表示できる。"
+        rows = []
+        for index, fat in enumerate(("0.2", "0.3", "0.2"), start=1):
+            rows.append([
+                "ヨーグルト", f"テストヨーグルト{index}",
+                f"1個(80g)当たり；エネルギー100kcal；たんぱく質3g；脂質{fat}g；"
+                f"炭水化物20g；食塩相当量0.1g；カルシウム30mg；{definition}",
+                "生乳、砂糖",
+            ])
+        rows.extend([
+            ["ヨーグルト", "通常注記", "1個(80g)当たり；脂質0.2g；通常100g当たりの表示", "生乳"],
+            ["ヨーグルト", "別パネル", "1個(80g)当たり；脂質0.2g；100g当たり；脂質0.3g", "生乳"],
+            ["ヨーグルト", "注記と別パネル", f"1個(80g)当たり；脂質0.2g；{definition}；100g当たり；脂質0.3g", "生乳"],
+        ])
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory)
+            write_csv(source / "nipponluna_officialSite_260728.csv", rows)
+            dataset, report = build_dataset(source)
+
+        self.assertEqual(report["acceptedRows"], 3)
+        self.assertEqual(
+            [record["nutrients"]["fatG"]["value"] for record in dataset["records"]],
+            [0.2, 0.3, 0.2],
+        )
+        self.assertEqual(report["exclusions"]["mixed_basis_panels"], 3)
 
     def test_publication_date_is_not_a_multiple_nutrient_value(self) -> None:
         self.assertFalse(has_multiple_values(

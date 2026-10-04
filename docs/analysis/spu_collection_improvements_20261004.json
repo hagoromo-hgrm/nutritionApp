@@ -1,0 +1,569 @@
+{
+  "format": "nutrition-spu-source-csv-audit",
+  "formatVersion": 1,
+  "generatedAt": "2026-10-04T12:34:38.817961+00:00",
+  "files": [
+    {
+      "csvFile": "ajinomoto_frozen_officialSite_261004.csv",
+      "csvSha256": "1871e02e98d952ec16344878db4aac649aa20ef0a0db206a9c2e92c9579548ad",
+      "maker": "味の素冷凍食品",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.5",
+      "rawRows": 87,
+      "completeMajorNutrientRows": 87,
+      "normalizationAcceptedRows": 6,
+      "normalizationDeferralReasons": {
+        "missing_explicit_reference_mass": 3,
+        "no_target_nutrient": 78
+      },
+      "targetLabelCounts": {
+        "calciumMg": 6
+      },
+      "targetLabelKindCounts": {
+        "fixed": 6
+      },
+      "humanFamilyReview": "not_completed",
+      "modelOrPriorUpdated": false
+    },
+    {
+      "csvFile": "akagi_officialSite_261004.csv",
+      "csvSha256": "8bf45f47245e022b430c4be0ea76a2ee63912250f525be599fcce16570d5cb0d",
+      "maker": "赤城乳業",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.5",
+      "rawRows": 52,
+      "completeMajorNutrientRows": 52,
+      "normalizationAcceptedRows": 0,
+      "normalizationDeferralReasons": {
+        "missing_explicit_reference_mass": 52
+      },
+      "targetLabelCounts": {},
+      "targetLabelKindCounts": {},
+      "humanFamilyReview": "not_completed",
+      "modelOrPriorUpdated": false
+    },
+    {
+      "csvFile": "asahi_gf_officialSite_261004.csv",
+      "csvSha256": "e822f2ec4deea5a5c0f55e79200f11a5b93ee6aafe32e45a969d8b9163c294ba",
+      "maker": "アサヒグループ食品",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.5",
+      "rawRows": 92,
+      "completeMajorNutrientRows": 92,
+      "normalizationAcceptedRows": 20,
+      "normalizationDeferralReasons": {
+        "missing_explicit_reference_mass": 5,
+        "no_target_nutrient": 67
+      },
+      "targetLabelCounts": {
+        "calciumMg": 11,
+        "fiberG": 20,
+        "ironMg": 14,
+        "vitaminAMcg": 7,
+        "vitaminB1Mg": 20,
+        "vitaminB2Mg": 20,
+        "vitaminCMg": 1,
+        "vitaminEMg": 19
+      },
+      "targetLabelKindCounts": {
+        "declared_range": 29,
+        "fixed": 83
+      },
+      "humanFamilyReview": "not_completed",
+      "modelOrPriorUpdated": false
+    },
+    {
+      "csvFile": "asahimatsu_officialSite_261004.csv",
+      "csvSha256": "955a063e9632dc7148ac911cc5dc00a6d800085454f0c3ff8d2f19c280422d5e",
+      "maker": "旭松食品",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.5",
+      "rawRows": 31,
+      "completeMajorNutrientRows": 31,
+      "normalizationAcceptedRows": 20,
+      "normalizationDeferralReasons": {
+        "missing_explicit_reference_mass": 2,
+        "no_target_nutrient": 9
+      },
+      "targetLabelCounts": {
+        "calciumMg": 8,
+        "fiberG": 12
+      },
+      "targetLabelKindCounts": {
+        "fixed": 20
+      },
+      "humanFamilyReview": "not_completed",
+      "modelOrPriorUpdated": false
+    },
+    {
+      "csvFile": "calbee_officialSite_261004.csv",
+      "csvSha256": "508179295d7242f7541016ea28ea41ac59dc1d2dc4dcf06b287302853a40f78d",
+      "maker": "カルビー",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.5",
+      "rawRows": 47,
+      "completeMajorNutrientRows": 47,
+      "normalizationAcceptedRows": 18,
+      "normalizationDeferralReasons": {
+        "no_target_nutrient": 29
+      },
+      "targetLabelCounts": {
+        "calciumMg": 15,
+        "fiberG": 13,
+        "ironMg": 16,
+        "vitaminAMcg": 13,
+        "vitaminB1Mg": 13
+      },
+      "targetLabelKindCounts": {
+        "fixed": 70
+      },
+      "humanFamilyReview": "not_completed",
+      "modelOrPriorUpdated": false
+    },
+    {
+      "csvFile": "glico_officialSite_261004.csv",
+      "csvSha256": "4c6266a9421e4c1ccb40722718a9ded0b24fa2727052644aaacdc3cf78da2044",
+      "maker": "江崎グリコ",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.5",
+      "rawRows": 194,
+      "completeMajorNutrientRows": 194,
+      "normalizationAcceptedRows": 52,
+      "normalizationDeferralReasons": {
+        "missing_explicit_reference_mass": 118,
+        "no_target_nutrient": 24
+      },
+      "targetLabelCounts": {
+        "calciumMg": 33,
+        "fiberG": 29,
+        "ironMg": 17,
+        "vitaminAMcg": 8,
+        "vitaminB1Mg": 21,
+        "vitaminB2Mg": 21,
+        "vitaminCMg": 12,
+        "vitaminEMg": 13
+      },
+      "targetLabelKindCounts": {
+        "declared_range": 1,
+        "fixed": 153
+      },
+      "humanFamilyReview": "not_completed",
+      "modelOrPriorUpdated": false
+    },
+    {
+      "csvFile": "hakubaku_officialSite_261004.csv",
+      "csvSha256": "378d2968cc4125b7475e78eadff48d7552affe44191bb9e5f736695506e9ed33",
+      "maker": "はくばく",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.5",
+      "rawRows": 79,
+      "completeMajorNutrientRows": 79,
+      "normalizationAcceptedRows": 33,
+      "normalizationDeferralReasons": {
+        "missing_explicit_reference_mass": 20,
+        "no_target_nutrient": 26
+      },
+      "targetLabelCounts": {
+        "calciumMg": 11,
+        "fiberG": 31,
+        "ironMg": 10,
+        "vitaminB1Mg": 7,
+        "vitaminB2Mg": 4
+      },
+      "targetLabelKindCounts": {
+        "estimated": 41,
+        "fixed": 22
+      },
+      "humanFamilyReview": "not_completed",
+      "modelOrPriorUpdated": false
+    },
+    {
+      "csvFile": "hamada_confect_officialSite_261004.csv",
+      "csvSha256": "ac8f67bf6c8c1c6e7d83c62c4a60fd368d9183ea91ed513018fcdff82c9fddde",
+      "maker": "ハマダコンフェクト",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.5",
+      "rawRows": 32,
+      "completeMajorNutrientRows": 32,
+      "normalizationAcceptedRows": 32,
+      "normalizationDeferralReasons": {},
+      "targetLabelCounts": {
+        "calciumMg": 29,
+        "fiberG": 32,
+        "ironMg": 25,
+        "vitaminAMcg": 15,
+        "vitaminB1Mg": 4,
+        "vitaminB2Mg": 19,
+        "vitaminEMg": 7
+      },
+      "targetLabelKindCounts": {
+        "estimated": 131
+      },
+      "humanFamilyReview": "not_completed",
+      "modelOrPriorUpdated": false
+    },
+    {
+      "csvFile": "kagome_officialSite_261004.csv",
+      "csvSha256": "5feebd4eca96fe3600ee174853ec09ed7d946525dc6bb730ad11d36e90edb56f",
+      "maker": "カゴメ",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.5",
+      "rawRows": 117,
+      "completeMajorNutrientRows": 117,
+      "normalizationAcceptedRows": 25,
+      "normalizationDeferralReasons": {
+        "missing_explicit_reference_mass": 39,
+        "no_target_nutrient": 53
+      },
+      "targetLabelCounts": {
+        "calciumMg": 15,
+        "fiberG": 25,
+        "ironMg": 1,
+        "vitaminAMcg": 3,
+        "vitaminCMg": 2,
+        "vitaminEMg": 4
+      },
+      "targetLabelKindCounts": {
+        "declared_range": 31,
+        "fixed": 19
+      },
+      "humanFamilyReview": "not_completed",
+      "modelOrPriorUpdated": false
+    },
+    {
+      "csvFile": "kameda_officialSite_261004.csv",
+      "csvSha256": "30f933e5542652fdd70ca3561988dde580fb41e0ef922a88835d6ce8f196233d",
+      "maker": "亀田製菓",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.5",
+      "rawRows": 134,
+      "completeMajorNutrientRows": 134,
+      "normalizationAcceptedRows": 7,
+      "normalizationDeferralReasons": {
+        "missing_explicit_reference_mass": 42,
+        "no_target_nutrient": 85
+      },
+      "targetLabelCounts": {
+        "calciumMg": 4,
+        "ironMg": 3,
+        "vitaminEMg": 2
+      },
+      "targetLabelKindCounts": {
+        "fixed": 9
+      },
+      "humanFamilyReview": "not_completed",
+      "modelOrPriorUpdated": false
+    },
+    {
+      "csvFile": "kikkoman_officialSite_261004.csv",
+      "csvSha256": "7a73fa61a0951d6b96cfa0dfffa007efcd18ab16e36840091667ec83d6e56d04",
+      "maker": "キッコーマン",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.5",
+      "rawRows": 220,
+      "completeMajorNutrientRows": 220,
+      "normalizationAcceptedRows": 108,
+      "normalizationDeferralReasons": {
+        "missing_explicit_reference_mass": 105,
+        "mixed_basis_panels": 7
+      },
+      "targetLabelCounts": {
+        "calciumMg": 2,
+        "fiberG": 108,
+        "ironMg": 1,
+        "saturatedFatG": 73,
+        "vitaminCMg": 4
+      },
+      "targetLabelKindCounts": {
+        "declared_range": 17,
+        "estimated": 22,
+        "fixed": 149
+      },
+      "humanFamilyReview": "not_completed",
+      "modelOrPriorUpdated": false
+    },
+    {
+      "csvFile": "koikeya_officialSite_261004.csv",
+      "csvSha256": "d134ee8b0402d31c4b460279a6d7968723e72c3ef0e4f96a872e8cc7b604db45",
+      "maker": "湖池屋",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.5",
+      "rawRows": 85,
+      "completeMajorNutrientRows": 85,
+      "normalizationAcceptedRows": 7,
+      "normalizationDeferralReasons": {
+        "no_target_nutrient": 78
+      },
+      "targetLabelCounts": {
+        "calciumMg": 6,
+        "fiberG": 1,
+        "vitaminEMg": 6
+      },
+      "targetLabelKindCounts": {
+        "fixed": 13
+      },
+      "humanFamilyReview": "not_completed",
+      "modelOrPriorUpdated": false
+    },
+    {
+      "csvFile": "marukome_officialSite_261004.csv",
+      "csvSha256": "584bae3e0d83de22854579001f398a1c4867e37a8bd45023b81522a4b0f742bf",
+      "maker": "マルコメ",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.5",
+      "rawRows": 91,
+      "completeMajorNutrientRows": 91,
+      "normalizationAcceptedRows": 29,
+      "normalizationDeferralReasons": {
+        "missing_explicit_reference_mass": 19,
+        "no_target_nutrient": 43
+      },
+      "targetLabelCounts": {
+        "fiberG": 29
+      },
+      "targetLabelKindCounts": {
+        "estimated": 25,
+        "fixed": 4
+      },
+      "humanFamilyReview": "not_completed",
+      "modelOrPriorUpdated": false
+    },
+    {
+      "csvFile": "marusanai_officialSite_261004.csv",
+      "csvSha256": "4864464c5804cf16964acc85936f85dd5b779e89c0e03b5eab0d43b1fbdee5e0",
+      "maker": "マルサンアイ",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.5",
+      "rawRows": 77,
+      "completeMajorNutrientRows": 77,
+      "normalizationAcceptedRows": 6,
+      "normalizationDeferralReasons": {
+        "missing_explicit_reference_mass": 48,
+        "no_target_nutrient": 23
+      },
+      "targetLabelCounts": {
+        "calciumMg": 2,
+        "fiberG": 2,
+        "ironMg": 1,
+        "saturatedFatG": 4
+      },
+      "targetLabelKindCounts": {
+        "estimated": 5,
+        "fixed": 4
+      },
+      "humanFamilyReview": "not_completed",
+      "modelOrPriorUpdated": false
+    },
+    {
+      "csvFile": "meg_snow_officialSite_261004.csv",
+      "csvSha256": "c8ebb49297c3cc7b21051e15e812e1ac7e0dc2f62beb93c7325f494a14ac9527",
+      "maker": "雪印メグミルク",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.5",
+      "rawRows": 160,
+      "completeMajorNutrientRows": 160,
+      "normalizationAcceptedRows": 68,
+      "normalizationDeferralReasons": {
+        "missing_explicit_reference_mass": 92
+      },
+      "targetLabelCounts": {
+        "calciumMg": 29,
+        "fiberG": 51,
+        "ironMg": 1,
+        "saturatedFatG": 56
+      },
+      "targetLabelKindCounts": {
+        "declared_range": 4,
+        "fixed": 133
+      },
+      "humanFamilyReview": "not_completed",
+      "modelOrPriorUpdated": false
+    },
+    {
+      "csvFile": "morinagamilk_officialSite_261004.csv",
+      "csvSha256": "eb27a7e1e445d9e0b501588699eeb2fc3db7894b255bbab20b6a0e882d836532",
+      "maker": "森永乳業",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.5",
+      "rawRows": 179,
+      "completeMajorNutrientRows": 179,
+      "normalizationAcceptedRows": 83,
+      "normalizationDeferralReasons": {
+        "missing_explicit_reference_mass": 87,
+        "no_target_nutrient": 9
+      },
+      "targetLabelCounts": {
+        "calciumMg": 82,
+        "fiberG": 13,
+        "ironMg": 5,
+        "vitaminAMcg": 1,
+        "vitaminB1Mg": 1,
+        "vitaminB2Mg": 1,
+        "vitaminCMg": 3,
+        "vitaminEMg": 1
+      },
+      "targetLabelKindCounts": {
+        "declared_range": 5,
+        "fixed": 102
+      },
+      "humanFamilyReview": "not_completed",
+      "modelOrPriorUpdated": false
+    },
+    {
+      "csvFile": "nipponham_officialSite_261004.csv",
+      "csvSha256": "750c562adb9d9ecaf1897ca31025024d4d2fb4cb99b3ec16e8ad490da742af18",
+      "maker": "日本ハム",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.5",
+      "rawRows": 197,
+      "completeMajorNutrientRows": 197,
+      "normalizationAcceptedRows": 7,
+      "normalizationDeferralReasons": {
+        "missing_explicit_reference_mass": 30,
+        "no_target_nutrient": 160
+      },
+      "targetLabelCounts": {
+        "calciumMg": 4,
+        "fiberG": 3
+      },
+      "targetLabelKindCounts": {
+        "declared_range": 2,
+        "fixed": 5
+      },
+      "humanFamilyReview": "not_completed",
+      "modelOrPriorUpdated": false
+    },
+    {
+      "csvFile": "nipponluna_officialSite_261004.csv",
+      "csvSha256": "7a63c378d39014c97f3bbb9b64fc7894e3ab906cf60f37876241e9bfb9fa1f0a",
+      "maker": "日本ルナ",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.5",
+      "rawRows": 20,
+      "completeMajorNutrientRows": 20,
+      "normalizationAcceptedRows": 18,
+      "normalizationDeferralReasons": {
+        "missing_explicit_reference_mass": 1,
+        "no_target_nutrient": 1
+      },
+      "targetLabelCounts": {
+        "calciumMg": 18,
+        "fiberG": 4,
+        "ironMg": 4
+      },
+      "targetLabelKindCounts": {
+        "fixed": 26
+      },
+      "humanFamilyReview": "not_completed",
+      "modelOrPriorUpdated": false
+    },
+    {
+      "csvFile": "nissin_cisco_officialSite_261004.csv",
+      "csvSha256": "3740d513622c444c940123671cf8074f92c8060fcacdffefc875cd26e485da97",
+      "maker": "日清シスコ",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.5",
+      "rawRows": 46,
+      "completeMajorNutrientRows": 46,
+      "normalizationAcceptedRows": 33,
+      "normalizationDeferralReasons": {
+        "missing_explicit_reference_mass": 8,
+        "no_target_nutrient": 5
+      },
+      "targetLabelCounts": {
+        "calciumMg": 32,
+        "fiberG": 25,
+        "ironMg": 33,
+        "saturatedFatG": 2,
+        "vitaminB1Mg": 25,
+        "vitaminB2Mg": 23,
+        "vitaminCMg": 23
+      },
+      "targetLabelKindCounts": {
+        "fixed": 163
+      },
+      "humanFamilyReview": "not_completed",
+      "modelOrPriorUpdated": false
+    },
+    {
+      "csvFile": "otsuka_officialSite_261004.csv",
+      "csvSha256": "f12e26f8bac34048586619a7a2fc94eb95eb9f2cf0168343c4eda9719e72cff3",
+      "maker": "大塚製薬",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.5",
+      "rawRows": 77,
+      "completeMajorNutrientRows": 77,
+      "normalizationAcceptedRows": 42,
+      "normalizationDeferralReasons": {
+        "missing_explicit_reference_mass": 31,
+        "no_target_nutrient": 4
+      },
+      "targetLabelCounts": {
+        "calciumMg": 23,
+        "fiberG": 33,
+        "ironMg": 10,
+        "saturatedFatG": 16,
+        "vitaminAMcg": 13,
+        "vitaminB1Mg": 13,
+        "vitaminB2Mg": 13,
+        "vitaminCMg": 11,
+        "vitaminEMg": 17
+      },
+      "targetLabelKindCounts": {
+        "fixed": 149
+      },
+      "humanFamilyReview": "not_completed",
+      "modelOrPriorUpdated": false
+    },
+    {
+      "csvFile": "qbb_officialSite_261004.csv",
+      "csvSha256": "02055087b22dd8e6dc7d6fac6ca92e913812b38cebe78b3690044b4103e74711",
+      "maker": "六甲バター",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.5",
+      "rawRows": 66,
+      "completeMajorNutrientRows": 66,
+      "normalizationAcceptedRows": 64,
+      "normalizationDeferralReasons": {
+        "no_target_nutrient": 2
+      },
+      "targetLabelCounts": {
+        "calciumMg": 64,
+        "fiberG": 7,
+        "ironMg": 3
+      },
+      "targetLabelKindCounts": {
+        "estimated": 55,
+        "fixed": 19
+      },
+      "humanFamilyReview": "not_completed",
+      "modelOrPriorUpdated": false
+    },
+    {
+      "csvFile": "sbfoods_officialSite_261004.csv",
+      "csvSha256": "3123763d5cc8980704d93dad9d2a365e153cad3dd498b8d21e497c7df4a6b9e1",
+      "maker": "エスビー食品",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.5",
+      "rawRows": 42,
+      "completeMajorNutrientRows": 42,
+      "normalizationAcceptedRows": 1,
+      "normalizationDeferralReasons": {
+        "missing_explicit_reference_mass": 2,
+        "no_target_nutrient": 39
+      },
+      "targetLabelCounts": {
+        "calciumMg": 1,
+        "ironMg": 1
+      },
+      "targetLabelKindCounts": {
+        "estimated": 2
+      },
+      "humanFamilyReview": "not_completed",
+      "modelOrPriorUpdated": false
+    },
+    {
+      "csvFile": "yotsuba_officialSite_261004.csv",
+      "csvSha256": "bf28adc43e8380310983eb329a2329e6581bd591f44fbf72fc04f6c9f5a2a486",
+      "maker": "よつ葉乳業",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.5",
+      "rawRows": 72,
+      "completeMajorNutrientRows": 72,
+      "normalizationAcceptedRows": 28,
+      "normalizationDeferralReasons": {
+        "missing_explicit_reference_mass": 27,
+        "no_target_nutrient": 17
+      },
+      "targetLabelCounts": {
+        "calciumMg": 28
+      },
+      "targetLabelKindCounts": {
+        "estimated": 21,
+        "fixed": 7
+      },
+      "humanFamilyReview": "not_completed",
+      "modelOrPriorUpdated": false
+    }
+  ],
+  "rawRows": 2197,
+  "normalizationAcceptedRows": 707,
+  "scope": "private_local_collection; not reviewed independent families or authorized model adoption"
+}
