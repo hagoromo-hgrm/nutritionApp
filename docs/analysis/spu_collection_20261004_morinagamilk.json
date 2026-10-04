@@ -1,0 +1,39 @@
+{
+  "format": "nutrition-spu-source-csv-audit",
+  "formatVersion": 1,
+  "generatedAt": "2026-10-04T08:18:04.664215+00:00",
+  "files": [
+    {
+      "csvFile": "morinagamilk_officialSite_261004.csv",
+      "csvSha256": "eb27a7e1e445d9e0b501588699eeb2fc3db7894b255bbab20b6a0e882d836532",
+      "maker": "森永乳業",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.2",
+      "rawRows": 179,
+      "completeMajorNutrientRows": 179,
+      "normalizationAcceptedRows": 83,
+      "normalizationDeferralReasons": {
+        "missing_explicit_reference_mass": 87,
+        "no_target_nutrient": 9
+      },
+      "targetLabelCounts": {
+        "calciumMg": 82,
+        "fiberG": 13,
+        "ironMg": 4,
+        "vitaminAMcg": 1,
+        "vitaminB1Mg": 1,
+        "vitaminB2Mg": 1,
+        "vitaminCMg": 3,
+        "vitaminEMg": 1
+      },
+      "targetLabelKindCounts": {
+        "declared_range": 5,
+        "fixed": 101
+      },
+      "humanFamilyReview": "not_completed",
+      "modelOrPriorUpdated": false
+    }
+  ],
+  "rawRows": 179,
+  "normalizationAcceptedRows": 83,
+  "scope": "private_local_collection; not reviewed independent families or authorized model adoption"
+}
