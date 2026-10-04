@@ -1,13 +1,13 @@
 {
   "format": "nutrition-spu-source-csv-audit",
   "formatVersion": 1,
-  "generatedAt": "2026-10-04T08:39:30.606437+00:00",
+  "generatedAt": "2026-10-04T09:14:45.409395+00:00",
   "files": [
     {
       "csvFile": "akagi_officialSite_261004.csv",
       "csvSha256": "8bf45f47245e022b430c4be0ea76a2ee63912250f525be599fcce16570d5cb0d",
       "maker": "赤城乳業",
-      "normalizationTransformVersion": "spu-estimator-training-0.5.3",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.4",
       "rawRows": 52,
       "completeMajorNutrientRows": 52,
       "normalizationAcceptedRows": 0,

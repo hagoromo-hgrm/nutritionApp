@@ -1,13 +1,13 @@
 {
   "format": "nutrition-spu-source-csv-audit",
   "formatVersion": 1,
-  "generatedAt": "2026-10-04T08:52:09.846146+00:00",
+  "generatedAt": "2026-10-04T09:14:45.679517+00:00",
   "files": [
     {
       "csvFile": "glico_officialSite_261004.csv",
       "csvSha256": "4c6266a9421e4c1ccb40722718a9ded0b24fa2727052644aaacdc3cf78da2044",
       "maker": "江崎グリコ",
-      "normalizationTransformVersion": "spu-estimator-training-0.5.3",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.4",
       "rawRows": 194,
       "completeMajorNutrientRows": 194,
       "normalizationAcceptedRows": 52,

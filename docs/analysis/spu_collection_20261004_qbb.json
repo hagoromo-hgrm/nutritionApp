@@ -1,13 +1,13 @@
 {
   "format": "nutrition-spu-source-csv-audit",
   "formatVersion": 1,
-  "generatedAt": "2026-10-04T08:49:05.226866+00:00",
+  "generatedAt": "2026-10-04T09:14:46.686561+00:00",
   "files": [
     {
       "csvFile": "qbb_officialSite_261004.csv",
       "csvSha256": "02055087b22dd8e6dc7d6fac6ca92e913812b38cebe78b3690044b4103e74711",
       "maker": "六甲バター",
-      "normalizationTransformVersion": "spu-estimator-training-0.5.3",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.4",
       "rawRows": 66,
       "completeMajorNutrientRows": 66,
       "normalizationAcceptedRows": 64,

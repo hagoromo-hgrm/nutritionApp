@@ -1,13 +1,13 @@
 {
   "format": "nutrition-spu-source-csv-audit",
   "formatVersion": 1,
-  "generatedAt": "2026-10-04T08:39:30.674491+00:00",
+  "generatedAt": "2026-10-04T09:14:45.479215+00:00",
   "files": [
     {
       "csvFile": "asahi_gf_officialSite_261004.csv",
       "csvSha256": "e822f2ec4deea5a5c0f55e79200f11a5b93ee6aafe32e45a969d8b9163c294ba",
       "maker": "アサヒグループ食品",
-      "normalizationTransformVersion": "spu-estimator-training-0.5.3",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.4",
       "rawRows": 92,
       "completeMajorNutrientRows": 92,
       "normalizationAcceptedRows": 20,

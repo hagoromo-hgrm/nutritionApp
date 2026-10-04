@@ -1,13 +1,13 @@
 {
   "format": "nutrition-spu-source-csv-audit",
   "formatVersion": 1,
-  "generatedAt": "2026-10-04T08:39:31.338625+00:00",
+  "generatedAt": "2026-10-04T09:14:46.606492+00:00",
   "files": [
     {
       "csvFile": "otsuka_officialSite_261004.csv",
       "csvSha256": "f12e26f8bac34048586619a7a2fc94eb95eb9f2cf0168343c4eda9719e72cff3",
       "maker": "大塚製薬",
-      "normalizationTransformVersion": "spu-estimator-training-0.5.3",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.4",
       "rawRows": 77,
       "completeMajorNutrientRows": 77,
       "normalizationAcceptedRows": 42,

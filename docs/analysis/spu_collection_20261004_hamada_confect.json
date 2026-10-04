@@ -1,13 +1,13 @@
 {
   "format": "nutrition-spu-source-csv-audit",
   "formatVersion": 1,
-  "generatedAt": "2026-10-04T08:39:30.806801+00:00",
+  "generatedAt": "2026-10-04T09:14:45.823005+00:00",
   "files": [
     {
       "csvFile": "hamada_confect_officialSite_261004.csv",
       "csvSha256": "ac8f67bf6c8c1c6e7d83c62c4a60fd368d9183ea91ed513018fcdff82c9fddde",
       "maker": "ハマダコンフェクト",
-      "normalizationTransformVersion": "spu-estimator-training-0.5.3",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.4",
       "rawRows": 32,
       "completeMajorNutrientRows": 32,
       "normalizationAcceptedRows": 32,

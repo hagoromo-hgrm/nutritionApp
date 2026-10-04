@@ -1,13 +1,13 @@
 {
   "format": "nutrition-spu-source-csv-audit",
   "formatVersion": 1,
-  "generatedAt": "2026-10-04T08:43:44.487127+00:00",
+  "generatedAt": "2026-10-04T09:14:45.752690+00:00",
   "files": [
     {
       "csvFile": "hakubaku_officialSite_261004.csv",
       "csvSha256": "378d2968cc4125b7475e78eadff48d7552affe44191bb9e5f736695506e9ed33",
       "maker": "はくばく",
-      "normalizationTransformVersion": "spu-estimator-training-0.5.3",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.4",
       "rawRows": 79,
       "completeMajorNutrientRows": 79,
       "normalizationAcceptedRows": 33,

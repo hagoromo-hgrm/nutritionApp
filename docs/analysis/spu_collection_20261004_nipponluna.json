@@ -1,7 +1,7 @@
 {
   "format": "nutrition-spu-source-csv-audit",
   "formatVersion": 1,
-  "generatedAt": "2026-10-04T09:10:06.217732+00:00",
+  "generatedAt": "2026-10-04T09:14:46.468904+00:00",
   "files": [
     {
       "csvFile": "nipponluna_officialSite_261004.csv",

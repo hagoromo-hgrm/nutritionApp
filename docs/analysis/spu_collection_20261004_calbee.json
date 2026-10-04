@@ -1,13 +1,13 @@
 {
   "format": "nutrition-spu-source-csv-audit",
   "formatVersion": 1,
-  "generatedAt": "2026-10-04T08:39:30.737479+00:00",
+  "generatedAt": "2026-10-04T09:14:45.600812+00:00",
   "files": [
     {
       "csvFile": "calbee_officialSite_261004.csv",
       "csvSha256": "508179295d7242f7541016ea28ea41ac59dc1d2dc4dcf06b287302853a40f78d",
       "maker": "カルビー",
-      "normalizationTransformVersion": "spu-estimator-training-0.5.3",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.4",
       "rawRows": 47,
       "completeMajorNutrientRows": 47,
       "normalizationAcceptedRows": 18,

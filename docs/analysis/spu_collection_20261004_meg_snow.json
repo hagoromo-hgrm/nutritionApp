@@ -1,13 +1,13 @@
 {
   "format": "nutrition-spu-source-csv-audit",
   "formatVersion": 1,
-  "generatedAt": "2026-10-04T08:39:31.052518+00:00",
+  "generatedAt": "2026-10-04T09:14:46.246579+00:00",
   "files": [
     {
       "csvFile": "meg_snow_officialSite_261004.csv",
       "csvSha256": "c8ebb49297c3cc7b21051e15e812e1ac7e0dc2f62beb93c7325f494a14ac9527",
       "maker": "雪印メグミルク",
-      "normalizationTransformVersion": "spu-estimator-training-0.5.3",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.4",
       "rawRows": 160,
       "completeMajorNutrientRows": 160,
       "normalizationAcceptedRows": 68,

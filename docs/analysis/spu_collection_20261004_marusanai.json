@@ -1,7 +1,7 @@
 {
   "format": "nutrition-spu-source-csv-audit",
   "formatVersion": 1,
-  "generatedAt": "2026-10-04T09:11:16.223531+00:00",
+  "generatedAt": "2026-10-04T09:14:46.167449+00:00",
   "files": [
     {
       "csvFile": "marusanai_officialSite_261004.csv",

@@ -1,7 +1,7 @@
 {
   "format": "nutrition-spu-source-csv-audit",
   "formatVersion": 1,
-  "generatedAt": "2026-10-04T09:08:03.316192+00:00",
+  "generatedAt": "2026-10-04T09:14:46.101196+00:00",
   "files": [
     {
       "csvFile": "marukome_officialSite_261004.csv",
