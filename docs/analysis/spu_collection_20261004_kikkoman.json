@@ -1,0 +1,36 @@
+{
+  "format": "nutrition-spu-source-csv-audit",
+  "formatVersion": 1,
+  "generatedAt": "2026-10-04T07:35:34.480678+00:00",
+  "files": [
+    {
+      "csvFile": "kikkoman_officialSite_261004.csv",
+      "csvSha256": "7a73fa61a0951d6b96cfa0dfffa007efcd18ab16e36840091667ec83d6e56d04",
+      "maker": "キッコーマン",
+      "rawRows": 220,
+      "completeMajorNutrientRows": 220,
+      "normalizationAcceptedRows": 108,
+      "normalizationDeferralReasons": {
+        "missing_explicit_reference_mass": 105,
+        "mixed_basis_panels": 7
+      },
+      "targetLabelCounts": {
+        "calciumMg": 2,
+        "fiberG": 108,
+        "ironMg": 1,
+        "saturatedFatG": 73,
+        "vitaminCMg": 4
+      },
+      "targetLabelKindCounts": {
+        "declared_range": 17,
+        "estimated": 22,
+        "fixed": 149
+      },
+      "humanFamilyReview": "not_completed",
+      "modelOrPriorUpdated": false
+    }
+  ],
+  "rawRows": 220,
+  "normalizationAcceptedRows": 108,
+  "scope": "private_local_collection; not reviewed independent families or authorized model adoption"
+}
