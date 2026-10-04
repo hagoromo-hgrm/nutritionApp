@@ -27,6 +27,11 @@ TARGET_NUTRIENTS = {
     "vitaminB1Mg", "vitaminB2Mg", "vitaminCMg", "saturatedFatG",
 }
 SOURCE_CONFIG: dict[str, dict[str, str]] = {
+    "akagi": {"maker": "赤城乳業", "url": "https://www.akagi.com/products/"},
+    "calbee": {"maker": "カルビー", "url": "https://www.calbee.co.jp/products/"},
+    "hagoromo": {"maker": "はごろもフーズ", "url": "https://www.hagoromofoods.co.jp/products/"},
+    "kellogg": {"maker": "日本ケロッグ", "url": "https://www.kelloggs.com/ja-jp/products/"},
+    "koikeya": {"maker": "湖池屋", "url": "https://koikeya.co.jp/commodity/"},
     "asahi_milky": {
         "maker": "アサヒ飲料",
         "url": "https://www.asahiinryo.co.jp/products/",

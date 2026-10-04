@@ -1,0 +1,28 @@
+{
+  "format": "nutrition-spu-collection-summary",
+  "formatVersion": 1,
+  "collectedAt": "2026-10-04T07:13:20.920417+00:00",
+  "maker": "湖池屋",
+  "csvFile": "koikeya_officialSite_261004.csv",
+  "csvSha256": "d134ee8b0402d31c4b460279a6d7968723e72c3ef0e4f96a872e8cc7b604db45",
+  "csvRowCount": 85,
+  "completeMajorNutrientRows": 85,
+  "officialProductPages": 15,
+  "normalizationAcceptedRows": 7,
+  "normalizationDeferredRows": 78,
+  "normalizationDeferralReasons": {
+    "no_target_nutrient": 78
+  },
+  "targetLabelCounts": {
+    "fiberG": 1,
+    "calciumMg": 6,
+    "vitaminEMg": 6
+  },
+  "humanFamilyReview": "not_completed",
+  "rightsStatus": "private_personal_use_only_no_redistribution_or_model_license_asserted",
+  "sourceSite": "https://koikeya.co.jp/commodity/",
+  "termsSource": "https://koike-ya.com/usage.html",
+  "sourceManifestSha256": "f50671b6806207b69a733e02a8785c0e7effe12f7541d72b95f524544e3fcd4f",
+  "existingFilesOverwritten": false,
+  "appPriorOrModelUpdated": false
+}
