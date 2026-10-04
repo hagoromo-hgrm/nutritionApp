@@ -53,6 +53,8 @@ SOURCE_CONFIG: dict[str, dict[str, str]] = {
     "qbb": {"maker": "六甲バター", "url": "https://www.qbb.co.jp/products/"},
     "marusanai": {"maker": "マルサンアイ", "url": "https://www.marusanai.co.jp/lineup/"},
     "nipponluna": {"maker": "日本ルナ", "url": "https://www.nipponluna.co.jp/products/"},
+    "yotsuba": {"maker": "よつ葉乳業", "url": "https://www.yotsuba.co.jp/product/"},
+    "kagome": {"maker": "カゴメ", "url": "https://www.kagome.co.jp/products/"},
     "asahi_milky": {
         "maker": "アサヒ飲料",
         "url": "https://www.asahiinryo.co.jp/products/",

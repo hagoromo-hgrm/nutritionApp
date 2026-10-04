@@ -1,0 +1,32 @@
+{
+  "format": "nutrition-spu-source-csv-audit",
+  "formatVersion": 1,
+  "generatedAt": "2026-10-04T09:08:03.391832+00:00",
+  "files": [
+    {
+      "csvFile": "yotsuba_officialSite_261004.csv",
+      "csvSha256": "bf28adc43e8380310983eb329a2329e6581bd591f44fbf72fc04f6c9f5a2a486",
+      "maker": "よつ葉乳業",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.4",
+      "rawRows": 72,
+      "completeMajorNutrientRows": 72,
+      "normalizationAcceptedRows": 28,
+      "normalizationDeferralReasons": {
+        "missing_explicit_reference_mass": 27,
+        "no_target_nutrient": 17
+      },
+      "targetLabelCounts": {
+        "calciumMg": 28
+      },
+      "targetLabelKindCounts": {
+        "estimated": 21,
+        "fixed": 7
+      },
+      "humanFamilyReview": "not_completed",
+      "modelOrPriorUpdated": false
+    }
+  ],
+  "rawRows": 72,
+  "normalizationAcceptedRows": 28,
+  "scope": "private_local_collection; not reviewed independent families or authorized model adoption"
+}
