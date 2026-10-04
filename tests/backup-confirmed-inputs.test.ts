@@ -164,7 +164,8 @@ function traceCompositionGroup(input: {
 function makeActualTraceBackup(input: {
   requestId: string
   ingredientsText: string
-  evidence: ExplicitEstimationEvidence
+  evidence?: ExplicitEstimationEvidence
+  requestOverrides?: Partial<NutrientEstimateRequest>
 }): { backup: BackupData; storedTrace: NonNullable<NonNullable<ReturnType<typeof estimateNutrients>['optimization']>['trace']> } {
   const request: NutrientEstimateRequest = {
     requestId: input.requestId,
@@ -179,6 +180,7 @@ function makeActualTraceBackup(input: {
     knownNutrients: {},
     requestedNutrients: ['fiberG'],
     requestedAt: now,
+    ...input.requestOverrides,
   }
   const foodWithEvidence: Food = {
     ...food,
@@ -221,6 +223,25 @@ function traceEvidence(ingredientsText: string, ...groups: ExplicitCompositionGr
 }
 
 describe('estimation backup confirmed-input validation', () => {
+  it('round trips actual alternative mixtures and rejects false scenario weights or budgets', () => {
+    const { backup, storedTrace } = makeActualTraceBackup({ requestId: 'alternative_backup', ingredientsText: '大豆油、なたね油', requestOverrides: {
+      fitMode: 'robust_interval', requestedNutrients: ['vitaminEMg'], knownNutrients: { energyKcal: 900, fatG: 100 },
+      knownNutrientEvidence: { energyKcal: { origin: 'user_input', verified: true, resolution: 'explicit_metadata' }, fatG: { origin: 'user_input', verified: true, resolution: 'explicit_metadata' } },
+      knownNutrientReferenceBasis: { amount: 100, unit: 'g' }, knownNutrientReferences: {
+        energyKcal: { origin: 'user_input', verified: true, sourceReference: 'synthetic', basis: { amount: 100, unit: 'g' }, reference: { kind: 'fixed', value: 900, decimalPlaces: 0 } },
+        fatG: { origin: 'user_input', verified: true, sourceReference: 'synthetic', basis: { amount: 100, unit: 'g' }, reference: { kind: 'fixed', value: 100, decimalPlaces: 0 } },
+      },
+    } })
+    expect(storedTrace.plausibleScenarioCount).toBeGreaterThan(storedTrace.retainedCandidateCombinationCount)
+    expect(validateBackup(backup).estimationResults![0].optimization!.trace!.ratioScenarios).toEqual(storedTrace.ratioScenarios)
+    const invalid = structuredClone(backup)
+    invalid.estimationResults![0].optimization!.trace!.ratioScenarios![0].priorShare = .9
+    expect(() => validateBackup(invalid)).toThrow()
+    const legacy = structuredClone(backup)
+    delete legacy.estimationResults![0].optimization!.trace!.ratioScenarioPolicy
+    expect(() => validateBackup(legacy)).toThrow()
+  })
+
   it('validates and restores actual additive bounds, materials and dose evidence', () => {
     const text = '上白糖／合成製剤'
     const source = { kind: 'user_measurement' as const, reference: 'synthetic batch', verified: true as const, checkedAt: now }

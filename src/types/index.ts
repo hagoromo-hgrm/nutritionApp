@@ -878,6 +878,8 @@ export interface EstimationTrace {
   candidateCombinationCount: number
   retainedCandidateCombinationCount: number
   plausibleScenarioCount: number
+  ratioScenarioPolicy?: 'same_candidate_max4_v1'
+  ratioScenarios?: Array<{ profileIds: string[]; ratios: number[]; fitScore: number; priorShare: number }>
   unresolvedMassRatio: number
   /** 対象栄養素でジャンル分布を適用した、製品重量に対する暫定重量比。 */
   genrePriorContributionRatios: Partial<Record<NutrientKey, number>>

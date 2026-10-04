@@ -10,6 +10,15 @@ export interface IngredientProfile {
   sourceFoodIds: readonly string[]
   nutrientSourceFoodIds?: Partial<Record<NutrientKey, readonly string[]>>
   priorProbability: number
+  /** Conditional supplier bounds are source metadata, never ordinary fit points. */
+  conditionalSourceBounds?: Partial<Record<NutrientKey, {
+    kind: 'minimum'
+    minPer100g: number
+    maxPer100g: null
+    basis: 'ingredient_as_supplied' | 'dry_matter'
+    requiredMaterial: string
+    sourceReference: string
+  }>>
   ambiguous?: boolean
   derivationWarnings?: readonly string[]
   requiredProductTerms?: readonly string[]
@@ -415,6 +424,11 @@ const fructooligosaccharideProxy = profile(
 )
 const declaredSolubleFiberProxy: IngredientProfile = {
   ...solubleFiberProxy,
+  canonicalName: '難消化性糖質（製剤未確認）',
+  nutrients: Object.fromEntries(NUTRIENT_KEYS.map((key) => [key, null])) as Nutrients,
+  sourceFoodIds: ['spec:matsutani:fibersol2:conditional'],
+  conditionalSourceBounds: { fiberG: { kind: 'minimum', minPer100g: 85, maxPer100g: null, basis: 'ingredient_as_supplied', requiredMaterial: '松谷化学ファイバーソル2の確認済み製剤', sourceReference: 'https://www.matsutani.co.jp/product/kinousei/topix02/' } },
+  derivationWarnings: ['難消化性糖質の製剤・carrierは未確認です。粉寒天の栄養値を転用せず欠損を維持しています。', 'ファイバーソル2の85%以上は確認済み製剤の最低繊維含有率で、一般名の点値ではありません。米国資料の乾物90%以上を製品重量85%へ混同していません。'],
   requiredProductTerms: undefined,
 }
 
@@ -661,13 +675,14 @@ const skimMilkPowder = profile('mext_13010', '脱脂粉乳', {
 })
 const milkMinerals = profile('spec_adpi_milk_minerals', 'ミルクカルシウム・乳清ミネラル', {
   energyKcal: null, proteinG: null, fatG: null, carbohydrateG: null, fiberG: null, saltG: null,
-  calciumMg: 22000, ironMg: null, vitaminAMcg: null, vitaminEMg: null, vitaminB1Mg: null,
+  calciumMg: null, ironMg: null, vitaminAMcg: null, vitaminEMg: null, vitaminB1Mg: null,
   vitaminB2Mg: null, vitaminCMg: null, saturatedFatG: null,
 }, {
   sourceFoodIds: ['spec:adpi:milk-minerals'],
+  conditionalSourceBounds: { calciumMg: { kind: 'minimum', minPer100g: 22000, maxPer100g: null, basis: 'ingredient_as_supplied', requiredMaterial: 'ADPI Milk Minerals Standard v2.0に適合する確認済み製剤', sourceReference: 'https://www.adpi.org/wp-content/uploads/2023/07/Milk-Minerals-Standard-v-2.0_2023.pdf' } },
   ambiguous: true,
   derivationWarnings: [
-    'American Dairy Products Instituteのミルクミネラル規格（カルシウム22%以上）を、カルシウムの保守的な下限候補として使用しています。',
+    'ADPI規格のカルシウム22%以上は適合製剤の最低含有率です。一般名だけでは規格適合・gradeを確認できないため、点値や製品全体の下限へ転用していません。',
     '製品ごとの成分表がないため、カルシウム以外の栄養素は欠損のまま維持しています。',
   ],
 })

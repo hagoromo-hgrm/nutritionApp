@@ -632,6 +632,27 @@ function isExplicitCompositionEvidenceTrace(value: unknown): boolean {
   })
 }
 
+function isRatioScenarios(value: unknown, count: number, expectedScenarios: number): boolean {
+  if (!Array.isArray(value) || value.length > 256 || value.length !== expectedScenarios) return false
+  const groups = new Map<string, { count: number; share: number }>()
+  const seen = new Set<string>()
+  for (const row of value) {
+    if (!isRecord(row) || !Array.isArray(row.profileIds) || row.profileIds.length !== count || !row.profileIds.every(isNonEmptyString)
+      || !Array.isArray(row.ratios) || row.ratios.length !== count || !row.ratios.every((ratio) => typeof ratio === 'number' && Number.isFinite(ratio) && ratio >= 0 && ratio <= 1)
+      || typeof row.fitScore !== 'number' || !Number.isFinite(row.fitScore) || row.fitScore < 0
+      || typeof row.priorShare !== 'number' || !Number.isFinite(row.priorShare) || row.priorShare <= 0 || row.priorShare > 1) return false
+    const ratios = row.ratios
+    if (Math.abs(ratios.reduce<number>((sum, ratio) => sum + ratio, 0) - 1) > 1e-12
+      || ratios.some((ratio, i) => i > 0 && ratio > ratios[i - 1] + 1e-12)) return false
+    const identity = JSON.stringify([row.profileIds, row.ratios])
+    if (seen.has(identity)) return false
+    seen.add(identity)
+    const key = JSON.stringify(row.profileIds), previous = groups.get(key) ?? { count: 0, share: 0 }
+    groups.set(key, { count: previous.count + 1, share: previous.share + row.priorShare })
+  }
+  return [...groups.values()].every((group) => group.count <= 4 && Math.abs(group.share - 1) <= 1e-12)
+}
+
 function isEstimationTrace(value: unknown): boolean {
   if (!isRecord(value)
     || !Array.isArray(value.ingredientNames) || !value.ingredientNames.every(isNonEmptyString)
@@ -646,8 +667,10 @@ function isEstimationTrace(value: unknown): boolean {
     || typeof value.candidateCombinationCount !== 'number' || !Number.isSafeInteger(value.candidateCombinationCount) || value.candidateCombinationCount < 0
     || typeof value.retainedCandidateCombinationCount !== 'number' || !Number.isSafeInteger(value.retainedCandidateCombinationCount) || value.retainedCandidateCombinationCount < 0
     || typeof value.plausibleScenarioCount !== 'number' || !Number.isSafeInteger(value.plausibleScenarioCount) || value.plausibleScenarioCount < 0
+    || (value.ratioScenarioPolicy !== undefined && value.ratioScenarioPolicy !== 'same_candidate_max4_v1')
+    || (value.ratioScenarios !== undefined && !isRatioScenarios(value.ratioScenarios, value.ingredientNames.length, value.plausibleScenarioCount))
     || value.retainedCandidateCombinationCount > value.candidateCombinationCount
-    || (value.plausibleScenarioCount > value.retainedCandidateCombinationCount
+    || (value.plausibleScenarioCount > value.retainedCandidateCombinationCount * (value.ratioScenarioPolicy === 'same_candidate_max4_v1' ? 4 : 1)
       && !(isRecord(value.explicitCompositionEvidence)
         && value.explicitCompositionEvidence.status === 'applied'
         && value.candidateCombinationCount === 0

@@ -744,7 +744,7 @@ describe('browser nutrient estimator', () => {
     expect(trace?.ingredientRatios.reduce((sum, ratio) => sum + ratio, 0)).toBeCloseTo(1, 5)
     expect(trace?.fitScore).not.toBeNull()
     expect(trace?.candidateCombinationCount).toBeGreaterThanOrEqual(trace?.retainedCandidateCombinationCount ?? 0)
-    expect(trace?.retainedCandidateCombinationCount).toBeGreaterThanOrEqual(trace?.plausibleScenarioCount ?? 0)
+    expect((trace?.retainedCandidateCombinationCount ?? 0) * 4).toBeGreaterThanOrEqual(trace?.plausibleScenarioCount ?? 0)
     expect(estimateNutrients(request)).toEqual(result)
   })
 

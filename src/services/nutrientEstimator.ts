@@ -105,7 +105,7 @@ const LEGACY_SEED_NUTRIENT_KEYS = [
 ] as const satisfies readonly NutrientKey[]
 export type EstimateConfidence = 'high' | 'medium' | 'low' | 'unavailable'
 export type EstimateAdoptability = EstimationAdoptionClass | 'unavailable'
-export const NUTRIENT_ESTIMATOR_MODEL_VERSION = 'browser-rule-0.30.0' as const
+export const NUTRIENT_ESTIMATOR_MODEL_VERSION = 'browser-rule-0.31.0' as const
 const MEXT_SOURCE = '文部科学省 日本食品標準成分表（八訂）増補2023年（2026年3月27日正誤表対応）' as const
 const FDC_SOURCE = 'USDA FoodData Central SR Legacy 04/2018' as const
 const INGREDIENT_SPEC_SOURCE = '原料メーカー・業界団体公式仕様' as const
@@ -274,6 +274,8 @@ interface ResolvedIngredient {
 }
 
 interface MacroFit {
+  alternatives?: MacroFit[]
+  scenarioPriorShare?: number
   profiles: IngredientProfile[]
   ratios: number[]
   priorProbability: number
@@ -1278,6 +1280,7 @@ function fitIngredientRatios(
     return (macroError ?? 0) + (ratioPenalty ?? 0) * (ratioFeedback?.feedbackWeight ?? 0)
   }
 
+  const sampledRatios: Array<{ ratios: number[]; error: number }> = []
   const count = profiles.length
   let ratios = fallbackRatios(count)
   let normalizedError = macroObjectiveForRatios(ratios)
@@ -1298,7 +1301,12 @@ function fitIngredientRatios(
       const exponential = Array.from({ length: count }, () => -Math.log(Math.max(random(), Number.EPSILON)))
       const total = exponential.reduce((sum, value) => sum + value, 0)
       const q = exponential.map((value) => value / total)
-      const error = fitObjectiveForRatios(orderedRatiosFromQ(q))!
+      const sampled = orderedRatiosFromQ(q)
+      const error = fitObjectiveForRatios(sampled)!
+      // Bounded alternatives retain feasible sampled mixtures without changing best-fit refinement.
+      sampledRatios.push({ ratios: sampled, error })
+      sampledRatios.sort((a, b) => a.error - b.error)
+      if (sampledRatios.length > 12) sampledRatios.pop()
       if (error < bestError) {
         bestQ = q
         bestError = error
@@ -1338,7 +1346,7 @@ function fitIngredientRatios(
   // 商品名等の事前確率は、主要栄養値との整合を覆さない弱いペナルティとしてだけ使う。
   const priorPenalty = -Math.log(Math.max(combination.priorProbability, 1e-9)) * 0.08
   const ratioFeedbackPenalty = ratioPenaltyForRatios(ratios)
-  return {
+  const selected: MacroFit = {
     profiles,
     ratios,
     priorProbability: combination.priorProbability,
@@ -1349,6 +1357,18 @@ function fitIngredientRatios(
     usedMacroFit,
     score: fitObjective + priorPenalty,
   }
+  const alternatives: MacroFit[] = []
+  for (const sample of sampledRatios) {
+    const candidate = sample.ratios
+    const objective = sample.error
+    if (objective > fitObjective + CANDIDATE_SCENARIO_SCORE_TOLERANCE
+      || [ratios, ...alternatives.map((fit) => fit.ratios)].some((existing) => existing.reduce((sum, value, i) => sum + Math.abs(value - candidate[i]), 0) < .02)) continue
+    alternatives.push({ ...selected, ratios: [...candidate], fitObjective: objective, normalizedError: macroObjectiveForRatios(candidate), ratioFeedbackPenalty: ratioPenaltyForRatios(candidate), score: objective + priorPenalty })
+    if (alternatives.length === 3) break
+  }
+  selected.alternatives = alternatives
+  return selected
+
 }
 
 function weightedQuantile(
@@ -1370,7 +1390,10 @@ function weightedQuantile(
 }
 
 function plausibleFits(fits: readonly MacroFit[], selected: MacroFit): MacroFit[] {
-  return fits.filter((fit) => fit.score <= selected.score + CANDIDATE_SCENARIO_SCORE_TOLERANCE)
+  return fits.flatMap((fit) => {
+    const scenarios = [fit, ...(fit.alternatives ?? [])].filter((scenario) => scenario.score <= selected.score + CANDIDATE_SCENARIO_SCORE_TOLERANCE)
+    return scenarios.map((scenario) => ({ ...scenario, scenarioPriorShare: 1 / scenarios.length }))
+  })
 }
 
 function candidateScenarioRange(
@@ -1392,7 +1415,7 @@ function candidateScenarioRange(
     return [{
       value,
       weight: Math.exp(-fitErrorDelta / CANDIDATE_SCENARIO_TEMPERATURE)
-        * Math.max(fit.priorProbability, 1e-12),
+        * Math.max(fit.priorProbability, 1e-12) * (fit.scenarioPriorShare ?? 1),
     }]
   })
   if (scenarios.length < 2 || new Set(scenarios.map((scenario) => scenario.value)).size < 2) return null
@@ -2688,6 +2711,8 @@ export function estimateNutrients(
           ),
           retainedCandidateCombinationCount: combinations.length,
           plausibleScenarioCount: plausibleFits(fits, selected).length,
+          ratioScenarioPolicy: 'same_candidate_max4_v1',
+          ratioScenarios: plausibleFits(fits, selected).map((fit) => ({ profileIds: fit.profiles.map((profile) => profile.profileId), ratios: [...fit.ratios], fitScore: fit.score, priorShare: fit.scenarioPriorShare ?? 1 })),
           unresolvedMassRatio: 0,
           genrePriorContributionRatios,
           ...(request.fitMode === 'robust_interval'
@@ -2800,6 +2825,7 @@ export function toStoredNutrientEstimateResult(
                     ingredientNames: [...result.optimization.trace.ingredientNames],
                     selectedProfileIds: [...result.optimization.trace.selectedProfileIds],
                     ingredientRatios: [...result.optimization.trace.ingredientRatios],
+                    ...(result.optimization.trace.ratioScenarios ? { ratioScenarios: structuredClone(result.optimization.trace.ratioScenarios) } : {}),
                     genrePriorContributionRatios: {
                       ...result.optimization.trace.genrePriorContributionRatios,
                     },
