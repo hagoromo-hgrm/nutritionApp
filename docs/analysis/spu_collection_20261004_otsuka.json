@@ -1,0 +1,38 @@
+{
+  "format": "nutrition-spu-source-csv-audit",
+  "formatVersion": 1,
+  "generatedAt": "2026-10-04T07:35:34.530308+00:00",
+  "files": [
+    {
+      "csvFile": "otsuka_officialSite_261004.csv",
+      "csvSha256": "f12e26f8bac34048586619a7a2fc94eb95eb9f2cf0168343c4eda9719e72cff3",
+      "maker": "大塚製薬",
+      "rawRows": 77,
+      "completeMajorNutrientRows": 77,
+      "normalizationAcceptedRows": 42,
+      "normalizationDeferralReasons": {
+        "missing_explicit_reference_mass": 31,
+        "no_target_nutrient": 4
+      },
+      "targetLabelCounts": {
+        "calciumMg": 23,
+        "fiberG": 33,
+        "ironMg": 10,
+        "saturatedFatG": 16,
+        "vitaminAMcg": 13,
+        "vitaminB1Mg": 13,
+        "vitaminB2Mg": 13,
+        "vitaminCMg": 11,
+        "vitaminEMg": 17
+      },
+      "targetLabelKindCounts": {
+        "fixed": 149
+      },
+      "humanFamilyReview": "not_completed",
+      "modelOrPriorUpdated": false
+    }
+  ],
+  "rawRows": 77,
+  "normalizationAcceptedRows": 42,
+  "scope": "private_local_collection; not reviewed independent families or authorized model adoption"
+}
