@@ -17,6 +17,7 @@ except ImportError:
  from build_spu_estimator_training import _source_config_for,clean_nutrition_text,first_nutrient_offset,normalize_row,parse_nutrient,validate_columns
 MAJOR=('energyKcal','proteinG','fatG','carbohydrateG','saltG')
 TARGET=('saturatedFatG','fiberG','calciumMg','ironMg','vitaminAMcg','vitaminEMg','vitaminB1Mg','vitaminB2Mg','vitaminCMg')
+DISPLAYED_BASIS = re.compile(r'\d+(?:\.\d+)?\s*(?:ml|g|個|袋|食|本|枚|包|粒|カップ|箱|缶|瓶|杯|パック|包装|グラム|ミリリットル)(?![A-Za-z])', re.IGNORECASE)
 class CsvAuditError(ValueError):pass
 
 def audit_csv(path:Path)->tuple[dict,list[dict]]:
@@ -35,7 +36,7 @@ def audit_csv(path:Path)->tuple[dict,list[dict]]:
    if url.scheme!='https' or url.username or url.password or url.hostname is None or url.hostname.removeprefix('www.')!=host.removeprefix('www.'):
     raise CsvAuditError(f'row {row_number}: product URL differs from registered official host')
    text=clean_nutrition_text(row['栄養素']);offset=first_nutrient_offset(text)
-   if offset is None or not re.search(r'\d',text[:offset]):raise CsvAuditError(f'row {row_number}: missing explicit displayed basis')
+   if offset is None or not DISPLAYED_BASIS.search(text[:offset]):raise CsvAuditError(f'row {row_number}: missing explicit displayed basis')
    if any(parse_nutrient(text,key,'displayed_basis',False) is None for key in MAJOR):raise CsvAuditError(f'row {row_number}: missing/malformed major nutrient')
    identity=(row['商品名'],row['栄養素'],row['原材料'])
    if identity in seen:raise CsvAuditError(f'row {row_number}: exact duplicate')
@@ -55,7 +56,10 @@ def main()->int:
  parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('csv',nargs='+',type=Path);parser.add_argument('--public-report',type=Path,required=True);parser.add_argument('--private-report',type=Path)
  args=parser.parse_args()
  if args.private_report and not args.private_report.resolve().is_relative_to(Path(__file__).resolve().parents[1]/'data/estimator/private'):parser.error('individual detail output must remain in data/estimator/private')
- if args.public_report.resolve() in {p.resolve() for p in args.csv}:parser.error('report must not overwrite an input CSV')
+ inputs={p.resolve() for p in args.csv}
+ outputs=[args.public_report]+([args.private_report] if args.private_report else [])
+ if any(p.resolve() in inputs for p in outputs):parser.error('report must not overwrite an input CSV')
+ if len({p.resolve() for p in outputs}) != len(outputs):parser.error('public and private reports must be distinct')
  summaries=[];details=[]
  for path in args.csv:
   summary,detail=audit_csv(path);summaries.append(summary);details.append({'csvFile':path.name,'rows':detail})
