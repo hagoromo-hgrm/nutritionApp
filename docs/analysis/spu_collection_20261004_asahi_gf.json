@@ -1,0 +1,39 @@
+{
+  "format": "nutrition-spu-source-csv-audit",
+  "formatVersion": 1,
+  "generatedAt": "2026-10-04T08:37:11.388188+00:00",
+  "files": [
+    {
+      "csvFile": "asahi_gf_officialSite_261004.csv",
+      "csvSha256": "e822f2ec4deea5a5c0f55e79200f11a5b93ee6aafe32e45a969d8b9163c294ba",
+      "maker": "アサヒグループ食品",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.3",
+      "rawRows": 92,
+      "completeMajorNutrientRows": 92,
+      "normalizationAcceptedRows": 20,
+      "normalizationDeferralReasons": {
+        "missing_explicit_reference_mass": 5,
+        "no_target_nutrient": 67
+      },
+      "targetLabelCounts": {
+        "calciumMg": 11,
+        "fiberG": 20,
+        "ironMg": 14,
+        "vitaminAMcg": 7,
+        "vitaminB1Mg": 20,
+        "vitaminB2Mg": 20,
+        "vitaminCMg": 1,
+        "vitaminEMg": 19
+      },
+      "targetLabelKindCounts": {
+        "declared_range": 29,
+        "fixed": 83
+      },
+      "humanFamilyReview": "not_completed",
+      "modelOrPriorUpdated": false
+    }
+  ],
+  "rawRows": 92,
+  "normalizationAcceptedRows": 20,
+  "scope": "private_local_collection; not reviewed independent families or authorized model adoption"
+}
