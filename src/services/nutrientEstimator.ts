@@ -588,7 +588,7 @@ export interface NutrientEstimatorRatioStrategy {
   postBlendWeight: number
 }
 
-// 評価スクリプトは校正区分だけでこの組合せが候補中の最良であることを検証する。
+// 校正24戦略の比較ではこの既定値を維持。独立系列/メーカー支持が不足し、他項目退行もあるため新係数を採用しない。
 export const SATURATED_FAT_RATIO_FEEDBACK_WEIGHT = 0
 export const SATURATED_FAT_RATIO_BLEND_WEIGHT = 0.75
 export const DEFAULT_NUTRIENT_ESTIMATOR_RATIO_STRATEGY: NutrientEstimatorRatioStrategy = {

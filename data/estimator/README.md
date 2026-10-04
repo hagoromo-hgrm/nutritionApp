@@ -124,3 +124,9 @@ python3 scripts/build_reviewed_processing_catalog.py --retention-csv /path/to/re
 `reviewed_processing_profiles.json` は可食部100gの牛乳・生全卵・ゆで全卵だけを加工用の独立IDへ生成する。牛乳の鉄は公式ページ確認に基づく限定overrideを記録する。通常候補や食品マスターへ上書きしない。工程との対応はアプリ側のレビュー済み状態registryで管理し、catalogに存在するだけでは適用しない。
 
 使用には確認済みの加工前後可食重量、状態、単一工程、同じ宣言位置の固定finished配合が必要で、未収録係数を1として補完しない。根拠入力と保存のhookであり、商品名からの自動補正や通常フォームの工程入力機能ではない。
+
+### 校正比較CLI
+
+`node scripts/run_nutrient_estimator_comparison.mjs --training data/estimator/private/spu_training.json --manifest data/estimator/private/spu_training_manifest.json --comparison ratio --output-json docs/analysis/nutrient_estimator_ratio_strategy_comparison.json --output-markdown docs/analysis/nutrient_estimator_ratio_strategy_comparison.md`
+
+`--comparison fit`（省略時もfit）は区間fit比較、`ratio`は24組の飽和脂肪酸戦略比較。起動器はvite-nodeが削除するargvを明示引数へ渡す。Python整合監査と承認済み訓練hashを必須とし、calibrationだけを評価する。封印パス・入力を出力として上書きする指定は拒否する。

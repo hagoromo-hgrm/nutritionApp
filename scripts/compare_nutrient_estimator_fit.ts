@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url'
 import {
   assertApprovedPriorDataset,
   buildFitComparison,
+  buildRatioStrategyComparison,
   markdownReport,
 } from './lib/nutrientEstimatorComparison'
 
@@ -15,6 +16,7 @@ interface CliOptions {
   manifest: string
   outputJson: string
   outputMarkdown: string
+  comparison: 'fit' | 'ratio'
 }
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -35,10 +37,12 @@ function parseArgs(args: readonly string[]): CliOptions {
   const manifest = options.get('--manifest')
   const outputJson = options.get('--output-json')
   const outputMarkdown = options.get('--output-markdown')
-  if (!training || !manifest || !outputJson || !outputMarkdown || options.size !== 4) {
+  if (!training || !manifest || !outputJson || !outputMarkdown || (options.size !== 4 && options.size !== 5)) {
     throw new Error('必須引数 --training、--manifest、--output-json、--output-markdown を指定してください。')
   }
-  return { training, manifest, outputJson, outputMarkdown }
+  const comparison = options.get('--comparison') ?? 'fit'
+  if (!['fit', 'ratio'].includes(comparison) || [...options.keys()].some((key) => !['--training', '--manifest', '--output-json', '--output-markdown', '--comparison'].includes(key))) throw new Error('comparison must be fit or ratio')
+  return { training, manifest, outputJson, outputMarkdown, comparison: comparison as 'fit' | 'ratio' }
 }
 
 function rejectSealedInput(path: string): void {
@@ -126,14 +130,15 @@ export async function runComparisonCli(args: readonly string[] = process.argv.sl
   assertApprovedPriorDataset(manifestValue)
   const sourceHashes = await verifyWithPythonAudit(training, manifest)
   const datasetValue = await readJson(training)
-  const report = buildFitComparison(datasetValue, manifestValue, sourceHashes)
+  const report = options.comparison === 'ratio' ? buildRatioStrategyComparison(datasetValue, manifestValue, sourceHashes) : buildFitComparison(datasetValue, manifestValue, sourceHashes)
+  const markdown = options.comparison === 'ratio' ? `# 飽和脂肪酸補正戦略の校正比較\n\n対象: calibrationのみ、${report.calibrationRecordCount}商品。24戦略を各対象栄養素ごとに比較した。結果の全項目・方式別・ジャンル別集計は同名JSONに保存する。対象ラベル自身、推定値、未確認値はfitへ渡さず、封印ラベルは参照していない。\n\n既定feedback=0 / postBlend=.75を維持する。系列・メーカー条件と全栄養素の非退行を満たす代替戦略がない。部分値やジャンル補完の成績から全原材料推計の精度を保証しない。表の区間外誤差は参照区間への距離で、真値の誤差や真値包含率ではない。\n` : markdownReport(report as ReturnType<typeof buildFitComparison>)
   await Promise.all([
     mkdir(dirname(safeOutputJson), { recursive: true }),
     mkdir(dirname(safeOutputMarkdown), { recursive: true }),
   ])
   await Promise.all([
     writeFile(safeOutputJson, `${JSON.stringify(report, null, 2)}\n`, 'utf8'),
-    writeFile(safeOutputMarkdown, markdownReport(report), 'utf8'),
+    writeFile(safeOutputMarkdown, markdown, 'utf8'),
   ])
   process.stdout.write(`Calibration aggregate reports written; records=${report.calibrationRecordCount}\n`)
 }

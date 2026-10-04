@@ -7,6 +7,7 @@ import {
   type EstimateFitNutrientKey,
   type EstimatableNutrientKey,
   type NutrientEstimateRequest,
+  type NutrientEstimatorRatioStrategy,
 } from '../../src/services/nutrientEstimator'
 import { ESTIMATOR_GENRE_NUTRIENT_PRIOR_DATASET_HASH } from '../../src/data/nutrientEstimatorGenreNutrientPriors'
 import {
@@ -506,8 +507,9 @@ function observationFor(
   target: AcceptedTarget,
   targetKey: EstimatableNutrientKey,
   mode: FitMode,
+  strategy?: NutrientEstimatorRatioStrategy,
 ): InternalObservation {
-  const result = estimateNutrients(buildRequest(target.record, targetKey, mode))
+  const result = estimateNutrients(buildRequest(target.record, targetKey, mode), strategy)
   const estimate = result.estimates[targetKey]
   const scale = 100 / target.record.referenceMassG
   const referenceMin = target.referenceInterval.min * scale
@@ -865,5 +867,39 @@ export function buildFitComparison(
       ? 'Every target nutrient met the independent-support floor and paired non-regression criteria.'
       : 'robust_interval remains an explicit opt-in because at least one target nutrient misses the independent-support floor or paired non-regression criteria.',
     genreBreakdown,
+  }
+}
+
+export function buildRatioStrategyComparison(datasetValue: unknown, manifestValue: unknown, sourceHashes: Record<string, unknown>) {
+  assertManifest(manifestValue)
+  assertApprovedPriorDataset(manifestValue)
+  assertDataset(datasetValue)
+  const manifestById = assertManifestBijection(datasetValue, manifestValue)
+  const calibration = datasetValue.records.filter((record) => manifestById.get(record.recordId)?.split === 'calibration')
+  if (!calibration.length) throw new Error('calibration split is empty')
+  const baseline = { feedbackWeight: 0, postBlendWeight: .75 }
+  const targets = ESTIMATABLE_NUTRIENT_KEYS.map((nutrientKey) => {
+    const prepared = acceptedTargets(calibration, manifestById, nutrientKey)
+    return { nutrientKey, prepared, support: supportSummary(prepared.accepted, prepared.observedCount, prepared.exclusions, calibration.length),
+      baseline: prepared.accepted.map((target) => observationFor(target, nutrientKey, 'legacy_point', baseline)) }
+  })
+  const candidates = [0, .02, .05, .1, .2, .4].flatMap((feedbackWeight) => [0, .25, .5, .75].map((postBlendWeight) => ({ feedbackWeight, postBlendWeight }))).map((strategy) => {
+    const nutrients = targets.map(({ nutrientKey, prepared, support, baseline: before }) => {
+      const after = strategy.feedbackWeight === 0 && strategy.postBlendWeight === .75 ? before : prepared.accepted.map((target) => observationFor(target, nutrientKey, 'legacy_point', strategy))
+      const paired = pairedSummary(before, after)
+      const metric = metricForReport(modeMetric(after))
+      const byGenre = ESTIMATOR_GENRES.map((genreId) => {
+        const indices = prepared.accepted.flatMap((target, i) => target.record.genreId === genreId ? [i] : [])
+        return { genreId, metric: metricForReport(modeMetric(indices.map((i) => after[i]))), paired: pairedSummary(indices.map((i) => before[i]), indices.map((i) => after[i])) }
+      })
+      return { nutrientKey, support, metric, paired, shortfalls: shortfallReasons(support), byGenre: byGenre.filter((row) => row.metric.referenceCount > 0) }
+    })
+    const sat = nutrients.find((row) => row.nutrientKey === 'saturatedFatG')!
+    return { strategy, nutrients, eligible: sat.shortfalls.length === 0 && nutrients.every((row) => row.paired.nonRegression === true && row.metric.availableCount >= targets.find((t) => t.nutrientKey === row.nutrientKey)!.baseline.filter((o) => o.available).length) }
+  })
+  return { format: 'nutrient-estimator-ratio-strategy-comparison', formatVersion: 1, scope: 'calibration_split_only', calibrationRecordCount: calibration.length,
+    estimatorModelVersion: NUTRIENT_ESTIMATOR_MODEL_VERSION, sourceHashes, baseline, selected: baseline, candidates,
+    decision: 'Keep the existing strategy. No eligible candidate establishes independent-family support and per-nutrient non-regression; partial/genre values are reported separately and cannot establish full-estimate accuracy.',
+    protocol: { individualTargetRequests: true, nonEstimatedConfirmedInputsOnly: true, targetLabelExcluded: true, sealedDataRead: false, evaluationFloor: EVALUATION_FLOOR, aggregateAverageUsedForSelection: false },
   }
 }

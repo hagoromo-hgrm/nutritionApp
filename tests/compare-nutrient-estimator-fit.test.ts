@@ -4,6 +4,7 @@ import {
   assertManifestBijection,
   assertApprovedPriorDataset,
   buildRequest,
+  buildRatioStrategyComparison,
   meetsEvaluationFloor,
   modeMetric,
   pairedSummary,
@@ -12,6 +13,22 @@ import {
 } from '../scripts/lib/nutrientEstimatorComparison'
 
 describe('nutrient estimator fit comparison helpers', () => {
+  it('compares 24 ratio strategies without treating one family as sufficient evidence', () => {
+    const record = { recordId: 'ratio-fixture', genreId: 'dairy', productName: 'synthetic', maker: 'synthetic', productFamily: 'one-family',
+      ingredientsText: '牛乳', baseAmount: 100, baseUnit: 'g', referenceMassG: 100, referenceMassSource: 'synthetic', sourceReference: 'synthetic', verifiedAt: '2026-10-04T00:00:00Z',
+      nutrients: { fatG: { value: 3.8, rangeMin: null, rangeMax: null, decimalPlaces: 1, valueKind: 'fixed' }, saturatedFatG: { value: 2.3, rangeMin: null, rangeMax: null, decimalPlaces: 1, valueKind: 'fixed' } } }
+    const dataset = { format: 'nutrition-estimator-training-data', formatVersion: 1, records: [record] }
+    const manifest = { format: 'nutrition-estimator-training-manifest', formatVersion: 1, sourceFileSha256: 'a'.repeat(64), normalizedDatasetSha256: ESTIMATOR_GENRE_NUTRIENT_PRIOR_DATASET_HASH, recordCount: 1,
+      records: [{ recordId: record.recordId, genreId: record.genreId, groupKey: 'synthetic\u0000one-family', split: 'calibration' }] }
+    const report = buildRatioStrategyComparison(dataset, manifest, {})
+    expect(report.candidates).toHaveLength(24)
+    expect(report.candidates.every((row) => !row.eligible)).toBe(true)
+    expect(report.selected).toEqual({ feedbackWeight: 0, postBlendWeight: .75 })
+    const sat = report.candidates[0].nutrients.find((row) => row.nutrientKey === 'saturatedFatG')!
+    expect(sat.support.independentFamilyCount).toBe(1)
+    expect(sat.shortfalls.length).toBeGreaterThan(0)
+  })
+
   it('uses fixed labels as printed points and rejects estimated and malformed ranges', () => {
     expect(parseTargetReference({ valueKind: 'fixed', value: 0, decimalPlaces: 0 })).toEqual({
       reference: { kind: 'fixed', value: 0, decimalPlaces: 0 },
