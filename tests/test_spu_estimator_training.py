@@ -7,6 +7,7 @@ from scripts.build_spu_estimator_training import (
     build_dataset,
     build_ingredient_coverage_dataset,
     infer_genre,
+    has_multiple_values,
     product_family,
 )
 
@@ -22,6 +23,14 @@ def write_csv(path: Path, rows: list[list[str]]) -> None:
 
 
 class SpuEstimatorTrainingTests(unittest.TestCase):
+    def test_publication_date_is_not_a_multiple_nutrient_value(self) -> None:
+        self.assertFalse(has_multiple_values(
+            "カルシウム:230mg 鉄:2.3mg ビタミンB2:0.47mg （2026/09/25現在）"
+        ))
+        self.assertTrue(has_multiple_values("カルシウム:20/30mg"))
+        self.assertTrue(has_multiple_values("カルシウム:20mg/30mg"))
+        self.assertTrue(has_multiple_values("カルシウム:20mg；カルシウム:20/30mg"))
+
     def test_accepts_optional_product_url_and_maker_key_with_underscore(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             source = Path(directory)
