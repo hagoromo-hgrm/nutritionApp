@@ -1,0 +1,32 @@
+{
+  "format": "nutrition-spu-source-csv-audit",
+  "formatVersion": 1,
+  "generatedAt": "2026-10-04T08:00:17.318243+00:00",
+  "files": [
+    {
+      "csvFile": "nipponham_officialSite_261004.csv",
+      "csvSha256": "750c562adb9d9ecaf1897ca31025024d4d2fb4cb99b3ec16e8ad490da742af18",
+      "maker": "日本ハム",
+      "rawRows": 197,
+      "completeMajorNutrientRows": 197,
+      "normalizationAcceptedRows": 7,
+      "normalizationDeferralReasons": {
+        "missing_explicit_reference_mass": 30,
+        "no_target_nutrient": 160
+      },
+      "targetLabelCounts": {
+        "calciumMg": 4,
+        "fiberG": 3
+      },
+      "targetLabelKindCounts": {
+        "declared_range": 2,
+        "fixed": 5
+      },
+      "humanFamilyReview": "not_completed",
+      "modelOrPriorUpdated": false
+    }
+  ],
+  "rawRows": 197,
+  "normalizationAcceptedRows": 7,
+  "scope": "private_local_collection; not reviewed independent families or authorized model adoption"
+}

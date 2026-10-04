@@ -40,6 +40,8 @@ SOURCE_CONFIG: dict[str, dict[str, str]] = {
     "morinagamilk": {"maker": "森永乳業", "url": "https://www.morinagamilk.co.jp/products/"},
     "ajinomoto_frozen": {"maker": "味の素冷凍食品", "url": "https://www.ffa.ajinomoto.com/product"},
     "sbfoods": {"maker": "エスビー食品", "url": "https://www.sbfoods.co.jp/products/"},
+    "nipponham": {"maker": "日本ハム", "url": "https://www.nipponham.co.jp/products/"},
+    "glico": {"maker": "江崎グリコ", "url": "https://www.glico.com/jp/product/"},
     "asahi_milky": {
         "maker": "アサヒ飲料",
         "url": "https://www.asahiinryo.co.jp/products/",
