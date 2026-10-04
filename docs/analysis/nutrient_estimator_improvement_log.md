@@ -176,3 +176,10 @@
 - 評価固定後のmodel/data/evaluator bytesは不変。変更したfreeze対象は生成済みリリースノートだけ。封印個票、原票、ユーザーのAGENTS.md変更・ZIP・分析草稿はstageしていない。
 - iPhone Safari実機でのホーム画面起動・通信遮断・カメラ拒否は本環境では未確認。バックアップ不正/往復、CSV文字コード/列/数値、カメラ拒否分岐は自動検証の範囲で成功。
 - origin/mainとの差は通常の前進更新のみ。最終リリースcommitを明示されたpush先origin/mainへ送る。配信は既存のmain pushによるGitHub Pages workflowを利用する。
+
+### 17. 追加収集後の限定解析修正・0.3.1
+
+- 23メーカー2,197行を確認し、「鉄分」のラベル、脂肪0定義注記の基準誤認、原材料見出し、同じ状態の別名を修正した。正規化候補704→707、同じ2,194行で未対応名のない行765→796。独立教師数や精度改善率とは扱わない。詳細は `spu_collection_improvements_20261004.md` と集計JSON。
+- 推計版0.32.1は新規要求だけに適用する。参照栄養値・候補確率・係数・既存教師・prior・校正・封印・評価生成物は更新していない。保存済み食品・食事の再計算、スキーマやバックアップ形式の変更はない。収集CSVと原票は引き続きGit/PWAへ含めない。
+- lint、typecheck、Vitest64ファイル538件、Python129件、通常buildとGitHub Pages mode buildが成功。人工回復15ケースのMAPE2.96%も不変。既存の500kB超chunk警告は残る。iPhone Safari実機での更新・オフライン確認は未実施。
+- 修正ごとにcommitし、利用者向けノートを0.3.1としてpackage/lock/生成ノートへ反映。ユーザーの既存AGENTS.md変更と未追跡分析・ZIPはstageしていない。以前の明示指示に従い、公開集計・実装・ノートだけをorigin/mainへpushする。

@@ -13,9 +13,38 @@ export interface ReleaseNote {
   sections: ReleaseNoteSection[]
 }
 
-export const APP_VERSION = "0.3.0"
+export const APP_VERSION = "0.3.1"
 
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
+  {
+    "version": "0.3.1",
+    "releaseDate": "2026-10-04",
+    "summary": "原材料表示の見出しを食品名と誤認する問題を修正し、しょう油・卵白末の表記を栄養推計へ反映しました。",
+    "sections": [
+      {
+        "heading": "改善",
+        "paragraphs": [],
+        "items": [
+          "原材料の対応: 「しょう油」をしょうゆ、「卵白末」を乾燥卵白の表記として扱えるようになりました。生卵白や加工卵白とは区別します。"
+        ]
+      },
+      {
+        "heading": "不具合修正",
+        "paragraphs": [],
+        "items": [
+          "栄養推計: 原材料表示の先頭や区画見出しの直後にある「原材料」「原材料名」が空白や改行で区切られている場合に、見出しを食品名の一部として扱う問題を修正しました。"
+        ]
+      },
+      {
+        "heading": "データ・互換性",
+        "paragraphs": [],
+        "items": [
+          "推計モデルを browser-rule-0.32.1 へ更新しました。新しく実行する推計に適用し、保存済みの食品値・食事記録を自動で再計算しません。",
+          "食品データ、JSONバックアップ形式、食事履歴CSVの形式は変更していません。"
+        ]
+      }
+    ]
+  },
   {
     "version": "0.3.0",
     "releaseDate": "2026-10-04",
