@@ -1,0 +1,32 @@
+{
+  "format": "nutrition-spu-source-csv-audit",
+  "formatVersion": 1,
+  "generatedAt": "2026-10-04T08:55:10.776808+00:00",
+  "files": [
+    {
+      "csvFile": "asahimatsu_officialSite_261004.csv",
+      "csvSha256": "955a063e9632dc7148ac911cc5dc00a6d800085454f0c3ff8d2f19c280422d5e",
+      "maker": "旭松食品",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.3",
+      "rawRows": 31,
+      "completeMajorNutrientRows": 31,
+      "normalizationAcceptedRows": 20,
+      "normalizationDeferralReasons": {
+        "missing_explicit_reference_mass": 2,
+        "no_target_nutrient": 9
+      },
+      "targetLabelCounts": {
+        "calciumMg": 8,
+        "fiberG": 12
+      },
+      "targetLabelKindCounts": {
+        "fixed": 20
+      },
+      "humanFamilyReview": "not_completed",
+      "modelOrPriorUpdated": false
+    }
+  ],
+  "rawRows": 31,
+  "normalizationAcceptedRows": 20,
+  "scope": "private_local_collection; not reviewed independent families or authorized model adoption"
+}
