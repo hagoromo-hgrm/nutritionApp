@@ -8,6 +8,8 @@ from scripts.build_spu_estimator_training import (
     build_ingredient_coverage_dataset,
     infer_genre,
     has_multiple_values,
+    parse_nutrient,
+    clean_nutrition_text,
     product_family,
 )
 
@@ -23,6 +25,23 @@ def write_csv(path: Path, rows: list[list[str]]) -> None:
 
 
 class SpuEstimatorTrainingTests(unittest.TestCase):
+    def test_fat_zero_definition_does_not_replace_displayed_fat(self) -> None:
+        text = clean_nutrition_text(
+            "80g/1個あたり；脂質 0.2g；注記 ※「脂肪0」は、100g当たり"
+            "脂質0.5ｇ未満のものに表示できる。（食品表示基準による）"
+        )
+        parsed = parse_nutrient(text, "fatG", "80g/1個あたり")
+        self.assertIsNotNone(parsed)
+        self.assertEqual(parsed["value"], 0.2)
+        self.assertIsNone(parse_nutrient("脂質0.5g未満", "fatG", "100g当たり"))
+        self.assertIsNone(parse_nutrient(
+            "脂質0.2g；注記 脂質0.5g未満", "fatG", "80g当たり"
+        ))
+        self.assertIsNone(parse_nutrient(
+            "※「脂肪0」は、100g当たり脂質0.5g未満のものに表示できる。",
+            "fatG", "80g当たり",
+        ))
+
     def test_publication_date_is_not_a_multiple_nutrient_value(self) -> None:
         self.assertFalse(has_multiple_values(
             "カルシウム:230mg 鉄:2.3mg ビタミンB2:0.47mg （2026/09/25現在）"

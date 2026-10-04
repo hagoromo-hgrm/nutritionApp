@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-TRANSFORM_VERSION = "spu-estimator-training-0.5.3"
+TRANSFORM_VERSION = "spu-estimator-training-0.5.4"
 FILENAME_RE = re.compile(
     r"^(?P<maker>.+)_(?P<source>[^_]+)_(?P<date>\d{6})\.csv$",
     re.IGNORECASE,
@@ -285,7 +285,15 @@ def parse_nutrient(text: str, key: str, basis: str, estimated: bool = False) -> 
         rf"(?P<first>[+-]?{NUMBER_PATTERN})(?:\s*(?P<separator>{RANGE_SEPARATOR_PATTERN})\s*(?P<second>[+-]?{NUMBER_PATTERN}))?"
         rf"\s*(?P<unit>{UNIT_PATTERN})(?![A-Za-z0-9.%/])", re.IGNORECASE)
     candidates = []
+    # This quoted labeling definition describes a threshold, not this product's fat.
+    # Keep the source note; only omit its label from value candidates.
+    fat_definition_notes = list(re.finditer(
+        r"※\s*[「『]脂肪\s*0[」』]\s*は[^。;；\n]{0,160}表示できる。",
+        text,
+    )) if key == "fatG" else []
     for label in re.finditer(rf"(?:{labels})", text, re.IGNORECASE):
+        if any(note.start() <= label.start() < note.end() for note in fat_definition_notes):
+            continue
         match = pattern.match(text[label.start():])
         if match is None:
             suffix = text[label.end():].lstrip(" :：;；")
