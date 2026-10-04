@@ -1,0 +1,33 @@
+{
+  "format": "nutrition-spu-source-csv-audit",
+  "formatVersion": 1,
+  "generatedAt": "2026-10-04T07:35:34.399768+00:00",
+  "files": [
+    {
+      "csvFile": "calbee_officialSite_261004.csv",
+      "csvSha256": "508179295d7242f7541016ea28ea41ac59dc1d2dc4dcf06b287302853a40f78d",
+      "maker": "カルビー",
+      "rawRows": 47,
+      "completeMajorNutrientRows": 47,
+      "normalizationAcceptedRows": 18,
+      "normalizationDeferralReasons": {
+        "no_target_nutrient": 29
+      },
+      "targetLabelCounts": {
+        "calciumMg": 15,
+        "fiberG": 13,
+        "ironMg": 16,
+        "vitaminAMcg": 13,
+        "vitaminB1Mg": 13
+      },
+      "targetLabelKindCounts": {
+        "fixed": 70
+      },
+      "humanFamilyReview": "not_completed",
+      "modelOrPriorUpdated": false
+    }
+  ],
+  "rawRows": 47,
+  "normalizationAcceptedRows": 18,
+  "scope": "private_local_collection; not reviewed independent families or authorized model adoption"
+}
