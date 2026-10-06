@@ -1,0 +1,78 @@
+{
+  "format": "nutrition-required-ingredient-reference-collection",
+  "formatVersion": 1,
+  "verifiedDate": "2026-10-06",
+  "scope": "collection_only; state-mismatched or imputed data not automatically adopted",
+  "counts": {
+    "capturedResources": 13,
+    "failedResourceFetches": 2,
+    "fdcSearchRequests": 9,
+    "fdcDetailBatches": 1,
+    "fdcApiRequestsTotal": 10,
+    "fdcFoodRecords": 10,
+    "mextRowsChecked": 9,
+    "manufacturerSources": 5,
+    "pdfPagesVisuallyChecked": 9,
+    "targetGroupsReviewed": 8,
+    "stateMismatchComparatorsExcluded": 6,
+    "distinctManufacturerCount": 3
+  },
+  "sha256": {
+    "privateCatalog": "d672cd1c522378a9427c88f2f0fb7f7a1508c5e8f7dc144fafc04f0fbedfb809",
+    "capturedSourceFiles": [
+      "938aa9d6a04fa6071a1e82bef110fc51d7730a094d7d26bfbbb9f6c62040322b",
+      "9e42f82dac3ba51ce7949affd7e2ae318ebe8bbb8c38a296e622bf1486b4b948",
+      "3dfe79e4506e18779bff811e446af94d6141d0403b8bd78cdffd05c373b2f016",
+      "ce92db232c3e6d9825516cf45c7ca7dcb5dfd1fce8ceb0bde947c76db8001c3b",
+      "429067def38a299aaab4de48e7e48478bb9d0571247c85ca31590f7cce03375a",
+      "c9c2a704ed2ea7fcd4505340e413cb88f181598ad4025e0314f886f82046d4e7",
+      "2a57ce1eb6e7ff08a5809d03aee772a2ed347c24ca1962fa681b845780fca950",
+      "955dd8e425b450f7d8a5f0670433dd46c4d786bc1a5c46ce58952bee683ec8aa",
+      "fdc33442adb5707d448676e92b54f9adeaad63b6df267b683b5fe728307391cf",
+      "1c84ff1fb180e94c57ca7082988884bb27242f063a8e737d67cec2c414fc2c3d",
+      "cda30b572dddcc34b8ad47c81144d4532bed94b51e064b822e83ede4e2d3c426",
+      "5f5d78f309c6e34683a52da478664e1e1df226f39dafd29b34379e8b9f6fb56e",
+      "f65a93931b6f0b92e26d5d38366433d2d0909ab6f545ed016ea2984fea1685c3",
+      "553f574c248a138f1965e599e2d8ee604ec83fb23e3cdff1a51a1db054347e99",
+      "7176a08006554306fcd564b329e394a1e61e6e2533c393fa754a05fcdb3d0eb1",
+      "23ab2b738f6eda812fbb89dc2c5e1fe64419f84820b1e93be29c4a7f01e118ef",
+      "233564e61388450922c06d8bf08b29412c06dbd3b81b997339d789b8cd78dc74",
+      "3bf0ea6553c0d7d4ffe37e3ffcc6e1afa6cafb5ff6faebec2c1c203a0e0c5daf",
+      "c49b9c4f11384f9ddbd68e2ce3672a93b0f3418dce95b2d420ec2b4f63af9d9c",
+      "69df33bdeaf2ecc7ffeb4ffc4232ab30dd8e53a67114adbe7e0f8666c2ecdf47",
+      "5b5427f15a8d52032c47bd735d41e8af4cd90da19264e6dc9a4812266bfc82c1",
+      "51aadc54a3ca8785de29e5b71f59bef38d34e7c4606b282b1c71ee7321a75289",
+      "cde0f4433042efea8c959056a3d1a7c57adc9247bfc6a0030a1b0325fb9af176",
+      "90a728d899dd25698b0ca5be55f0cf650ade7a5a26fd2e73f6834359c858d239",
+      "a49e2bd6636f88a1273876dc71b6431bfe75d4716ff396ea53cafc8ed230c9de",
+      "7cf2489aace1035b5c8ef407047e4ec8b6823aad3056e83332eaef53d243291f"
+    ],
+    "reusedOfficialDataSources": [
+      "0d5a77077dd6cd91cbc2e6e317b8b218a38728c409eed452f1c10635a0d3099c",
+      "435ab7125d3de26fba968de952b463b71d011c6b0f50e8966112293c521fd5fd",
+      "ee2f94ba51a18d439d6b72a825d2b389babe01d65d8a16bfe52150d9984493b3",
+      "0fe8ae486a2c8eb42cb96413f058deb51863a46c8fb8eeb4b1fb45006dd338ef"
+    ],
+    "activeManufacturerFiles": [
+      "429067def38a299aaab4de48e7e48478bb9d0571247c85ca31590f7cce03375a",
+      "c9c2a704ed2ea7fcd4505340e413cb88f181598ad4025e0314f886f82046d4e7",
+      "2a57ce1eb6e7ff08a5809d03aee772a2ed347c24ca1962fa681b845780fca950",
+      "5f5d78f309c6e34683a52da478664e1e1df226f39dafd29b34379e8b9f6fb56e",
+      "553f574c248a138f1965e599e2d8ee604ec83fb23e3cdff1a51a1db054347e99"
+    ]
+  },
+  "collectorSummarySha256": "746f02fd0b2eef2dc5005495df1e087e0c3fdf3f04ac0889997223c15149b863",
+  "integrationQa": {
+    "reviewedDate": "2026-10-06",
+    "catalogSha256": "d672cd1c522378a9427c88f2f0fb7f7a1508c5e8f7dc144fafc04f0fbedfb809",
+    "sourceHashChecks": 17,
+    "fdcFoodRecordsChecked": 10,
+    "fdcNutrientValuesAndUnitsMatched": 140,
+    "fdcMissingNutrientEntriesPreserved": 0,
+    "fdcDerivationAndSourceMetadataMatched": 140,
+    "mextSoySauceSaturatedFatMissingRowsPreserved": 9,
+    "applicationProfilesUpdated": false
+  },
+  "modelOrPriorUpdated": false,
+  "applicationProfilesUpdated": false
+}
