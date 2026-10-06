@@ -1,0 +1,59 @@
+{
+  "format": "nutrition-spu-source-csv-audit",
+  "formatVersion": 1,
+  "generatedAt": "2026-10-06T13:55:36.355160+00:00",
+  "files": [
+    {
+      "csvFile": "pasco_officialSite_261006.csv",
+      "csvSha256": "9d1ccf401353a44562974ae291b00363c3c5b63f5a27dd1ade11241836f79d21",
+      "maker": "敷島製パン",
+      "normalizationTransformVersion": "spu-estimator-training-0.5.6",
+      "rawRows": 14,
+      "completeMajorNutrientRows": 14,
+      "normalizationAcceptedRows": 0,
+      "normalizationDeferralReasons": {
+        "mixed_basis_panels": 14
+      },
+      "targetLabelCounts": {},
+      "targetLabelKindCounts": {},
+      "humanFamilyReview": "not_completed",
+      "modelOrPriorUpdated": false
+    }
+  ],
+  "rawRows": 14,
+  "normalizationAcceptedRows": 0,
+  "scope": "private_local_collection; not reviewed independent families or authorized model adoption",
+  "independentSourceQa": {
+    "format": "pasco-source-html-independent-qa",
+    "formatVersion": 1,
+    "scope": "aggregate_and_hash_only; no product-level names or values",
+    "rawCsvRows": 14,
+    "uniqueProductDetailPages": 10,
+    "listingRowsMatchedByIndependentRegexExtraction": 14,
+    "detailNutritionRowsMatchedByIndependentRegexExtraction": 14,
+    "ingredientParagraphsMatchedByIndependentRegexExtraction": 14,
+    "manufacturerCategoryMetaMatched": 14,
+    "csvNutrientCellsMatched": 14,
+    "fatAndSaturatedFatSameDeclaredBasisRows": 14,
+    "explicitReferenceMassGBasisRows": 0,
+    "averageValueNoticeRows": 14,
+    "estimatedValueNoticeRows": 0,
+    "valueKindFixedAssignments": 0,
+    "normalizationAcceptedRowsFromOfficialCsvAudit": 0,
+    "sourceCsvSha256": "9d1ccf401353a44562974ae291b00363c3c5b63f5a27dd1ade11241836f79d21",
+    "modelsOrPriorsGenerated": false,
+    "sourceQaSha256": "cbd96c69ef71cead7e75dd42558c702a1781fc2c540cc867c21cc96c8e950101"
+  },
+  "sourceHashChecks": {
+    "checkedFiles": 31,
+    "mismatches": 0
+  },
+  "pdfSidecar": {
+    "pages": 2,
+    "productRows": 13,
+    "explicitReferenceMassGRows": 0,
+    "sourceDisplayReviewFlags": 2,
+    "includedInCsv": false,
+    "adopted": false
+  }
+}

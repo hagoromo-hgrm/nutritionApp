@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-TRANSFORM_VERSION = "spu-estimator-training-0.5.5"
+TRANSFORM_VERSION = "spu-estimator-training-0.5.6"
 FILENAME_RE = re.compile(
     r"^(?P<maker>.+)_(?P<source>[^_]+)_(?P<date>\d{6})\.csv$",
     re.IGNORECASE,
@@ -27,6 +27,7 @@ TARGET_NUTRIENTS = {
     "vitaminB1Mg", "vitaminB2Mg", "vitaminCMg", "saturatedFatG",
 }
 SOURCE_CONFIG: dict[str, dict[str, str]] = {
+    "pasco": {"maker": "敷島製パン", "url": "https://www.pasconet.co.jp/nutrition/"},
     "akagi": {"maker": "赤城乳業", "url": "https://www.akagi.com/products/"},
     "calbee": {"maker": "カルビー", "url": "https://www.calbee.co.jp/products/"},
     "hagoromo": {"maker": "はごろもフーズ", "url": "https://www.hagoromofoods.co.jp/products/"},

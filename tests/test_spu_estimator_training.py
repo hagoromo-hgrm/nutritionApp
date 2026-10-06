@@ -107,7 +107,7 @@ class SpuEstimatorTrainingTests(unittest.TestCase):
         start = nutrition.index("鉄分")
         self.assertEqual(iron_audit["sourceSpans"], [[start, start + 2]])
         self.assertEqual(notes["sourceNutritionText"], nutrition)
-        self.assertEqual(notes["transformVersion"], "spu-estimator-training-0.5.5")
+        self.assertEqual(notes["transformVersion"], "spu-estimator-training-0.5.6")
 
     def test_nippon_luna_fat_values_survive_definition_note_and_real_mixed_panels_stay_excluded(self) -> None:
         definition = "注記※「脂肪0」は、100g当たり脂質0.5g未満のものに表示できる。"
