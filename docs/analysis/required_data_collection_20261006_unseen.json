@@ -1,0 +1,152 @@
+{
+  "format": "nutrition-estimator-required-data-collection-unseen-summary",
+  "formatVersion": 1,
+  "collectionDate": "2026-10-06",
+  "sealed": true,
+  "sealing": {
+    "familyCount": 21,
+    "makerCount": 3,
+    "genreFamilyCounts": {
+      "baked_sweets": 9,
+      "other_unknown": 9,
+      "snack_rice_cracker": 3
+    },
+    "maxMakerShare": 0.5714285714285714,
+    "adequacy": false,
+    "adequacyScope": "collection_family_and_maker_targets_only",
+    "independentEvaluationMinimumPerNutrient": 30,
+    "nutrientsBelowEvaluationMinimum": [
+      "calciumMg",
+      "fiberG",
+      "ironMg",
+      "saturatedFatG",
+      "vitaminAMcg",
+      "vitaminB1Mg",
+      "vitaminB2Mg",
+      "vitaminCMg",
+      "vitaminEMg"
+    ],
+    "warnings": [
+      "independent families below target: 21/30",
+      "maximum maker share exceeds 0.5: 0.571429"
+    ],
+    "familyHashes": [
+      "14ba60a6fe2dae658567d99b36302fffd5047af2f9b725df25787965fc4aba28",
+      "16786d611369de406cafbeb67ec9df8104ba23a7c76eb2168d4d45e9cc13658a",
+      "187be01e52f393ebab846d92cfe975f5bee1da34d4211bb3bd8356d8c5b9b3d9",
+      "21fdad549ca6196905f3622cf123cf98bf71de6d0fef3e13744b395d5b2a059e",
+      "221385a97043c8d81e499cf66626686355e2417153a35eb1a7348e806844a050",
+      "25af2923799638e2c65965e7eea353dca2c1bf464df62c389516b83987e82e7f",
+      "4d5c1c25458a8dbf29167f272e8b53c5c51bdf4420a67a53092563e2e22d5e19",
+      "5558a6977b07a1a7e978d7bfdb38b2b35f87d6775b320e81bd20d8be71b5a859",
+      "6eb09fd856de6929ae2f6901514cd5b15b3962d28f771763098c29f15a9f9628",
+      "77b5bfc77cd22f6688f6eb8fe126e820815eb7c6cc6bf5c5a9a7ff320614b416",
+      "89fb89720a9007ead3ab449ae791d804abe4080b74fd594da49546f09db88e35",
+      "a962710989acfef3e4a9952e3ee4987ac9f24afcf3cae1222fd419fd20fc4109",
+      "b3835513052809f451d89fd13cbe91e3f76ed2fb0a35ba43ba83bac8d720d322",
+      "c1a2b272204a06c483aad3a9a577ee32307877893263f0948cc39e5eee357348",
+      "c215dcbc1262168a0759d8b520cf8f31bb689e39fcd40054c35809bce217c7d1",
+      "dc72d2a648c8d4c9a0371b99bb0869cd17c4a86b74fcaa2c673f49df4337b405",
+      "ef1f14ac211d1f2edadb68adb8a9b38e146e43fd6c2ecc2c4a0e85c08dccaa2d",
+      "f8dfb5111538cb97b29dfd0ee5d54760c596de177f45d64dcd607c84702e9208",
+      "f969a35b391596fa4e732f6300c49fba01462dacbfeab748612da40edf65bbf9",
+      "fbff512b4fa2f5cce2b0902c9d73f35c86df090bb4aa15bd997416467bbff8ad",
+      "fe7f32bd9d17e89180ebe2b2edd7a494682da7a264181720ffa8c68a7fdff00b"
+    ],
+    "sourceFileSha256": "e087078bdfcfd426c0b8aa28d22beffafba0d09c21c844d08a13bc23736c57d1",
+    "normalizedDatasetSha256": "d0a011fdf0462c11f85d3fb544887e2277b7c2efda0f39b470a2cc556a738252",
+    "exclusionsFileSha256": "e7df36a2ebaa39eff7611bfa10543e609e35b0e5eeb802e5b9e697f8c9971f58",
+    "sealedAt": "2026-10-06T14:36:09Z"
+  },
+  "anonymousMakerFamilyCounts": [
+    1,
+    8,
+    12
+  ],
+  "excludedFamilyCount": 737,
+  "blockedMakerCount": 43,
+  "nonEstimatedDeclaredTargetCounts": {
+    "calciumMg": 0,
+    "fiberG": 21,
+    "ironMg": 1,
+    "saturatedFatG": 21,
+    "vitaminAMcg": 0,
+    "vitaminB1Mg": 1,
+    "vitaminB2Mg": 1,
+    "vitaminCMg": 0,
+    "vitaminEMg": 0
+  },
+  "genreTargetCounts": {
+    "baked_sweets": {
+      "fiberG": 9,
+      "saturatedFatG": 9
+    },
+    "other_unknown": {
+      "fiberG": 9,
+      "saturatedFatG": 9,
+      "ironMg": 1,
+      "vitaminB2Mg": 1,
+      "vitaminB1Mg": 1
+    },
+    "snack_rice_cracker": {
+      "fiberG": 3,
+      "saturatedFatG": 3
+    }
+  },
+  "numericAndBasisChecks": {
+    "positiveFat": 21,
+    "validSaturatedFatBound": 21,
+    "explicit100g": 21
+  },
+  "independentQa": {
+    "reviewStatus": "completed_pass",
+    "candidateByteHashStable": true,
+    "candidateBindingChecksPassed": 21,
+    "recordsWithMatchingSavedSourceHash": 21,
+    "candidateProductNamesMatchingPrimarySourceHeading": 21,
+    "candidateFamiliesMatchingPrimarySourceHeading": 21,
+    "recordsWithCompleteIngredientTextFoundInCapturedPage": 21,
+    "candidateNutrientDisplayCellCount": 150,
+    "independentlyComparedSourceNutrientCells": 150,
+    "independentlyMatchedNumericValueAndPrecisionCells": 150,
+    "targetDisplayCellCheckCount": 45,
+    "recordsWithOneVerifiedPer100gPanelOrColumn": 21,
+    "candidateFamilyHashMatchesExclusionSet": 0,
+    "correctedPrimaryHeadingFamilyHashMatchesExclusionSet": 0,
+    "candidateMakersBlockedByExclusionSet": 0,
+    "candidateProductNameExactMatchesInExistingCsv": 0,
+    "candidateProductUrlExactMatchesInExistingCsv": 0,
+    "capturedPagesWithExplicitEstimateOrApproximationWording": 0,
+    "recordsWithTypicalValuesPer100gBasisWording": 12,
+    "checksPassing": true,
+    "findingReasonCounts": {}
+  },
+  "sha256": {
+    "manifest": "44c7a51cb406ecc9406d07f3cc2441a02eea5fadc820182b70ab1d12f83a3d06",
+    "independentQa": "2a619ccb43d8fe7964bf9c17bfa895cf86574ecf61ed15a765561588b1add9d2",
+    "independentQaCode": "60d7bed038682b881b1eeb1c5744bcb876cb08d36de4d339542cd9a7d31281f5",
+    "evidence": "f555d1dbbbf7729a5e1d14f1d41fcd5f7b7801301647deae99e6077b47a61a24",
+    "reviewSidecar": "cf1ffccf0176fc7f35358d76da41df7dc4b66e00378ca322e6f8d33e7d7a8139",
+    "familyReview": "c731c2876865041578d058b052170be61e73836fb8c944ba71f77e22920a204f",
+    "identityCorrection": "a7d4dba383fed85de668fec695d7cfed2e285eec4e4000fea24809263dad7869",
+    "aggregateQa": "f60fbaf994bd88de377573c869a6b6c1da2a674e4bd9c1e1d43b47900d996aeb"
+  },
+  "gates": {
+    "sourceLabelQaPassed": true,
+    "collectionAdequacyPassed": false,
+    "japaneseLanguageAndMarketTransferReviewed": false,
+    "domesticIndependentEvaluationReady": false,
+    "analyticalMeasurementOriginConfirmed": false,
+    "redistributionPermissionAsserted": false,
+    "trainingOrEvaluationPermissionAsserted": false,
+    "modelOrPriorChanged": false,
+    "evaluationRun": false
+  },
+  "privateStorage": "data/estimator/private/required_collection_20261006/",
+  "notes": [
+    "UK/English manufacturer declarations; fixed describes label format, not analytical measurement origin.",
+    "Provisional collection is below every genre/nutrient minimum; 9 records remain other_unknown under existing deterministic genre mapping.",
+    "Independent identity mismatch in one candidate was corrected from captured source heading and all 21 were independently checked again.",
+    "Candidates remain isolated from ordinary spu_data and development data; original sealed sets are unchanged."
+  ]
+}
