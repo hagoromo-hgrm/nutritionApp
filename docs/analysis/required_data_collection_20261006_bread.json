@@ -1,0 +1,41 @@
+{
+  "verifiedDate": "2026-10-06",
+  "attemptedProductPages": 19,
+  "acceptedRows": 18,
+  "provisionalFamilyCount": 17,
+  "makerCount": 1,
+  "saturatedFatAndFatSameBasisRows": 18,
+  "fiberRows": 18,
+  "ingredientPercentageRows": 7,
+  "rightsStatus": "private_personal_noncommercial_educational_research_only",
+  "region": "UK",
+  "language": "en",
+  "adoptionStatus": "held_for_language_region_rights_family_review",
+  "modelUpdated": false,
+  "independentEvaluation": false,
+  "candidateSha256": "348f2715b775ac52ac21adddb15dc9ec8d258b384a37756ab166ab5996f50651",
+  "exclusionReasonCounts": {
+    "missing product ingredient/table/title": 1,
+    "no_cached_source": 1
+  },
+  "requestedProductPages": 20,
+  "cachedProductPages": 19,
+  "retrievalUnavailableRows": 1,
+  "retrievalUnavailableReason": "HTTP_404_recorded_in_initial_run",
+  "contentHeldRows": 1,
+  "sourceSha256": {
+    "robots.txt": "f6e9702fb71a5e04c51bdde7086f995d2e33b239e38733c2a6fb5da492332192",
+    "terms.html": "c6faec852cb6455026fa9b2bbc12a63c74b11bf71d85a9e97990c6005ba44923",
+    "sitemap.html": "7da5e1ec3a6f020004e0b2a613f6492ea5739afd29c068a95f39a5a151a02a62"
+  },
+  "qa": {
+    "reviewedDate": "2026-10-06",
+    "verifiedRows": 18,
+    "originalHtmlSha256Matched": 18,
+    "independentDomReExtractionMatched": 18,
+    "majorFiveAndSameBasisFatSatFiberMatched": 18,
+    "newIndependentFamiliesClaimed": false,
+    "candidateSha256": "348f2715b775ac52ac21adddb15dc9ec8d258b384a37756ab166ab5996f50651"
+  },
+  "evidenceSha256": "bc5e41d84f0dd4a0a9afc9ec1704ba29b6c1ea6828a8df12fd71d13f98caf50e"
+}
