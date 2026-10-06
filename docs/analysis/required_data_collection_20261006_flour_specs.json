@@ -1,0 +1,17 @@
+{
+  "verifiedDate": "2026-10-06",
+  "sourceDocumentCount": 1,
+  "constraintRows": 9,
+  "currentPeriodRows": 4,
+  "futurePeriodRows": 5,
+  "effectiveChangeDate": "2026-12-13",
+  "basis": "100g flour, not 100g finished bread",
+  "region": "UK",
+  "rightsStatus": "OGL-v3.0-except-where-otherwise-stated",
+  "sourceSha256": "f31b1fbbbc0c4c13470ddc6406ff8f764d9ae354fd7ea6c1ef4bec0083f7a970",
+  "specificationSha256": "f4a05d184fb76c4bef1e7803773cdfa691423431eda13f510893236ed4ff1934",
+  "originalTableWidthValidated": true,
+  "applicationProfilesUpdated": false,
+  "productNutrientLabelsGenerated": false,
+  "unknownPremixAdditionQuantityRetained": true
+}
