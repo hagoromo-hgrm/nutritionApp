@@ -16,6 +16,10 @@ import { confirmedNutrientInputsFromFood } from '../src/services/confirmedNutrie
 import { estimateNutrients, type NutrientEstimateRequest } from '../src/services/nutrientEstimator'
 import { EMPTY_NUTRIENTS } from '../src/types'
 import { createIngredientDeclarationFingerprint } from '../src/services/explicitCompositionEvidence'
+import { mextFoods } from '../src/data/mextFoods'
+import { getFoodVariantBySourceId } from '../src/services/mextFoodData'
+import { buildMextFoodSearchResult } from '../src/components/foodSearchModels'
+import { calculateNutrients } from '../src/services/nutrition'
 
 const screens = vi.hoisted(() => ({ form: null as ComponentProps<typeof FoodFormView> | null, settings: null as ComponentProps<typeof SettingsView> | null, releaseNotes: null as ComponentProps<typeof ReleaseNotesView> | null, foods: null as ComponentProps<typeof FoodsView> | null, input: null as ComponentProps<typeof SearchInputView> | null, results: null as ComponentProps<typeof SearchResultsView> | null }))
 vi.mock('../src/components/FoodFormView', () => ({ FoodFormView: (props: ComponentProps<typeof FoodFormView>) => { screens.form = props; return null } }))
@@ -266,5 +270,51 @@ it('手動familyの既存食事は登録時の属性と分量を開き、属性�
   expect(updated.sortOrder).toBe(saved.sortOrder)
   expect(updated.foodId).toBe(first.id)
   expect(updated.foodSnapshot.name).toBe(first.name)
+  expect(await db.mealEntries.count()).toBe(1)
+})
+
+it('玄米検索から単位を杯からgへ変えても分量を維持し、gの食事スナップショットを保存する', async () => {
+  await act(async () => root.unmount())
+  const source = mextFoods.find((food) => food.id === 'mext_01085')!
+  const rice = { ...source, foodGroupId: getFoodVariantBySourceId(source.id)!.foodGroupId }
+  const result = buildMextFoodSearchResult(rice.foodGroupId, [rice], [])!
+  await db.foods.put(rice)
+  await db.foodGroups.put(result.group)
+  root = createRoot(host)
+  await act(async () => root.render(createElement(App)))
+  await vi.waitFor(async () => {
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 10)) })
+    expect(host.querySelector('nav')).not.toBeNull()
+  })
+  await startBreakfastAddition()
+  await act(async () => screens.foods!.onOpenSearch!())
+  await act(async () => screens.input!.setBars(['玄米']))
+  await act(async () => { screens.input!.onSearch(); await new Promise((resolve) => setTimeout(resolve, 30)) })
+  await vi.waitFor(async () => {
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 10)) })
+    expect(screens.results?.groups[0]?.query).toBe('玄米')
+  })
+  const search = screens.results!.groups[0]
+  const item = search.items.find((candidate) => candidate.userFoodResult?.group.canonicalName === 'ご飯')!
+  expect(item).toBeDefined()
+  await act(async () => screens.results!.onSelect(search.query, item))
+  const input = host.querySelector<HTMLInputElement>('.variant-picker-modal input[type="number"]')!
+  const unit = host.querySelector<HTMLSelectElement>('.variant-picker-modal select[aria-label="入力単位"]')!
+  expect(unit.value).toBe('杯')
+  await act(async () => {
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(input, '75')
+    input.dispatchEvent(new Event('input', { bubbles: true }))
+  })
+  await act(async () => { unit.value = 'g'; unit.dispatchEvent(new Event('change', { bubbles: true })) })
+  expect(unit.value).toBe('g')
+  expect(input.value).toBe('75')
+  await act(async () => {
+    host.querySelector<HTMLButtonElement>('.variant-picker-confirm')!.click()
+    await new Promise((resolve) => setTimeout(resolve, 30))
+  })
+  const saved = (await db.mealEntries.toArray())[0]
+  expect(saved).toMatchObject({ foodId: rice.id, amount: 75, amountUnit: 'g', mealType: '朝食' })
+  expect(saved.foodSnapshot).toMatchObject({ baseAmount: 100, baseUnit: 'g', inputUnitConversions: rice.inputUnitConversions })
+  expect(saved.calculatedNutrients).toEqual(calculateNutrients(rice, 75, 'g'))
   expect(await db.mealEntries.count()).toBe(1)
 })

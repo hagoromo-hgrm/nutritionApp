@@ -13,9 +13,30 @@ export interface ReleaseNote {
   sections: ReleaseNoteSection[]
 }
 
-export const APP_VERSION = "0.3.1"
+export const APP_VERSION = "0.3.2"
 
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
+  {
+    "version": "0.3.2",
+    "releaseDate": "2026-10-07",
+    "summary": "食事登録で入力単位をgへ変更したとき、元の単位と既定の分量へ戻る問題を修正しました。",
+    "sections": [
+      {
+        "heading": "不具合修正",
+        "paragraphs": [],
+        "items": [
+          "食事登録: 種類・属性を選ぶ画面で入力単位を杯・個などからgへ変更すると、元の単位と既定の分量へ戻る問題を修正しました。変更した単位と入力中の分量を維持して登録できます。"
+        ]
+      },
+      {
+        "heading": "データ・互換性",
+        "paragraphs": [],
+        "items": [
+          "食品データ、保存済みの食事記録、JSONバックアップ形式、食事履歴CSVの形式は変更していません。"
+        ]
+      }
+    ]
+  },
   {
     "version": "0.3.1",
     "releaseDate": "2026-10-04",

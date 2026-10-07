@@ -228,14 +228,19 @@ function MextFoodVariantPickerModal({ result, userFoodResult, foods = [], foodGr
   const editingAmount = initialAmount !== undefined
   const [amount, setAmount] = useState(initialAmount ?? selectedFoodDefaultAmount)
   const [amountUnit, setAmountUnit] = useState<QuantityUnit>(initialAmountUnit ?? selectedFoodDefaultUnit)
+  const previousFoodId = useRef(selectedFoodId)
   useEffect(() => {
-    if (!editingAmount) {
-      setAmount(selectedFoodDefaultAmount)
+    if (previousFoodId.current === selectedFoodId) return
+    previousFoodId.current = selectedFoodId
+    if (editingAmount) return
+    setAmount(selectedFoodDefaultAmount)
+    setAmountUnit(selectedFoodDefaultUnit)
+  }, [editingAmount, selectedFoodDefaultAmount, selectedFoodDefaultUnit, selectedFoodId])
+  useEffect(() => {
+    if (selectedFood && !getFoodQuantityUnits(selectedFood).includes(amountUnit)) {
       setAmountUnit(selectedFoodDefaultUnit)
-      return
     }
-    if (selectedFood && !getFoodQuantityUnits(selectedFood).includes(amountUnit)) setAmountUnit(selectedFoodDefaultUnit)
-  }, [amountUnit, editingAmount, selectedFood, selectedFoodDefaultAmount, selectedFoodDefaultUnit, selectedFoodId])
+  }, [amountUnit, selectedFood, selectedFoodDefaultUnit])
 
   const chooseAttribute = (attributeId: string, valueId: string, hidden: boolean) => {
     if (!activeFoodGroupId) return
