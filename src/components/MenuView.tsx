@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { menuToFood } from '../services/menuIngredients'
 import { getMenuSetCalorieSummary, getMenuSetFoodItems } from '../services/menuSetMeals'
-import { formatGraphNutrient, formatNutrient } from '../services/nutrition'
+import { calculateNutrients, formatGraphNutrient, formatNutrient } from '../services/nutrition'
 import {
   MENU_CATEGORIES,
   type Food,
@@ -15,8 +15,9 @@ import { displayFoodName, generalMenuToFood } from './foodPresentation'
 
 export function MenuNutritionDetailsModal({ menu, menus, foods, goals, onClose }: { menu: Menu; menus: Menu[]; foods: Food[]; goals: NutritionGoals; onClose: () => void }) {
   const menuFood = menuToFood(menu, menus, foods)
+  const nutrients = calculateNutrients(menuFood, 1, menuFood.baseUnit)
   const memo = menu.memo?.trim()
-  return <div className="modal-backdrop nutrient-detail-backdrop" role="dialog" aria-modal="true" aria-label={`${menu.name}の詳細`}><section className="modal-card nutrient-detail-modal menu-nutrition-details-modal"><div className="modal-heading"><div><span className="eyebrow">MY MENU DETAILS</span><h2>{menu.name}</h2></div><button className="icon-button" type="button" onClick={onClose} aria-label="閉じる">×</button></div><div className="detail-total"><span>合計カロリー</span><strong>{formatNutrient(menuFood.nutrients.energyKcal)}<small> kcal</small></strong></div><section className="menu-detail-nutrients" aria-label="栄養価"><span className="eyebrow">NUTRIENTS</span><h3>栄養価</h3><NutrientGoalGraphs nutrients={menuFood.nutrients} goals={goals} /></section>{memo && <section className="menu-detail-memo" aria-label="メモ"><span className="eyebrow">MEMO</span><h3>メモ</h3><p>{memo}</p></section>}</section></div>
+  return <div className="modal-backdrop nutrient-detail-backdrop" role="dialog" aria-modal="true" aria-label={`${menu.name}の詳細`}><section className="modal-card nutrient-detail-modal menu-nutrition-details-modal"><div className="modal-heading"><div><span className="eyebrow">MY MENU DETAILS</span><h2>{menu.name}</h2><small>1{menuFood.baseUnit}あたり</small></div><button className="icon-button" type="button" onClick={onClose} aria-label="閉じる">×</button></div><div className="detail-total"><span>合計カロリー</span><strong>{formatNutrient(nutrients.energyKcal)}<small> kcal</small></strong></div><section className="menu-detail-nutrients" aria-label="栄養価"><span className="eyebrow">NUTRIENTS</span><h3>栄養価</h3><NutrientGoalGraphs nutrients={nutrients} goals={goals} /></section>{memo && <section className="menu-detail-memo" aria-label="メモ"><span className="eyebrow">MEMO</span><h3>メモ</h3><p>{memo}</p></section>}</section></div>
 }
 
 interface MenuViewProps { menus: Menu[]; generalMenus: GeneralMenu[]; menuSets: MenuSet[]; foods: Food[]; onNewMenu: () => void; onShowMenuNutrition: (menu: Menu) => void; onEditMenu: (menu: Menu) => void; onDeleteMenu: (menu: Menu) => void; onNewGeneralMenu: () => void; onEditGeneralMenu: (menu: GeneralMenu) => void; onDeleteGeneralMenu: (menu: GeneralMenu) => void; onCloneGeneralMenu: (menu: GeneralMenu) => void; onNewMenuSet: () => void; onEditMenuSet: (menuSet: MenuSet) => void; onDeleteMenuSet: (menuSet: MenuSet) => void; onReorderMenuSets: (orderedMenuSetIds: string[]) => Promise<void>; onBack: () => void }
