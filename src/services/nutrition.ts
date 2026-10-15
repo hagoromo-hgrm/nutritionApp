@@ -96,17 +96,6 @@ export function sumEntries(entries: MealEntry[]): Nutrients {
   return sumNutrients(entries.map((entry) => entry.calculatedNutrients))
 }
 
-/**
- * グラフ描画用に、記録済みの値だけを栄養素ごとに小計する。
- * 欠損値は推定もゼロ補完もせず、その栄養素が全件欠損の場合は未集計のままにする。
- */
-export function sumAvailableNutrients(entries: MealEntry[]): Nutrients {
-  if (entries.length === 0) {
-    return sumEntries(entries)
-  }
-  return sumKnownNutrients(entries.map((entry) => entry.calculatedNutrients))
-}
-
 export function sumByMealType(entries: MealEntry[]): Record<string, Nutrients> {
   return entries.reduce<Record<string, Nutrients>>((result, entry) => {
     result[entry.mealType] = result[entry.mealType]

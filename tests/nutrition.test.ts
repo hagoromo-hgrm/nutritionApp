@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { calculateBmi, calculateNutrients, estimateDailyEnergyTarget, estimateDailyGoals, formatGraphNutrient, formatNutrient, getFoodDefaultServing, getFoodDefaultServingNutrition, goalRate, incrementByBaseAmount, incrementByQuantityUnit, mealDetailNutritionGoals, nutrientGraphMax, nutrientRangeForGoals, scaleNutrientReference, scaleNutritionGoals, sumAvailableNutrients, sumByMealType, sumEntries, sumNutrients } from '../src/services/nutrition'
+import { calculateBmi, calculateNutrients, estimateDailyEnergyTarget, estimateDailyGoals, formatGraphNutrient, formatNutrient, getFoodDefaultServing, getFoodDefaultServingNutrition, goalRate, incrementByBaseAmount, incrementByQuantityUnit, mealDetailNutritionGoals, nutrientGraphMax, nutrientRangeForGoals, scaleNutrientReference, scaleNutritionGoals, sumByMealType, sumEntries, sumNutrients } from '../src/services/nutrition'
+import { sumAvailableNutrients } from '../src/services/mealEntryNutrition'
 import { isValidQuantityUnit } from '../src/utils/validation'
 import type { BodyProfile, Food, MealEntry, Nutrients } from '../src/types'
 

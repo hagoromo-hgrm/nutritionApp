@@ -1,6 +1,7 @@
 import { MEAL_TYPES, NUTRIENT_KEYS, type MealEntry, type MealType, type Nutrients } from '../types'
 import { addDays } from '../utils/date'
-import { sumAvailableNutrients, sumByMealType, sumEntries } from './nutrition'
+import { sumByMealType, sumEntries } from './nutrition'
+import { sumAvailableNutrients } from './mealEntryNutrition'
 
 export const TODAY_DETAIL_RANGE_OPTIONS = [
   { id: 'day', label: '1日', days: 1 },

@@ -1,11 +1,40 @@
 import { describe, expect, it } from 'vitest'
 import { buildDailyNutrientTrend, buildTrendAxisTicks, buildTrendAxisTicksForRange } from '../src/services/trend'
-import type { MealEntry } from '../src/types'
+import { calculateMealMenuEntryNutrients, createMealMenuSnapshot } from '../src/services/mealMenuSnapshots'
+import { EMPTY_NUTRIENTS, type Food, type MealEntry, type Menu } from '../src/types'
 
 const entry: MealEntry = {
   id: 'meal_1', eatenAt: '2026-07-16T00:00:00.000Z', mealType: '朝食', foodId: 'food_1', amount: 1, amountUnit: '個',
   foodSnapshot: { name: 'テスト食品', maker: '', barcode: '', baseAmount: 1, baseUnit: '個', nutrients: { energyKcal: 300, proteinG: 10, fatG: 5, carbohydrateG: 20, fiberG: 1, saltG: 0.5, calciumMg: 10, ironMg: 1, vitaminAMcg: 10, vitaminEMg: 1, vitaminB1Mg: 0.1, vitaminB2Mg: 0.1, vitaminCMg: 5, saturatedFatG: 2 } },
   calculatedNutrients: { energyKcal: 300, proteinG: 10, fatG: 5, carbohydrateG: 20, fiberG: 1, saltG: 0.5, calciumMg: 10, ironMg: 1, vitaminAMcg: 10, vitaminEMg: 1, vitaminB1Mg: 0.1, vitaminB2Mg: 0.1, vitaminCMg: 5, saturatedFatG: 2 },
+}
+
+function savedPartialMenuEntry(): MealEntry {
+  const knownFood: Food = {
+    id: 'known-menu-food', name: '既知食品', maker: '', barcode: '', source: 'user', sourceVersion: 'test',
+    baseAmount: 100, baseUnit: 'g', servingAmount: null, servingUnit: null,
+    nutrients: { ...EMPTY_NUTRIENTS, energyKcal: 100 }, createdAt: '', updatedAt: '',
+  }
+  const menu: Menu = {
+    id: 'partial-menu', name: '部分欠損メニュー', category: '主菜', baseAmount: 2, baseUnit: '食',
+    servingAmount: 1, servingUnit: '食', foodIds: [knownFood.id, 'deleted-food'],
+    ingredients: [
+      { kind: 'food', itemId: knownFood.id, amount: 200, unit: 'g' },
+      { kind: 'food', itemId: 'deleted-food', amount: 100, unit: 'g' },
+    ],
+    createdAt: '', updatedAt: '',
+  }
+  const menuSnapshot = createMealMenuSnapshot(menu, [menu], [knownFood])
+  const calculatedNutrients = calculateMealMenuEntryNutrients(menuSnapshot, 1, '食')
+  return {
+    ...entry,
+    id: 'saved-menu',
+    foodId: `menu:${menu.id}`,
+    amount: 1,
+    amountUnit: '食',
+    calculatedNutrients,
+    menuSnapshot,
+  }
 }
 
 describe('daily nutrient trend', () => {
@@ -116,6 +145,14 @@ describe('daily nutrient trend', () => {
     const points = buildDailyNutrientTrend([allMissingEntry], '2026-07-16', '2026-07-16')
     expect(points[0].nutrients.energyKcal).toBeNull()
     expect(points[0].availableNutrients.energyKcal).toBeNull()
+  })
+
+  it('保存済みメニュースナップショットの既知分を日別・食事区分別の小計へ引き継ぐ', () => {
+    const points = buildDailyNutrientTrend([savedPartialMenuEntry()], '2026-07-16', '2026-07-16')
+
+    expect(points[0].nutrients.energyKcal).toBeNull()
+    expect(points[0].availableNutrients.energyKcal).toBe(100)
+    expect(points[0].availableNutrientsByMealType.朝食.energyKcal).toBe(100)
   })
 
   it('1年表示では365日分を生成し、31日上限に切り詰めない', () => {

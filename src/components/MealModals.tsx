@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { getFoodSnapshotDisplayName, getMealEntryDisplayName } from '../services/mealEntryDisplay'
 import {
-  calculateMealMenuEntryNutrients,
+  calculateMealMenuEntryAvailableNutrients,
   createMealFoodIngredientSnapshot,
   createMealMenuIngredientSnapshot,
 } from '../services/mealMenuSnapshots'
-import { calculateNutrients, formatNutrient, getFoodQuantityUnits, incrementByQuantityUnit, sumAvailableNutrients } from '../services/nutrition'
+import { calculateNutrients, formatGraphNutrient, getFoodQuantityUnits, incrementByQuantityUnit } from '../services/nutrition'
+import { getMealEntryAvailableNutrients, sumAvailableNutrients } from '../services/mealEntryNutrition'
 import { getMenuBase } from '../services/menuIngredients'
 import {
   MEAL_TYPES,
@@ -53,7 +54,7 @@ function MealSnapshotIngredientRow({ ingredient, onChange, onRemove }: { ingredi
 
 export function MealModal({ food, amount, setAmount, amountUnit, setAmountUnit, menuSnapshot, setMenuSnapshot, menus, foods, foodGroups, recentFoods, favoriteFoods, favoriteIds, onToggleFavorite, foodAttributePreferences, onSaveFoodAttributePreference, editing, onSubmit, onClose }: { food: Food; amount: string; setAmount: (value: string) => void; amountUnit: QuantityUnit; setAmountUnit: (value: QuantityUnit) => void; menuSnapshot: MealMenuSnapshot | null; setMenuSnapshot: (snapshot: MealMenuSnapshot | null) => void; menus: Menu[]; foods: Food[]; foodGroups: FoodGroup[]; recentFoods: Food[]; favoriteFoods: Food[]; favoriteIds: Set<string>; onToggleFavorite: (food: Food) => void; foodAttributePreferences?: FoodAttributePreferences; onSaveFoodAttributePreference?: (foodGroupId: string, attributeId: string, preference: FoodAttributePreference | null) => Promise<boolean>; editing: boolean; onSubmit: (event: React.FormEvent<HTMLFormElement>) => void; onClose: () => void }) {
   const preview = menuSnapshot
-    ? calculateMealMenuEntryNutrients(menuSnapshot, Number(amount), amountUnit)
+    ? calculateMealMenuEntryAvailableNutrients(menuSnapshot, Number(amount), amountUnit)
     : calculateNutrients(food, Number(amount), amountUnit)
   const [selectedIngredientsOpen, setSelectedIngredientsOpen] = useState(() => editing)
   const numericAmount = Number(amount)
@@ -86,7 +87,7 @@ export function MealModal({ food, amount, setAmount, amountUnit, setAmountUnit, 
           </details>
           <div className="menu-editor-add-section"><MenuFoodSelection selectedIds={selectedFoodIds} selectedIngredients={selectedIngredients} menus={menus} editingMenuId={menuSnapshot.sourceMenuId} foods={foods} foodGroups={foodGroups} recentFoods={recentFoods} favoriteFoods={favoriteFoods} favoriteIds={favoriteIds} onToggleFavorite={onToggleFavorite} foodAttributePreferences={foodAttributePreferences} onSaveFoodAttributePreference={onSaveFoodAttributePreference} onAdd={addFood} onRemove={() => undefined} onAddMenu={addMenu} showSelectedList={false} pickerTitle="食材を追加" /></div>
         </section>}
-        <div className="preview-box calorie-preview"><div className="section-kicker">今回のカロリー</div><strong>{formatNutrient(preview.energyKcal)}<small> kcal</small></strong></div>
+        <div className="preview-box calorie-preview"><div className="section-kicker">今回のカロリー</div><strong>{formatGraphNutrient(preview.energyKcal)}<small> kcal</small></strong></div>
         <button className="button primary full-width" type="submit">{editing ? '変更を保存' : '食事として登録'}</button>
         <button className="button ghost full-width" type="button" onClick={onClose}>キャンセル</button>
       </form>
@@ -99,5 +100,5 @@ export function MealDetailsModal({ details, goals, onUpdateTimes, onClose }: { d
   const [snackTimes, setSnackTimes] = useState<Record<string, string>>(() => Object.fromEntries(details.entries.map((entry) => [entry.id, toTokyoTimeInput(entry.eatenAt)])))
   const sharedEntryIds = details.entries.map((entry) => entry.id)
   const availableNutrients = sumAvailableNutrients(details.entries)
-  return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label={`${details.type}の栄養詳細`}><section className="modal-card"><div className="modal-heading"><div><span className="eyebrow">NUTRIENTS</span><h2>{details.type}の詳細</h2></div><button className="icon-button" type="button" onClick={onClose} aria-label="閉じる">×</button></div><div className="detail-total"><span>合計カロリー</span><strong>{formatNutrient(details.subtotal.energyKcal)}<small> kcal</small></strong></div><NutrientGoalGraphs nutrients={details.subtotal} availableNutrients={availableNutrients} goals={goals} /><section className="meal-time-editor"><div className="section-title"><div><span className="eyebrow">MEAL TIME</span><h3>食事時刻</h3></div></div>{details.type !== '間食' ? <form className="inline-time-form" onSubmit={(event) => { event.preventDefault(); onUpdateTimes(sharedEntryIds, sharedTime) }}><label><input aria-label="食事時刻" type="time" value={sharedTime} onChange={(event) => setSharedTime(event.target.value)} required /></label><button className="button secondary" type="submit">時刻を保存</button></form> : <div className="snack-time-list">{details.entries.map((entry) => <div className="snack-time-row" key={entry.id}><span>{getMealEntryDisplayName(entry)}</span><input type="time" value={snackTimes[entry.id] ?? ''} onChange={(event) => setSnackTimes((current) => ({ ...current, [entry.id]: event.target.value }))} /><button className="small-action" type="button" onClick={() => onUpdateTimes([entry.id], snackTimes[entry.id] ?? '')}>保存</button></div>)}</div>}</section><div className="detail-entry-list">{details.entries.map((entry) => <div className="detail-entry" key={entry.id}><span>{getMealEntryDisplayName(entry)} · {entry.amount}{entry.amountUnit}</span><strong>{formatNutrient(entry.calculatedNutrients.energyKcal)} kcal</strong></div>)}</div><button className="button ghost full-width" type="button" onClick={onClose}>閉じる</button></section></div>
+  return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label={`${details.type}の栄養詳細`}><section className="modal-card"><div className="modal-heading"><div><span className="eyebrow">NUTRIENTS</span><h2>{details.type}の詳細</h2></div><button className="icon-button" type="button" onClick={onClose} aria-label="閉じる">×</button></div><div className="detail-total"><span>合計カロリー</span><strong>{formatGraphNutrient(availableNutrients.energyKcal)}<small> kcal</small></strong></div><NutrientGoalGraphs nutrients={details.subtotal} availableNutrients={availableNutrients} goals={goals} /><section className="meal-time-editor"><div className="section-title"><div><span className="eyebrow">MEAL TIME</span><h3>食事時刻</h3></div></div>{details.type !== '間食' ? <form className="inline-time-form" onSubmit={(event) => { event.preventDefault(); onUpdateTimes(sharedEntryIds, sharedTime) }}><label><input aria-label="食事時刻" type="time" value={sharedTime} onChange={(event) => setSharedTime(event.target.value)} required /></label><button className="button secondary" type="submit">時刻を保存</button></form> : <div className="snack-time-list">{details.entries.map((entry) => <div className="snack-time-row" key={entry.id}><span>{getMealEntryDisplayName(entry)}</span><input type="time" value={snackTimes[entry.id] ?? ''} onChange={(event) => setSnackTimes((current) => ({ ...current, [entry.id]: event.target.value }))} /><button className="small-action" type="button" onClick={() => onUpdateTimes([entry.id], snackTimes[entry.id] ?? '')}>保存</button></div>)}</div>}</section><div className="detail-entry-list">{details.entries.map((entry) => <div className="detail-entry" key={entry.id}><span>{getMealEntryDisplayName(entry)} · {entry.amount}{entry.amountUnit}</span><strong>{formatGraphNutrient(getMealEntryAvailableNutrients(entry).energyKcal)} kcal</strong></div>)}</div><button className="button ghost full-width" type="button" onClick={onClose}>閉じる</button></section></div>
 }

@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
+  calculateMealMenuEntryAvailableNutrients,
   calculateMealMenuEntryNutrients,
+  calculateMealMenuSnapshotAvailableNutrients,
   calculateMealMenuSnapshotNutrients,
   cloneMealMenuSnapshot,
   createMealFoodIngredientSnapshot,
@@ -9,7 +11,7 @@ import {
   createTemporaryMealMenuSnapshot,
   isMealMenuSnapshot,
 } from '../src/services/mealMenuSnapshots'
-import type { Food, GeneralMenu, Menu, Nutrients } from '../src/types'
+import { EMPTY_NUTRIENTS, type Food, type GeneralMenu, type Menu, type Nutrients } from '../src/types'
 
 const nutrients = (energyKcal: number): Nutrients => ({
   energyKcal, proteinG: 1, fatG: 1, carbohydrateG: 1, fiberG: 1, saltG: 0,
@@ -98,6 +100,7 @@ describe('meal menu snapshots', () => {
     expect(snapshot.inputUnitConversions).toBeUndefined()
     expect(calculateMealMenuEntryNutrients(snapshot, 1, '皿').energyKcal).toBe(170)
     expect(calculateMealMenuEntryNutrients(snapshot, 2, '皿').energyKcal).toBe(340)
+    expect(calculateMealMenuEntryAvailableNutrients(snapshot, 1, '皿').energyKcal).toBe(170)
     expect(isMealMenuSnapshot(snapshot)).toBe(true)
     expect(isMealMenuSnapshot({ ...snapshot, baseAmount: undefined })).toBe(false)
     expect(isMealMenuSnapshot({ ...snapshot, inputUnitConversions: [{ unit: '食', baseAmount: 1 }] })).toBe(false)
@@ -114,7 +117,104 @@ describe('meal menu snapshots', () => {
 
     expect(nested).toMatchObject({ kind: 'menu', amount: 1, unit: '個', baseAmount: 2, baseUnit: '個' })
     expect(calculateMealMenuSnapshotNutrients(snapshot).energyKcal).toBe(40)
+    expect(calculateMealMenuEntryAvailableNutrients(snapshot, 1, '食').energyKcal).toBe(40)
     expect(isMealMenuSnapshot(snapshot)).toBe(true)
+  })
+
+  it('正規集計はnullを維持し、表示用小計は栄養素別に既知分だけを1単位へ換算する', () => {
+    const energyFood = food('energy-only', 'エネルギーのみ', 100)
+    energyFood.nutrients = { ...EMPTY_NUTRIENTS, energyKcal: 100 }
+    const proteinFood = food('protein-only', 'たんぱく質のみ', 100)
+    proteinFood.nutrients = { ...EMPTY_NUTRIENTS, proteinG: 20 }
+    const missingMenu: Menu = {
+      id: 'partial', name: '部分欠損', category: '主菜', baseAmount: 2, baseUnit: '食', foodIds: [],
+      ingredients: [
+        { kind: 'food', itemId: energyFood.id, amount: 100, unit: 'g' },
+        { kind: 'food', itemId: proteinFood.id, amount: 100, unit: 'g' },
+        { kind: 'food', itemId: 'deleted-food', amount: 100, unit: 'g' },
+      ], createdAt: '', updatedAt: '',
+    }
+    const snapshot = createMealMenuSnapshot(missingMenu, [missingMenu], [energyFood, proteinFood])
+
+    expect(calculateMealMenuSnapshotNutrients(snapshot).energyKcal).toBeNull()
+    expect(calculateMealMenuSnapshotNutrients(snapshot).proteinG).toBeNull()
+    expect(calculateMealMenuEntryNutrients(snapshot, 1, '食').energyKcal).toBeNull()
+    expect(calculateMealMenuSnapshotAvailableNutrients(snapshot)).toMatchObject({ energyKcal: 100, proteinG: 20, fatG: null })
+    expect(calculateMealMenuEntryAvailableNutrients(snapshot, 1, '食')).toMatchObject({ energyKcal: 50, proteinG: 10, fatG: null })
+  })
+
+  it('欠損だけならnullを返し、明示された0は既知の0として保持する', () => {
+    const missingMenu: Menu = {
+      id: 'missing', name: '欠損のみ', category: '主菜', foodIds: [],
+      ingredients: [{ kind: 'food', itemId: 'not-found', amount: 10, unit: 'g' }], createdAt: '', updatedAt: '',
+    }
+    const missingSnapshot = createMealMenuSnapshot(missingMenu, [missingMenu], [])
+    expect(calculateMealMenuEntryAvailableNutrients(missingSnapshot, 1, '食').energyKcal).toBeNull()
+
+    const zeroFood = food('zero', '0kcal食品', 0)
+    zeroFood.nutrients = { ...nutrients(0), energyKcal: 0 }
+    const zeroMenu: Menu = {
+      id: 'zero-menu', name: '0kcal', category: '主菜', foodIds: [zeroFood.id],
+      ingredients: [{ kind: 'food', itemId: zeroFood.id, amount: 100, unit: 'g' }], createdAt: '', updatedAt: '',
+    }
+    const zeroSnapshot = createMealMenuSnapshot(zeroMenu, [zeroMenu], [zeroFood])
+    expect(calculateMealMenuEntryAvailableNutrients(zeroSnapshot, 1, '食').energyKcal).toBe(0)
+  })
+
+  it('旧スナップショットの明示換算とネスト単位を既知小計にも反映する', () => {
+    const knownFood = food('known', '既知食品', 100)
+    const ingredient = createMealFoodIngredientSnapshot(knownFood, 100, 'g')
+    const legacySnapshot = {
+      sourceMenuId: 'legacy-parent', sourceMenuName: '旧親メニュー',
+      inputUnitConversions: [{ unit: '皿', baseAmount: 0.5 }],
+      ingredients: [{
+        kind: 'menu' as const, itemId: 'legacy-child', name: '旧子メニュー', amount: 2, unit: '皿',
+        inputUnitConversions: [{ unit: '皿', baseAmount: 0.5 }],
+        ingredients: [ingredient], missing: false,
+      }],
+    }
+
+    expect(calculateMealMenuEntryAvailableNutrients(legacySnapshot, 1, '皿').energyKcal).toBe(50)
+  })
+
+  it('子メニューと親メニューの分量を段階的に換算して既知小計を出す', () => {
+    const knownFood = food('known-child', '子メニューの既知食品', 100)
+    const childMenu: Menu = {
+      id: 'two-piece-child', name: '2個分の子メニュー', category: '主菜', baseAmount: 2, baseUnit: '個', foodIds: [knownFood.id, 'deleted-child-food'],
+      ingredients: [
+        { kind: 'food', itemId: knownFood.id, amount: 200, unit: 'g' },
+        { kind: 'food', itemId: 'deleted-child-food', amount: 100, unit: 'g' },
+      ], createdAt: '', updatedAt: '',
+    }
+    const parentMenu: Menu = {
+      id: 'four-serving-parent', name: '4食分の親メニュー', category: '主菜', baseAmount: 4, baseUnit: '食', foodIds: [],
+      ingredients: [{ kind: 'menu', itemId: childMenu.id, amount: 1, unit: '個' }], createdAt: '', updatedAt: '',
+    }
+    const snapshot = createMealMenuSnapshot(parentMenu, [parentMenu, childMenu], [knownFood])
+
+    expect(calculateMealMenuEntryNutrients(snapshot, 1.5, '食').energyKcal).toBeNull()
+    expect(calculateMealMenuEntryAvailableNutrients(snapshot, 1.5, '食').energyKcal).toBe(37.5)
+  })
+
+  it('missingフラグ付きの数値、無効単位、削除済み子メニューを既知寄与へ含めない', () => {
+    const knownFood = food('known', '既知食品', 100)
+    const missingFlagFood = food('deleted', '削除済み食品', 900)
+    const invalidUnitFood = food('invalid-unit', '換算のない食品', 700)
+    const menu: Menu = {
+      id: 'mixed-invalid', name: '欠損と無効単位', category: '主菜', foodIds: [],
+      ingredients: [
+        { kind: 'food', itemId: knownFood.id, amount: 100, unit: 'g' },
+        { kind: 'food', itemId: missingFlagFood.id, amount: 100, unit: 'g' },
+        { kind: 'food', itemId: invalidUnitFood.id, amount: 1, unit: '切れ' },
+        { kind: 'menu', itemId: 'deleted-child-menu', amount: 1, unit: '食' },
+      ], createdAt: '', updatedAt: '',
+    }
+    const snapshot = createMealMenuSnapshot(menu, [menu], [knownFood, missingFlagFood, invalidUnitFood])
+    const missingFlagIngredient = snapshot.ingredients.find((ingredient) => ingredient.kind === 'food' && ingredient.itemId === missingFlagFood.id)
+    if (!missingFlagIngredient || missingFlagIngredient.kind !== 'food') throw new Error('missing食品スナップショットがありません')
+    missingFlagIngredient.foodSnapshot.missing = true
+
+    expect(calculateMealMenuEntryAvailableNutrients(snapshot, 1, '食').energyKcal).toBe(100)
   })
 
   it('一般メニューのスナップショットは由来を区別して複製する', () => {

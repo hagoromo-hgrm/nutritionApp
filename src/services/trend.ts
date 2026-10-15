@@ -1,6 +1,7 @@
-import { sumAvailableNutrients, sumEntries } from './nutrition'
+import { sumEntries } from './nutrition'
 import { MEAL_TYPES, type MealEntry, type MealType, type Nutrients } from '../types'
 import { addDays, formatDateKey } from '../utils/date'
+import { sumAvailableNutrients } from './mealEntryNutrition'
 
 export interface DailyNutrientTrendPoint {
   date: string

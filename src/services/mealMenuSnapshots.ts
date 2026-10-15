@@ -14,7 +14,7 @@ import {
 } from '../types'
 import { createId } from '../utils/id'
 import { isFoodUnitConversion, isNutrients, isValidQuantityUnit, isValidUnit } from '../utils/validation'
-import { calculateNutrients, getFoodDefaultServing, sumNutrients } from './nutrition'
+import { calculateNutrients, getFoodDefaultServing, sumKnownNutrients, sumNutrients } from './nutrition'
 import { getMenuBase, getMenuIngredients } from './menuIngredients'
 import { getMextUserFacingFoodName } from './mealEntryDisplay'
 
@@ -205,8 +205,13 @@ function snapshotFoodAsFood(snapshot: FoodSnapshot, id: string): Food {
   }
 }
 
-export function calculateMealIngredientSnapshotNutrients(ingredient: MealIngredientSnapshot): Nutrients {
+function calculateMealIngredientSnapshotNutrientsWithSummarizer(
+  ingredient: MealIngredientSnapshot,
+  summarizeNutrients: typeof sumNutrients,
+  ignoreMissingFoods: boolean,
+): Nutrients {
   if (ingredient.kind === 'food') {
+    if (ignoreMissingFoods && ingredient.foodSnapshot.missing) return { ...EMPTY_NUTRIENTS }
     return calculateNutrients(snapshotFoodAsFood(ingredient.foodSnapshot, ingredient.itemId), ingredient.amount, ingredient.unit)
   }
   if (ingredient.missing) return { ...EMPTY_NUTRIENTS }
@@ -216,9 +221,17 @@ export function calculateMealIngredientSnapshotNutrients(ingredient: MealIngredi
     inputUnitConversions: ingredient.baseAmount === undefined && ingredient.baseUnit === undefined
       ? ingredient.inputUnitConversions?.map((conversion) => ({ ...conversion }))
       : undefined,
-    nutrients: sumNutrients(ingredient.ingredients.map(calculateMealIngredientSnapshotNutrients)), createdAt: '', updatedAt: '',
+    nutrients: summarizeNutrients(ingredient.ingredients.map((child) => calculateMealIngredientSnapshotNutrientsWithSummarizer(child, summarizeNutrients, ignoreMissingFoods))), createdAt: '', updatedAt: '',
   }
   return calculateNutrients(menuFood, ingredient.amount, ingredient.unit)
+}
+
+export function calculateMealIngredientSnapshotNutrients(ingredient: MealIngredientSnapshot): Nutrients {
+  return calculateMealIngredientSnapshotNutrientsWithSummarizer(ingredient, sumNutrients, false)
+}
+
+export function calculateMealIngredientSnapshotAvailableNutrients(ingredient: MealIngredientSnapshot): Nutrients {
+  return calculateMealIngredientSnapshotNutrientsWithSummarizer(ingredient, sumKnownNutrients, true)
 }
 
 /** 料理メニューの基準量分の栄養値を、食事側へ複製した構成だけから計算する。 */
@@ -226,16 +239,27 @@ export function calculateMealMenuSnapshotNutrients(snapshot: MealMenuSnapshot): 
   return sumNutrients(snapshot.ingredients.map(calculateMealIngredientSnapshotNutrients))
 }
 
-export function calculateMealMenuEntryNutrients(snapshot: MealMenuSnapshot, amount: number, unit: QuantityUnit): Nutrients {
-  const food: Food = {
+export function calculateMealMenuSnapshotAvailableNutrients(snapshot: MealMenuSnapshot): Nutrients {
+  return sumKnownNutrients(snapshot.ingredients.map(calculateMealIngredientSnapshotAvailableNutrients))
+}
+
+function mealMenuSnapshotAsFood(snapshot: MealMenuSnapshot, nutrients: Nutrients): Food {
+  return {
     id: `menu:${snapshot.sourceMenuId}`, name: snapshot.sourceMenuName, maker: '', barcode: '', source: 'user', sourceVersion: '食事記録のメニュースナップショット',
     baseAmount: snapshot.baseAmount ?? 1, baseUnit: (snapshot.baseUnit ?? '食') as Food['baseUnit'], servingAmount: null, servingUnit: null,
     inputUnitConversions: snapshot.baseAmount === undefined && snapshot.baseUnit === undefined
       ? snapshot.inputUnitConversions?.map((conversion) => ({ ...conversion }))
       : undefined,
-    nutrients: calculateMealMenuSnapshotNutrients(snapshot), createdAt: '', updatedAt: '',
+    nutrients, createdAt: '', updatedAt: '',
   }
-  return calculateNutrients(food, amount, unit)
+}
+
+export function calculateMealMenuEntryNutrients(snapshot: MealMenuSnapshot, amount: number, unit: QuantityUnit): Nutrients {
+  return calculateNutrients(mealMenuSnapshotAsFood(snapshot, calculateMealMenuSnapshotNutrients(snapshot)), amount, unit)
+}
+
+export function calculateMealMenuEntryAvailableNutrients(snapshot: MealMenuSnapshot, amount: number, unit: QuantityUnit): Nutrients {
+  return calculateNutrients(mealMenuSnapshotAsFood(snapshot, calculateMealMenuSnapshotAvailableNutrients(snapshot)), amount, unit)
 }
 
 function cloneIngredient(ingredient: MealIngredientSnapshot): MealIngredientSnapshot {

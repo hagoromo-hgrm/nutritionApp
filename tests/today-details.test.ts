@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { buildTodayDetailSummary, resolveTodayDetailPeriod, TODAY_DETAIL_RANGE_OPTIONS } from '../src/services/todayDetails'
-import { EMPTY_NUTRIENTS, type MealEntry, type Nutrients } from '../src/types'
+import { calculateMealMenuEntryNutrients, createMealMenuSnapshot } from '../src/services/mealMenuSnapshots'
+import { EMPTY_NUTRIENTS, type Food, type MealEntry, type Menu, type Nutrients } from '../src/types'
 
 function entry(id: string, mealType: MealEntry['mealType'], nutrients: Partial<Nutrients>): MealEntry {
   const calculatedNutrients = { ...EMPTY_NUTRIENTS, ...nutrients }
@@ -20,6 +21,33 @@ function entry(id: string, mealType: MealEntry['mealType'], nutrients: Partial<N
       nutrients: calculatedNutrients,
     },
     calculatedNutrients,
+  }
+}
+
+function savedPartialMenuEntry(): MealEntry {
+  const knownFood: Food = {
+    id: 'known-menu-food', name: '既知食品', maker: '', barcode: '', source: 'user', sourceVersion: 'test',
+    baseAmount: 100, baseUnit: 'g', servingAmount: null, servingUnit: null,
+    nutrients: { ...EMPTY_NUTRIENTS, energyKcal: 100 }, createdAt: '', updatedAt: '',
+  }
+  const menu: Menu = {
+    id: 'partial-menu', name: '部分欠損メニュー', category: '主菜', baseAmount: 2, baseUnit: '食',
+    servingAmount: 1, servingUnit: '食', foodIds: [knownFood.id, 'deleted-food'],
+    ingredients: [
+      { kind: 'food', itemId: knownFood.id, amount: 200, unit: 'g' },
+      { kind: 'food', itemId: 'deleted-food', amount: 100, unit: 'g' },
+    ],
+    createdAt: '', updatedAt: '',
+  }
+  const menuSnapshot = createMealMenuSnapshot(menu, [menu], [knownFood])
+  const calculatedNutrients = calculateMealMenuEntryNutrients(menuSnapshot, 1, '食')
+  return {
+    ...entry('saved-menu', '朝食', calculatedNutrients),
+    foodId: `menu:${menu.id}`,
+    amount: 1,
+    amountUnit: '食',
+    calculatedNutrients,
+    menuSnapshot,
   }
 }
 
@@ -99,5 +127,14 @@ describe('today details period and summary', () => {
     expect(summary.subtotals.朝食.energyKcal).toBeNull()
     expect(summary.availableSubtotals.朝食.energyKcal).toBeNull()
     expect(summary.availableSubtotals.昼食.energyKcal).toBe(100)
+  })
+
+  it('保存済みメニュースナップショットの既知分を日次・区分小計へ引き継ぐ', () => {
+    const summary = buildTodayDetailSummary([savedPartialMenuEntry()])
+
+    expect(summary.nutrients.energyKcal).toBeNull()
+    expect(summary.availableNutrients.energyKcal).toBe(100)
+    expect(summary.subtotals.朝食.energyKcal).toBeNull()
+    expect(summary.availableSubtotals.朝食.energyKcal).toBe(100)
   })
 })
