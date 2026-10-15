@@ -1,6 +1,6 @@
 import type { Food, FoodSnapshot, GeneralMenu, MealEntry, MealType, Menu, MenuSet, MenuSetFoodItem } from '../types'
-import { calculateNutrients, getFoodDefaultServing, sumEntries } from './nutrition'
-import { menuToFood } from './menuIngredients'
+import { calculateNutrients, getFoodDefaultServing, getFoodDefaultServingNutrition } from './nutrition'
+import { menuToDisplayFood, menuToFood } from './menuIngredients'
 import {
   calculateMealMenuEntryNutrients,
   calculateMealMenuSnapshotNutrients,
@@ -77,37 +77,32 @@ interface MenuSetCalorieSummaryOptions {
 }
 
 /**
- * Myセット表示用のカロリーを、食事へのセット展開と同じ計算経路から求める。
- * 削除済み参照や算出不能な項目は0補完せず、項目とセット合計の欠損を維持する。
+ * Myセット表示は、登録時と同じ分量で既知のカロリーだけを合計する。
+ * 表示用の小計を食事記録の正規集計やスナップショットへ流用しない。
  */
 export function getMenuSetCalorieSummary(options: MenuSetCalorieSummaryOptions): MenuSetCalorieSummary {
   const { menuSet, menus, generalMenus = [], foods } = options
-  const batch = createMenuSetMealBatch({
-    menuSet,
-    menus,
-    generalMenus,
-    foods,
-    mealType: '朝食',
-    eatenAt: '',
-    createId: () => 'menu-set-calorie-preview',
-  })
-  const entriesByFoodId = new Map<string, MealEntry[]>()
-  for (const entry of batch.entries) {
-    const entries = entriesByFoodId.get(entry.foodId) ?? []
-    entries.push(entry)
-    entriesByFoodId.set(entry.foodId, entries)
+  const menusById = new Map(menus.map((menu) => [menu.id, menu]))
+  const generalMenusById = new Map(generalMenus.map((menu) => [menu.id, menu]))
+  const foodsById = new Map(foods.map((food) => [food.id, food]))
+  const menuEnergy = (menu: Menu | undefined): number | null => {
+    if (!menu) return null
+    return getFoodDefaultServingNutrition(menuToDisplayFood(menu, menus, foods)).nutrients.energyKcal
   }
-  const takeEnergy = (id: string): number | null => entriesByFoodId.get(id)?.shift()?.calculatedNutrients.energyKcal ?? null
   const items: MenuSetCalorieItem[] = [
-    ...menuSet.menuIds.map((id) => ({ id: `menu:${id}`, energyKcal: takeEnergy(`menu:${id}`) })),
-    ...(menuSet.generalMenuIds ?? []).map((id) => ({ id: `general-menu:${id}`, energyKcal: takeEnergy(`general-menu:${id}`) })),
-    ...getMenuSetFoodItems(menuSet, foods).map((item) => ({ id: `food:${item.foodId}`, energyKcal: takeEnergy(item.foodId) })),
+    ...menuSet.menuIds.map((id) => ({ id: `menu:${id}`, energyKcal: menuEnergy(menusById.get(id)) })),
+    ...(menuSet.generalMenuIds ?? []).map((id) => ({ id: `general-menu:${id}`, energyKcal: menuEnergy(generalMenusById.get(id)) })),
+    ...getMenuSetFoodItems(menuSet, foods).map((item) => {
+      const food = foodsById.get(item.foodId)
+      return { id: `food:${item.foodId}`, energyKcal: food ? calculateNutrients(food, item.amount, item.unit).energyKcal : null }
+    }),
   ]
+  const knownCalories = items.flatMap((item) => item.energyKcal === null ? [] : [item.energyKcal])
   return {
     items,
-    energyKcal: items.some((item) => item.energyKcal === null)
+    energyKcal: items.length > 0 && knownCalories.length === 0
       ? null
-      : sumEntries(batch.entries).energyKcal,
+      : knownCalories.reduce((sum, energyKcal) => sum + energyKcal, 0),
   }
 }
 

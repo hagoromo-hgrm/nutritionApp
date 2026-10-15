@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { EMPTY_NUTRIENTS, type Food, type Menu, type Nutrients } from '../src/types'
-import { getEditableMenuBase, getMenuBase, getMenuFoodIds, getMenuIngredients, getMenuQuantityUnits, getNestedMenuIds, hasMenuCycles, menuToFood, wouldCreateMenuCycle } from '../src/services/menuIngredients'
+import { getEditableMenuBase, getMenuBase, getMenuFoodIds, getMenuIngredients, getMenuQuantityUnits, getNestedMenuIds, hasMenuCycles, menuToDisplayFood, menuToFood, wouldCreateMenuCycle } from '../src/services/menuIngredients'
 import { calculateNutrients, getFoodDefaultServing } from '../src/services/nutrition'
 
 const nutrients = (energyKcal: number): Nutrients => ({
@@ -96,5 +96,70 @@ describe('menu ingredients', () => {
     expect(menuToFood(first, [first, second], []).nutrients).toEqual(EMPTY_NUTRIENTS)
     expect(menuToFood(missing, [missing], []).nutrients).toEqual(EMPTY_NUTRIENTS)
     expect(menuToFood(legacyMissing, [legacyMissing], []).nutrients).toEqual(EMPTY_NUTRIENTS)
+  })
+
+  it('表示用小計は栄養素ごとに既知寄与を合算し、通常計算のnull伝播を保つ', () => {
+    const energyFood: Food = { ...food('energy', 100), nutrients: { ...EMPTY_NUTRIENTS, energyKcal: 100 } }
+    const proteinFood: Food = { ...food('protein', 100), nutrients: { ...EMPTY_NUTRIENTS, proteinG: 20 } }
+    const mixed = menu('mixed', [
+      { kind: 'food', itemId: energyFood.id, amount: 100, unit: 'g' },
+      { kind: 'food', itemId: proteinFood.id, amount: 100, unit: 'g' },
+    ])
+    mixed.baseAmount = 2
+    mixed.baseUnit = '食'
+    const strict = menuToFood(mixed, [mixed], [energyFood, proteinFood])
+    const display = menuToDisplayFood(mixed, [], [energyFood, proteinFood])
+
+    expect(strict.nutrients.energyKcal).toBeNull()
+    expect(strict.nutrients.proteinG).toBeNull()
+    expect(display.nutrients.energyKcal).toBe(100)
+    expect(display.nutrients.proteinG).toBe(20)
+    expect(display.nutrients.fatG).toBeNull()
+    expect(calculateNutrients(display, 1, '食')).toMatchObject({ energyKcal: 50, proteinG: 10, fatG: null })
+  })
+
+  it('欠損参照、循環参照、単位不一致を除いて既知の栄養寄与を残す', () => {
+    const valid = food('valid', 120)
+    const incompatible = food('incompatible', 500)
+    const mixed = menu('mixed', [
+      { kind: 'food', itemId: valid.id, amount: 100, unit: 'g' },
+      { kind: 'food', itemId: incompatible.id, amount: 1, unit: 'oz' },
+      { kind: 'food', itemId: 'deleted-food', amount: 100, unit: 'g' },
+      { kind: 'menu', itemId: 'deleted-menu', amount: 1, unit: '食' },
+      { kind: 'menu', itemId: 'mixed', amount: 1, unit: '食' },
+    ])
+    const display = menuToDisplayFood(mixed, [], [valid, incompatible])
+
+    expect(display.nutrients.energyKcal).toBe(120)
+    expect(display.nutrients.proteinG).toBe(10)
+    expect(menuToFood(mixed, [], [valid, incompatible]).nutrients.energyKcal).toBeNull()
+  })
+
+  it('ネスト内の既知分を分量と基準量で換算し、子メニューの欠損は除外する', () => {
+    const chicken = food('chicken', 200)
+    const nested = menu('nested', [
+      { kind: 'food', itemId: chicken.id, amount: 400, unit: 'g' },
+      { kind: 'food', itemId: 'deleted-food', amount: 100, unit: 'g' },
+    ])
+    nested.baseAmount = 2
+    nested.baseUnit = '食'
+    const parent = menu('parent', [{ kind: 'menu', itemId: nested.id, amount: 2, unit: '食' }])
+    parent.baseAmount = 4
+    parent.baseUnit = '食'
+    const display = menuToDisplayFood(parent, [nested], [chicken])
+
+    expect(display.nutrients.energyKcal).toBe(800)
+    expect(display.nutrients.proteinG).toBe(40)
+    expect(calculateNutrients(display, 1, '食')).toMatchObject({ energyKcal: 200, proteinG: 10 })
+    expect(menuToFood(parent, [nested], [chicken]).nutrients.energyKcal).toBeNull()
+  })
+
+  it('明示された0だけを既知の0として保持する', () => {
+    const zeroFood: Food = { ...food('zero', 0), nutrients: { ...EMPTY_NUTRIENTS, energyKcal: 0 } }
+    const zero = menu('zero', [{ kind: 'food', itemId: zeroFood.id, amount: 100, unit: 'g' }])
+    const missing = menu('missing', [{ kind: 'food', itemId: 'deleted-food', amount: 100, unit: 'g' }])
+
+    expect(menuToDisplayFood(zero, [zero], [zeroFood]).nutrients.energyKcal).toBe(0)
+    expect(menuToDisplayFood(missing, [missing], []).nutrients.energyKcal).toBeNull()
   })
 })

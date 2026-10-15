@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { menuToFood } from '../services/menuIngredients'
+import { menuToDisplayFood, menuToFood } from '../services/menuIngredients'
 import { getMenuSetCalorieSummary, getMenuSetFoodItems } from '../services/menuSetMeals'
 import { calculateNutrients, formatGraphNutrient, formatNutrient } from '../services/nutrition'
 import {
@@ -11,13 +11,15 @@ import {
   type NutritionGoals,
 } from '../types'
 import { NutrientGoalGraphs } from './NutritionGraphs'
-import { displayFoodName, generalMenuToFood } from './foodPresentation'
+import { displayFoodName } from './foodPresentation'
 
 export function MenuNutritionDetailsModal({ menu, menus, foods, goals, onClose }: { menu: Menu; menus: Menu[]; foods: Food[]; goals: NutritionGoals; onClose: () => void }) {
   const menuFood = menuToFood(menu, menus, foods)
+  const displayMenuFood = menuToDisplayFood(menu, menus, foods)
   const nutrients = calculateNutrients(menuFood, 1, menuFood.baseUnit)
+  const availableNutrients = calculateNutrients(displayMenuFood, 1, displayMenuFood.baseUnit)
   const memo = menu.memo?.trim()
-  return <div className="modal-backdrop nutrient-detail-backdrop" role="dialog" aria-modal="true" aria-label={`${menu.name}の詳細`}><section className="modal-card nutrient-detail-modal menu-nutrition-details-modal"><div className="modal-heading"><div><span className="eyebrow">MY MENU DETAILS</span><h2>{menu.name}</h2><small>1{menuFood.baseUnit}あたり</small></div><button className="icon-button" type="button" onClick={onClose} aria-label="閉じる">×</button></div><div className="detail-total"><span>合計カロリー</span><strong>{formatNutrient(nutrients.energyKcal)}<small> kcal</small></strong></div><section className="menu-detail-nutrients" aria-label="栄養価"><span className="eyebrow">NUTRIENTS</span><h3>栄養価</h3><NutrientGoalGraphs nutrients={nutrients} goals={goals} /></section>{memo && <section className="menu-detail-memo" aria-label="メモ"><span className="eyebrow">MEMO</span><h3>メモ</h3><p>{memo}</p></section>}</section></div>
+  return <div className="modal-backdrop nutrient-detail-backdrop" role="dialog" aria-modal="true" aria-label={`${menu.name}の詳細`}><section className="modal-card nutrient-detail-modal menu-nutrition-details-modal"><div className="modal-heading"><div><span className="eyebrow">MY MENU DETAILS</span><h2>{menu.name}</h2><small>1{menuFood.baseUnit}あたり</small></div><button className="icon-button" type="button" onClick={onClose} aria-label="閉じる">×</button></div><div className="detail-total"><span>合計カロリー</span><strong>{formatGraphNutrient(availableNutrients.energyKcal)}<small> kcal</small></strong></div><section className="menu-detail-nutrients" aria-label="栄養価"><span className="eyebrow">NUTRIENTS</span><h3>栄養価</h3><NutrientGoalGraphs nutrients={nutrients} availableNutrients={availableNutrients} goals={goals} /></section>{memo && <section className="menu-detail-memo" aria-label="メモ"><span className="eyebrow">MEMO</span><h3>メモ</h3><p>{memo}</p></section>}</section></div>
 }
 
 interface MenuViewProps { menus: Menu[]; generalMenus: GeneralMenu[]; menuSets: MenuSet[]; foods: Food[]; onNewMenu: () => void; onShowMenuNutrition: (menu: Menu) => void; onEditMenu: (menu: Menu) => void; onDeleteMenu: (menu: Menu) => void; onNewGeneralMenu: () => void; onEditGeneralMenu: (menu: GeneralMenu) => void; onDeleteGeneralMenu: (menu: GeneralMenu) => void; onCloneGeneralMenu: (menu: GeneralMenu) => void; onNewMenuSet: () => void; onEditMenuSet: (menuSet: MenuSet) => void; onDeleteMenuSet: (menuSet: MenuSet) => void; onReorderMenuSets: (orderedMenuSetIds: string[]) => Promise<void>; onBack: () => void }
@@ -211,9 +213,7 @@ export function MenuView({ menus, generalMenus, menuSets, foods, onNewMenu, onSh
   const menuList = (items: Array<Menu | GeneralMenu>, kind: 'my' | 'general') => <div className="menu-category-groups">{MENU_CATEGORIES.map((category) => {
     const categoryMenus = items.filter((menu) => menu.category === category)
     return <details className="menu-category-group" key={category}><summary><span className="menu-picker-summary-label"><i aria-hidden="true" />{category}</span><small>{categoryMenus.length > 0 ? `${categoryMenus.length}件` : '登録なし'}</small></summary>{categoryMenus.length > 0 ? <div className="menu-list">{categoryMenus.map((menu) => {
-      const menuFood = kind === 'general'
-        ? generalMenuToFood(menu, menus, foods)
-        : menuToFood(menu, menus, foods)
+      const menuFood = menuToDisplayFood(menu, menus, foods)
       return <div className="menu-card" key={menu.id}><div><strong>{menu.name}</strong><small>{formatGraphNutrient(menuFood.nutrients.energyKcal)}kcal</small></div><div className="menu-card-actions">{kind === 'my' && <button type="button" className="small-action" onClick={() => onShowMenuNutrition(menu)}>詳細</button>}{kind === 'general' && <button type="button" className="small-action" onClick={() => onCloneGeneralMenu(menu)}>Myメニューに複製</button>}<button type="button" className="small-action" onClick={() => kind === 'general' ? onEditGeneralMenu(menu) : onEditMenu(menu)}>編集</button><button type="button" className="small-action danger-text" onClick={() => kind === 'general' ? onDeleteGeneralMenu(menu) : onDeleteMenu(menu)}>削除</button></div></div>
     })}</div> : <p className="menu-picker-empty">この区分に登録された{kind === 'general' ? '一般メニュー' : 'Myメニュー'}はありません。</p>}</details>
   })}</div>

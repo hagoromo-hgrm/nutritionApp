@@ -1,5 +1,5 @@
 import { EMPTY_NUTRIENTS, type Food, type Menu, type MenuIngredient, type QuantityUnit } from '../types'
-import { calculateNutrients, getFoodQuantityUnits, sumNutrients } from './nutrition'
+import { calculateNutrients, getFoodQuantityUnits, sumKnownNutrients, sumNutrients } from './nutrition'
 import { isValidQuantityUnit } from '../utils/validation'
 
 /** メニューの新形式の基準量。旧形式・不完全な値は1食へ読み替える。 */
@@ -86,7 +86,7 @@ export function menusWithUnsupportedIngredientUnits(menus: Menu[], foods: Food[]
   }))
 }
 
-function createMenuFood(menu: Menu, menusById: Map<string, Menu>, foodsById: Map<string, Food>, ancestors: Set<string>): Food {
+function createMenuFood(menu: Menu, menusById: Map<string, Menu>, foodsById: Map<string, Food>, ancestors: Set<string>, summarizeNutrients: typeof sumNutrients): Food {
   const base = getMenuBase(menu)
   const legacyConversions = menu.baseAmount === undefined && menu.baseUnit === undefined
     ? menu.inputUnitConversions?.map((conversion) => ({ ...conversion }))
@@ -98,14 +98,14 @@ function createMenuFood(menu: Menu, menusById: Map<string, Menu>, foodsById: Map
     }
   }
   const nextAncestors = new Set(ancestors).add(menu.id)
-  const nutrients = sumNutrients(getMenuIngredients(menu, [...foodsById.values()]).map((ingredient) => {
+  const nutrients = summarizeNutrients(getMenuIngredients(menu, [...foodsById.values()]).map((ingredient) => {
     if (ingredient.kind === 'food') {
       const food = foodsById.get(ingredient.itemId)
       return food ? calculateNutrients(food, ingredient.amount, ingredient.unit) : { ...EMPTY_NUTRIENTS }
     }
     const nestedMenu = menusById.get(ingredient.itemId)
     if (!nestedMenu) return { ...EMPTY_NUTRIENTS }
-    return calculateNutrients(createMenuFood(nestedMenu, menusById, foodsById, nextAncestors), ingredient.amount, ingredient.unit)
+    return calculateNutrients(createMenuFood(nestedMenu, menusById, foodsById, nextAncestors, summarizeNutrients), ingredient.amount, ingredient.unit)
   }))
   return {
     id: `menu:${menu.id}`, name: menu.name, maker: '', barcode: '', source: 'user', sourceVersion: `メニュー「${menu.category}」`,
@@ -115,5 +115,11 @@ function createMenuFood(menu: Menu, menusById: Map<string, Menu>, foodsById: Map
 
 /** メニューを基準量・基準単位付きの食品として扱える形へ変換する。 */
 export function menuToFood(menu: Menu, menus: Menu[], foods: Food[]): Food {
-  return createMenuFood(menu, new Map(menus.map((item) => [item.id, item])), new Map(foods.map((food) => [food.id, food])), new Set())
+  return createMenuFood(menu, new Map(menus.map((item) => [item.id, item])), new Map(foods.map((food) => [food.id, food])), new Set(), sumNutrients)
+}
+
+/** メニュー詳細や一覧の表示用に、欠損値を除いて既知寄与だけを積算した食品形式へ変換する。 */
+export function menuToDisplayFood(menu: Menu, menus: Menu[], foods: Food[]): Food {
+  const menusById = new Map([...menus.filter((item) => item.id !== menu.id), menu].map((item) => [item.id, item]))
+  return createMenuFood(menu, menusById, new Map(foods.map((food) => [food.id, food])), new Set(), sumKnownNutrients)
 }

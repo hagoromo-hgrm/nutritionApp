@@ -41,14 +41,53 @@ describe('menu set meal batches', () => {
     expect(summary.energyKcal).toBeCloseTo(180.8)
   })
 
-  it('欠損した構成食品を0kcalにせず、項目を欠損表示できる値で返す', () => {
+  it('欠損した構成食品は欠損のまま、セット合計には既知分を表示する', () => {
     const summary = getMenuSetCalorieSummary({
       menuSet: { ...breakfast, menuIds: [], foodIds: ['missing-food'], foodItems: [{ foodId: 'rice', amount: 100, unit: 'g' }, { foodId: 'missing-food', amount: 1, unit: 'g' }] },
       menus: [], foods: [rice],
     })
 
     expect(summary.items.map((item) => item.energyKcal)).toEqual([160, null])
-    expect(summary.energyKcal).toBeNull()
+    expect(summary.energyKcal).toBe(160)
+  })
+
+  it('メニュー内の欠損を除いた既知分を既定分量へ換算し、食事保存値には流用しない', () => {
+    const partial: Menu = {
+      ...soup,
+      baseAmount: 4, baseUnit: '食', servingAmount: 2, servingUnit: '食',
+      ingredients: [...(soup.ingredients ?? []), { kind: 'food', itemId: 'unknown', amount: 10, unit: 'g' }],
+    }
+    const unknown: Food = { ...soupIngredient, id: 'unknown', nutrients: { ...soupIngredient.nutrients, energyKcal: null } }
+    const options = { menuSet: { ...breakfast, foodIds: [] }, menus: [partial], foods: [soupIngredient, unknown] }
+    const summary = getMenuSetCalorieSummary(options)
+    expect(summary.items).toEqual([{ id: 'menu:soup', energyKcal: 10 }])
+    expect(summary.energyKcal).toBe(10)
+
+    const batch = createMenuSetMealBatch({ ...options, mealType: '朝食', eatenAt: '', createId: () => 'meal' })
+    expect(batch.entries[0].calculatedNutrients.energyKcal).toBeNull()
+    expect(batch.entries[0].foodSnapshot.nutrients.energyKcal).toBeNull()
+  })
+
+  it('全項目欠損と既知の0kcalを区別する', () => {
+    const unknown: Food = { ...rice, nutrients: { ...rice.nutrients, energyKcal: null } }
+    const options = { menuSet: { ...breakfast, menuIds: ['missing'] }, menus: [], foods: [unknown] }
+    expect(getMenuSetCalorieSummary(options).energyKcal).toBeNull()
+    const zero: Food = { ...unknown, nutrients: { ...unknown.nutrients, energyKcal: 0 } }
+    expect(getMenuSetCalorieSummary({ ...options, foods: [zero] }).energyKcal).toBe(0)
+  })
+
+  it('一般メニューの既知小計も換算し、空セットは従来どおり0kcalとする', () => {
+    const partialGeneral: GeneralMenu = {
+      ...generalBreakfast, baseAmount: 2, baseUnit: '皿', servingAmount: 1, servingUnit: '皿',
+      ingredients: [...(generalBreakfast.ingredients ?? []), { kind: 'food', itemId: 'missing', amount: 100, unit: 'g' }],
+    }
+    const summary = getMenuSetCalorieSummary({
+      menuSet: { ...breakfast, menuIds: [], foodIds: [], generalMenuIds: [partialGeneral.id] },
+      menus: [], generalMenus: [partialGeneral], foods: [rice],
+    })
+    expect(summary.items.map((item) => item.energyKcal)).toEqual([80])
+    expect(summary.energyKcal).toBe(80)
+    expect(getMenuSetCalorieSummary({ menuSet: { ...breakfast, menuIds: [], foodIds: [] }, menus: [], foods: [] }).energyKcal).toBe(0)
   })
 
   it('セット名ではなく料理メニューと食品を個別の食事記録へ展開する', () => {

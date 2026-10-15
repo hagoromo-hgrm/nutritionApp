@@ -82,6 +82,16 @@ export function sumNutrients(values: Nutrients[]): Nutrients {
   })) as Nutrients
 }
 
+/** 欠損値を無視して栄養素ごとの既知分を合計する。既知値がない栄養素はnullのままにする。 */
+export function sumKnownNutrients(values: Nutrients[]): Nutrients {
+  return Object.fromEntries(NUTRIENT_KEYS.map((key) => {
+    const knownValues = values
+      .map((value) => value[key])
+      .filter((value): value is number => typeof value === 'number')
+    return [key, knownValues.length === 0 ? null : knownValues.reduce((sum, value) => sum + value, 0)]
+  })) as Nutrients
+}
+
 export function sumEntries(entries: MealEntry[]): Nutrients {
   return sumNutrients(entries.map((entry) => entry.calculatedNutrients))
 }
@@ -94,15 +104,7 @@ export function sumAvailableNutrients(entries: MealEntry[]): Nutrients {
   if (entries.length === 0) {
     return sumEntries(entries)
   }
-
-  return Object.fromEntries(NUTRIENT_KEYS.map((key) => {
-    const availableValues = entries
-      .map((entry) => entry.calculatedNutrients[key])
-      .filter((value): value is number => typeof value === 'number')
-    return [key, availableValues.length === 0
-      ? null
-      : availableValues.reduce((sum, value) => sum + value, 0)]
-  })) as Nutrients
+  return sumKnownNutrients(entries.map((entry) => entry.calculatedNutrients))
 }
 
 export function sumByMealType(entries: MealEntry[]): Record<string, Nutrients> {
