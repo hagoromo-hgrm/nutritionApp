@@ -61,12 +61,12 @@ describe('登録済みメニューの栄養価表示', () => {
     expect(container.querySelector('.meal-heading-actions > span')?.textContent).toBe('300.0 kcal')
     expect(container.querySelector('.goal-progress-heading strong')?.textContent).toContain('300.0')
     expect(container.querySelector('.goal-intake-bar')).not.toBeNull()
-    expect(container.querySelector('.goal-progress-status-unknown')).not.toBeNull()
+    expect(container.querySelector('.goal-progress-status-ok')).not.toBeNull()
     expect(entry.calculatedNutrients.energyKcal).toBeNull()
     expect(JSON.stringify(entry)).toBe(original)
   })
 
-  it('確認画面・食事詳細・TODAY詳細で同じ小計を表示し、欠損項目を適正扱いしない', () => {
+  it('確認画面・食事詳細・TODAY詳細で同じ既知小計を表示し、範囲内の小計を適正扱いする', () => {
     const entry = savedMeal()
     const subtotal = sumEntries([entry])
     const confirmation = render(<MealConfirmationView
@@ -84,7 +84,7 @@ describe('登録済みメニューの栄養価表示', () => {
       goals={goals} goalRecords={[]} onClose={noop} />)
     for (const container of [details, todayDetails]) {
       expect(nutrientRow(container, 'エネルギー')?.querySelector('.nutrient-graph-value')?.textContent).toBe('300.0kcal')
-      expect(nutrientRow(container, 'エネルギー')?.querySelector('.nutrient-graph-status-unknown')).not.toBeNull()
+      expect(nutrientRow(container, 'エネルギー')?.querySelector('.nutrient-graph-status-ok')).not.toBeNull()
       expect(nutrientRow(container, 'たんぱく質')?.querySelector('.nutrient-graph-value')?.textContent).toBe('22.5g')
       expect(nutrientRow(container, '脂質')?.querySelector('.nutrient-graph-value')?.textContent).toBe('--.-g')
       expect(nutrientRow(container, '脂質')?.querySelector('.nutrient-graph-intake')).toBeNull()

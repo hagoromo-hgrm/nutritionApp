@@ -109,7 +109,7 @@ describe('Myメニュー栄養価詳細', () => {
     expectNutrientValue(html, '食塩相当量', '--.-')
   })
 
-  it('栄養素ごとに既知分を独立して小計し、欠損行を適正扱いしない', () => {
+  it('栄養素ごとに既知分を独立して小計し、範囲外の小計は不足と表示する', () => {
     const energyFood = makeFood('energy', { ...EMPTY_NUTRIENTS, energyKcal: 100 })
     const proteinFood = makeFood('protein', { ...EMPTY_NUTRIENTS, proteinG: 20 })
     const menu = makeMenu('independent subtotals', [
@@ -120,7 +120,7 @@ describe('Myメニュー栄養価詳細', () => {
 
     expectNutrientValue(html, 'エネルギー', '50.0')
     expectNutrientValue(html, 'たんぱく質', '10.0')
-    expect(getNutrientRow(html, 'エネルギー')).toContain('nutrient-graph-status-unknown')
+    expect(getNutrientRow(html, 'エネルギー')).toContain('nutrient-graph-status-under')
     expect(getNutrientRow(html, '食塩相当量')).toContain('--.-')
   })
 
@@ -157,7 +157,7 @@ describe('Myメニュー栄養価詳細', () => {
 
     expect(html).toContain('>200.0<small> kcal</small>')
     expectNutrientValue(html, 'たんぱく質', '20.0')
-    expect(getNutrientRow(html, 'エネルギー')).toContain('nutrient-graph-status-unknown')
+    expect(getNutrientRow(html, 'エネルギー')).toContain('nutrient-graph-status-under')
   })
 
   it('完全集計できた栄養素の適正色は維持する', () => {

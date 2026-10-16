@@ -249,7 +249,7 @@ export function GraphsView({ range, goals, goalRecords, onRangeChange }: GraphsV
                   : nutrientMetric && nutrientPoints.map((point, index) => {
                     const availableValue = point.availableNutrients[nutrientMetric]
                     const showLabel = shouldShowTrendDate(point.date, range)
-                    return <span key={point.date} className={`trend-bar-value${isNutrientWithinGoalRange(point.nutrients[nutrientMetric], dailyGoals[index], nutrientMetric) ? ' is-within-goal' : ''}${availableValue === null ? ' is-missing' : ''}${showLabel ? '' : ' is-hidden'}`}>{formatGraphNutrient(availableValue)}<small>{metricUnit}</small></span>
+                    return <span key={point.date} className={`trend-bar-value${isNutrientWithinGoalRange(availableValue, dailyGoals[index], nutrientMetric) ? ' is-within-goal' : ''}${availableValue === null ? ' is-missing' : ''}${showLabel ? '' : ' is-hidden'}`}>{formatGraphNutrient(availableValue)}<small>{metricUnit}</small></span>
                   })}
               </div>
               <div className={`trend-chart-track-area${weightMode ? ' weight-trend-track-area' : ''}`}>
